@@ -157,29 +157,6 @@
     </div>
 </section>
 
-<!-- cta section -->
-<section class="py-20 bg-gradient-to-r from-primary-600 via-blue-600 to-primary-700 text-white relative overflow-hidden">
-    <div class="absolute inset-0 opacity-10">
-        <div class="absolute top-0 left-0 w-96 h-96 bg-white rounded-full -translate-x-1/2 -translate-y-1/2"></div>
-        <div class="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full translate-x-1/2 translate-y-1/2"></div>
-    </div>
-
-    <div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 text-center relative z-10" data-aos="zoom-in">
-        <h2 class="text-4xl md:text-5xl font-bold mb-6">
-            Siap Memulai Perjalanan KKN Anda?
-        </h2>
-        <p class="text-xl mb-8 text-blue-100 max-w-2xl mx-auto leading-relaxed">
-            Bergabunglah dengan ribuan mahasiswa dan instansi yang sudah mempercayai KKN-GO
-        </p>
-        <a href="{{ route('register') }}" class="inline-flex items-center bg-white text-primary-600 hover:bg-gray-100 px-10 py-5 rounded-xl text-lg font-semibold shadow-2xl hover:shadow-3xl transition-all duration-300 hover:-translate-y-2 hover:scale-105">
-            Daftar Gratis Sekarang
-            <svg class="w-6 h-6 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
-            </svg>
-        </a>
-    </div>
-</section>
-
 @endsection
 
 @push('scripts')
