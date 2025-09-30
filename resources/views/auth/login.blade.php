@@ -38,37 +38,37 @@
     <div class="flex min-h-screen">
         <!-- left side - promotional content with hero image -->
         <div class="hidden lg:flex lg:w-1/2 hero-bg text-white p-12 flex-col justify-center relative">
-            <!-- overlay untuk text contrast -->
-            <div class="absolute inset-0 bg-gradient-to-br from-blue-900/30 via-transparent to-green-900/20"></div>
+            <!-- overlay ringan untuk text contrast -->
+            <div class="absolute inset-0 bg-gradient-to-br from-blue-900/10 via-transparent to-green-900/5"></div>
             
             <div class="max-w-xl mx-auto relative z-10">
                 <!-- tagline -->
-                <h1 class="text-5xl font-bold mb-4 leading-tight" style="text-shadow: 0 2px 10px rgba(0,0,0,0.3);">
+                <h1 class="text-5xl font-bold mb-4 leading-tight" style="text-shadow: 0 3px 12px rgba(0,0,0,0.5), 0 1px 4px rgba(0,0,0,0.3);">
                     Connect. Collaborate.<br>
-                    <span class="text-lime-400">Create Impact.</span>
+                    <span class="text-lime-300">Create Impact.</span>
                 </h1>
                 
-                <p class="text-xl text-white/90 mb-16 leading-relaxed" style="text-shadow: 0 1px 8px rgba(0,0,0,0.3);">
+                <p class="text-xl text-white mb-16 leading-relaxed" style="text-shadow: 0 2px 10px rgba(0,0,0,0.5), 0 1px 4px rgba(0,0,0,0.3);">
                     Join the largest platform connecting students and institutions for meaningful community service programs across Indonesia's villages and communities.
                 </p>
 
                 <!-- statistics grid -->
                 <div class="grid grid-cols-2 gap-8">
-                    <div style="text-shadow: 0 2px 10px rgba(0,0,0,0.4);">
+                    <div style="text-shadow: 0 3px 12px rgba(0,0,0,0.6), 0 1px 4px rgba(0,0,0,0.4);">
                         <div class="text-5xl font-bold mb-2">500+</div>
-                        <div class="text-lg text-white/90">Active Projects</div>
+                        <div class="text-lg text-white">Active Projects</div>
                     </div>
-                    <div style="text-shadow: 0 2px 10px rgba(0,0,0,0.4);">
+                    <div style="text-shadow: 0 3px 12px rgba(0,0,0,0.6), 0 1px 4px rgba(0,0,0,0.4);">
                         <div class="text-5xl font-bold mb-2">50+</div>
-                        <div class="text-lg text-white/90">Universities</div>
+                        <div class="text-lg text-white">Universities</div>
                     </div>
-                    <div style="text-shadow: 0 2px 10px rgba(0,0,0,0.4);">
+                    <div style="text-shadow: 0 3px 12px rgba(0,0,0,0.6), 0 1px 4px rgba(0,0,0,0.4);">
                         <div class="text-5xl font-bold mb-2">10.000+</div>
-                        <div class="text-lg text-white/90">Students</div>
+                        <div class="text-lg text-white">Students</div>
                     </div>
-                    <div style="text-shadow: 0 2px 10px rgba(0,0,0,0.4);">
+                    <div style="text-shadow: 0 3px 12px rgba(0,0,0,0.6), 0 1px 4px rgba(0,0,0,0.4);">
                         <div class="text-5xl font-bold mb-2">200+</div>
-                        <div class="text-lg text-white/90">Institutions</div>
+                        <div class="text-lg text-white">Institutions</div>
                     </div>
                 </div>
             </div>
@@ -77,8 +77,15 @@
         <!-- right side - login form -->
         <div class="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white">
             <div class="w-full max-w-md">
+                <!-- logo -->
+                <div class="flex justify-center mb-8 mt-8">
+                    <img src="{{ asset('kkn-go-logo.png') }}" 
+                         alt="KKN-GO Logo" 
+                         class="h-20 w-auto">
+                </div>
+                
                 <!-- header -->
-                <div class="mb-8">
+                <div class="mb-8 text-center">
                     <h2 class="text-4xl font-bold text-gray-900 mb-3">Welcome Back!</h2>
                     <p class="text-gray-600 text-lg">
                         Sign in to your KKN-GO account and continue making impact in your community.
