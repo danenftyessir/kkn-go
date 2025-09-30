@@ -1,86 +1,209 @@
-@extends('layouts.auth')
-
-@section('title', 'Login')
-
-@section('content')
-<div class="bg-white rounded-2xl shadow-xl p-8">
-    <!-- logo -->
-    <div class="text-center mb-8">
-        <h2 class="text-3xl font-bold text-gray-900">Selamat Datang Kembali!</h2>
-        <p class="text-gray-600 mt-2">Masuk ke akun KKN-GO anda</p>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Login - KKN-GO</title>
+    
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
+    <style>
+        .hero-bg {
+            background-image: linear-gradient(135deg, rgba(59, 89, 152, 0.65) 0%, rgba(44, 95, 127, 0.62) 50%, rgba(30, 139, 115, 0.58) 100%),
+                              url('{{ asset('login-register-view.jpg') }}');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+    <!-- back to home -->
+    <div class="absolute top-6 left-6 z-10">
+        <a href="{{ route('home') }}" class="inline-flex items-center text-white hover:text-gray-200 transition-colors">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            <span class="font-medium">Back to Home</span>
+        </a>
     </div>
 
-    <!-- form login -->
-    <form method="POST" action="{{ route('login') }}" class="space-y-6">
-        @csrf
+    <!-- top navigation -->
+    <div class="absolute top-6 right-6 z-10 flex items-center space-x-6">
+        <a href="#" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">About</a>
+        <a href="#" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">Contact</a>
+    </div>
 
-        <!-- email or username -->
-        <div>
-            <label for="email" class="form-label">Email atau Username</label>
-            <input 
-                id="email" 
-                type="text" 
-                name="email" 
-                value="{{ old('email') }}"
-                class="input @error('email') input-error @enderror" 
-                placeholder="Masukkan email atau username"
-                required 
-                autofocus
-            >
-            @error('email')
-                <p class="form-error">{{ $message }}</p>
-            @enderror
-        </div>
+    <div class="flex min-h-screen">
+        <!-- left side - promotional content with hero image -->
+        <div class="hidden lg:flex lg:w-1/2 hero-bg text-white p-12 flex-col justify-center relative">
+            <!-- overlay untuk text contrast -->
+            <div class="absolute inset-0 bg-gradient-to-br from-blue-900/30 via-transparent to-green-900/20"></div>
+            
+            <div class="max-w-xl mx-auto relative z-10">
+                <!-- tagline -->
+                <h1 class="text-5xl font-bold mb-4 leading-tight" style="text-shadow: 0 2px 10px rgba(0,0,0,0.3);">
+                    Connect. Collaborate.<br>
+                    <span class="text-lime-400">Create Impact.</span>
+                </h1>
+                
+                <p class="text-xl text-white/90 mb-16 leading-relaxed" style="text-shadow: 0 1px 8px rgba(0,0,0,0.3);">
+                    Join the largest platform connecting students and institutions for meaningful community service programs across Indonesia's villages and communities.
+                </p>
 
-        <!-- password -->
-        <div>
-            <label for="password" class="form-label">Password</label>
-            <input 
-                id="password" 
-                type="password" 
-                name="password" 
-                class="input @error('password') input-error @enderror"
-                placeholder="Masukkan password"
-                required
-            >
-            @error('password')
-                <p class="form-error">{{ $message }}</p>
-            @enderror
-        </div>
-
-        <!-- remember me & forgot password -->
-        <div class="flex items-center justify-between">
-            <div class="flex items-center">
-                <input 
-                    id="remember" 
-                    type="checkbox" 
-                    name="remember" 
-                    class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                >
-                <label for="remember" class="ml-2 block text-sm text-gray-700">
-                    Ingat saya
-                </label>
-            </div>
-
-            <div class="text-sm">
-                <a href="{{ route('password.request') }}" class="text-primary-600 hover:text-primary-800">
-                    Lupa password?
-                </a>
+                <!-- statistics grid -->
+                <div class="grid grid-cols-2 gap-8">
+                    <div style="text-shadow: 0 2px 10px rgba(0,0,0,0.4);">
+                        <div class="text-5xl font-bold mb-2">500+</div>
+                        <div class="text-lg text-white/90">Active Projects</div>
+                    </div>
+                    <div style="text-shadow: 0 2px 10px rgba(0,0,0,0.4);">
+                        <div class="text-5xl font-bold mb-2">50+</div>
+                        <div class="text-lg text-white/90">Universities</div>
+                    </div>
+                    <div style="text-shadow: 0 2px 10px rgba(0,0,0,0.4);">
+                        <div class="text-5xl font-bold mb-2">10.000+</div>
+                        <div class="text-lg text-white/90">Students</div>
+                    </div>
+                    <div style="text-shadow: 0 2px 10px rgba(0,0,0,0.4);">
+                        <div class="text-5xl font-bold mb-2">200+</div>
+                        <div class="text-lg text-white/90">Institutions</div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- submit button -->
-        <button type="submit" class="btn-primary w-full">
-            Masuk
-        </button>
-    </form>
+        <!-- right side - login form -->
+        <div class="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white">
+            <div class="w-full max-w-md">
+                <!-- header -->
+                <div class="mb-8">
+                    <h2 class="text-4xl font-bold text-gray-900 mb-3">Welcome Back!</h2>
+                    <p class="text-gray-600 text-lg">
+                        Sign in to your KKN-GO account and continue making impact in your community.
+                    </p>
+                </div>
 
-    <!-- register link -->
-    <p class="mt-6 text-center text-sm text-gray-600">
-        Belum punya akun? 
-        <a href="{{ route('register') }}" class="text-primary-600 hover:text-primary-800 font-medium">
-            Daftar sekarang
-        </a>
-    </p>
-</div>
-@endsection
+                <!-- form -->
+                <form method="POST" action="{{ route('login') }}" class="space-y-6">
+                    @csrf
+
+                    <!-- email atau username -->
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                            Email atau Username <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" 
+                               id="email" 
+                               name="email" 
+                               value="{{ old('email') }}"
+                               placeholder="Email atau username"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all @error('email') border-red-500 @enderror"
+                               required
+                               autofocus>
+                        @error('email')
+                            <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- password -->
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+                            Password <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <input type="password" 
+                                   id="password" 
+                                   name="password"
+                                   placeholder="Masukkan password Anda"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all pr-12 @error('password') border-red-500 @enderror"
+                                   required>
+                            <button type="button" 
+                                    onclick="togglePassword()"
+                                    class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
+                                <svg id="eyeIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        @error('password')
+                            <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- remember me & forgot password -->
+                    <div class="flex items-center justify-between">
+                        <label class="flex items-center">
+                            <input type="checkbox" 
+                                   name="remember" 
+                                   {{ old('remember') ? 'checked' : '' }}
+                                   class="w-4 h-4 border-gray-300 rounded text-blue-600 focus:ring-blue-500">
+                            <span class="ml-2 text-sm text-gray-700">Remember me</span>
+                        </label>
+                        <a href="{{ route('password.request') }}" 
+                           class="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                            Forgot password?
+                        </a>
+                    </div>
+
+                    <!-- submit button -->
+                    <button type="submit" 
+                            class="w-full bg-blue-600 text-white py-3.5 rounded-lg font-semibold hover:bg-blue-700 transition-all flex items-center justify-center space-x-2 shadow-sm hover:shadow-md">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                        </svg>
+                        <span>Sign In</span>
+                    </button>
+                </form>
+
+                <!-- register link -->
+                <div class="mt-8 text-center">
+                    <p class="text-gray-600">
+                        Don't have an account? 
+                        <a href="{{ route('register') }}" class="text-blue-600 hover:text-blue-700 font-semibold">
+                            Sign up here
+                        </a>
+                    </p>
+                </div>
+
+                <!-- security notice -->
+                <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start space-x-3">
+                    <svg class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                    </svg>
+                    <p class="text-sm text-blue-900">
+                        Your login is secured with industry-standard encryption. We never store your password in plain text.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // toggle password visibility
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const eyeIcon = document.getElementById('eyeIcon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>';
+            } else {
+                passwordInput.type = 'password';
+                eyeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>';
+            }
+        }
+
+        // smooth page transition
+        document.addEventListener('DOMContentLoaded', function() {
+            document.body.style.opacity = '0';
+            setTimeout(() => {
+                document.body.style.transition = 'opacity 0.3s ease-in-out';
+                document.body.style.opacity = '1';
+            }, 10);
+        });
+    </script>
+</body>
+</html>
