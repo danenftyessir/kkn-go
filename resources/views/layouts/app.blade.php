@@ -12,7 +12,10 @@
     <link href="https://fonts.bunny.net/css?family=inter:300,400,500,600,700,800|poppins:300,400,500,600,700,800" rel="stylesheet" />
 
     <!-- styles -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css'])
+    
+    <!-- Alpine.js CDN -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
 
     @stack('styles')
 </head>
@@ -54,6 +57,100 @@
         </svg>
     </button>
 
+    <!-- scripts -->
+    @vite(['resources/js/app.js'])
     @stack('scripts')
+
+    <script>
+    // scroll to top functionality
+    const scrollBtn = document.getElementById('scroll-to-top');
+    if (scrollBtn) {
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                scrollBtn.classList.remove('hidden');
+            } else {
+                scrollBtn.classList.add('hidden');
+            }
+        }, { passive: true });
+
+        scrollBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+    }
+
+    // notification manager
+    class NotificationManager {
+        constructor() {
+            this.container = null;
+            this.init();
+        }
+
+        init() {
+            this.createContainer();
+            this.showExistingNotifications();
+        }
+
+        createContainer() {
+            if (document.getElementById('notification-container')) return;
+
+            this.container = document.createElement('div');
+            this.container.id = 'notification-container';
+            this.container.className = 'fixed top-4 right-4 z-50 space-y-2';
+            document.body.appendChild(this.container);
+        }
+
+        show(message, type = 'info', duration = 5000) {
+            const notification = document.createElement('div');
+            const colors = {
+                success: 'bg-green-50 border-green-200 text-green-800',
+                error: 'bg-red-50 border-red-200 text-red-800',
+                info: 'bg-blue-50 border-blue-200 text-blue-800',
+                warning: 'bg-yellow-50 border-yellow-200 text-yellow-800'
+            };
+
+            notification.className = `${colors[type]} px-4 py-3 rounded-lg border mb-4 animate-slideInRight shadow-lg max-w-sm`;
+            notification.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <span>${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" 
+                            class="ml-4 text-gray-500 hover:text-gray-700">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                    </button>
+                </div>
+            `;
+
+            this.container.appendChild(notification);
+
+            if (duration > 0) {
+                setTimeout(() => {
+                    notification.classList.add('animate-fadeOut');
+                    setTimeout(() => notification.remove(), 300);
+                }, duration);
+            }
+        }
+
+        showExistingNotifications() {
+            const successMsg = document.querySelector('[data-success-message]');
+            const errorMsg = document.querySelector('[data-error-message]');
+            const infoMsg = document.querySelector('[data-info-message]');
+            const warningMsg = document.querySelector('[data-warning-message]');
+
+            if (successMsg) this.show(successMsg.dataset.successMessage, 'success');
+            if (errorMsg) this.show(errorMsg.dataset.errorMessage, 'error');
+            if (infoMsg) this.show(infoMsg.dataset.infoMessage, 'info');
+            if (warningMsg) this.show(warningMsg.dataset.warningMessage, 'warning');
+        }
+    }
+
+    // initialize notification manager
+    document.addEventListener('DOMContentLoaded', () => {
+        window.notificationManager = new NotificationManager();
+    });
+    </script>
 </body>
 </html>
