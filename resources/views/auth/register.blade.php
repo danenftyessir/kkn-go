@@ -26,7 +26,7 @@
     <div class="flex items-center justify-center min-h-screen p-8">
         <div class="w-full max-w-2xl">
             <!-- logo -->
-            <div class="flex justify-center mb-8">
+            <div class="flex justify-center mb-8 mt-12">
                 <img src="{{ asset('kkn-go-logo.png') }}" 
                      alt="KKN-GO Logo" 
                      class="h-24 w-auto transform hover:scale-105 transition-transform">
@@ -118,34 +118,6 @@
                 </div>
             </div>
 
-            <!-- info cards -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
-                <div class="bg-white/80 backdrop-blur-sm rounded-lg p-4 border border-gray-200">
-                    <div class="flex items-start">
-                        <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
-                        </svg>
-                        <div class="text-sm">
-                            <p class="font-semibold text-gray-900 mb-1">Untuk Mahasiswa</p>
-                            <p class="text-gray-600">Gunakan email universitas (.ac.id atau .edu) untuk verifikasi otomatis</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white/80 backdrop-blur-sm rounded-lg p-4 border border-gray-200">
-                    <div class="flex items-start">
-                        <svg class="w-5 h-5 text-green-600 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
-                        </svg>
-                        <div class="text-sm">
-                            <p class="font-semibold text-gray-900 mb-1">Untuk Instansi</p>
-                            <p class="text-gray-600">Akun instansi akan diverifikasi oleh admin dalam 1-3 hari kerja</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <script>
         // smooth page transition
