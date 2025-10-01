@@ -32,12 +32,22 @@
     box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3);
 }
 
+/* hilangkan warna pada step label - ganti dengan bold */
+.institution-register .step-item .step-label {
+    color: #6b7280;
+    font-weight: normal;
+    transition: font-weight 0.3s ease;
+}
+
+/* step label tidak pakai warna lagi */
 .institution-register .step-item:has(.step-circle.active) .step-label {
-    color: #10b981;
+    color: #6b7280;
+    font-weight: bold;
 }
 
 .institution-register .step-item:has(.step-circle.completed) .step-label {
-    color: #14b8a6;
+    color: #6b7280;
+    font-weight: normal;
 }
 
 .institution-register .step-connector::before {
@@ -55,11 +65,11 @@
 }
 
 /* Links */
-.institution-register a.text-indigo-600 {
+.institution-register a.text-green-600 {
     color: #10b981;
 }
 
-.institution-register a.text-indigo-600:hover {
+.institution-register a.text-green-600:hover {
     color: #059669;
 }
 
