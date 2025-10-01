@@ -28,9 +28,9 @@ Route::middleware('guest')->group(function () {
     // register
     Route::get('/register', [RegisterController::class, 'showRegisterForm'])->name('register');
     Route::get('/register/student', [RegisterController::class, 'showStudentRegisterForm'])->name('register.student');
-    Route::post('/register/student', [RegisterController::class, 'registerStudent']);
+    Route::post('/register/student', [RegisterController::class, 'registerStudent'])->name('register.student.store');
     Route::get('/register/institution', [RegisterController::class, 'showInstitutionRegisterForm'])->name('register.institution');
-    Route::post('/register/institution', [RegisterController::class, 'registerInstitution']);
+    Route::post('/register/institution', [RegisterController::class, 'registerInstitution'])->name('register.institution.store');
     
     // forgot password
     Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');

@@ -7,9 +7,15 @@
 
     <title>{{ config('app.name') }} - @yield('title')</title>
 
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <!-- fonts -->
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=inter:300,400,500,600,700,800" rel="stylesheet" />
+
+    @vite(['resources/css/app.css', 'resources/css/auth.css', 'resources/js/app.js'])
+    
+    @stack('styles')
 </head>
-<body class="font-sans antialiased">
+<body class="font-sans antialiased bg-gray-50">
     <!-- flash messages -->
     @if(session('success'))
         <div data-success-message="{{ session('success') }}" class="hidden"></div>
@@ -19,11 +25,15 @@
         <div data-error-message="{{ session('error') }}" class="hidden"></div>
     @endif
 
-    <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-white to-blue-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div class="max-w-md w-full page-transition">
-            @yield('content')
-        </div>
-    </div>
+    <!-- navbar -->
+    @include('components.navbar')
+
+    <!-- main content -->
+    <main class="min-h-screen">
+        @yield('content')
+    </main>
+
+    <!-- FOOTER DIHAPUS UNTUK HALAMAN AUTH -->
 
     @stack('scripts')
 </body>
