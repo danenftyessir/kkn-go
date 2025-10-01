@@ -28,10 +28,6 @@
 
 <!-- hero section -->
 <section class="relative hero-background text-white overflow-hidden">
-    <div class="absolute inset-0 opacity-10">
-        <div class="absolute inset-0" style="background-image: url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.4\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');"></div>
-    </div>
-
     <div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 relative z-10 py-24 lg:py-32">
         <div class="max-w-4xl" data-aos="fade-right">
             <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
@@ -163,6 +159,7 @@
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+
 // initialize AOS
 AOS.init({
     duration: 600,
@@ -184,30 +181,41 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 18,
 }).addTo(map);
 
+// Data proyek yang diperbanyak
 const projects = [
     { lat: -6.2088, lng: 106.8456, name: 'Jakarta - Proyek Smart Village', institution: 'Dinas Komunikasi DKI' },
     { lat: -7.7956, lng: 110.3695, name: 'Yogyakarta - Pemberdayaan UMKM', institution: 'Pemda Sleman' },
     { lat: -6.9175, lng: 107.6191, name: 'Bandung - Digitalisasi Desa', institution: 'Pemkot Bandung' },
     { lat: -7.2575, lng: 112.7521, name: 'Surabaya - Pengelolaan Sampah', institution: 'Dinas LH Surabaya' },
     { lat: 3.5952, lng: 98.6722, name: 'Medan - Pertanian Organik', institution: 'Dinas Pertanian Sumut' },
+    { lat: -5.1477, lng: 119.4327, name: 'Makassar - Edukasi Maritim', institution: 'Dinas Kelautan dan Perikanan Sulsel' },
+    { lat: -8.6705, lng: 115.2126, name: 'Denpasar - Pengembangan Pariwisata Desa', institution: 'Dinas Pariwisata Bali' },
+    { lat: 0.5330, lng: 101.4474, name: 'Pekanbaru - Konservasi Hutan Gambut', institution: 'LSM Lingkungan Riau' },
+    { lat: -0.9436, lng: 100.3631, name: 'Padang - Mitigasi Bencana Tsunami', institution: 'BPBD Sumatera Barat' },
+    { lat: -3.3190, lng: 114.5908, name: 'Banjarmasin - Restorasi Lahan Basah', institution: 'Yayasan Peduli Lahan Basah' }
 ];
 
 const customIcon = L.divIcon({
     className: 'custom-marker',
-    html: '<div style="background: #2563eb; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-center; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 3px solid white;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></div>',
+    html: '<div style="background: #2563eb; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 3px solid white;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></div>',
     iconSize: [32, 32],
     iconAnchor: [16, 32],
     popupAnchor: [0, -32]
 });
 
+// Loop untuk menambahkan marker dan popup yang lebih informatif
 projects.forEach(project => {
     L.marker([project.lat, project.lng], { icon: customIcon })
         .addTo(map)
         .bindPopup(`
-            <div style="min-width: 200px;">
-                <h3 style="font-weight: bold; margin-bottom: 8px; color: #1e40af;">${project.name}</h3>
-                <p style="color: #6b7280; margin-bottom: 4px;">${project.institution}</p>
-                <a href="#" style="color: #2563eb; text-decoration: underline; font-size: 14px;">Lihat Detail →</a>
+            <div style="min-width: 220px; padding: 5px;">
+                <h3 style="font-weight: bold; margin-bottom: 8px; color: #1e40af; font-size: 1.1em;">${project.name}</h3>
+                <p style="color: #6b7280; margin-bottom: 12px; font-size: 0.9em;">
+                    <span style="font-weight: 500;">Oleh:</span> ${project.institution}
+                </p>
+                <a href="#" style="display: inline-block; background-color: #3b82f6; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 500; transition: background-color 0.2s;">
+                    Lihat Detail
+                </a>
             </div>
         `);
 });
