@@ -1,0 +1,87 @@
+/* ============================================
+   Institution Register - Green Theme
+   ============================================ */
+
+.institution-register .register-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #d1fae5 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.institution-register .register-container::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 20% 50%, rgba(34, 197, 94, 0.08) 0%, transparent 50%), 
+                radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.08) 0%, transparent 50%);
+}
+
+/* Step Indicator - Green */
+.institution-register .step-circle.active {
+    background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);
+    box-shadow: 0 8px 16px rgba(16, 185, 129, 0.4), 0 0 0 4px rgba(16, 185, 129, 0.1);
+}
+
+.institution-register .step-circle.active::before {
+    background: rgba(16, 185, 129, 0.2);
+}
+
+.institution-register .step-circle.completed {
+    background: linear-gradient(135deg, #14b8a6 0%, #2dd4bf 100%);
+    box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3);
+}
+
+.institution-register .step-item:has(.step-circle.active) .step-label {
+    color: #10b981;
+}
+
+.institution-register .step-item:has(.step-circle.completed) .step-label {
+    color: #14b8a6;
+}
+
+.institution-register .step-connector::before {
+    background: linear-gradient(90deg, #14b8a6 0%, #2dd4bf 100%);
+}
+
+/* Button */
+.institution-register .btn-primary {
+    background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);
+}
+
+.institution-register .btn-primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, #059669 0%, #0d9488 100%);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
+}
+
+/* Links */
+.institution-register a.text-indigo-600 {
+    color: #10b981;
+}
+
+.institution-register a.text-indigo-600:hover {
+    color: #059669;
+}
+
+/* Form Focus */
+.institution-register .form-input:focus {
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1), 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.institution-register .form-input:focus ~ .form-input-icon {
+    color: #10b981;
+}
+
+.institution-register .file-upload-area:hover {
+    border-color: #10b981;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+}
+
+.institution-register .file-upload-area:hover .file-upload-icon {
+    color: #10b981;
+}
+
+.institution-register .spinner {
+    border-top-color: #10b981;
+}
