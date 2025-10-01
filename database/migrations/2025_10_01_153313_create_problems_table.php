@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * jalankan migrasi
-     */
     public function up(): void
     {
         Schema::create('problems', function (Blueprint $table) {
@@ -31,8 +28,8 @@ return new class extends Migration
             
             // requirements
             $table->integer('required_students');
-            $table->json('required_skills'); // array of skills
-            $table->json('required_majors')->nullable(); // array of majors
+            $table->json('required_skills');
+            $table->json('required_majors')->nullable();
             
             // timeline
             $table->date('start_date');
@@ -40,17 +37,17 @@ return new class extends Migration
             $table->date('application_deadline');
             $table->integer('duration_months');
             
-            // tingkat kesulitan: beginner, intermediate, advanced
+            // tingkat kesulitan
             $table->enum('difficulty_level', ['beginner', 'intermediate', 'advanced'])->default('intermediate');
             
-            // status: draft, open, in_progress, completed, closed
+            // status
             $table->enum('status', ['draft', 'open', 'in_progress', 'completed', 'closed'])->default('draft');
             
             // expected outcomes
             $table->text('expected_outcomes')->nullable();
             $table->json('deliverables')->nullable();
             
-            // fasilitas yang disediakan
+            // fasilitas
             $table->json('facilities_provided')->nullable();
             
             // statistik
@@ -65,7 +62,6 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
             
-            // indexes untuk performa pencarian
             $table->index('status');
             $table->index('difficulty_level');
             $table->index('application_deadline');
@@ -75,9 +71,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * rollback migrasi
-     */
     public function down(): void
     {
         Schema::dropIfExists('problems');

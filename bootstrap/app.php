@@ -11,32 +11,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // alias middleware untuk digunakan di routes
+        // register middleware aliases untuk Laravel 11
         $middleware->alias([
-            'dev.auth' => \App\Http\Middleware\CheckDevAuth::class,
+            'user.type' => \App\Http\Middleware\CheckUserType::class,
         ]);
-        
-        // middleware global (jalan di semua request)
-        // $middleware->append(\App\Http\Middleware\YourMiddleware::class);
-        
-        // middleware untuk web routes
-        // $middleware->web(append: [
-        //     \App\Http\Middleware\YourWebMiddleware::class,
-        // ]);
-        
-        // middleware untuk api routes
-        // $middleware->api(prepend: [
-        //     \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
-        // ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        // custom exception handling
-        // contoh:
-        // $exceptions->render(function (NotFoundHttpException $e, Request $request) {
-        //     if ($request->is('api/*')) {
-        //         return response()->json([
-        //             'message' => 'Record not found.'
-        //         ], 404);
-        //     }
-        // });
+        //
     })->create();

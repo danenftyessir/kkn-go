@@ -9,25 +9,26 @@ use Symfony\Component\HttpFoundation\Response;
 class CheckUserType
 {
     /**
-     * handle request untuk mengecek user type
+     * handle incoming request
      */
     public function handle(Request $request, Closure $next, string $userType): Response
     {
+        // cek apakah user sudah login
         if (!auth()->check()) {
-            return redirect()->route('login');
+            return redirect()->route('login')->with('error', 'silakan login terlebih dahulu');
         }
 
-        $user = auth()->user();
-
-        // cek apakah user type sesuai
-        if ($user->user_type !== $userType) {
-            // redirect ke dashboard yang sesuai
-            return match ($user->user_type) {
-                'student' => redirect()->route('student.dashboard'),
-                'institution' => redirect()->route('institution.dashboard'),
-                'admin' => redirect()->route('admin.dashboard'),
-                default => redirect()->route('home'),
+        // cek tipe user
+        if (auth()->user()->user_type !== $userType) {
+            // redirect ke dashboard sesuai role mereka
+            $redirectRoute = match(auth()->user()->user_type) {
+                'student' => 'student.dashboard',
+                'institution' => 'institution.dashboard',
+                default => 'home',
             };
+
+            return redirect()->route($redirectRoute)
+                ->with('error', 'anda tidak memiliki akses ke halaman ini');
         }
 
         return $next($request);

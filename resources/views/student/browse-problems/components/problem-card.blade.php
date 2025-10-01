@@ -78,14 +78,19 @@
 
             <!-- SDG tags -->
             <div class="flex flex-wrap gap-1 mb-4">
-                @foreach(array_slice($problem->sdg_categories, 0, 3) as $sdg)
+                @php
+                    $sdgCategories = is_array($problem->sdg_categories) 
+                        ? $problem->sdg_categories 
+                        : json_decode($problem->sdg_categories, true) ?? [];
+                @endphp
+                @foreach(array_slice($sdgCategories, 0, 3) as $sdg)
                 <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded">
                     SDG {{ $sdg }}
                 </span>
                 @endforeach
-                @if(count($problem->sdg_categories) > 3)
+                @if(count($sdgCategories) > 3)
                 <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded">
-                    +{{ count($problem->sdg_categories) - 3 }}
+                    +{{ count($sdgCategories) - 3 }}
                 </span>
                 @endif
             </div>
