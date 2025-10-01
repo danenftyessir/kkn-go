@@ -33,7 +33,7 @@
                 <!-- logo & header -->
                 <div class="text-center mb-8 fade-in-up">
                     <a href="{{ route('home') }}" class="inline-block mb-6">
-                        <h2 class="text-3xl font-bold text-green-600">KKN-GO</h2>
+                        <img src="{{ asset('kkn-go-logo.png') }}" alt="KKN-GO" class="h-16 w-auto">
                     </a>
                     <h1 class="text-4xl font-bold text-gray-900 mb-2">Registrasi Instansi</h1>
                     <p class="text-gray-600 text-lg">Bergabung sebagai mitra KKN-GO untuk pembangunan daerah</p>
