@@ -1,104 +1,90 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\Auth\RegisterController;
-use App\Http\Controllers\Auth\ForgotPasswordController;
-use App\Http\Controllers\Auth\ResetPasswordController;
-use App\Http\Controllers\Auth\EmailVerificationController;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\Student\ProfileController as StudentProfileController;
-use App\Http\Controllers\Institution\ProfileController as InstitutionProfileController;
 
 /*
 |--------------------------------------------------------------------------
-| web routes
+| bypass login routes (untuk testing saja!)
 |--------------------------------------------------------------------------
+| routes ini untuk bypass authentication saat testing
+| HAPUS di production!
 */
 
-// home route
-Route::get('/', [HomeController::class, 'index'])->name('home');
+// halaman pilih role untuk bypass login
+Route::get('/dev-login', function () {
+    return view('dev.login');
+})->name('dev.login');
 
-// authentication routes
-Route::middleware('guest')->group(function () {
-    // login
-    Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [LoginController::class, 'login']);
-    
-    // register
-    Route::get('/register', [RegisterController::class, 'showRegisterForm'])->name('register');
-    Route::get('/register/student', [RegisterController::class, 'showStudentRegisterForm'])->name('register.student');
-    Route::post('/register/student', [RegisterController::class, 'registerStudent'])->name('register.student.store');
-    Route::get('/register/institution', [RegisterController::class, 'showInstitutionRegisterForm'])->name('register.institution');
-    Route::post('/register/institution', [RegisterController::class, 'registerInstitution'])->name('register.institution.store');
-    
-    // forgot password
-    Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
-    Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
-    
-    // reset password
-    Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
-    Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
-});
-
-// email verification routes
-Route::middleware('auth')->group(function () {
-    Route::get('/email/verify', [EmailVerificationController::class, 'notice'])->name('verification.notice');
-    Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])->name('verification.verify');
-    Route::post('/email/resend', [EmailVerificationController::class, 'resend'])->name('verification.resend');
-});
-
-// logout route
-Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
-
-// student routes
-Route::prefix('student')->name('student.')->middleware(['auth', 'user.type:student'])->group(function () {
-    Route::get('/dashboard', function () {
-        return view('student.dashboard.index');
-    })->name('dashboard');
-    
-    // profile routes
-    Route::get('/profile', [StudentProfileController::class, 'index'])->name('profile.index');
-    Route::get('/profile/edit', [StudentProfileController::class, 'edit'])->name('profile.edit');
-    Route::put('/profile', [StudentProfileController::class, 'update'])->name('profile.update');
-    Route::put('/profile/password', [StudentProfileController::class, 'updatePassword'])->name('profile.password');
-    Route::put('/profile/privacy', [StudentProfileController::class, 'updatePrivacy'])->name('profile.privacy');
-    Route::delete('/profile/photo', [StudentProfileController::class, 'deletePhoto'])->name('profile.photo.delete');
-    
-    // TODO: tambahkan route lainnya di fase berikutnya
-});
-
-// institution routes
-Route::prefix('institution')->name('institution.')->middleware(['auth', 'user.type:institution'])->group(function () {
-    Route::get('/dashboard', function () {
-        return view('institution.dashboard.index');
-    })->name('dashboard');
-    
-    // profile routes
-    Route::get('/profile', [InstitutionProfileController::class, 'index'])->name('profile.index');
-    Route::get('/profile/edit', [InstitutionProfileController::class, 'edit'])->name('profile.edit');
-    Route::put('/profile', [InstitutionProfileController::class, 'update'])->name('profile.update');
-    Route::put('/profile/password', [InstitutionProfileController::class, 'updatePassword'])->name('profile.password');
-    Route::delete('/profile/logo', [InstitutionProfileController::class, 'deleteLogo'])->name('profile.logo.delete');
-    Route::post('/profile/verification-document', [InstitutionProfileController::class, 'uploadVerificationDocument'])->name('profile.verification.upload');
-    
-    // TODO: tambahkan route lainnya di fase berikutnya
-});
-
-// public profile routes (accessible without auth)
-Route::get('/portfolio/{username}', [StudentProfileController::class, 'show'])->name('student.profile.public');
-Route::get('/institution/{username}', [InstitutionProfileController::class, 'show'])->name('institution.profile.public');
-
-// admin routes (untuk fase selanjutnya)
-Route::prefix('admin')->name('admin.')->middleware(['auth', 'user.type:admin'])->group(function () {
-    Route::get('/dashboard', function () {
-        return 'Admin Dashboard - Coming Soon';
-    })->name('dashboard');
-});
-
-// api route untuk check verification status (untuk auto-refresh)
-Route::middleware('auth')->get('/api/check-verification', function () {
-    return response()->json([
-        'verified' => auth()->user()->email_verified_at !== null
+// bypass login sebagai mahasiswa
+Route::get('/dev-login/student', function () {
+    session([
+        'user' => [
+            'id' => 1,
+            'email' => 'budi.santoso@mail.ugm.ac.id',
+            'username' => 'budisantoso',
+            'user_type' => 'student',
+            'is_active' => true,
+            'profile' => [
+                'first_name' => 'Budi',
+                'last_name' => 'Santoso',
+                'university' => 'Universitas Gadjah Mada',
+                'major' => 'Teknik Informatika',
+                'nim' => '21/234567/TK/12345',
+                'semester' => 6,
+                'profile_photo_url' => null
+            ]
+        ],
+        'authenticated' => true
     ]);
-});
+    
+    return redirect('/student/dashboard')->with('success', 'login berhasil sebagai mahasiswa (dev mode)');
+})->name('dev.login.student');
+
+// bypass login sebagai instansi
+Route::get('/dev-login/institution', function () {
+    session([
+        'user' => [
+            'id' => 2,
+            'email' => 'admin@desamakmur.go.id',
+            'username' => 'desamakmur',
+            'user_type' => 'institution',
+            'is_active' => true,
+            'profile' => [
+                'institution_name' => 'Pemerintah Desa Makmur',
+                'institution_type' => 'pemerintah_desa',
+                'pic_name' => 'Bapak Suharto',
+                'pic_position' => 'Kepala Desa',
+                'is_verified' => true,
+                'logo_url' => null
+            ]
+        ],
+        'authenticated' => true
+    ]);
+    
+    return redirect('/institution/dashboard')->with('success', 'login berhasil sebagai instansi (dev mode)');
+})->name('dev.login.institution');
+
+// bypass login sebagai admin
+Route::get('/dev-login/admin', function () {
+    session([
+        'user' => [
+            'id' => 3,
+            'email' => 'admin@kkngo.id',
+            'username' => 'admin',
+            'user_type' => 'admin',
+            'is_active' => true,
+            'profile' => [
+                'name' => 'Admin KKN-GO',
+            ]
+        ],
+        'authenticated' => true
+    ]);
+    
+    return redirect('/admin/dashboard')->with('success', 'login berhasil sebagai admin (dev mode)');
+})->name('dev.login.admin');
+
+// logout dari dev session
+Route::get('/dev-logout', function () {
+    session()->flush();
+    return redirect('/dev-login')->with('success', 'logout berhasil');
+})->name('dev.logout');
