@@ -656,3 +656,65 @@ textarea.form-input {
         display: none;
     }
 }
+
+/* Z-Index Hierarchy Fix */
+.register-container {
+    position: relative;
+    z-index: 1 !important;
+}
+
+.register-container * {
+    z-index: auto !important;
+}
+
+.step-indicator-container {
+    position: relative;
+    z-index: 2;
+}
+
+.step-circle {
+    position: relative;
+    z-index: 3;
+}
+
+.loading-overlay {
+    z-index: 9999 !important;
+}
+
+/* Smooth Step Animation */
+.step-item {
+    opacity: 0;
+    animation: fadeInStep 0.6s ease-out forwards;
+}
+
+.step-item:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.step-item:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.step-item:nth-child(5) {
+    animation-delay: 0.5s;
+}
+
+@keyframes fadeInStep {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Smooth transition saat ganti step */
+.step-circle {
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.step-connector::before {
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}

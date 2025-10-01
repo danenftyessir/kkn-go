@@ -9,3 +9,24 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+/* Navbar Z-Index Fix */
+nav,
+header,
+.navbar,
+[role="navigation"] {
+    position: relative;
+    z-index: 1000 !important;
+}
+
+nav *,
+header *,
+.navbar * {
+    position: relative;
+}
+
+/* Dropdown menu navbar */
+.dropdown-menu,
+[role="menu"] {
+    z-index: 1001 !important;
+}

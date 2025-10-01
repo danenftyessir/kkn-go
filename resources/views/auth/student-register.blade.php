@@ -16,7 +16,7 @@
                 <a href="{{ route('home') }}" class="inline-block mb-6">
                     <img src="{{ asset('kkn-go-logo.png') }}" alt="KKN-GO" class="h-16 w-auto">
                 </a>
-                <h1 class="text-4xl font-bold text-gray-900 mb-2">Bergabung Bersama KKN-GO! 🚀</h1>
+                <h1 class="text-4xl font-bold text-gray-900 mb-2">Bergabung Bersama KKN-GO!</h1>
                 <p class="text-gray-600 text-lg">Wujudkan dampak positif untuk Indonesia</p>
             </div>
 
@@ -24,30 +24,31 @@
             <div class="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden fade-in-scale" style="animation-delay: 0.1s;">
                 <!-- progress steps -->
                 <div class="bg-gradient-to-br from-gray-50 to-white border-b-2 border-gray-100 px-8 py-6">
+                    <!-- Step Indicator dengan AOS -->
                     <div class="step-indicator-container">
-                        <div class="step-item">
+                        <div class="step-item" data-aos="fade-up" data-aos-delay="100">
                             <div class="step-circle active" id="step1-circle">
                                 <span class="step-number">1</span>
                             </div>
-                            <span class="step-label text-gray-700">Data Pribadi</span>
+                            <span class="step-label">Data Pribadi</span>
                         </div>
                         
                         <div class="step-connector" id="connector1"></div>
                         
-                        <div class="step-item">
+                        <div class="step-item" data-aos="fade-up" data-aos-delay="200">
                             <div class="step-circle inactive" id="step2-circle">
                                 <span class="step-number">2</span>
                             </div>
-                            <span class="step-label text-gray-500">Data Akademik</span>
+                            <span class="step-label">Data Akademik</span>
                         </div>
                         
                         <div class="step-connector" id="connector2"></div>
                         
-                        <div class="step-item">
+                        <div class="step-item" data-aos="fade-up" data-aos-delay="300">
                             <div class="step-circle inactive" id="step3-circle">
                                 <span class="step-number">3</span>
                             </div>
-                            <span class="step-label text-gray-500">Buat Akun</span>
+                            <span class="step-label">Buat Akun</span>
                         </div>
                     </div>
                 </div>
@@ -62,7 +63,7 @@
                     <!-- step 1: data pribadi -->
                     <div id="step1-content" class="step-content">
                         <div class="mb-8">
-                            <h2 class="text-2xl font-bold text-gray-800 mb-2">Data Pribadi 👤</h2>
+                            <h2 class="text-2xl font-bold text-gray-800 mb-2">Data Pribadi</h2>
                             <p class="text-gray-600">Isi data diri kamu dengan lengkap ya!</p>
                         </div>
 
