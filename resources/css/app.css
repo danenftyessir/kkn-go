@@ -20,7 +20,7 @@
 @import './auth.css';
 @import './auth-student.css';
 @import './auth-institution.css';
-
+@import './navbar-dropdown.css';
 
 /* Navbar Z-Index Fix */
 nav,

@@ -22,6 +22,35 @@ nav div[x-show] {
     position: absolute;
 }
 
+/* CRITICAL: Force compact spacing untuk dropdown */
+nav div[x-show] > div {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+nav div[x-show] a,
+nav div[x-show] button {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    margin: 0 !important;
+}
+
+nav div[x-show] svg {
+    margin-right: 0.5rem !important;
+}
+
+/* Header user info di dropdown */
+nav div[x-show] > div:first-child {
+    padding: 0.5rem 0.75rem !important;
+}
+
+nav div[x-show] p {
+    margin: 0 !important;
+    line-height: 1.25 !important;
+}
+
 /* smooth dropdown transition */
 nav [x-transition] {
     transition-property: opacity, transform;
@@ -56,4 +85,13 @@ nav button[type="submit"]:hover {
 /* enhanced z-index layering */
 .z-\[9999\] {
     z-index: 9999 !important;
+}
+
+/* Remove extra spacing dari tailwind */
+nav div[x-show] .border-b {
+    margin-bottom: 0 !important;
+}
+
+nav div[x-show] .border-t {
+    margin-top: 0 !important;
 }

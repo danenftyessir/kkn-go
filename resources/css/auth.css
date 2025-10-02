@@ -1,7 +1,3 @@
-/* ============================================
-   AUTH PAGE STYLES - KKN-GO
-   ============================================ */
-
 /* variabel css untuk konsistensi */
 :root {
     --primary-blue: #3b82f6;
@@ -15,10 +11,6 @@
     --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
-
-/* ============================================
-   PAGE LOAD OPTIMIZATION
-   ============================================ */
 
 /* preload state - mencegah fouc */
 body.page-loading {
@@ -57,10 +49,6 @@ body.page-loading .page-loader {
     to { transform: rotate(360deg); }
 }
 
-/* ============================================
-   SMOOTH SCROLLING & GPU ACCELERATION
-   ============================================ */
-
 html {
     scroll-behavior: smooth;
 }
@@ -81,10 +69,6 @@ body,
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
-
-/* ============================================
-   AUTH LAYOUT
-   ============================================ */
 
 .auth-container {
     min-height: 100vh;
@@ -116,10 +100,6 @@ body,
     75% { transform: translate(-5%, 5%) rotate(1deg); }
 }
 
-/* ============================================
-   AUTH CARD
-   ============================================ */
-
 .auth-card {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
@@ -138,10 +118,6 @@ body,
         0 25px 50px -12px rgba(0, 0, 0, 0.15),
         0 10px 15px -5px rgba(0, 0, 0, 0.08);
 }
-
-/* ============================================
-   FORM ELEMENTS
-   ============================================ */
 
 .form-group {
     margin-bottom: 1.5rem;
@@ -309,10 +285,6 @@ body,
         transform: translateY(0);
     }
 }
-
-/* ============================================
-   BUTTONS
-   ============================================ */
 
 .btn {
     display: inline-flex;
