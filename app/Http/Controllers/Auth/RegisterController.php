@@ -50,6 +50,11 @@ class RegisterController extends Controller
         // ambil data provinces untuk dropdown
         $provinces = Province::orderBy('name', 'asc')->get();
         
+        $regencies = collect();
+        if (old('province_id')) {
+            $regencies = Regency::where('province_id', old('province_id'))->orderBy('name', 'asc')->get();
+        }
+
         // definisi tipe institusi
         $institutionTypes = [
             'pemerintah_desa' => 'pemerintah desa',
@@ -61,7 +66,7 @@ class RegisterController extends Controller
             'lainnya' => 'lainnya'
         ];
         
-        return view('auth.institution-register', compact('provinces', 'institutionTypes'));
+        return view('auth.institution-register', compact('provinces', 'regencies', 'institutionTypes'));
     }
 
     /**

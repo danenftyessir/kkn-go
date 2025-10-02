@@ -74,11 +74,12 @@
                     </div>
 
                     {{-- form content --}}
-                    <form method="POST" action="{{ route('register.institution') }}" 
-                          enctype="multipart/form-data" 
-                          id="institutionRegisterForm"
-                          class="p-8">
-                        @csrf
+                    <form method="POST" action="..." 
+                            enctype="multipart/form-data" 
+                            id="institutionRegisterForm"
+                            class="p-8"
+                            x-data="institutionForm('{{ route('api.public.regencies', ['provinceId' => 'PLACEHOLDER']) }}')">
+                            @csrf
 
                         {{-- step 1: data instansi --}}
                         <div id="step1-content" class="step-content">
@@ -149,15 +150,17 @@
                                     <div class="form-field-group">
                                         <label for="province_id" class="form-label required">provinsi</label>
                                         <div class="form-input-wrapper">
+                                            <!-- UBAH DROPDOWN PROVINSI INI -->
                                             <select id="province_id" 
                                                     name="province_id" 
                                                     class="form-input form-select @error('province_id') error @enderror"
+                                                    x-model="provinceId"
+                                                    @change="loadRegencies()"
                                                     required>
                                                 <option value="">-- pilih provinsi --</option>
-                                                {{-- TODO: ambil dari database --}}
-                                                <option value="1" {{ old('province_id') == 1 ? 'selected' : '' }}>Jawa Barat</option>
-                                                <option value="2" {{ old('province_id') == 2 ? 'selected' : '' }}>Jawa Tengah</option>
-                                                <option value="3" {{ old('province_id') == 3 ? 'selected' : '' }}>Jawa Timur</option>
+                                                @foreach($provinces as $province)
+                                                    <option value="{{ $province->id }}">{{ $province->name }}</option>
+                                                @endforeach
                                             </select>
                                             <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
@@ -180,11 +183,18 @@
                                             <select id="regency_id" 
                                                     name="regency_id" 
                                                     class="form-input form-select @error('regency_id') error @enderror"
+                                                    x-model="regencyId"
+                                                    :disabled="loadingRegencies || !provinceId"
                                                     required>
-                                                <option value="">-- pilih kabupaten/kota --</option>
-                                                {{-- TODO: ambil dari database berdasarkan provinsi --}}
-                                                <option value="1" {{ old('regency_id') == 1 ? 'selected' : '' }}>Bandung</option>
-                                                <option value="2" {{ old('regency_id') == 2 ? 'selected' : '' }}>Sumedang</option>
+                                                <template x-if="loadingRegencies">
+                                                    <option value="">Memuat...</option>
+                                                </template>
+                                                <template x-if="!loadingRegencies">
+                                                    <option value="">-- pilih kabupaten/kota --</option>
+                                                </template>
+                                                <template x-for="regency in regencies" :key="regency.id">
+                                                    <option :value="regency.id" x-text="regency.name"></option>
+                                                </template>
                                             </select>
                                             <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
@@ -736,11 +746,56 @@
 
     // handle form submission
     document.getElementById('institutionRegisterForm')?.addEventListener('submit', function(e) {
-        const loadingOverlay = document.getElementById('loadingOverlay');
-        if (loadingOverlay) {
-            loadingOverlay.classList.add('active');
-        }
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    if (loadingOverlay) {
+        loadingOverlay.classList.add('active');
+    }
     });
+
+    function institutionForm(regenciesUrlTemplate) {
+        return {
+            provinceId: '{{ old("province_id") }}',
+            regencyId: '{{ old("regency_id") }}',
+            regencies: {!! $regencies->toJson() !!},
+            loadingRegencies: false,
+
+            init() {
+                // Ini akan memastikan dropdown regency tetap terisi setelah validasi gagal
+                // dan Alpine.js mengambil alih
+                this.$watch('regencies', () => {
+                    // Set timeout agar DOM sempat di-update oleh Alpine
+                    setTimeout(() => {
+                        if (this.regencyId) {
+                            this.$el.querySelector('#regency_id').value = this.regencyId;
+                        }
+                    }, 50);
+                });
+            },
+
+            async loadRegencies() {
+                this.regencyId = ''; // Reset pilihan regency
+                if (!this.provinceId) {
+                    this.regencies = [];
+                    return;
+                }
+
+                this.loadingRegencies = true;
+                
+                const url = regenciesUrlTemplate.replace('PLACEHOLDER', this.provinceId);
+
+                try {
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    this.regencies = data;
+                } catch (error) {
+                    console.error('Gagal memuat kabupaten/kota:', error);
+                    this.regencies = [];
+                } finally {
+                    this.loadingRegencies = false;
+                }
+            }
+        };
+    }
     </script>
 
     @vite(['resources/js/app.js'])

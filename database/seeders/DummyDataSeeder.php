@@ -142,6 +142,23 @@ class DummyDataSeeder extends Seeder
             // jawa tengah
             ['province_id' => 3, 'name' => 'Kota Semarang', 'code' => '3374'],
             ['province_id' => 3, 'name' => 'Kota Surakarta', 'code' => '3372'],
+
+            // Jawa Timur
+            ['province_id' => 4, 'name' => 'Kota Surabaya', 'code' => '3578'],
+            ['province_id' => 4, 'name' => 'Kabupaten Malang', 'code' => '3507'],
+            
+            // Sumatera Selatan
+            ['province_id' => 5, 'name' => 'Kota Palembang', 'code' => '1671'],
+            
+            // Bali
+            ['province_id' => 6, 'name' => 'Kabupaten Badung', 'code' => '5103'],
+            ['province_id' => 6, 'name' => 'Kota Denpasar', 'code' => '5171'],
+            
+            // Sulawesi Selatan
+            ['province_id' => 7, 'name' => 'Kota Makassar', 'code' => '7371'],
+            
+            // Sumatera Utara
+            ['province_id' => 8, 'name' => 'Kota Medan', 'code' => '1271'],
         ];
 
         foreach ($regencies as $regency) {

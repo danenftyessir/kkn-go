@@ -76,9 +76,6 @@ Route::middleware(['auth', 'user.type:student'])->prefix('student')->name('stude
     Route::get('/browse-problems', [BrowseProblemsController::class, 'index'])->name('browse-problems');
     Route::get('/problems/{id}', [BrowseProblemsController::class, 'show'])->name('problems.show');
     
-    // ajax endpoints untuk filter
-    Route::get('/api/regencies/{provinceId}', [BrowseProblemsController::class, 'getRegencies'])->name('api.regencies');
-    
     // applications
     Route::prefix('applications')->name('applications.')->group(function () {
         Route::get('/', [ApplicationController::class, 'index'])->name('index');
@@ -148,6 +145,21 @@ Route::middleware(['auth', 'user.type:institution'])->prefix('institution')->nam
 
 // public institution profile (tanpa auth)
 Route::get('/institution/profile/{id}', [InstitutionProfileController::class, 'publicProfile'])->name('institution.profile.public');
+
+// ==========================================================
+// TAMBAHKAN BLOK BARU INI UNTUK API PUBLIK
+// ==========================================================
+/*
+|--------------------------------------------------------------------------
+| Public API Routes (untuk AJAX calls)
+|--------------------------------------------------------------------------
+*/
+Route::prefix('api')->name('api.public.')->group(function () {
+    Route::get('/regencies/{provinceId}', [BrowseProblemsController::class, 'getRegencies'])
+         ->name('regencies'); // Nama rutenya akan menjadi 'api.public.regencies'
+});
+// ==========================================================
+
 
 /*
 |--------------------------------------------------------------------------
