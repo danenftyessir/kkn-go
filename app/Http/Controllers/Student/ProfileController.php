@@ -73,12 +73,31 @@ class ProfileController extends Controller
             'university_id' => 'required|exists:universities,id',
             'major' => 'required|string|max:100',
             'semester' => 'required|integer|min:1|max:14',
-            'phone' => 'required|string|regex:/^(\+62|62|0)[0-9]{9,12}$/',
+            'phone' => ['required', 'string', 'regex:/^(\+62|62|0)[0-9]{9,12}$/'],
             'bio' => 'nullable|string|max:500',
             'skills' => 'nullable|string',
             'profile_photo' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
             'portfolio_visible' => 'nullable|boolean'
+        ], [
+            // pesan error kustom
+            'first_name.required' => 'nama depan wajib diisi',
+            'last_name.required' => 'nama belakang wajib diisi',
+            'university_id.required' => 'universitas wajib dipilih',
+            'university_id.exists' => 'universitas tidak valid',
+            'major.required' => 'jurusan wajib diisi',
+            'semester.required' => 'semester wajib diisi',
+            'semester.min' => 'semester minimal 1',
+            'semester.max' => 'semester maksimal 14',
+            'phone.required' => 'nomor whatsapp wajib diisi',
+            'phone.regex' => 'format nomor whatsapp tidak valid. gunakan format: 08xxxxxxxxx',
+            'bio.max' => 'bio maksimal 500 karakter',
+            'profile_photo.image' => 'file harus berupa gambar',
+            'profile_photo.mimes' => 'foto profil harus berformat jpeg, jpg, atau png',
+            'profile_photo.max' => 'ukuran foto profil maksimal 2MB'
         ]);
+
+        // normalize nomor telepon
+        $validated['phone'] = $this->normalizePhoneNumber($validated['phone']);
 
         // handle upload foto profil
         if ($request->hasFile('profile_photo')) {
@@ -108,6 +127,36 @@ class ProfileController extends Controller
         
         return redirect()->route('student.profile.index')
             ->with('success', 'profil berhasil diperbarui');
+    }
+
+    /**
+     * update password student
+     */
+    public function updatePassword(Request $request)
+    {
+        $user = auth()->user();
+        
+        $validated = $request->validate([
+            'current_password' => 'required',
+            'password' => ['required', 'confirmed', Password::min(8)],
+        ], [
+            'current_password.required' => 'password saat ini wajib diisi',
+            'password.required' => 'password baru wajib diisi',
+            'password.confirmed' => 'konfirmasi password tidak cocok',
+            'password.min' => 'password minimal 8 karakter'
+        ]);
+
+        // verifikasi password saat ini
+        if (!Hash::check($validated['current_password'], $user->password)) {
+            return back()->withErrors(['current_password' => 'password saat ini salah']);
+        }
+
+        // update password
+        $user->update([
+            'password' => Hash::make($validated['password'])
+        ]);
+
+        return back()->with('success', 'password berhasil diperbarui');
     }
 
     /**
@@ -144,5 +193,26 @@ class ProfileController extends Controller
         ];
         
         return view('student.profile.public', compact('user', 'student', 'completedProjects', 'stats'));
+    }
+
+    /**
+     * normalize nomor telepon
+     */
+    private function normalizePhoneNumber(string $phone): string
+    {
+        // hapus spasi dan karakter non-numeric kecuali +
+        $phone = preg_replace('/[^0-9+]/', '', $phone);
+        
+        // convert 08xx menjadi 628xx
+        if (str_starts_with($phone, '08')) {
+            $phone = '62' . substr($phone, 1);
+        }
+        
+        // tambahkan + jika belum ada dan dimulai dengan 62
+        if (!str_starts_with($phone, '+') && str_starts_with($phone, '62')) {
+            $phone = '+' . $phone;
+        }
+        
+        return $phone;
     }
 }
