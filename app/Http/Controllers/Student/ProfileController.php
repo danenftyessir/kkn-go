@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Models\University;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
+use App\Models\User;
 
 class ProfileController extends Controller
 {
@@ -17,6 +19,12 @@ class ProfileController extends Controller
     {
         $user = auth()->user();
         $student = $user->student;
+        
+        // pastikan relasi student ada
+        if (!$student) {
+            return redirect()->route('student.dashboard')
+                ->with('error', 'data profil tidak ditemukan');
+        }
         
         return view('student.profile.index', compact('user', 'student'));
     }
@@ -29,8 +37,17 @@ class ProfileController extends Controller
         $user = auth()->user();
         $student = $user->student;
         
-        // TODO: ambil data universities dan majors dari database
-        $universities = [];
+        // pastikan relasi student ada
+        if (!$student) {
+            return redirect()->route('student.dashboard')
+                ->with('error', 'data profil tidak ditemukan');
+        }
+        
+        // ambil data universities dari database
+        $universities = University::orderBy('name', 'asc')->get();
+        
+        // TODO: jika ada table majors terpisah, ambil dari sana
+        // untuk sementara major diinput manual sebagai text field
         $majors = [];
         
         return view('student.profile.edit', compact('user', 'student', 'universities', 'majors'));
@@ -44,27 +61,34 @@ class ProfileController extends Controller
         $user = auth()->user();
         $student = $user->student;
         
+        // pastikan relasi student ada
+        if (!$student) {
+            return redirect()->route('student.dashboard')
+                ->with('error', 'data profil tidak ditemukan');
+        }
+        
         $validated = $request->validate([
             'first_name' => 'required|string|max:50',
             'last_name' => 'required|string|max:50',
             'university_id' => 'required|exists:universities,id',
             'major' => 'required|string|max:100',
             'semester' => 'required|integer|min:1|max:14',
-            'whatsapp_number' => 'required|string|regex:/^(\+62|62|0)[0-9]{9,12}$/',
+            'phone' => 'required|string|regex:/^(\+62|62|0)[0-9]{9,12}$/',
             'bio' => 'nullable|string|max:500',
             'skills' => 'nullable|string',
-            'profile_photo' => 'nullable|image|mimes:jpeg,jpg,png|max:2048'
+            'profile_photo' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
+            'portfolio_visible' => 'nullable|boolean'
         ]);
 
         // handle upload foto profil
         if ($request->hasFile('profile_photo')) {
             // hapus foto lama jika ada
-            if ($student->profile_photo_url) {
-                Storage::disk('public')->delete($student->profile_photo_url);
+            if ($student->profile_photo_path) {
+                Storage::disk('public')->delete($student->profile_photo_path);
             }
             
             $path = $request->file('profile_photo')->store('profiles', 'public');
-            $student->profile_photo_url = $path;
+            $validated['profile_photo_path'] = $path;
         }
 
         // update data student
@@ -74,119 +98,51 @@ class ProfileController extends Controller
             'university_id' => $validated['university_id'],
             'major' => $validated['major'],
             'semester' => $validated['semester'],
-            'whatsapp_number' => $validated['whatsapp_number'],
+            'phone' => $validated['phone'],
             'bio' => $validated['bio'] ?? null,
-            'profile_photo_url' => $student->profile_photo_url
+            'profile_photo_path' => $validated['profile_photo_path'] ?? $student->profile_photo_path,
         ]);
 
-        // handle skills (convert dari string ke array)
-        if (isset($validated['skills'])) {
-            $skills = array_map('trim', explode(',', $validated['skills']));
-            // TODO: simpan skills ke tabel pivot student_skill
-        }
-
-        return redirect()
-            ->route('student.profile.index')
+        // TODO: update skills jika ada table terpisah
+        // untuk sementara skills disimpan sebagai json atau text
+        
+        return redirect()->route('student.profile.index')
             ->with('success', 'profil berhasil diperbarui');
     }
 
     /**
-     * update password
+     * tampilkan profil publik student berdasarkan username
      */
-    public function updatePassword(Request $request)
+    public function publicProfile($username)
     {
-        $request->validate([
-            'current_password' => 'required',
-            'password' => [
-                'required',
-                'confirmed',
-                Password::min(8)
-                    ->mixedCase()
-                    ->numbers()
-                    ->symbols()
-            ]
-        ], [
-            'current_password.required' => 'password saat ini wajib diisi',
-            'password.required' => 'password baru wajib diisi',
-            'password.confirmed' => 'konfirmasi password tidak cocok'
-        ]);
-
-        $user = auth()->user();
-
-        // cek password saat ini
-        if (!Hash::check($request->current_password, $user->password)) {
-            return back()->withErrors([
-                'current_password' => 'password saat ini tidak sesuai'
-            ]);
-        }
-
-        // update password
-        $user->update([
-            'password' => Hash::make($request->password)
-        ]);
-
-        return back()->with('success', 'password berhasil diperbarui');
-    }
-
-    /**
-     * update pengaturan privasi
-     */
-    public function updatePrivacy(Request $request)
-    {
-        $validated = $request->validate([
-            'portfolio_visible' => 'required|boolean',
-            'show_email' => 'required|boolean',
-            'show_phone' => 'required|boolean'
-        ]);
-
-        $student = auth()->user()->student;
-        
-        $student->update([
-            'portfolio_visible' => $validated['portfolio_visible'],
-            'show_email' => $validated['show_email'],
-            'show_phone' => $validated['show_phone']
-        ]);
-
-        return back()->with('success', 'pengaturan privasi berhasil diperbarui');
-    }
-
-    /**
-     * tampilkan profil publik student
-     */
-    public function show($username)
-    {
-        // TODO: cari user berdasarkan username dan tampilkan profil publik
-        $user = \App\Models\User::where('username', $username)
+        $user = User::where('username', $username)
             ->where('user_type', 'student')
             ->firstOrFail();
         
         $student = $user->student;
         
-        // cek apakah portfolio visible
-        if (!$student->portfolio_visible) {
-            abort(403, 'profil ini bersifat privat');
+        // pastikan relasi student ada
+        if (!$student) {
+            abort(404, 'profil tidak ditemukan');
         }
         
-        // TODO: ambil data projects, skills, dan achievements
-        $projects = [];
-        $skills = [];
-        $achievements = [];
+        // TODO: cek apakah portfolio visible
+        // jika tidak dan bukan owner, tampilkan 404
+        // if (!$student->portfolio_visible && auth()->id() !== $user->id) {
+        //     abort(404);
+        // }
         
-        return view('student.profile.public', compact('user', 'student', 'projects', 'skills', 'achievements'));
-    }
-
-    /**
-     * hapus foto profil
-     */
-    public function deletePhoto()
-    {
-        $student = auth()->user()->student;
+        // TODO: ambil data projects yang sudah completed
+        $completedProjects = [];
         
-        if ($student->profile_photo_url) {
-            Storage::disk('public')->delete($student->profile_photo_url);
-            $student->update(['profile_photo_url' => null]);
-        }
+        // TODO: ambil data statistics
+        $stats = [
+            'total_projects' => 0,
+            'sdgs_addressed' => 0,
+            'positive_reviews' => 0,
+            'average_rating' => 0
+        ];
         
-        return back()->with('success', 'foto profil berhasil dihapus');
+        return view('student.profile.public', compact('user', 'student', 'completedProjects', 'stats'));
     }
 }

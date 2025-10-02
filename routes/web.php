@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Student\BrowseProblemsController;
 use App\Http\Controllers\Student\DashboardController as StudentDashboardController;
+use App\Http\Controllers\Student\ProfileController as StudentProfileController;
 
 // halaman publik
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -18,8 +19,8 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [LoginController::class, 'login']);
     
     Route::get('/register', [RegisterController::class, 'showRegisterForm'])->name('register');
-Route::get('/register/student', [RegisterController::class, 'showStudentRegisterForm'])->name('register.student');
-Route::get('/register/institution', [RegisterController::class, 'showInstitutionRegisterForm'])->name('register.institution');
+    Route::get('/register/student', [RegisterController::class, 'showStudentRegisterForm'])->name('register.student');
+    Route::get('/register/institution', [RegisterController::class, 'showInstitutionRegisterForm'])->name('register.institution');
     Route::post('/register/student', [RegisterController::class, 'registerStudent'])->name('register.student.submit');
     Route::post('/register/institution', [RegisterController::class, 'registerInstitution'])->name('register.institution.submit');
     
@@ -41,6 +42,14 @@ Route::middleware(['auth', 'user.type:student'])->prefix('student')->name('stude
     Route::get('/browse-problems', [BrowseProblemsController::class, 'index'])->name('browse-problems');
     Route::get('/problems/{id}', [BrowseProblemsController::class, 'show'])->name('problems.show');
     
+    // profile routes - FIX: aktifkan route profile
+    Route::get('/profile', [StudentProfileController::class, 'index'])->name('profile.index');
+    Route::get('/profile/edit', [StudentProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [StudentProfileController::class, 'update'])->name('profile.update');
+    
+    // public portfolio route (tanpa middleware auth)
+    // ini akan diakses oleh route terpisah di bawah
+    
     // TODO: application routes
     // Route::get('/applications', [ApplicationController::class, 'index'])->name('applications.index');
     // Route::get('/applications/{id}', [ApplicationController::class, 'show'])->name('applications.show');
@@ -53,21 +62,21 @@ Route::middleware(['auth', 'user.type:student'])->prefix('student')->name('stude
     
     // TODO: portfolio routes
     // Route::get('/portfolio', [PortfolioController::class, 'index'])->name('portfolio.index');
-    // Route::get('/portfolio/public/{username}', [PortfolioController::class, 'public'])->name('portfolio.public');
     
     // TODO: knowledge repository routes
     // Route::get('/knowledge', [KnowledgeRepositoryController::class, 'index'])->name('knowledge.index');
     // Route::get('/knowledge/{id}', [KnowledgeRepositoryController::class, 'show'])->name('knowledge.show');
-    
-    // profile routes
-    // Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
-    // Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
-    // Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
 });
+
+// public profile routes (tanpa auth)
+Route::get('/student/profile/{username}', [StudentProfileController::class, 'publicProfile'])->name('student.profile.public');
 
 // TODO: institution routes
 // Route::middleware(['auth', 'user.type:institution'])->prefix('institution')->name('institution.')->group(function () {
 //     Route::get('/dashboard', [InstitutionDashboardController::class, 'index'])->name('dashboard');
+//     Route::get('/profile', [InstitutionProfileController::class, 'index'])->name('profile.index');
+//     Route::get('/profile/edit', [InstitutionProfileController::class, 'edit'])->name('profile.edit');
+//     Route::patch('/profile', [InstitutionProfileController::class, 'update'])->name('profile.update');
 //     // ... institution routes lainnya
 // });
 
