@@ -116,7 +116,7 @@
                             </svg>
                             <div class="flex-1">
                                 <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">semester</p>
-                                <p class="text-sm text-gray-900 mt-1 font-medium">semester {{ $student->semester ?? 'belum diisi' }}</p>
+                                <p class="text-sm text-gray-900 mt-1 font-medium">Semester {{ $student->semester ?? 'belum diisi' }}</p>
                             </div>
                         </div>
                         
@@ -159,7 +159,7 @@
                     <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-6 text-white profile-card hover:shadow-lg transition-shadow">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-blue-100 text-sm font-medium">proyek selesai</p>
+                                <p class="text-blue-100 text-sm font-medium">Finished</p>
                                 <p class="text-3xl font-bold mt-2">0</p>
                             </div>
                             <div class="bg-white/20 p-3 rounded-lg">
@@ -173,7 +173,7 @@
                     <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg p-6 text-white profile-card hover:shadow-lg transition-shadow">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-purple-100 text-sm font-medium">aplikasi aktif</p>
+                                <p class="text-purple-100 text-sm font-medium">Apply</p>
                                 <p class="text-3xl font-bold mt-2">0</p>
                             </div>
                             <div class="bg-white/20 p-3 rounded-lg">
@@ -187,7 +187,7 @@
                     <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-lg p-6 text-white profile-card hover:shadow-lg transition-shadow">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-green-100 text-sm font-medium">sdgs disentuh</p>
+                                <p class="text-green-100 text-sm font-medium">SDGS Confirmed</p>
                                 <p class="text-3xl font-bold mt-2">0</p>
                             </div>
                             <div class="bg-white/20 p-3 rounded-lg">
@@ -201,31 +201,31 @@
 
                 <!-- informasi pribadi -->
                 <div class="bg-white rounded-lg shadow-sm p-6 profile-card">
-                    <h2 class="text-xl font-bold text-gray-900 mb-6">informasi pribadi</h2>
+                    <h2 class="text-xl font-bold text-gray-900 mb-6">Informasi Pribadi</h2>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label class="text-sm font-medium text-gray-700">nama lengkap</label>
+                            <label class="text-sm font-medium text-gray-700">Nama Lengkap</label>
                             <p class="text-gray-900 mt-1">{{ $student->first_name }} {{ $student->last_name }}</p>
                         </div>
                         <div>
-                            <label class="text-sm font-medium text-gray-700">email</label>
+                            <label class="text-sm font-medium text-gray-700">Email</label>
                             <p class="text-gray-900 mt-1">{{ $user->email }}</p>
                         </div>
                         <div>
-                            <label class="text-sm font-medium text-gray-700">nomor whatsapp</label>
+                            <label class="text-sm font-medium text-gray-700">Nomor WhatsApp</label>
                             <p class="text-gray-900 mt-1">{{ $student->phone ?? 'belum diisi' }}</p>
                         </div>
                         <div>
-                            <label class="text-sm font-medium text-gray-700">nim</label>
+                            <label class="text-sm font-medium text-gray-700">NIM</label>
                             <p class="text-gray-900 mt-1">{{ $student->nim ?? 'belum diisi' }}</p>
                         </div>
                         <div>
-                            <label class="text-sm font-medium text-gray-700">semester</label>
-                            <p class="text-gray-900 mt-1">semester {{ $student->semester ?? 'belum diisi' }}</p>
+                            <label class="text-sm font-medium text-gray-700">Semester</label>
+                            <p class="text-gray-900 mt-1">Semester {{ $student->semester ?? 'belum diisi' }}</p>
                         </div>
                         <div>
-                            <label class="text-sm font-medium text-gray-700">status akun</label>
+                            <label class="text-sm font-medium text-gray-700">Status Akun</label>
                             <div class="mt-1">
                                 @if($user->email_verified_at)
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -249,7 +249,7 @@
 
                 <!-- tentang saya -->
                 <div class="bg-white rounded-lg shadow-sm p-6 profile-card">
-                    <h2 class="text-xl font-bold text-gray-900 mb-4">tentang saya</h2>
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">Tentang Saya</h2>
                     
                     @if($student->bio)
                         <p class="text-gray-700 leading-relaxed">{{ $student->bio }}</p>

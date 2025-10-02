@@ -40,13 +40,13 @@
             <div class="absolute top-3 left-3 flex flex-wrap gap-2">
                 @if($problem->is_featured)
                 <span class="badge px-3 py-1 bg-yellow-500 text-white text-xs font-semibold rounded-full shadow-lg">
-                    ⭐ Unggulan
+                    Unggulan
                 </span>
                 @endif
                 
                 @if($problem->is_urgent)
                 <span class="badge px-3 py-1 bg-red-500 text-white text-xs font-semibold rounded-full shadow-lg animate-pulse">
-                    🔥 Mendesak
+                    Mendesak
                 </span>
                 @endif
             </div>
