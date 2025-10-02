@@ -1,0 +1,59 @@
+/* alpine.js x-cloak directive - hide element until alpine is ready */
+[x-cloak] {
+    display: none !important;
+}
+
+/* navbar dropdown stability */
+nav .relative {
+    isolation: isolate;
+}
+
+/* dropdown menu enhanced styling */
+nav .absolute {
+    pointer-events: auto;
+    transform-origin: top right;
+}
+
+/* ensure dropdown stays on top */
+nav [role="menu"],
+nav .dropdown-menu,
+nav div[x-show] {
+    z-index: 9999 !important;
+    position: absolute;
+}
+
+/* smooth dropdown transition */
+nav [x-transition] {
+    transition-property: opacity, transform;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* prevent text selection on dropdown button */
+nav button {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+}
+
+/* dropdown menu item hover effect */
+nav a[href]:hover,
+nav button[type="submit"]:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* mobile menu optimization */
+@media (max-width: 768px) {
+    nav .md\:hidden {
+        will-change: transform, opacity;
+    }
+}
+
+/* fix for dropdown positioning */
+.fixed.z-50 {
+    will-change: auto;
+}
+
+/* enhanced z-index layering */
+.z-\[9999\] {
+    z-index: 9999 !important;
+}
