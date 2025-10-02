@@ -1,108 +1,325 @@
+/* ============================================
+   STUDENT REGISTER - THEME BIRU
+   resources/css/auth-student.css
+   ============================================ */
+
+/* background gradient yang lebih subtle */
 .student-register .register-container {
     min-height: 100vh;
-    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #dbeafe 100%);
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f0f9ff 100%);
     position: relative;
     overflow: hidden;
 }
 
+/* pattern background dengan opacity lebih rendah */
 .student-register .register-container::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: radial-gradient(circle at 20% 50%, rgba(56, 189, 248, 0.08) 0%, transparent 50%), 
-                radial-gradient(circle at 80% 80%, rgba(14, 165, 233, 0.08) 0%, transparent 50%);
+    background: 
+        radial-gradient(circle at 25% 40%, rgba(56, 189, 248, 0.05) 0%, transparent 50%), 
+        radial-gradient(circle at 75% 70%, rgba(14, 165, 233, 0.05) 0%, transparent 50%);
+    animation: bgPulse 15s ease-in-out infinite;
 }
 
-/* Step Indicator - Blue */
+@keyframes bgPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* ============================================
+   STEP INDICATOR - MINIMALIS & CLEAN
+   ============================================ */
+
+/* step container dengan spacing yang lebih baik */
+.student-register .step-indicator-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    position: relative;
+    padding: 0 1rem;
+}
+
+/* step item wrapper */
+.student-register .step-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    position: relative;
+    z-index: 2;
+    flex-shrink: 0;
+    opacity: 0;
+    animation: fadeInStep 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.student-register .step-item:nth-child(1) { animation-delay: 0.1s; }
+.student-register .step-item:nth-child(3) { animation-delay: 0.2s; }
+.student-register .step-item:nth-child(5) { animation-delay: 0.3s; }
+
+@keyframes fadeInStep {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* step circle - design minimalis */
+.student-register .step-circle {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.25rem;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    background: white;
+    border: 3px solid #e5e7eb;
+    color: #9ca3af;
+}
+
+/* state inactive - subtle */
+.student-register .step-circle.inactive {
+    background: white;
+    border-color: #e5e7eb;
+    color: #9ca3af;
+}
+
+/* state active - clean dengan gradient lembut */
 .student-register .step-circle.active {
     background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
-    box-shadow: 0 8px 16px rgba(14, 165, 233, 0.4), 0 0 0 4px rgba(14, 165, 233, 0.1);
+    border-color: #0ea5e9;
+    color: white;
+    transform: scale(1.08);
+    box-shadow: 
+        0 4px 12px rgba(14, 165, 233, 0.25),
+        0 2px 4px rgba(14, 165, 233, 0.15);
 }
 
+/* ring effect saat active - lebih subtle */
 .student-register .step-circle.active::before {
-    background: rgba(14, 165, 233, 0.2);
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    background: rgba(14, 165, 233, 0.12);
+    animation: pulseRing 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+@keyframes pulseRing {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.5;
+    }
+    50% {
+        transform: scale(1.15);
+        opacity: 0.2;
+    }
+}
+
+/* state completed - gradient berbeda */
 .student-register .step-circle.completed {
-    background: linear-gradient(135deg, #06b6d4 0%, #22d3ee 100%);
-    box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+    background: linear-gradient(135deg, #06b6d4 0%, #14b8a6 100%);
+    border-color: #06b6d4;
+    color: white;
+    box-shadow: 0 2px 8px rgba(6, 182, 212, 0.2);
 }
 
-/* hilangkan warna pada step label - ganti dengan bold */
-.student-register .step-item .step-label {
+/* checkmark icon untuk completed */
+.student-register .step-circle.completed .step-number {
+    display: none;
+}
+
+.student-register .step-circle.completed::after {
+    content: '✓';
+    font-size: 1.5rem;
+    font-weight: 800;
+}
+
+/* ============================================
+   STEP LABEL - MINIMALIS
+   ============================================ */
+
+.student-register .step-label {
+    font-size: 0.875rem;
     color: #6b7280;
-    font-weight: normal;
-    transition: font-weight 0.3s ease;
+    font-weight: 500;
+    text-align: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    letter-spacing: 0.01em;
 }
 
-/* step label tidak pakai warna lagi */
+/* label saat step active - hanya bold tanpa warna berlebih */
 .student-register .step-item:has(.step-circle.active) .step-label {
-    color: #6b7280;
-    font-weight: bold;
+    font-weight: 700;
+    color: #374151;
 }
 
+/* label saat step completed */
 .student-register .step-item:has(.step-circle.completed) .step-label {
+    font-weight: 500;
     color: #6b7280;
-    font-weight: normal;
 }
 
+/* ============================================
+   STEP CONNECTOR - LINE ANTAR STEP
+   ============================================ */
+
+.student-register .step-connector {
+    flex: 1;
+    height: 2px;
+    background: #d1d5db;
+    position: relative;
+    margin: 0 1.5rem;
+    margin-top: 26px;
+    border-radius: 1px;
+}
+
+/* animated progress line */
 .student-register .step-connector::before {
-    background: linear-gradient(90deg, #06b6d4 0%, #22d3ee 100%);
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, #0ea5e9 0%, #06b6d4 100%);
+    border-radius: 1px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 8px rgba(14, 165, 233, 0.3);
 }
 
-/* Button */
-.student-register .btn-primary {
-    background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+/* connector completed dengan smooth transition */
+.student-register .step-connector.completed::before {
+    width: 100%;
 }
 
-.student-register .btn-primary:hover:not(:disabled) {
-    background: linear-gradient(135deg, #0284c7 0%, #0891b2 100%);
-    box-shadow: 0 6px 16px rgba(14, 165, 233, 0.3);
-}
+/* ============================================
+   FORM ELEMENTS - KONSISTEN DENGAN STEP
+   ============================================ */
 
-/* Links */
-.student-register a.text-blue-600 {
-    color: #0ea5e9;
-}
-
-.student-register a.text-blue-600:hover {
-    color: #0284c7;
-}
-
-/* Form Focus */
+/* input focus dengan warna theme */
 .student-register .form-input:focus {
     border-color: #0ea5e9;
-    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1), 0 2px 8px rgba(0, 0, 0, 0.05);
+    box-shadow: 
+        0 0 0 3px rgba(14, 165, 233, 0.1),
+        0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .student-register .form-input:focus ~ .form-input-icon {
     color: #0ea5e9;
 }
 
+/* ============================================
+   BUTTONS - SMOOTH INTERACTIONS
+   ============================================ */
+
+.student-register .btn-primary {
+    background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.student-register .btn-primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, #0284c7 0%, #0891b2 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(14, 165, 233, 0.3);
+}
+
+.student-register .btn-primary:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+/* button secondary */
+.student-register .btn-secondary:hover {
+    border-color: #0ea5e9;
+    color: #0ea5e9;
+}
+
+/* ============================================
+   FILE UPLOAD - HOVER EFFECT
+   ============================================ */
+
 .student-register .file-upload-area:hover {
     border-color: #0ea5e9;
-    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.1);
+    background: rgba(14, 165, 233, 0.03);
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.08);
 }
 
 .student-register .file-upload-area:hover .file-upload-icon {
     color: #0ea5e9;
+    transform: scale(1.05);
 }
+
+/* ============================================
+   LINKS & ACCENT COLORS
+   ============================================ */
+
+.student-register a.text-blue-600 {
+    color: #0ea5e9;
+    transition: color 0.2s ease;
+}
+
+.student-register a.text-blue-600:hover {
+    color: #0284c7;
+}
+
+/* ============================================
+   LOADING SPINNER
+   ============================================ */
 
 .student-register .spinner {
     border-top-color: #0ea5e9;
 }
 
-.step-indicator-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    width: 100%;
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 768px) {
+    .student-register .step-indicator-container {
+        max-width: 100%;
+        padding: 0 0.5rem;
+    }
+    
+    .student-register .step-circle {
+        width: 44px;
+        height: 44px;
+        font-size: 1.125rem;
+    }
+    
+    .student-register .step-label {
+        font-size: 0.8125rem;
+    }
+    
+    .student-register .step-connector {
+        margin: 0 1rem;
+        margin-top: 22px;
+    }
 }
 
-.step-indicator-container .step-divider {
-    flex-grow: 1;
-    height: 2px;
-    background-color: #e5e7eb; /* Warna abu-abu */
-    margin: 0 1rem;
-    transform: translateY(20px);
+/* ============================================
+   ACCESSIBILITY - REDUCED MOTION
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    .student-register .step-item,
+    .student-register .step-circle,
+    .student-register .step-connector::before {
+        animation: none !important;
+        transition-duration: 0.05s !important;
+    }
+    
+    .student-register .register-container::before {
+        animation: none;
+    }
 }

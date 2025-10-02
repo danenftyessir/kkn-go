@@ -29,7 +29,7 @@
         </div>
     </nav>
 
-    <div class="register-container student-register" style="padding-top: 5rem;">
+    <div class="register-container student-register" style="padding-top: 2rem;">
         <div class="relative z-10 flex items-center justify-center min-h-screen py-12 px-4">
             <div class="w-full max-w-4xl">
                 {{-- logo & header --}}
