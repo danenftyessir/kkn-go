@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use App\Models\User;
+use App\Http\Requests\UpdateStudentProfileRequest;
+use App\Http\Requests\UpdateStudentPasswordRequest;
 
 class ProfileController extends Controller
 {
@@ -56,48 +58,12 @@ class ProfileController extends Controller
     /**
      * update profil student
      */
-    public function update(Request $request)
+    public function update(UpdateStudentProfileRequest $request)
     {
-        $user = auth()->user();
-        $student = $user->student;
+        // Dapatkan data yang sudah tervalidasi dan ternormalisasi dari FormRequest
+        $validated = $request->validated();
         
-        // pastikan relasi student ada
-        if (!$student) {
-            return redirect()->route('student.dashboard')
-                ->with('error', 'data profil tidak ditemukan');
-        }
-        
-        $validated = $request->validate([
-            'first_name' => 'required|string|max:50',
-            'last_name' => 'required|string|max:50',
-            'university_id' => 'required|exists:universities,id',
-            'major' => 'required|string|max:100',
-            'semester' => 'required|integer|min:1|max:14',
-            'phone' => ['required', 'string', 'regex:/^(\+62|62|0)[0-9]{9,12}$/'],
-            'bio' => 'nullable|string|max:500',
-            'skills' => 'nullable|string',
-            'profile_photo' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
-            'portfolio_visible' => 'nullable|boolean'
-        ], [
-            // pesan error kustom
-            'first_name.required' => 'nama depan wajib diisi',
-            'last_name.required' => 'nama belakang wajib diisi',
-            'university_id.required' => 'universitas wajib dipilih',
-            'university_id.exists' => 'universitas tidak valid',
-            'major.required' => 'jurusan wajib diisi',
-            'semester.required' => 'semester wajib diisi',
-            'semester.min' => 'semester minimal 1',
-            'semester.max' => 'semester maksimal 14',
-            'phone.required' => 'nomor whatsapp wajib diisi',
-            'phone.regex' => 'format nomor whatsapp tidak valid. gunakan format: 08xxxxxxxxx',
-            'bio.max' => 'bio maksimal 500 karakter',
-            'profile_photo.image' => 'file harus berupa gambar',
-            'profile_photo.mimes' => 'foto profil harus berformat jpeg, jpg, atau png',
-            'profile_photo.max' => 'ukuran foto profil maksimal 2MB'
-        ]);
-
-        // normalize nomor telepon
-        $validated['phone'] = $this->normalizePhoneNumber($validated['phone']);
+        $student = auth()->user()->student;
 
         // handle upload foto profil
         if ($request->hasFile('profile_photo')) {
@@ -111,52 +77,28 @@ class ProfileController extends Controller
         }
 
         // update data student
-        $student->update([
-            'first_name' => $validated['first_name'],
-            'last_name' => $validated['last_name'],
-            'university_id' => $validated['university_id'],
-            'major' => $validated['major'],
-            'semester' => $validated['semester'],
-            'phone' => $validated['phone'],
-            'bio' => $validated['bio'] ?? null,
-            'profile_photo_path' => $validated['profile_photo_path'] ?? $student->profile_photo_path,
-        ]);
-
-        // TODO: update skills jika ada table terpisah
-        // untuk sementara skills disimpan sebagai json atau text
+        $student->update($validated);
         
         return redirect()->route('student.profile.index')
-            ->with('success', 'profil berhasil diperbarui');
+            ->with('success', 'Profil berhasil diperbarui!');
     }
 
     /**
      * update password student
      */
-    public function updatePassword(Request $request)
+    public function updatePassword(UpdateStudentPasswordRequest $request)
     {
         $user = auth()->user();
         
-        $validated = $request->validate([
-            'current_password' => 'required',
-            'password' => ['required', 'confirmed', Password::min(8)],
-        ], [
-            'current_password.required' => 'password saat ini wajib diisi',
-            'password.required' => 'password baru wajib diisi',
-            'password.confirmed' => 'konfirmasi password tidak cocok',
-            'password.min' => 'password minimal 8 karakter'
-        ]);
-
-        // verifikasi password saat ini
-        if (!Hash::check($validated['current_password'], $user->password)) {
-            return back()->withErrors(['current_password' => 'password saat ini salah']);
-        }
+        // Dapatkan password baru yang sudah tervalidasi
+        $validated = $request->validated();
 
         // update password
         $user->update([
             'password' => Hash::make($validated['password'])
         ]);
 
-        return back()->with('success', 'password berhasil diperbarui');
+        return back()->with('success', 'Password berhasil diperbarui!');
     }
 
     /**

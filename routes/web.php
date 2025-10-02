@@ -97,6 +97,7 @@ Route::middleware(['auth', 'user.type:student'])->prefix('student')->name('stude
     Route::get('/profile', [StudentProfileController::class, 'index'])->name('profile.index');
     Route::get('/profile/edit', [StudentProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [StudentProfileController::class, 'update'])->name('profile.update');
+    Route::patch('/profile/password', [StudentProfileController::class, 'updatePassword'])->name('profile.password.update');
     
     // TODO: my projects routes
     // Route::get('/projects', [MyProjectsController::class, 'index'])->name('projects.index');
