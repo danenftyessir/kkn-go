@@ -1,3 +1,4 @@
+{{-- resources/views/auth/institution-register.blade.php --}}
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -11,90 +12,91 @@
     <link rel="stylesheet" href="{{ asset('css/auth-institution.css') }}">
 </head>
 <body class="font-sans antialiased bg-gray-50">
-    <!-- back to home -->
-    <div class="absolute top-6 left-6 z-50">
-        <a href="{{ route('home') }}" class="inline-flex items-center text-gray-700 hover:text-gray-900 transition-colors font-semibold">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-            </svg>
-            <span class="font-medium">Back to Home</span>
-        </a>
-    </div>
+    {{-- navbar tetap --}}
+    <nav class="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="{{ route('home') }}" class="inline-flex items-center text-gray-700 hover:text-gray-900 transition-colors font-semibold">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                <span class="font-medium">kembali ke beranda</span>
+            </a>
+            
+            <div class="flex items-center space-x-6">
+                <a href="#" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">tentang</a>
+                <a href="#" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">kontak</a>
+            </div>
+        </div>
+    </nav>
 
-    <!-- top navigation -->
-    <div class="absolute top-6 right-6 z-50 flex items-center space-x-6">
-        <a href="#" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">About</a>
-        <a href="#" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">Contact</a>
-    </div>
-
-    <div class="register-container institution-register gpu-accelerated" style="padding-top: 5rem;">
+    <div class="register-container institution-register" style="padding-top: 5rem;">
         <div class="relative z-10 flex items-center justify-center min-h-screen py-12 px-4">
             <div class="w-full max-w-4xl">
-                <!-- logo & header -->
+                {{-- logo & header --}}
                 <div class="text-center mb-8 fade-in-up">
                     <a href="{{ route('home') }}" class="inline-block mb-6">
                         <img src="{{ asset('kkn-go-logo.png') }}" alt="KKN-GO" class="h-16 w-auto">
                     </a>
-                    <h1 class="text-4xl font-bold text-gray-900 mb-2">Registrasi Instansi</h1>
-                    <p class="text-gray-600 text-lg">Bergabung sebagai mitra KKN-GO untuk pembangunan daerah</p>
+                    <h1 class="text-4xl font-bold text-gray-900 mb-2">daftarkan instansi anda!</h1>
+                    <p class="text-gray-600 text-lg">bergabung dengan ekosistem KKN Indonesia</p>
                 </div>
 
-                <!-- form container -->
+                {{-- form container --}}
                 <div class="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden fade-in-scale" style="animation-delay: 0.1s;">
-                    <!-- progress steps -->
+                    {{-- progress steps --}}
                     <div class="bg-gradient-to-br from-gray-50 to-white border-b-2 border-gray-100 px-8 py-6">
                         <div class="step-indicator-container">
-                            <div class="step-item">
+                            <div class="step-item" id="step1-item">
                                 <div class="step-circle active" id="step1-circle">
                                     <span class="step-number">1</span>
                                 </div>
-                                <span class="step-label">Data Instansi</span>
+                                <span class="step-label">data instansi</span>
                             </div>
                             
                             <div class="step-connector" id="connector1"></div>
                             
-                            <div class="step-item">
+                            <div class="step-item" id="step2-item">
                                 <div class="step-circle inactive" id="step2-circle">
                                     <span class="step-number">2</span>
                                 </div>
-                                <span class="step-label">Penanggung Jawab</span>
+                                <span class="step-label">penanggung jawab</span>
                             </div>
                             
                             <div class="step-connector" id="connector2"></div>
                             
-                            <div class="step-item">
+                            <div class="step-item" id="step3-item">
                                 <div class="step-circle inactive" id="step3-circle">
                                     <span class="step-number">3</span>
                                 </div>
-                                <span class="step-label">Akun & Verifikasi</span>
+                                <span class="step-label">akun & verifikasi</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- form content -->
+                    {{-- form content --}}
                     <form method="POST" action="{{ route('register.institution') }}" 
                           enctype="multipart/form-data" 
                           id="institutionRegisterForm"
                           class="p-8">
                         @csrf
 
-                        <!-- step 1: data instansi -->
+                        {{-- step 1: data instansi --}}
                         <div id="step1-content" class="step-content">
                             <div class="mb-8">
-                                <h2 class="text-2xl font-bold text-gray-800 mb-2">Data Instansi</h2>
-                                <p class="text-gray-600">Informasi lengkap tentang instansi Anda</p>
+                                <h2 class="text-2xl font-bold text-gray-800 mb-2">data instansi</h2>
+                                <p class="text-gray-600">informasi lengkap tentang instansi anda</p>
                             </div>
 
                             <div class="space-y-6">
-                                <!-- nama instansi -->
+                                {{-- nama instansi --}}
                                 <div class="form-field-group">
-                                    <label for="institution_name" class="form-label required">Nama Instansi</label>
+                                    <label for="institution_name" class="form-label required">nama instansi</label>
                                     <div class="form-input-wrapper">
                                         <input type="text" 
                                                id="institution_name" 
                                                name="institution_name" 
                                                value="{{ old('institution_name') }}"
-                                               placeholder="Contoh: Pemerintah Desa Sukamaju"
+                                               placeholder="contoh: Desa Sukamaju"
                                                class="form-input @error('institution_name') error @enderror"
                                                required>
                                         <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -111,20 +113,22 @@
                                     @enderror
                                 </div>
 
-                                <!-- jenis instansi -->
+                                {{-- jenis instansi --}}
                                 <div class="form-field-group">
-                                    <label for="institution_type" class="form-label required">Jenis Instansi</label>
+                                    <label for="institution_type" class="form-label required">jenis instansi</label>
                                     <div class="form-input-wrapper">
                                         <select id="institution_type" 
                                                 name="institution_type" 
                                                 class="form-input form-select @error('institution_type') error @enderror"
                                                 required>
-                                            <option value="">-- Pilih Jenis Instansi --</option>
-                                            <option value="pemerintah_desa">Pemerintah Desa</option>
-                                            <option value="dinas">Dinas</option>
-                                            <option value="ngo">NGO</option>
-                                            <option value="puskesmas">Puskesmas</option>
-                                            <option value="lainnya">Lainnya</option>
+                                            <option value="">-- pilih jenis instansi --</option>
+                                            <option value="pemerintah_desa" {{ old('institution_type') == 'pemerintah_desa' ? 'selected' : '' }}>pemerintah desa</option>
+                                            <option value="dinas" {{ old('institution_type') == 'dinas' ? 'selected' : '' }}>dinas</option>
+                                            <option value="ngo" {{ old('institution_type') == 'ngo' ? 'selected' : '' }}>NGO / lembaga non-profit</option>
+                                            <option value="puskesmas" {{ old('institution_type') == 'puskesmas' ? 'selected' : '' }}>puskesmas</option>
+                                            <option value="sekolah" {{ old('institution_type') == 'sekolah' ? 'selected' : '' }}>sekolah</option>
+                                            <option value="perguruan_tinggi" {{ old('institution_type') == 'perguruan_tinggi' ? 'selected' : '' }}>perguruan tinggi</option>
+                                            <option value="lainnya" {{ old('institution_type') == 'lainnya' ? 'selected' : '' }}>lainnya</option>
                                         </select>
                                         <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
@@ -140,19 +144,76 @@
                                     @enderror
                                 </div>
 
-                                <!-- alamat lengkap -->
+                                {{-- provinsi & kabupaten --}}
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div class="form-field-group">
+                                        <label for="province_id" class="form-label required">provinsi</label>
+                                        <div class="form-input-wrapper">
+                                            <select id="province_id" 
+                                                    name="province_id" 
+                                                    class="form-input form-select @error('province_id') error @enderror"
+                                                    required>
+                                                <option value="">-- pilih provinsi --</option>
+                                                {{-- TODO: ambil dari database --}}
+                                                <option value="1" {{ old('province_id') == 1 ? 'selected' : '' }}>Jawa Barat</option>
+                                                <option value="2" {{ old('province_id') == 2 ? 'selected' : '' }}>Jawa Tengah</option>
+                                                <option value="3" {{ old('province_id') == 3 ? 'selected' : '' }}>Jawa Timur</option>
+                                            </select>
+                                            <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            </svg>
+                                        </div>
+                                        @error('province_id')
+                                            <p class="error-message">
+                                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                                </svg>
+                                                {{ $message }}
+                                            </p>
+                                        @enderror
+                                    </div>
+
+                                    <div class="form-field-group">
+                                        <label for="regency_id" class="form-label required">kabupaten/kota</label>
+                                        <div class="form-input-wrapper">
+                                            <select id="regency_id" 
+                                                    name="regency_id" 
+                                                    class="form-input form-select @error('regency_id') error @enderror"
+                                                    required>
+                                                <option value="">-- pilih kabupaten/kota --</option>
+                                                {{-- TODO: ambil dari database berdasarkan provinsi --}}
+                                                <option value="1" {{ old('regency_id') == 1 ? 'selected' : '' }}>Bandung</option>
+                                                <option value="2" {{ old('regency_id') == 2 ? 'selected' : '' }}>Sumedang</option>
+                                            </select>
+                                            <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            </svg>
+                                        </div>
+                                        @error('regency_id')
+                                            <p class="error-message">
+                                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                                </svg>
+                                                {{ $message }}
+                                            </p>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                {{-- alamat lengkap --}}
                                 <div class="form-field-group">
-                                    <label for="address" class="form-label required">Alamat Lengkap</label>
+                                    <label for="address" class="form-label required">alamat lengkap</label>
                                     <div class="form-input-wrapper">
                                         <textarea id="address" 
                                                   name="address" 
                                                   rows="3"
-                                                  placeholder="Alamat lengkap instansi..."
+                                                  placeholder="contoh: Jl. Raya Desa No. 123"
                                                   class="form-input @error('address') error @enderror"
                                                   required>{{ old('address') }}</textarea>
                                         <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
                                         </svg>
                                     </div>
                                     @error('address')
@@ -165,76 +226,22 @@
                                     @enderror
                                 </div>
 
-                                <!-- email instansi & no telepon -->
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div class="form-field-group">
-                                        <label for="email" class="form-label required">Email Resmi Instansi</label>
-                                        <div class="form-input-wrapper">
-                                            <input type="email" 
-                                                   id="email" 
-                                                   name="email" 
-                                                   value="{{ old('email') }}"
-                                                   placeholder="info@instansi.go.id"
-                                                   class="form-input @error('email') error @enderror"
-                                                   required>
-                                            <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                                            </svg>
-                                        </div>
-                                        @error('email')
-                                            <p class="error-message">
-                                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                                                </svg>
-                                                {{ $message }}
-                                            </p>
-                                        @enderror
-                                    </div>
-
-                                    <div class="form-field-group">
-                                        <label for="phone" class="form-label required">No. Telepon</label>
-                                        <div class="form-input-wrapper">
-                                            <input type="tel" 
-                                                   id="phone" 
-                                                   name="phone" 
-                                                   value="{{ old('phone') }}"
-                                                   placeholder="(021) xxxxxxxx"
-                                                   class="form-input @error('phone') error @enderror"
-                                                   required>
-                                            <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
-                                            </svg>
-                                        </div>
-                                        @error('phone')
-                                            <p class="error-message">
-                                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                                                </svg>
-                                                {{ $message }}
-                                            </p>
-                                        @enderror
-                                    </div>
-                                </div>
-
-                                <!-- logo instansi -->
+                                {{-- email resmi --}}
                                 <div class="form-field-group">
-                                    <label class="form-label">Logo Instansi <span class="text-xs text-gray-500">(opsional)</span></label>
-                                    <div class="file-upload-area" id="logoArea">
-                                        <input type="file" 
-                                               id="logo" 
-                                               name="logo" 
-                                               accept="image/*"
-                                               class="file-input"
-                                               onchange="handleFileSelect(this, 'logoArea', 'logoPreview')">
-                                        <div class="file-upload-content" id="logoPreview">
-                                            <svg class="file-upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                            </svg>
-                                            <p class="file-upload-text">Klik atau drag logo instansi ke sini</p>
-                                            <p class="file-upload-subtext">PNG, JPG hingga 2MB</p>
-                                        </div>
+                                    <label for="official_email" class="form-label required">email resmi instansi</label>
+                                    <div class="form-input-wrapper">
+                                        <input type="email" 
+                                               id="official_email" 
+                                               name="official_email" 
+                                               value="{{ old('official_email') }}"
+                                               placeholder="contoh: info@desasukamaju.go.id"
+                                               class="form-input @error('official_email') error @enderror"
+                                               required>
+                                        <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                        </svg>
                                     </div>
-                                    @error('logo')
+                                    @error('official_email')
                                         <p class="error-message">
                                             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
@@ -245,10 +252,10 @@
                                 </div>
                             </div>
 
-                            <!-- navigation -->
+                            {{-- navigation --}}
                             <div class="mt-8 flex justify-end">
                                 <button type="button" onclick="nextStep(2)" class="btn btn-primary">
-                                    Lanjutkan
+                                    lanjutkan
                                     <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
                                     </svg>
@@ -256,23 +263,23 @@
                             </div>
                         </div>
 
-                        <!-- step 2: penanggung jawab -->
+                        {{-- step 2: penanggung jawab --}}
                         <div id="step2-content" class="step-content hidden">
                             <div class="mb-8">
-                                <h2 class="text-2xl font-bold text-gray-800 mb-2">Penanggung Jawab</h2>
-                                <p class="text-gray-600">Data person in charge (PIC) instansi</p>
+                                <h2 class="text-2xl font-bold text-gray-800 mb-2">penanggung jawab</h2>
+                                <p class="text-gray-600">informasi kontak person in charge</p>
                             </div>
 
                             <div class="space-y-6">
-                                <!-- nama pic -->
+                                {{-- nama pic --}}
                                 <div class="form-field-group">
-                                    <label for="pic_name" class="form-label required">Nama PIC</label>
+                                    <label for="pic_name" class="form-label required">nama penanggung jawab</label>
                                     <div class="form-input-wrapper">
                                         <input type="text" 
                                                id="pic_name" 
                                                name="pic_name" 
                                                value="{{ old('pic_name') }}"
-                                               placeholder="Nama lengkap penanggung jawab"
+                                               placeholder="contoh: Budi Santoso"
                                                class="form-input @error('pic_name') error @enderror"
                                                required>
                                         <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -289,15 +296,15 @@
                                     @enderror
                                 </div>
 
-                                <!-- jabatan pic -->
+                                {{-- jabatan --}}
                                 <div class="form-field-group">
-                                    <label for="pic_position" class="form-label required">Jabatan PIC</label>
+                                    <label for="pic_position" class="form-label required">jabatan</label>
                                     <div class="form-input-wrapper">
                                         <input type="text" 
                                                id="pic_position" 
                                                name="pic_position" 
                                                value="{{ old('pic_position') }}"
-                                               placeholder="Contoh: Kepala Desa, Sekretaris Dinas"
+                                               placeholder="contoh: Kepala Desa"
                                                class="form-input @error('pic_position') error @enderror"
                                                required>
                                         <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -314,68 +321,86 @@
                                     @enderror
                                 </div>
 
-                                <!-- email pic & no telepon pic -->
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div class="form-field-group">
-                                        <label for="pic_email" class="form-label required">Email PIC</label>
-                                        <div class="form-input-wrapper">
-                                            <input type="email" 
-                                                   id="pic_email" 
-                                                   name="pic_email" 
-                                                   value="{{ old('pic_email') }}"
-                                                   placeholder="email@pic.com"
-                                                   class="form-input @error('pic_email') error @enderror"
-                                                   required>
-                                            <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                                            </svg>
-                                        </div>
-                                        @error('pic_email')
-                                            <p class="error-message">
-                                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                                                </svg>
-                                                {{ $message }}
-                                            </p>
-                                        @enderror
+                                {{-- no telepon --}}
+                                <div class="form-field-group">
+                                    <label for="phone_number" class="form-label required">no. telepon</label>
+                                    <div class="form-input-wrapper">
+                                        <input type="tel" 
+                                               id="phone_number" 
+                                               name="phone_number" 
+                                               value="{{ old('phone_number') }}"
+                                               placeholder="contoh: 081234567890"
+                                               class="form-input @error('phone_number') error @enderror"
+                                               required>
+                                        <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                                        </svg>
                                     </div>
+                                    @error('phone_number')
+                                        <p class="error-message">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            {{ $message }}
+                                        </p>
+                                    @enderror
+                                </div>
 
-                                    <div class="form-field-group">
-                                        <label for="pic_phone" class="form-label required">No. Telepon PIC</label>
-                                        <div class="form-input-wrapper">
-                                            <input type="tel" 
-                                                   id="pic_phone" 
-                                                   name="pic_phone" 
-                                                   value="{{ old('pic_phone') }}"
-                                                   placeholder="08xxxxxxxxxx"
-                                                   class="form-input @error('pic_phone') error @enderror"
-                                                   required>
-                                            <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
-                                            </svg>
-                                        </div>
-                                        @error('pic_phone')
-                                            <p class="error-message">
-                                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                                                </svg>
-                                                {{ $message }}
-                                            </p>
-                                        @enderror
+                                {{-- website (opsional) --}}
+                                <div class="form-field-group">
+                                    <label for="website" class="form-label">website (opsional)</label>
+                                    <div class="form-input-wrapper">
+                                        <input type="url" 
+                                               id="website" 
+                                               name="website" 
+                                               value="{{ old('website') }}"
+                                               placeholder="contoh: https://desasukamaju.go.id"
+                                               class="form-input @error('website') error @enderror">
+                                        <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
+                                        </svg>
                                     </div>
+                                    @error('website')
+                                        <p class="error-message">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            {{ $message }}
+                                        </p>
+                                    @enderror
+                                </div>
+
+                                {{-- deskripsi (opsional) --}}
+                                <div class="form-field-group">
+                                    <label for="description" class="form-label">deskripsi singkat (opsional)</label>
+                                    <div class="form-input-wrapper">
+                                        <textarea id="description" 
+                                                  name="description" 
+                                                  rows="4"
+                                                  placeholder="ceritakan tentang instansi anda..."
+                                                  class="form-input @error('description') error @enderror">{{ old('description') }}</textarea>
+                                    </div>
+                                    @error('description')
+                                        <p class="error-message">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            {{ $message }}
+                                        </p>
+                                    @enderror
                                 </div>
                             </div>
 
-                            <!-- navigation -->
+                            {{-- navigation --}}
                             <div class="mt-8 flex justify-between">
                                 <button type="button" onclick="prevStep(1)" class="btn btn-secondary">
                                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                                     </svg>
-                                    Kembali
+                                    kembali
                                 </button>
                                 <button type="button" onclick="nextStep(3)" class="btn btn-primary">
-                                    Lanjutkan
+                                    lanjutkan
                                     <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
                                     </svg>
@@ -383,23 +408,23 @@
                             </div>
                         </div>
 
-                        <!-- step 3: akun & verifikasi -->
+                        {{-- step 3: akun & verifikasi --}}
                         <div id="step3-content" class="step-content hidden">
                             <div class="mb-8">
-                                <h2 class="text-2xl font-bold text-gray-800 mb-2">Akun & Verifikasi</h2>
-                                <p class="text-gray-600">Buat akun dan upload dokumen verifikasi</p>
+                                <h2 class="text-2xl font-bold text-gray-800 mb-2">akun & verifikasi</h2>
+                                <p class="text-gray-600">buat akun dan upload dokumen verifikasi</p>
                             </div>
 
                             <div class="space-y-6">
-                                <!-- username -->
+                                {{-- username --}}
                                 <div class="form-field-group">
-                                    <label for="username" class="form-label required">Username</label>
+                                    <label for="username" class="form-label required">username</label>
                                     <div class="form-input-wrapper">
                                         <input type="text" 
                                                id="username" 
                                                name="username" 
                                                value="{{ old('username') }}"
-                                               placeholder="Contoh: desa_sukamaju"
+                                               placeholder="contoh: desa_sukamaju"
                                                class="form-input @error('username') error @enderror"
                                                required>
                                         <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -416,19 +441,22 @@
                                     @enderror
                                 </div>
 
-                                <!-- password -->
+                                {{-- password --}}
                                 <div class="form-field-group">
-                                    <label for="password" class="form-label required">Password</label>
+                                    <label for="password" class="form-label required">password</label>
                                     <div class="form-input-wrapper">
                                         <input type="password" 
                                                id="password" 
                                                name="password" 
-                                               placeholder="Minimal 8 karakter"
+                                               placeholder="minimal 8 karakter"
                                                class="form-input @error('password') error @enderror"
                                                required>
+                                        <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                        </svg>
                                         <button type="button" 
                                                 onclick="togglePassword('password')" 
-                                                class="password-toggle">
+                                                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
@@ -445,27 +473,53 @@
                                     @enderror
                                 </div>
 
-                                <!-- konfirmasi password -->
+                                {{-- konfirmasi password --}}
                                 <div class="form-field-group">
-                                    <label for="password_confirmation" class="form-label required">Konfirmasi Password</label>
+                                    <label for="password_confirmation" class="form-label required">konfirmasi password</label>
                                     <div class="form-input-wrapper">
                                         <input type="password" 
                                                id="password_confirmation" 
                                                name="password_confirmation" 
-                                               placeholder="Ulangi password"
-                                               class="form-input @error('password_confirmation') error @enderror"
+                                               placeholder="ketik ulang password"
+                                               class="form-input"
                                                required>
+                                        <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                        </svg>
                                         <button type="button" 
                                                 onclick="togglePassword('password_confirmation')" 
-                                                class="password-toggle">
+                                                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                             </svg>
                                         </button>
                                     </div>
-                                    @error('password_confirmation')
-                                        <p class="error-message">
+                                </div>
+
+                                {{-- upload logo --}}
+                                <div class="form-field-group">
+                                    <label class="form-label">logo instansi (opsional)</label>
+                                    <div class="file-upload-area mt-2">
+                                        <input type="file" 
+                                               id="logo" 
+                                               name="logo" 
+                                               accept="image/jpeg,image/jpg,image/png"
+                                               class="hidden"
+                                               onchange="previewLogo(event)">
+                                        <label for="logo" class="cursor-pointer">
+                                            <svg class="file-upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                            </svg>
+                                            <p class="text-gray-600 font-medium" id="logoLabel">klik untuk upload logo</p>
+                                            <p class="text-sm text-gray-500 mt-1">JPG, JPEG atau PNG (max. 2MB)</p>
+                                        </label>
+                                        <div id="logoPreview" class="mt-4 hidden">
+                                            <img src="" alt="preview" class="mx-auto h-32 w-32 object-contain rounded-lg border">
+                                        </div>
+                                    </div>
+                                    @error('logo')
+                                        <p class="error-message mt-2">
                                             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
                                             </svg>
@@ -474,27 +528,27 @@
                                     @enderror
                                 </div>
 
-                                <!-- dokumen verifikasi -->
+                                {{-- upload dokumen verifikasi --}}
                                 <div class="form-field-group">
-                                    <label class="form-label required">Dokumen Verifikasi</label>
-                                    <div class="file-upload-area" id="verificationArea">
+                                    <label class="form-label required">dokumen verifikasi</label>
+                                    <div class="file-upload-area mt-2">
                                         <input type="file" 
                                                id="verification_document" 
                                                name="verification_document" 
-                                               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                                               class="file-input"
-                                               onchange="handleFileSelect(this, 'verificationArea', 'verificationPreview')"
+                                               accept="application/pdf"
+                                               class="hidden"
+                                               onchange="previewDocument(event)"
                                                required>
-                                        <div class="file-upload-content" id="verificationPreview">
+                                        <label for="verification_document" class="cursor-pointer">
                                             <svg class="file-upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                             </svg>
-                                            <p class="file-upload-text">Klik atau drag dokumen ke sini</p>
-                                            <p class="file-upload-subtext">Surat keterangan resmi (PDF, DOC, JPG hingga 5MB)</p>
-                                        </div>
+                                            <p class="text-gray-600 font-medium" id="docLabel">klik untuk upload dokumen</p>
+                                            <p class="text-sm text-gray-500 mt-1">PDF (max. 5MB) - Surat keterangan resmi</p>
+                                        </label>
                                     </div>
                                     @error('verification_document')
-                                        <p class="error-message">
+                                        <p class="error-message mt-2">
                                             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
                                             </svg>
@@ -503,7 +557,7 @@
                                     @enderror
                                 </div>
 
-                                <!-- terms -->
+                                {{-- terms --}}
                                 <div class="form-field-group">
                                     <label class="flex items-start space-x-3">
                                         <input type="checkbox" 
@@ -511,22 +565,22 @@
                                                class="mt-1 h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
                                                required>
                                         <span class="text-sm text-gray-700">
-                                            Saya menyatakan bahwa data yang diisikan adalah benar dan saya setuju dengan <a href="#" class="text-green-600 hover:text-green-700 font-medium">Syarat dan Ketentuan</a> KKN-GO
+                                            saya setuju dengan <a href="#" class="text-green-600 hover:text-green-700 font-medium">syarat dan ketentuan</a> serta <a href="#" class="text-green-600 hover:text-green-700 font-medium">kebijakan privasi</a>
                                         </span>
                                     </label>
                                 </div>
                             </div>
 
-                            <!-- navigation -->
+                            {{-- navigation --}}
                             <div class="mt-8 flex justify-between">
                                 <button type="button" onclick="prevStep(2)" class="btn btn-secondary">
                                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                                     </svg>
-                                    Kembali
+                                    kembali
                                 </button>
                                 <button type="submit" class="btn btn-primary">
-                                    Daftar Sekarang
+                                    daftar sekarang
                                     <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
@@ -535,12 +589,12 @@
                         </div>
                     </form>
 
-                    <!-- sudah punya akun -->
+                    {{-- sudah punya akun --}}
                     <div class="px-8 pb-8">
                         <div class="text-center text-sm text-gray-600 mt-4">
-                            Sudah punya akun?
+                            sudah punya akun?
                             <a href="{{ route('login') }}" class="text-green-600 hover:text-green-700 font-medium">
-                                Login di sini
+                                login di sini
                             </a>
                         </div>
                     </div>
@@ -548,12 +602,12 @@
             </div>
         </div>
 
-        <!-- loading overlay -->
+        {{-- loading overlay --}}
         <div class="loading-overlay" id="loadingOverlay">
             <div class="bg-white rounded-lg p-8 text-center">
                 <div class="spinner mx-auto mb-4" style="width: 3rem; height: 3rem;"></div>
-                <p class="text-gray-700 font-medium">Mendaftarkan instansi...</p>
-                <p class="text-sm text-gray-500 mt-1">Mohon tunggu sebentar</p>
+                <p class="text-gray-700 font-medium">mendaftarkan instansi...</p>
+                <p class="text-sm text-gray-500 mt-1">mohon tunggu sebentar</p>
             </div>
         </div>
     </div>
@@ -561,21 +615,27 @@
     <script>
     let currentStep = 1;
 
+    // fungsi navigasi step
     function nextStep(step) {
         if (!validateStep(currentStep)) return;
         
-        // update step label styling
-        document.querySelector(`#step${currentStep}-circle + .step-label`).style.fontWeight = 'normal';
-        document.querySelector(`#step${step}-circle + .step-label`).style.fontWeight = 'bold';
+        // hapus class active dari step saat ini
+        const currentCircle = document.getElementById(`step${currentStep}-circle`);
+        const currentContent = document.getElementById(`step${currentStep}-content`);
         
-        document.getElementById(`step${currentStep}-content`).classList.add('hidden');
-        document.getElementById(`step${currentStep}-circle`).classList.remove('active');
-        document.getElementById(`step${currentStep}-circle`).classList.add('completed');
+        currentContent.classList.add('hidden');
+        currentCircle.classList.remove('active');
+        currentCircle.classList.add('completed');
         
-        document.getElementById(`step${step}-content`).classList.remove('hidden');
-        document.getElementById(`step${step}-circle`).classList.remove('inactive');
-        document.getElementById(`step${step}-circle`).classList.add('active');
+        // tambahkan class active ke step berikutnya
+        const nextCircle = document.getElementById(`step${step}-circle`);
+        const nextContent = document.getElementById(`step${step}-content`);
         
+        nextContent.classList.remove('hidden');
+        nextCircle.classList.remove('inactive');
+        nextCircle.classList.add('active');
+        
+        // update connector jika maju
         if (currentStep < step) {
             document.getElementById(`connector${currentStep}`).classList.add('completed');
         }
@@ -585,19 +645,24 @@
     }
 
     function prevStep(step) {
-        // update step label styling
-        document.querySelector(`#step${currentStep}-circle + .step-label`).style.fontWeight = 'normal';
-        document.querySelector(`#step${step}-circle + .step-label`).style.fontWeight = 'bold';
+        // hapus class dari step saat ini
+        const currentCircle = document.getElementById(`step${currentStep}-circle`);
+        const currentContent = document.getElementById(`step${currentStep}-content`);
         
-        document.getElementById(`step${currentStep}-content`).classList.add('hidden');
-        document.getElementById(`step${currentStep}-circle`).classList.remove('active');
-        document.getElementById(`step${currentStep}-circle`).classList.add('inactive');
+        currentContent.classList.add('hidden');
+        currentCircle.classList.remove('active');
+        currentCircle.classList.add('inactive');
         
-        document.getElementById(`step${step}-content`).classList.remove('hidden');
-        document.getElementById(`step${step}-circle`).classList.remove('completed');
-        document.getElementById(`step${step}-circle`).classList.add('active');
+        // tambahkan class active ke step sebelumnya
+        const prevCircle = document.getElementById(`step${step}-circle`);
+        const prevContent = document.getElementById(`step${step}-content`);
         
-        if (step < currentStep) {
+        prevContent.classList.remove('hidden');
+        prevCircle.classList.remove('completed');
+        prevCircle.classList.add('active');
+        
+        // hapus completed dari connector jika mundur
+        if (currentStep > step) {
             document.getElementById(`connector${step}`).classList.remove('completed');
         }
         
@@ -605,99 +670,79 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    // validasi step
     function validateStep(step) {
-        const content = document.getElementById(`step${step}-content`);
-        const requiredInputs = content.querySelectorAll('[required]');
-        let isValid = true;
+        const form = document.getElementById('institutionRegisterForm');
         
-        requiredInputs.forEach(input => {
-            if (!input.value) {
-                input.classList.add('error');
-                isValid = false;
-            } else {
-                input.classList.remove('error');
+        if (step === 1) {
+            // validasi data instansi
+            const requiredFields = ['institution_name', 'institution_type', 'province_id', 'regency_id', 'address', 'official_email'];
+            for (let field of requiredFields) {
+                const input = form.querySelector(`[name="${field}"]`);
+                if (!input || !input.value.trim()) {
+                    alert(`mohon lengkapi field ${field.replace('_', ' ')}`);
+                    input?.focus();
+                    return false;
+                }
             }
-        });
+        } else if (step === 2) {
+            // validasi penanggung jawab
+            const requiredFields = ['pic_name', 'pic_position', 'phone_number'];
+            for (let field of requiredFields) {
+                const input = form.querySelector(`[name="${field}"]`);
+                if (!input || !input.value.trim()) {
+                    alert(`mohon lengkapi field ${field.replace('_', ' ')}`);
+                    input?.focus();
+                    return false;
+                }
+            }
+        }
         
-        if (!isValid) alert('Mohon lengkapi semua field yang wajib diisi');
-        return isValid;
+        return true;
     }
 
+    // toggle password visibility
     function togglePassword(inputId) {
         const input = document.getElementById(inputId);
         input.type = input.type === 'password' ? 'text' : 'password';
     }
 
-    function handleFileSelect(input, areaId, previewId) {
-        const area = document.getElementById(areaId);
-        const preview = document.getElementById(previewId);
+    // preview logo upload
+    function previewLogo(event) {
+        const file = event.target.files[0];
+        const preview = document.getElementById('logoPreview');
+        const label = document.getElementById('logoLabel');
         
-        if (input.files && input.files[0]) {
-            const file = input.files[0];
-            const fileName = file.name;
-            const fileSize = (file.size / 1024 / 1024).toFixed(2);
-            
-            if (file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    preview.innerHTML = `
-                        <div class="relative">
-                            <img src="${e.target.result}" class="max-h-48 rounded-lg mx-auto">
-                            <button type="button" onclick="clearFile('${input.id}', '${areaId}', '${previewId}')" class="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 hover:bg-red-600">
-                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                                </svg>
-                            </button>
-                        </div>
-                    `;
-                };
-                reader.readAsDataURL(file);
-            } else {
-                preview.innerHTML = `
-                    <div class="flex items-center justify-between bg-gray-50 p-4 rounded-lg">
-                        <div class="flex items-center space-x-3">
-                            <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            <div>
-                                <p class="font-medium text-gray-900">${fileName}</p>
-                                <p class="text-sm text-gray-500">${fileSize} MB</p>
-                            </div>
-                        </div>
-                        <button type="button" onclick="clearFile('${input.id}', '${areaId}', '${previewId}')" class="text-red-600 hover:text-red-700">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                            </svg>
-                        </button>
-                    </div>
-                `;
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.querySelector('img').src = e.target.result;
+                preview.classList.remove('hidden');
+                label.textContent = file.name;
             }
+            reader.readAsDataURL(file);
         }
     }
 
-    function clearFile(inputId, areaId, previewId) {
-        document.getElementById(inputId).value = '';
-        const preview = document.getElementById(previewId);
-        const icon = areaId === 'logoArea' ? 
-            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>' :
-            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>';
+    // preview document upload
+    function previewDocument(event) {
+        const file = event.target.files[0];
+        const label = document.getElementById('docLabel');
         
-        const text = areaId === 'logoArea' ? 'Klik atau drag logo instansi ke sini' : 'Klik atau drag dokumen ke sini';
-        const subtext = areaId === 'logoArea' ? 'PNG, JPG hingga 2MB' : 'Surat keterangan resmi (PDF, DOC, JPG hingga 5MB)';
-        
-        preview.innerHTML = `
-            <svg class="file-upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                ${icon}
-            </svg>
-            <p class="file-upload-text">${text}</p>
-            <p class="file-upload-subtext">${subtext}</p>
-        `;
+        if (file) {
+            label.textContent = file.name;
+        }
     }
 
-    // set step 1 label bold on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelector('#step1-circle + .step-label').style.fontWeight = 'bold';
+    // handle form submission
+    document.getElementById('institutionRegisterForm')?.addEventListener('submit', function(e) {
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        if (loadingOverlay) {
+            loadingOverlay.classList.add('active');
+        }
     });
     </script>
+
+    @vite(['resources/js/app.js'])
 </body>
 </html>

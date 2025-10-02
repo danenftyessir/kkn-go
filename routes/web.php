@@ -18,8 +18,8 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [LoginController::class, 'login']);
     
     Route::get('/register', [RegisterController::class, 'showRegisterForm'])->name('register');
-    Route::get('/register/student', [RegisterController::class, 'showStudentForm'])->name('register.student');
-    Route::get('/register/institution', [RegisterController::class, 'showInstitutionForm'])->name('register.institution');
+Route::get('/register/student', [RegisterController::class, 'showStudentRegisterForm'])->name('register.student');
+Route::get('/register/institution', [RegisterController::class, 'showInstitutionRegisterForm'])->name('register.institution');
     Route::post('/register/student', [RegisterController::class, 'registerStudent'])->name('register.student.submit');
     Route::post('/register/institution', [RegisterController::class, 'registerInstitution'])->name('register.institution.submit');
     

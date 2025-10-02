@@ -1,7 +1,3 @@
-/* ============================================
-   Institution Register - Green Theme
-   ============================================ */
-
 .institution-register .register-container {
     min-height: 100vh;
     background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #d1fae5 100%);
@@ -94,4 +90,19 @@
 
 .institution-register .spinner {
     border-top-color: #10b981;
+}
+
+.step-indicator-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
+}
+
+.step-indicator-container .step-divider {
+    flex-grow: 1; 
+    height: 2px;
+    background-color: #e5e7eb; /* Warna abu-abu */
+    margin: 0 1rem;
+    transform: translateY(20px);
 }

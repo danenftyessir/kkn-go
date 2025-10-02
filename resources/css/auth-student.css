@@ -1,7 +1,3 @@
-/* ============================================
-   Student Register - Blue Theme
-   ============================================ */
-
 .student-register .register-container {
     min-height: 100vh;
     background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #dbeafe 100%);
@@ -94,4 +90,19 @@
 
 .student-register .spinner {
     border-top-color: #0ea5e9;
+}
+
+.step-indicator-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
+}
+
+.step-indicator-container .step-divider {
+    flex-grow: 1;
+    height: 2px;
+    background-color: #e5e7eb; /* Warna abu-abu */
+    margin: 0 1rem;
+    transform: translateY(20px);
 }
