@@ -31,7 +31,7 @@ class Student extends Model
 
     protected $casts = [
         'portfolio_visible' => 'boolean',
-        'skills' => 'array', // jika skills disimpan sebagai json
+        'skills' => 'array',
     ];
 
     /**
@@ -56,6 +56,34 @@ class Student extends Model
     public function applications()
     {
         return $this->hasMany(Application::class);
+    }
+
+    /**
+     * relasi ke wishlists
+     */
+    public function wishlists()
+    {
+        return $this->hasMany(Wishlist::class);
+    }
+
+    /**
+     * relasi ke wishlisted problems (many-to-many melalui wishlist)
+     */
+    public function wishlistedProblems()
+    {
+        return $this->belongsToMany(Problem::class, 'wishlists')
+                    ->withTimestamps()
+                    ->withPivot('notes');
+    }
+
+    /**
+     * cek apakah student sudah save problem tertentu
+     */
+    public function hasWishlisted($problemId): bool
+    {
+        return $this->wishlists()
+                    ->where('problem_id', $problemId)
+                    ->exists();
     }
 
     /**
@@ -99,54 +127,22 @@ class Student extends Model
             return asset('storage/' . $this->profile_photo_path);
         }
         
-        // default avatar dengan inisial
-        return $this->getDefaultAvatarUrl();
+        // default avatar dengan initial
+        return 'https://ui-avatars.com/api/?name=' . urlencode($this->getFullName()) . '&color=3B82F6&background=EFF6FF';
     }
 
     /**
-     * get default avatar url (untuk future implementation)
+     * get statistics untuk dashboard/portfolio
      */
-    protected function getDefaultAvatarUrl(): string
+    public function getStatistics(): array
     {
-        // TODO: bisa gunakan service seperti ui-avatars.com
-        // atau generate default avatar image
-        return asset('images/default-avatar.png');
+        return [
+            'total_applications' => $this->applications()->count(),
+            'pending_applications' => $this->applications()->where('status', 'pending')->count(),
+            'accepted_applications' => $this->applications()->where('status', 'accepted')->count(),
+            'wishlist_count' => $this->wishlists()->count(),
+            // TODO: tambahkan completed projects count
+            // 'completed_projects' => $this->completedProjects()->count(),
+        ];
     }
-
-    /**
-     * scope untuk filter berdasarkan university
-     */
-    public function scopeFromUniversity($query, $universityId)
-    {
-        return $query->where('university_id', $universityId);
-    }
-
-    /**
-     * scope untuk filter berdasarkan semester
-     */
-    public function scopeInSemester($query, $semester)
-    {
-        return $query->where('semester', $semester);
-    }
-
-    /**
-     * cek apakah portfolio visible untuk publik
-     */
-    public function isPortfolioVisible(): bool
-    {
-        return (bool) $this->portfolio_visible;
-    }
-
-    /**
-     * TODO: method untuk menghitung statistik
-     */
-    // public function getStatistics()
-    // {
-    //     return [
-    //         'total_projects' => $this->completedProjects()->count(),
-    //         'sdgs_addressed' => $this->completedProjects()->distinct('sdg_category')->count(),
-    //         'positive_reviews' => $this->reviews()->where('rating', '>=', 4)->count(),
-    //         'average_rating' => $this->reviews()->avg('rating') ?? 0,
-    //     ];
-    // }
 }

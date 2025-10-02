@@ -55,6 +55,92 @@ class Problem extends Model
     ];
 
     /**
+     * accessor untuk required_skills - ensure always returns array
+     */
+    public function getRequiredSkillsAttribute($value)
+    {
+        if (is_null($value)) {
+            return [];
+        }
+        
+        if (is_array($value)) {
+            return $value;
+        }
+        
+        // jika string, decode JSON
+        $decoded = json_decode($value, true);
+        return is_array($decoded) ? $decoded : [];
+    }
+
+    /**
+     * accessor untuk sdg_categories - ensure always returns array
+     */
+    public function getSdgCategoriesAttribute($value)
+    {
+        if (is_null($value)) {
+            return [];
+        }
+        
+        if (is_array($value)) {
+            return $value;
+        }
+        
+        $decoded = json_decode($value, true);
+        return is_array($decoded) ? $decoded : [];
+    }
+
+    /**
+     * accessor untuk required_majors - ensure always returns array
+     */
+    public function getRequiredMajorsAttribute($value)
+    {
+        if (is_null($value)) {
+            return [];
+        }
+        
+        if (is_array($value)) {
+            return $value;
+        }
+        
+        $decoded = json_decode($value, true);
+        return is_array($decoded) ? $decoded : [];
+    }
+
+    /**
+     * accessor untuk deliverables - ensure always returns array
+     */
+    public function getDeliverablesAttribute($value)
+    {
+        if (is_null($value)) {
+            return [];
+        }
+        
+        if (is_array($value)) {
+            return $value;
+        }
+        
+        $decoded = json_decode($value, true);
+        return is_array($decoded) ? $decoded : [];
+    }
+
+    /**
+     * accessor untuk facilities_provided - ensure always returns array
+     */
+    public function getFacilitiesProvidedAttribute($value)
+    {
+        if (is_null($value)) {
+            return [];
+        }
+        
+        if (is_array($value)) {
+            return $value;
+        }
+        
+        $decoded = json_decode($value, true);
+        return is_array($decoded) ? $decoded : [];
+    }
+
+    /**
      * relasi ke institution
      */
     public function institution()
@@ -91,7 +177,25 @@ class Problem extends Model
      */
     public function images()
     {
-        return $this->hasMany(ProblemImage::class);
+        return $this->hasMany(ProblemImage::class)->orderBy('order');
+    }
+
+    /**
+     * relasi ke wishlists
+     */
+    public function wishlists()
+    {
+        return $this->hasMany(Wishlist::class);
+    }
+
+    /**
+     * relasi ke students yang wishlist problem ini (many-to-many)
+     */
+    public function wishlistedBy()
+    {
+        return $this->belongsToMany(Student::class, 'wishlists')
+                    ->withTimestamps()
+                    ->withPivot('notes');
     }
 
     /**
@@ -120,6 +224,14 @@ class Problem extends Model
     }
 
     /**
+     * scope untuk filter by regency
+     */
+    public function scopeInRegency($query, $regencyId)
+    {
+        return $query->where('regency_id', $regencyId);
+    }
+
+    /**
      * scope untuk filter by SDG category
      */
     public function scopeHasSdg($query, $sdgNumber)
@@ -142,9 +254,17 @@ class Problem extends Model
     }
 
     /**
-     * cek apakah problem masih open untuk aplikasi
+     * increment views counter
      */
-    public function isOpenForApplication(): bool
+    public function incrementViews()
+    {
+        $this->increment('views_count');
+    }
+
+    /**
+     * cek apakah masih menerima aplikasi
+     */
+    public function isAcceptingApplications(): bool
     {
         return $this->status === 'open' 
             && $this->application_deadline >= now()
@@ -152,34 +272,21 @@ class Problem extends Model
     }
 
     /**
-     * hitung sisa slot mahasiswa
+     * get status badge color class
      */
-    public function getRemainingSlots(): int
+    public function getStatusBadgeColor(): string
     {
-        return max(0, $this->required_students - $this->accepted_students);
+        return match($this->status) {
+            'open' => 'bg-green-100 text-green-800',
+            'in_progress' => 'bg-blue-100 text-blue-800',
+            'completed' => 'bg-gray-100 text-gray-800',
+            'closed' => 'bg-red-100 text-red-800',
+            default => 'bg-yellow-100 text-yellow-800',
+        };
     }
 
     /**
-     * format durasi proyek
-     */
-    public function getFormattedDuration(): string
-    {
-        if ($this->duration_months === 1) {
-            return '1 bulan';
-        }
-        return "{$this->duration_months} bulan";
-    }
-
-    /**
-     * increment view count
-     */
-    public function incrementViews(): void
-    {
-        $this->increment('views_count');
-    }
-
-    /**
-     * get difficulty badge color
+     * get difficulty badge color class
      */
     public function getDifficultyBadgeColor(): string
     {
@@ -199,8 +306,41 @@ class Problem extends Model
         return match($this->difficulty_level) {
             'beginner' => 'Pemula',
             'intermediate' => 'Menengah',
-            'advanced' => 'Lanjutan',
-            default => 'Tidak diketahui',
+            'advanced' => 'Lanjut',
+            default => 'Tidak Diketahui',
         };
+    }
+
+    /**
+     * get days until deadline
+     */
+    public function getDaysUntilDeadline(): int
+    {
+        return now()->diffInDays($this->application_deadline, false);
+    }
+
+    /**
+     * cek apakah deadline sudah lewat
+     */
+    public function isDeadlinePassed(): bool
+    {
+        return $this->application_deadline < now();
+    }
+
+    /**
+     * get remaining slots
+     */
+    public function getRemainingSlots(): int
+    {
+        return max(0, $this->required_students - $this->accepted_students);
+    }
+
+    /**
+     * get fill percentage
+     */
+    public function getFillPercentage(): int
+    {
+        if ($this->required_students == 0) return 0;
+        return (int) (($this->accepted_students / $this->required_students) * 100);
     }
 }

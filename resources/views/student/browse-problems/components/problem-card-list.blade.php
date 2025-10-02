@@ -47,120 +47,107 @@
                              alt="{{ $problem->institution->name }}"
                              class="w-8 h-8 rounded-full object-cover mr-2">
                         @else
-                        <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center mr-2">
-                            <span class="text-xs font-semibold text-gray-600">
-                                {{ substr($problem->institution->name, 0, 1) }}
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center mr-2">
+                            <span class="text-white text-xs font-bold">
+                                {{ strtoupper(substr($problem->institution->name, 0, 1)) }}
                             </span>
                         </div>
                         @endif
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm font-medium text-gray-900 truncate">
-                                {{ $problem->institution->name }}
-                            </p>
-                            <p class="text-xs text-gray-500 truncate">
-                                {{ $problem->regency->name }}, {{ $problem->province->name }}
-                            </p>
-                        </div>
-                        
-                        <!-- difficulty badge -->
-                        <span class="ml-3 px-2 py-1 {{ $problem->getDifficultyBadgeColor() }} text-xs font-semibold rounded-full">
-                            {{ $problem->getDifficultyLabel() }}
-                        </span>
+                        <span class="text-sm text-gray-600">{{ $problem->institution->name }}</span>
                     </div>
 
-                    <!-- title & description -->
+                    <!-- title -->
                     <h3 class="text-xl font-bold text-gray-900 mb-2 hover:text-blue-600 transition-colors">
                         {{ $problem->title }}
                     </h3>
 
+                    <!-- description -->
                     <p class="text-sm text-gray-600 mb-4 line-clamp-2">
-                        {{ Str::limit($problem->description, 150) }}
+                        {{ Str::limit($problem->description, 200) }}
                     </p>
 
-                    <!-- SDG tags -->
-                    <div class="flex flex-wrap gap-1 mb-4">
-                        @php
-                            $sdgCategories = is_array($problem->sdg_categories) 
-                                ? $problem->sdg_categories 
-                                : json_decode($problem->sdg_categories, true) ?? [];
-                        @endphp
-                        @foreach(array_slice($sdgCategories, 0, 5) as $sdg)
-                        <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded">
-                            SDG {{ $sdg }}
+                    <!-- details grid -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                        <div class="flex items-center text-sm text-gray-600">
+                            <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                            </svg>
+                            <span class="truncate">{{ $problem->regency->name }}</span>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-600">
+                            <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                            </svg>
+                            {{ $problem->required_students }} mahasiswa
+                        </div>
+                        <div class="flex items-center text-sm text-gray-600">
+                            <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            {{ $problem->duration_months }} bulan
+                        </div>
+                        <div class="flex items-center text-sm text-gray-600">
+                            <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            @php
+                                $daysLeft = now()->diffInDays($problem->application_deadline, false);
+                            @endphp
+                            <span class="{{ $daysLeft <= 7 && $daysLeft >= 0 ? 'text-red-600 font-semibold' : '' }}">
+                                {{ abs($daysLeft) }} hari {{ $daysLeft >= 0 ? 'lagi' : 'lewat' }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- tags/skills -->
+                    @php
+                        // handle both string (JSON) and array format
+                        $skills = $problem->required_skills;
+                        if (is_string($skills)) {
+                            $skills = json_decode($skills, true) ?? [];
+                        }
+                        $skills = is_array($skills) ? $skills : [];
+                    @endphp
+                    @if(count($skills) > 0)
+                    <div class="flex flex-wrap gap-1">
+                        @foreach(array_slice($skills, 0, 5) as $skill)
+                        <span class="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-md">
+                            {{ $skill }}
                         </span>
                         @endforeach
-                        @if(count($sdgCategories) > 5)
-                        <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded">
-                            +{{ count($sdgCategories) - 5 }}
+                        @if(count($skills) > 5)
+                        <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-md">
+                            +{{ count($skills) - 5 }}
                         </span>
                         @endif
                     </div>
+                    @endif
                 </div>
 
-                <!-- footer metadata -->
-                <div class="border-t border-gray-100 pt-4 mt-4">
-                    <div class="flex items-center justify-between flex-wrap gap-3">
-                        <!-- info items -->
-                        <div class="flex items-center gap-4 text-sm text-gray-600">
-                            <div class="flex items-center">
-                                <svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                {{ $problem->getFormattedDuration() }}
-                            </div>
-                            <div class="flex items-center">
-                                <svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                                </svg>
-                                {{ $problem->required_students }} orang
-                            </div>
-                            <div class="flex items-center text-red-600 font-medium">
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                </svg>
-                                {{ $problem->application_deadline->format('d M Y') }}
-                            </div>
-                        </div>
-                        
-                        <!-- slots badge -->
-                        @if($problem->getRemainingSlots() > 0)
-                        <span class="px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
-                            {{ $problem->getRemainingSlots() }} slot tersisa
+                <!-- footer -->
+                <div class="mt-4 pt-4 border-t border-gray-200 flex items-center justify-between">
+                    <div class="flex items-center space-x-4 text-xs text-gray-500">
+                        <span class="flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                            {{ $problem->views_count }}
                         </span>
-                        @else
-                        <span class="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded-full">
-                            Penuh
+                        <span class="flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            {{ $problem->applications_count }} aplikasi
                         </span>
-                        @endif
                     </div>
+
+                    <!-- difficulty badge -->
+                    <span class="inline-flex items-center px-2 py-1 {{ $problem->getDifficultyBadgeColor() }} text-xs font-medium rounded-md">
+                        {{ $problem->getDifficultyLabel() }}
+                    </span>
                 </div>
             </div>
         </div>
     </a>
-
-    <!-- action buttons di bagian bawah -->
-    <div class="px-6 pb-6 pt-0">
-        <div class="flex gap-3">
-            <a href="{{ route('student.problems.show', $problem->id) }}" 
-               class="flex-1 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors text-center">
-                Lihat Detail
-            </a>
-            
-            <button type="button" 
-                    class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"
-                    title="Simpan ke wishlist">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
-                </svg>
-            </button>
-            
-            <button type="button" 
-                    class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"
-                    title="Bagikan">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
-                </svg>
-            </button>
-        </div>
-    </div>
 </div>
