@@ -9,6 +9,8 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Student\BrowseProblemsController;
 use App\Http\Controllers\Student\DashboardController as StudentDashboardController;
 use App\Http\Controllers\Student\ProfileController as StudentProfileController;
+use App\Http\Controllers\Institution\DashboardController as InstitutionDashboardController;
+use App\Http\Controllers\Institution\ProfileController as InstitutionProfileController;
 
 // halaman publik
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -42,13 +44,10 @@ Route::middleware(['auth', 'user.type:student'])->prefix('student')->name('stude
     Route::get('/browse-problems', [BrowseProblemsController::class, 'index'])->name('browse-problems');
     Route::get('/problems/{id}', [BrowseProblemsController::class, 'show'])->name('problems.show');
     
-    // profile routes - FIX: aktifkan route profile
+    // profile routes
     Route::get('/profile', [StudentProfileController::class, 'index'])->name('profile.index');
     Route::get('/profile/edit', [StudentProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [StudentProfileController::class, 'update'])->name('profile.update');
-    
-    // public portfolio route (tanpa middleware auth)
-    // ini akan diakses oleh route terpisah di bawah
     
     // TODO: application routes
     // Route::get('/applications', [ApplicationController::class, 'index'])->name('applications.index');
@@ -71,14 +70,34 @@ Route::middleware(['auth', 'user.type:student'])->prefix('student')->name('stude
 // public profile routes (tanpa auth)
 Route::get('/student/profile/{username}', [StudentProfileController::class, 'publicProfile'])->name('student.profile.public');
 
-// TODO: institution routes
-// Route::middleware(['auth', 'user.type:institution'])->prefix('institution')->name('institution.')->group(function () {
-//     Route::get('/dashboard', [InstitutionDashboardController::class, 'index'])->name('dashboard');
-//     Route::get('/profile', [InstitutionProfileController::class, 'index'])->name('profile.index');
-//     Route::get('/profile/edit', [InstitutionProfileController::class, 'edit'])->name('profile.edit');
-//     Route::patch('/profile', [InstitutionProfileController::class, 'update'])->name('profile.update');
-//     // ... institution routes lainnya
-// });
+// institution routes
+Route::middleware(['auth', 'user.type:institution'])->prefix('institution')->name('institution.')->group(function () {
+    
+    // dashboard
+    Route::get('/dashboard', [InstitutionDashboardController::class, 'index'])->name('dashboard');
+    
+    // profile routes
+    Route::get('/profile', [InstitutionProfileController::class, 'index'])->name('profile.index');
+    Route::get('/profile/edit', [InstitutionProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [InstitutionProfileController::class, 'update'])->name('profile.update');
+    
+    // TODO: problem management routes
+    // Route::get('/problems', [InstitutionProblemController::class, 'index'])->name('problems.index');
+    // Route::get('/problems/create', [InstitutionProblemController::class, 'create'])->name('problems.create');
+    // Route::post('/problems', [InstitutionProblemController::class, 'store'])->name('problems.store');
+    // Route::get('/problems/{id}/edit', [InstitutionProblemController::class, 'edit'])->name('problems.edit');
+    // Route::patch('/problems/{id}', [InstitutionProblemController::class, 'update'])->name('problems.update');
+    // Route::delete('/problems/{id}', [InstitutionProblemController::class, 'destroy'])->name('problems.destroy');
+    
+    // TODO: application review routes
+    // Route::get('/applications', [InstitutionApplicationController::class, 'index'])->name('applications.index');
+    // Route::get('/applications/{id}', [InstitutionApplicationController::class, 'show'])->name('applications.show');
+    // Route::patch('/applications/{id}/accept', [InstitutionApplicationController::class, 'accept'])->name('applications.accept');
+    // Route::patch('/applications/{id}/reject', [InstitutionApplicationController::class, 'reject'])->name('applications.reject');
+});
+
+// public institution profile (tanpa auth)
+Route::get('/institution/profile/{username}', [InstitutionProfileController::class, 'publicProfile'])->name('institution.profile.public');
 
 // API routes untuk AJAX calls
 Route::prefix('api')->middleware('throttle:60,1')->group(function () {

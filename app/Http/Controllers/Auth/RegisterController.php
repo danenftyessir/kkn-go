@@ -8,16 +8,23 @@ use App\Http\Requests\InstitutionRegisterRequest;
 use App\Models\User;
 use App\Models\Student;
 use App\Models\Institution;
-use App\Mail\VerifyEmailMail;
+use App\Models\University;
+use App\Models\Province;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
+/**
+ * RegisterController
+ * 
+ * handle registrasi untuk student dan institution
+ */
 class RegisterController extends Controller
 {
     /**
-     * tampilkan halaman pilihan jenis registrasi
+     * tampilkan halaman pilihan registrasi
      */
     public function showRegisterForm()
     {
@@ -25,27 +32,29 @@ class RegisterController extends Controller
     }
 
     /**
-     * tampilkan form registrasi mahasiswa
+     * tampilkan form registrasi student
      */
     public function showStudentRegisterForm()
     {
-        // TODO: ambil data universities dari database
-        $universities = [];
+        // ambil data universities untuk dropdown
+        $universities = University::orderBy('name', 'asc')->get();
         
         return view('auth.student-register', compact('universities'));
     }
 
     /**
-     * tampilkan form registrasi instansi
+     * tampilkan form registrasi institution
      */
     public function showInstitutionRegisterForm()
     {
-        // TODO: ambil data provinces dari database
-        $provinces = [];
+        // ambil data provinces untuk dropdown
+        $provinces = Province::orderBy('name', 'asc')->get();
+        
+        // definisi tipe institusi
         $institutionTypes = [
             'pemerintah_desa' => 'pemerintah desa',
-            'dinas' => 'dinas',
-            'ngo' => 'NGO / lembaga non-profit',
+            'dinas' => 'dinas pemerintahan',
+            'ngo' => 'NGO / lembaga swadaya masyarakat',
             'puskesmas' => 'puskesmas',
             'sekolah' => 'sekolah',
             'perguruan_tinggi' => 'perguruan tinggi',
@@ -56,30 +65,27 @@ class RegisterController extends Controller
     }
 
     /**
-     * proses registrasi mahasiswa
+     * proses registrasi student
      */
     public function registerStudent(StudentRegisterRequest $request)
     {
         try {
+            // gunakan database transaction untuk memastikan atomicity
             DB::beginTransaction();
-
-            // handle upload foto profil
-            $profilePhotoPath = null;
-            if ($request->hasFile('profile_photo')) {
-                $profilePhotoPath = $request->file('profile_photo')->store('profiles', 'public');
-            }
-
-            // buat user
+            
+            // buat user account
             $user = User::create([
+                'name' => $request->first_name . ' ' . $request->last_name,
                 'email' => $request->email,
                 'username' => $request->username,
                 'password' => Hash::make($request->password),
                 'user_type' => 'student',
                 'is_active' => true,
-                'email_verified_at' => null // akan diset setelah verifikasi
+                // email_verified_at untuk sementara di-set null, nanti verifikasi lewat email
+                'email_verified_at' => null,
             ]);
 
-            // buat profile student
+            // buat data student
             $student = Student::create([
                 'user_id' => $user->id,
                 'first_name' => $request->first_name,
@@ -88,114 +94,133 @@ class RegisterController extends Controller
                 'major' => $request->major,
                 'nim' => $request->nim,
                 'semester' => $request->semester,
-                'whatsapp_number' => $request->whatsapp_number,
-                'profile_photo_url' => $profilePhotoPath,
-                'portfolio_visible' => false,
-                'show_email' => false,
-                'show_phone' => false
+                'phone' => $request->whatsapp_number,
+                'profile_photo_path' => null,
+                'bio' => null,
             ]);
 
-            // kirim email verifikasi
-            Mail::to($user->email)->send(new VerifyEmailMail($user));
-
+            // commit transaction
             DB::commit();
 
-            // login otomatis setelah registrasi
-            auth()->login($user, $request->filled('remember'));
+            // log successful registration
+            Log::info('student registered successfully', [
+                'user_id' => $user->id,
+                'student_id' => $student->id,
+                'email' => $user->email
+            ]);
 
-            return redirect()
-                ->route('verification.notice')
-                ->with('success', 'registrasi berhasil! silakan cek email anda untuk verifikasi');
+            // TODO: kirim email verifikasi
+            // dispatch(new SendEmailVerificationNotification($user));
+
+            // login otomatis setelah registrasi
+            Auth::login($user);
+
+            // redirect ke dashboard student dengan success message
+            return redirect()->route('student.dashboard')
+                ->with('success', 'registrasi berhasil! selamat datang di KKN-GO.');
 
         } catch (\Exception $e) {
+            // rollback jika ada error
             DB::rollBack();
             
-            // hapus file yang sudah diupload jika ada error
-            if (isset($profilePhotoPath)) {
-                Storage::disk('public')->delete($profilePhotoPath);
-            }
+            // log error
+            Log::error('student registration failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
 
+            // redirect kembali dengan error message
             return back()
-                ->withInput()
-                ->withErrors(['error' => 'terjadi kesalahan saat registrasi. silakan coba lagi.']);
+                ->withInput($request->except('password', 'password_confirmation'))
+                ->with('error', 'terjadi kesalahan saat registrasi. silakan coba lagi.');
         }
     }
 
     /**
-     * proses registrasi instansi
+     * proses registrasi institution
      */
     public function registerInstitution(InstitutionRegisterRequest $request)
     {
         try {
+            // gunakan database transaction
             DB::beginTransaction();
 
-            // handle upload logo
-            $logoPath = null;
-            if ($request->hasFile('logo')) {
-                $logoPath = $request->file('logo')->store('logos', 'public');
-            }
-
-            // handle upload dokumen verifikasi
-            $documentPath = $request->file('verification_document')->store('documents', 'public');
-
-            // buat user
+            // buat user account
             $user = User::create([
+                'name' => $request->institution_name,
                 'email' => $request->official_email,
                 'username' => $request->username,
                 'password' => Hash::make($request->password),
                 'user_type' => 'institution',
                 'is_active' => true,
-                'email_verified_at' => null // akan diset setelah verifikasi
+                'email_verified_at' => null,
             ]);
 
-            // buat profile institution
+            // handle upload logo jika ada
+            $logoPath = null;
+            if ($request->hasFile('logo')) {
+                $logoPath = $request->file('logo')->store('logos', 'public');
+            }
+
+            // handle upload dokumen verifikasi jika ada
+            $verificationDocPath = null;
+            if ($request->hasFile('verification_document')) {
+                $verificationDocPath = $request->file('verification_document')->store('verifications', 'public');
+            }
+
+            // buat data institution
             $institution = Institution::create([
                 'user_id' => $user->id,
-                'institution_name' => $request->institution_name,
-                'institution_type' => $request->institution_type,
+                'name' => $request->institution_name,
+                'type' => $request->institution_type,
                 'address' => $request->address,
                 'province_id' => $request->province_id,
                 'regency_id' => $request->regency_id,
+                'email' => $request->official_email,
+                'phone' => $request->phone,
+                'logo_path' => $logoPath,
                 'pic_name' => $request->pic_name,
                 'pic_position' => $request->pic_position,
-                'phone_number' => $request->phone_number,
-                'website' => $request->website,
-                'description' => $request->description,
-                'logo_url' => $logoPath,
-                'verification_document_url' => $documentPath,
-                'is_verified' => false, // menunggu verifikasi admin
+                'verification_document_path' => $verificationDocPath,
+                'is_verified' => false, // default belum terverifikasi, perlu approval admin
                 'verified_at' => null,
-                'verified_by' => null
+                'description' => null,
             ]);
 
-            // kirim email verifikasi
-            Mail::to($user->email)->send(new VerifyEmailMail($user));
-
-            // TODO: kirim notifikasi ke admin untuk verifikasi instansi
-
+            // commit transaction
             DB::commit();
 
-            // login otomatis setelah registrasi
-            auth()->login($user, $request->filled('remember'));
+            // log successful registration
+            Log::info('institution registered successfully', [
+                'user_id' => $user->id,
+                'institution_id' => $institution->id,
+                'email' => $user->email
+            ]);
 
-            return redirect()
-                ->route('verification.notice')
-                ->with('success', 'registrasi berhasil! silakan cek email anda untuk verifikasi. akun instansi anda juga akan diverifikasi oleh admin.');
+            // TODO: kirim email verifikasi
+            // TODO: kirim notifikasi ke admin untuk approval
+
+            // login otomatis setelah registrasi
+            Auth::login($user);
+
+            // redirect ke dashboard institution dengan info message
+            return redirect()->route('institution.dashboard')
+                ->with('info', 'registrasi berhasil! akun anda akan diverifikasi oleh admin dalam 1-3 hari kerja.');
 
         } catch (\Exception $e) {
+            // rollback jika ada error
             DB::rollBack();
             
-            // hapus file yang sudah diupload jika ada error
-            if (isset($logoPath)) {
-                Storage::disk('public')->delete($logoPath);
-            }
-            if (isset($documentPath)) {
-                Storage::disk('public')->delete($documentPath);
-            }
+            // log error
+            Log::error('institution registration failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
 
+            // redirect kembali dengan error message
             return back()
-                ->withInput()
-                ->withErrors(['error' => 'terjadi kesalahan saat registrasi. silakan coba lagi.']);
+                ->withInput($request->except('password', 'password_confirmation'))
+                ->with('error', 'terjadi kesalahan saat registrasi. silakan coba lagi.');
         }
     }
 }
