@@ -23,15 +23,16 @@ class DummyDataSeeder extends Seeder
         $this->command->info('Memulai seeding data dummy...');
 
         // clear data lama untuk menghindari duplikasi
+        // CATATAN: provinces dan regencies TIDAK dihapus karena sudah di-seed oleh ProvincesRegenciesSeeder
         $this->clearOldData();
 
-        // seeding provinces
-        $this->command->info('Seeding provinces...');
-        $this->seedProvinces();
-
-        // seeding regencies
-        $this->command->info('Seeding regencies...');
-        $this->seedRegencies();
+        // PERBAIKAN: hapus seeding provinces dan regencies karena sudah di-handle oleh ProvincesRegenciesSeeder
+        // jika provinces/regencies belum ada, beri warning
+        if (Province::count() === 0 || Regency::count() === 0) {
+            $this->command->error('⚠️ Provinces atau Regencies belum di-seed!');
+            $this->command->error('Jalankan ProvincesRegenciesSeeder terlebih dahulu.');
+            return;
+        }
 
         // seeding universities
         $this->command->info('Seeding universities...');
@@ -61,7 +62,7 @@ class DummyDataSeeder extends Seeder
         $this->command->info('   Email    : budi.santoso@ui.ac.id');
         $this->command->info('   Password : password123');
         $this->command->info('');
-        $this->command->info('🏛️  Instansi:');
+        $this->command->info('🏛️ Instansi:');
         $this->command->info('   Username : desamakmur');
         $this->command->info('   Email    : desa.sukamaju@example.com');
         $this->command->info('   Password : password123');
@@ -71,6 +72,7 @@ class DummyDataSeeder extends Seeder
 
     /**
      * clear data lama untuk menghindari duplikasi
+     * PERBAIKAN: TIDAK menghapus provinces dan regencies karena sudah di-seed oleh ProvincesRegenciesSeeder
      */
     private function clearOldData(): void
     {
@@ -84,13 +86,12 @@ class DummyDataSeeder extends Seeder
         }
 
         // truncate tables dalam urutan yang benar
+        // PERBAIKAN: hapus DB::table('regencies')->delete() dan DB::table('provinces')->delete()
         DB::table('students')->delete();
         DB::table('institutions')->delete();
         DB::table('problems')->delete();
         DB::table('users')->delete();
         DB::table('universities')->delete();
-        DB::table('regencies')->delete();
-        DB::table('provinces')->delete();
 
         // enable foreign key checks kembali
         if (DB::getDriverName() === 'sqlite') {
@@ -101,73 +102,8 @@ class DummyDataSeeder extends Seeder
     }
 
     /**
-     * seeding provinces
-     */
-    private function seedProvinces(): void
-    {
-        $provinces = [
-            ['name' => 'Jawa Barat', 'code' => '32'],
-            ['name' => 'DKI Jakarta', 'code' => '31'],
-            ['name' => 'Jawa Tengah', 'code' => '33'],
-            ['name' => 'Jawa Timur', 'code' => '35'],
-            ['name' => 'Sumatera Selatan', 'code' => '16'],
-            ['name' => 'Bali', 'code' => '51'],
-            ['name' => 'Sulawesi Selatan', 'code' => '73'],
-            ['name' => 'Sumatera Utara', 'code' => '12'],
-        ];
-
-        foreach ($provinces as $province) {
-            Province::create($province);
-        }
-    }
-
-    /**
-     * seeding regencies
-     */
-    private function seedRegencies(): void
-    {
-        $regencies = [
-            // jawa barat
-            ['province_id' => 1, 'name' => 'Kota Bandung', 'code' => '3273'],
-            ['province_id' => 1, 'name' => 'Kabupaten Bandung', 'code' => '3204'],
-            ['province_id' => 1, 'name' => 'Kota Cimahi', 'code' => '3277'],
-            ['province_id' => 1, 'name' => 'Kabupaten Garut', 'code' => '3205'],
-            ['province_id' => 1, 'name' => 'Kabupaten Sukabumi', 'code' => '3203'],
-            
-            // dki jakarta
-            ['province_id' => 2, 'name' => 'Jakarta Pusat', 'code' => '3171'],
-            ['province_id' => 2, 'name' => 'Jakarta Selatan', 'code' => '3174'],
-            ['province_id' => 2, 'name' => 'Jakarta Timur', 'code' => '3175'],
-            
-            // jawa tengah
-            ['province_id' => 3, 'name' => 'Kota Semarang', 'code' => '3374'],
-            ['province_id' => 3, 'name' => 'Kota Surakarta', 'code' => '3372'],
-
-            // Jawa Timur
-            ['province_id' => 4, 'name' => 'Kota Surabaya', 'code' => '3578'],
-            ['province_id' => 4, 'name' => 'Kabupaten Malang', 'code' => '3507'],
-            
-            // Sumatera Selatan
-            ['province_id' => 5, 'name' => 'Kota Palembang', 'code' => '1671'],
-            
-            // Bali
-            ['province_id' => 6, 'name' => 'Kabupaten Badung', 'code' => '5103'],
-            ['province_id' => 6, 'name' => 'Kota Denpasar', 'code' => '5171'],
-            
-            // Sulawesi Selatan
-            ['province_id' => 7, 'name' => 'Kota Makassar', 'code' => '7371'],
-            
-            // Sumatera Utara
-            ['province_id' => 8, 'name' => 'Kota Medan', 'code' => '1271'],
-        ];
-
-        foreach ($regencies as $regency) {
-            Regency::create($regency);
-        }
-    }
-
-    /**
      * seeding universities
+     * PERBAIKAN: hanya gunakan province_id dan regency_id yang ADA di ProvincesRegenciesSeeder
      */
     private function seedUniversities(): void
     {
@@ -175,40 +111,96 @@ class DummyDataSeeder extends Seeder
             [
                 'name' => 'Universitas Indonesia',
                 'code' => 'UI',
-                'province_id' => 2,
-                'regency_id' => 6,
+                'province_id' => 31, // DKI Jakarta
+                'regency_id' => 3174, // Kota Jakarta Barat
                 'type' => 'negeri',
                 'accreditation' => 'A'
             ],
             [
                 'name' => 'Institut Teknologi Bandung',
                 'code' => 'ITB',
-                'province_id' => 1,
-                'regency_id' => 1,
+                'province_id' => 32, // Jawa Barat
+                'regency_id' => 3273, // Kota Bandung
                 'type' => 'negeri',
                 'accreditation' => 'A'
             ],
             [
                 'name' => 'Universitas Gadjah Mada',
                 'code' => 'UGM',
-                'province_id' => 3,
-                'regency_id' => 9,
+                'province_id' => 34, // DI Yogyakarta
+                'regency_id' => 3471, // Kota Yogyakarta
                 'type' => 'negeri',
                 'accreditation' => 'A'
             ],
             [
                 'name' => 'Universitas Padjadjaran',
                 'code' => 'UNPAD',
-                'province_id' => 1,
-                'regency_id' => 1,
+                'province_id' => 32, // Jawa Barat
+                'regency_id' => 3204, // Kab. Bandung
                 'type' => 'negeri',
                 'accreditation' => 'A'
             ],
             [
                 'name' => 'Institut Pertanian Bogor',
                 'code' => 'IPB',
-                'province_id' => 1,
-                'regency_id' => 2,
+                'province_id' => 32, // Jawa Barat
+                'regency_id' => 3201, // Kab. Bogor
+                'type' => 'negeri',
+                'accreditation' => 'A'
+            ],
+            [
+                'name' => 'Universitas Diponegoro',
+                'code' => 'UNDIP',
+                'province_id' => 33, // Jawa Tengah
+                'regency_id' => 3374, // Kota Semarang
+                'type' => 'negeri',
+                'accreditation' => 'A'
+            ],
+            [
+                'name' => 'Universitas Sebelas Maret',
+                'code' => 'UNS',
+                'province_id' => 33, // Jawa Tengah
+                'regency_id' => 3372, // Kota Surakarta
+                'type' => 'negeri',
+                'accreditation' => 'A'
+            ],
+            [
+                'name' => 'Universitas Pendidikan Indonesia',
+                'code' => 'UPI',
+                'province_id' => 32, // Jawa Barat
+                'regency_id' => 3273, // Kota Bandung
+                'type' => 'negeri',
+                'accreditation' => 'A'
+            ],
+            [
+                'name' => 'Universitas Islam Negeri Jakarta',
+                'code' => 'UIN Jakarta',
+                'province_id' => 31, // DKI Jakarta
+                'regency_id' => 3173, // Jakarta Pusat
+                'type' => 'negeri',
+                'accreditation' => 'A'
+            ],
+            [
+                'name' => 'Universitas Sultan Ageng Tirtayasa',
+                'code' => 'UNTIRTA',
+                'province_id' => 36, // Banten
+                'regency_id' => 3673, // Kota Serang
+                'type' => 'negeri',
+                'accreditation' => 'B'
+            ],
+            [
+                'name' => 'Politeknik Negeri Bandung',
+                'code' => 'POLBAN',
+                'province_id' => 32, // Jawa Barat
+                'regency_id' => 3273, // Kota Bandung
+                'type' => 'negeri',
+                'accreditation' => 'A'
+            ],
+            [
+                'name' => 'Universitas Negeri Semarang',
+                'code' => 'UNNES',
+                'province_id' => 33, // Jawa Tengah
+                'regency_id' => 3374, // Kota Semarang
                 'type' => 'negeri',
                 'accreditation' => 'A'
             ],
@@ -217,6 +209,8 @@ class DummyDataSeeder extends Seeder
         foreach ($universities as $university) {
             University::create($university);
         }
+        
+        $this->command->info('✓ ' . University::count() . ' universities berhasil dibuat');
     }
 
     /**
@@ -224,305 +218,254 @@ class DummyDataSeeder extends Seeder
      */
     private function seedStudents(): void
     {
-        // data nama indonesia yang umum
+        // data nama indonesia yang realistis
         $namaDepan = [
-            'Ahmad', 'Budi', 'Citra', 'Dian', 'Eka', 
-            'Fajar', 'Gita', 'Hendra', 'Indah', 'Joko',
-            'Kartika', 'Lina', 'Made', 'Nur', 'Oki',
-            'Putri', 'Rama', 'Sari', 'Toni', 'Uni',
-            'Vina', 'Wawan', 'Yanti', 'Zainal', 'Ani',
-            'Bayu', 'Dewi', 'Eko', 'Fitri', 'Hadi'
+            'Budi', 'Andi', 'Siti', 'Ahmad', 'Dewi', 'Rizki', 'Fitri', 'Dimas', 
+            'Ayu', 'Raka', 'Nia', 'Fajar', 'Maya', 'Eko', 'Putri', 'Arief',
+            'Linda', 'Hendra', 'Ratna', 'Bambang', 'Sri', 'Wahyu', 'Indah', 'Joko',
+            'Sari', 'Yudi', 'Tina', 'Galuh', 'Wawan', 'Rina'
         ];
 
         $namaBelakang = [
-            'Santoso', 'Wijaya', 'Pratama', 'Kusuma', 'Putra',
-            'Sari', 'Wati', 'Susanto', 'Permana', 'Hidayat',
-            'Nugroho', 'Lestari', 'Setiawan', 'Rahma', 'Yusuf',
-            'Hakim', 'Malik', 'Purnomo', 'Andika', 'Rizki',
-            'Saputra', 'Saputri', 'Ramadan', 'Firmansyah', 'Utami'
+            'Santoso', 'Pratama', 'Wijaya', 'Permana', 'Kusuma', 'Saputra', 'Lestari',
+            'Setiawan', 'Wibowo', 'Nugroho', 'Rahmawati', 'Hidayat', 'Kurniawan', 
+            'Susanto', 'Purnomo', 'Handayani', 'Firmansyah', 'Safitri', 'Ramadhan',
+            'Maharani', 'Prasetyo', 'Utami', 'Anwar', 'Yulianto'
         ];
 
         $jurusan = [
-            'Teknik Informatika', 'Teknik Sipil', 'Teknik Elektro',
-            'Manajemen', 'Akuntansi', 'Ilmu Komunikasi',
-            'Psikologi', 'Hukum', 'Kedokteran',
-            'Kesehatan Masyarakat', 'Gizi', 'Farmasi',
-            'Arsitektur', 'Desain Komunikasi Visual', 'Seni Rupa'
+            'Teknik Informatika', 'Sistem Informasi', 'Teknik Sipil', 'Teknik Elektro',
+            'Manajemen', 'Akuntansi', 'Ilmu Komunikasi', 'Psikologi', 'Kedokteran',
+            'Hukum', 'Ekonomi Pembangunan', 'Kesehatan Masyarakat', 'Farmasi',
+            'Teknik Industri', 'Arsitektur', 'Sastra Inggris', 'Pendidikan',
+            'Pertanian', 'Peternakan', 'Sosiologi', 'Teknik Mesin', 'Desain Grafis'
         ];
 
-        // buat 1 student untuk testing (sesuai dokumentasi)
-        $testUser = User::create([
-            'name' => 'Budi Santoso',
-            'email' => 'budi.santoso@ui.ac.id',
-            'username' => 'budisantoso',
-            'password' => Hash::make('password123'),
-            'user_type' => 'student',
-            'email_verified_at' => now(),
-        ]);
+        $universities = University::all();
 
-        Student::create([
-            'user_id' => $testUser->id,
-            'first_name' => 'Budi',
-            'last_name' => 'Santoso',
-            'university_id' => 1, // universitas indonesia
-            'major' => 'Teknik Informatika',
-            'nim' => '2106123456',
-            'semester' => 6,
-            'phone' => '081234567890',
-        ]);
-
-        // generate 50 students dummy dengan data yang unik
-        for ($i = 0; $i < 50; $i++) {
-            $depan = $namaDepan[array_rand($namaDepan)];
-            $belakang = $namaBelakang[array_rand($namaBelakang)];
-            $fullName = $depan . ' ' . $belakang;
-            
-            // buat username yang unik dengan angka random
-            $username = strtolower($depan . '_' . $belakang . rand(100, 999));
-            
-            // buat email yang unik dengan timestamp dan random
-            $emailPrefix = strtolower($depan . '.' . $belakang . rand(100, 999));
-            $emailDomain = ['student.ac.id', 'mail.ac.id', 'std.ac.id', 'mahasiswa.ac.id'];
-            $email = $emailPrefix . '@' . $emailDomain[array_rand($emailDomain)];
-
-            try {
-                $user = User::create([
-                    'name' => $fullName,
-                    'email' => $email,
-                    'username' => $username,
-                    'password' => Hash::make('password123'),
-                    'user_type' => 'student',
-                    'email_verified_at' => now(),
-                ]);
-
-                Student::create([
-                    'user_id' => $user->id,
-                    'first_name' => $depan,
-                    'last_name' => $belakang,
-                    'university_id' => rand(1, 5),
-                    'major' => $jurusan[array_rand($jurusan)],
-                    'nim' => '2' . str_pad(rand(100000, 999999), 6, '0', STR_PAD_LEFT) . rand(10, 99),
-                    'semester' => rand(3, 8),
-                    'phone' => '08' . rand(10, 99) . rand(10000000, 99999999),
-                ]);
-            } catch (\Exception $e) {
-                // skip jika terjadi duplikasi
-                continue;
-            }
+        if ($universities->isEmpty()) {
+            $this->command->error('Tidak ada universities yang di-seed!');
+            return;
         }
-    }
 
-    /**
-     * seeding institutions
-     */
-    private function seedInstitutions(): void
-    {
-        // buat user institution untuk testing (sesuai dokumentasi)
-        $testUser = User::create([
-            'name' => 'Desa Sukamaju',
-            'email' => 'desa.sukamaju@example.com',
-            'username' => 'desamakmur',
-            'password' => Hash::make('password123'),
-            'user_type' => 'institution',
-            'email_verified_at' => now(),
-        ]);
+        // buat 30 mahasiswa dummy
+        for ($i = 0; $i < 30; $i++) {
+            $firstName = $namaDepan[array_rand($namaDepan)];
+            $lastName = $namaBelakang[array_rand($namaBelakang)];
+            $fullName = $firstName . ' ' . $lastName;
+            
+            // generate username dari nama
+            $username = strtolower($firstName . $lastName);
+            
+            // generate email dengan domain universitas
+            $university = $universities->random();
+            
+            // bersihkan spasi di code untuk email
+            $cleanCode = str_replace(' ', '', strtolower($university->code));
+            $emailDomain = $cleanCode . '.ac.id';
+            
+            // tambahkan suffix untuk uniqueness
+            $usernameSuffix = $i > 0 ? $i : '';
+            $emailSuffix = $i > 0 ? $i : '';
+            
+            $email = strtolower($firstName . '.' . $lastName . $emailSuffix) . '@' . $emailDomain;
 
-        $testInstitution = Institution::create([
-            'user_id' => $testUser->id,
-            'name' => 'Desa Sukamaju',
-            'type' => 'Pemerintah Desa',
-            'address' => 'Jl. Raya Desa No. 123, Kecamatan Jatinangor',
-            'province_id' => 1,
-            'regency_id' => 2,
-            'email' => 'desa.sukamaju@example.com',
-            'phone' => '0226789012',
-            'pic_name' => 'Pak Lurah',
-            'pic_position' => 'Kepala Desa',
-            'is_verified' => true,
-            'verified_at' => now(),
-        ]);
-
-        // institutions dummy lainnya
-        $institutions = [
-            [
-                'name' => 'Dinas Kesehatan Kota Bandung',
-                'type' => 'Dinas Pemerintah',
-                'email' => 'dinkes.bandung@gov.id',
-                'username' => 'dinkes_bandung',
-                'pic_name' => 'Dr. Siti Nurhaliza',
-                'pic_position' => 'Kepala Dinas Kesehatan',
-            ],
-            [
-                'name' => 'Puskesmas Sukahaji',
-                'type' => 'Puskesmas',
-                'email' => 'puskesmas.sukahaji@health.go.id',
-                'username' => 'puskesmas_sukahaji',
-                'pic_name' => 'dr. Ahmad Fauzi',
-                'pic_position' => 'Kepala Puskesmas',
-            ],
-            [
-                'name' => 'Desa Ciburial',
-                'type' => 'Pemerintah Desa',
-                'email' => 'desa.ciburial@village.id',
-                'username' => 'desa_ciburial',
-                'pic_name' => 'Bapak Udin',
-                'pic_position' => 'Kepala Desa',
-            ],
-            [
-                'name' => 'Kecamatan Cimahi Tengah',
-                'type' => 'Kecamatan',
-                'email' => 'kec.cimahitengah@gov.id',
-                'username' => 'kec_cimahitengah',
-                'pic_name' => 'Drs. Bambang Sutrisno',
-                'pic_position' => 'Camat',
-            ],
-        ];
-
-        foreach ($institutions as $index => $inst) {
+            // buat user
             $user = User::create([
-                'name' => $inst['name'],
-                'email' => $inst['email'],
-                'username' => $inst['username'],
+                'name' => $fullName,
+                'email' => $email,
+                'username' => $username . $usernameSuffix,
                 'password' => Hash::make('password123'),
-                'user_type' => 'institution',
+                'user_type' => 'student',
+                'is_active' => true,
                 'email_verified_at' => now(),
             ]);
 
+            // buat student profile
+            Student::create([
+                'user_id' => $user->id,
+                'university_id' => $university->id,
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'nim' => '2024' . str_pad($i + 1, 5, '0', STR_PAD_LEFT),
+                'major' => $jurusan[array_rand($jurusan)],
+                'semester' => rand(3, 8),
+                'phone' => '08' . rand(1000000000, 9999999999),
+                'bio' => 'Mahasiswa aktif yang tertarik dengan program KKN dan pengabdian masyarakat.',
+                'skills' => json_encode(['Komunikasi', 'Teamwork', 'Problem Solving', 'Leadership']),
+            ]);
+        }
+
+        $this->command->info('✓ ' . Student::count() . ' students berhasil dibuat');
+    }
+
+    /**
+     * seeding institutions dengan data dummy yang realistis
+     * PERBAIKAN: tambahkan field email yang required
+     */
+    private function seedInstitutions(): void
+    {
+        $namaInstansi = [
+            'Desa Sukamaju', 'Desa Makmur Sejahtera', 'Desa Harapan', 'Desa Maju Bersama',
+            'Kelurahan Cendana', 'Kelurahan Melati Indah', 'Kecamatan Raya Mandiri',
+            'Dinas Kesehatan Kabupaten', 'Dinas Pendidikan Kota', 'Dinas Sosial',
+            'Puskesmas Sehat Sentosa', 'Puskesmas Sejahtera', 'Puskesmas Makmur',
+            'UPTD Lingkungan Hidup', 'UPTD Pertanian dan Peternakan',
+            'Desa Sumber Rejeki', 'Kelurahan Harmoni', 'Puskesmas Citra Medika'
+        ];
+
+        $jenisInstansi = [
+            'Pemerintah Desa', 'Kelurahan', 'Kecamatan', 'Dinas', 'Puskesmas', 'UPTD'
+        ];
+
+        // ambil provinces dengan regencies
+        $provinces = Province::with('regencies')->whereIn('id', [31, 32, 33, 34, 36])->get();
+
+        if ($provinces->isEmpty()) {
+            $this->command->error('Tidak ada provinces yang di-seed!');
+            return;
+        }
+
+        // buat 18 instansi dummy (sesuai jumlah namaInstansi)
+        for ($i = 0; $i < count($namaInstansi); $i++) {
+            $namaInst = $namaInstansi[$i];
+            $jenis = $jenisInstansi[array_rand($jenisInstansi)];
+            
+            // pilih province dan regency secara acak
+            $province = $provinces->random();
+            $regency = $province->regencies->isNotEmpty() 
+                ? $province->regencies->random() 
+                : null;
+
+            if (!$regency) {
+                $this->command->warn("⚠️ Skip {$namaInst} - tidak ada regency untuk province {$province->name}");
+                continue;
+            }
+
+            // generate username dan email
+            $username = strtolower(str_replace(' ', '', $namaInst));
+            $email = strtolower(str_replace(' ', '.', $namaInst)) . '@example.com';
+
+            // tambahkan suffix untuk uniqueness
+            $suffix = $i > 0 ? $i : '';
+
+            // buat user
+            $user = User::create([
+                'name' => $namaInst,
+                'email' => strtolower(str_replace(' ', '.', $namaInst)) . $suffix . '@example.com',
+                'username' => $username . $suffix,
+                'password' => Hash::make('password123'),
+                'user_type' => 'institution',
+                'is_active' => true,
+                'email_verified_at' => now(),
+            ]);
+
+            // nama PIC acak
+            $picNames = ['Budi Santoso', 'Andi Wijaya', 'Joko Susanto', 'Hendra Pratama', 'Siti Rahmawati', 'Dewi Lestari'];
+            $picPositions = ['Kepala Desa', 'Lurah', 'Camat', 'Kepala Dinas', 'Kepala Puskesmas', 'Koordinator'];
+
+            // PERBAIKAN: tambahkan field email yang required
             Institution::create([
                 'user_id' => $user->id,
-                'name' => $inst['name'],
-                'type' => $inst['type'],
-                'address' => 'Jl. Contoh Alamat No. ' . ($index + 1) . ', Kota Bandung',
-                'province_id' => 1,
-                'regency_id' => 1,
-                'email' => $inst['email'],
-                'phone' => '022' . str_pad(rand(1000000, 9999999), 7, '0', STR_PAD_LEFT),
-                'pic_name' => $inst['pic_name'],
-                'pic_position' => $inst['pic_position'],
+                'name' => $namaInst,
+                'type' => $jenis,
+                'province_id' => $province->id,
+                'regency_id' => $regency->id,
+                'email' => $user->email, // PERBAIKAN: tambahkan email dari user
+                'address' => 'Jl. Raya No. ' . rand(1, 100) . ', ' . $regency->name . ', ' . $province->name,
+                'phone' => '0' . rand(21, 29) . rand(10000000, 99999999),
+                'pic_name' => $picNames[array_rand($picNames)],
+                'pic_position' => $picPositions[array_rand($picPositions)],
+                'description' => 'Instansi yang berkomitmen untuk pengembangan masyarakat dan wilayah melalui program-program pemberdayaan.',
                 'is_verified' => true,
                 'verified_at' => now(),
             ]);
         }
+
+        $this->command->info('✓ ' . Institution::count() . ' institutions berhasil dibuat');
     }
 
     /**
-     * seeding problems
+     * seeding problems (proyek) dari instansi
      */
     private function seedProblems(): void
     {
+        $judulProyek = [
+            'Pemberdayaan Ekonomi Masyarakat',
+            'Pengolahan Sampah Organik',
+            'Literasi Digital untuk Anak',
+            'Posyandu Balita Sehat',
+            'Pertanian Organik Berkelanjutan',
+            'Kampung Bersih dan Sehat',
+            'Pelatihan UMKM Mandiri',
+            'Sistem Irigasi Desa',
+            'Pendidikan Anak Usia Dini',
+            'Kesehatan Ibu dan Anak',
+            'Bank Sampah Komunitas',
+            'Wisata Desa Edukatif',
+        ];
+
+        $kategorSDG = [
+            'Tanpa Kemiskinan', 'Tanpa Kelaparan', 'Kehidupan Sehat dan Sejahtera',
+            'Pendidikan Berkualitas', 'Kesetaraan Gender', 'Air Bersih dan Sanitasi',
+            'Energi Bersih dan Terjangkau', 'Pekerjaan Layak dan Pertumbuhan Ekonomi',
+            'Industri, Inovasi dan Infrastruktur', 'Berkurangnya Kesenjangan',
+            'Kota dan Komunitas Berkelanjutan', 'Konsumsi dan Produksi Bertanggung Jawab',
+            'Penanganan Perubahan Iklim', 'Ekosistem Lautan', 'Ekosistem Daratan'
+        ];
+
+        $namaDesa = [
+            'Desa Sukamaju', 'Desa Mekar Sari', 'Desa Cihideung', 'Desa Pasir Jaya',
+            'Kelurahan Margahayu', 'Kelurahan Buah Batu', 'Desa Cimareme', 'Desa Ranca Bali'
+        ];
+
         $institutions = Institution::all();
-        
+
         if ($institutions->isEmpty()) {
-            $this->command->warn('Tidak ada institutions untuk membuat problems!');
+            $this->command->error('Tidak ada institutions yang di-seed!');
             return;
         }
 
-        $problems = [
-            [
-                'title' => 'Masalah Air Bersih Desa Jambi',
-                'description' => 'Desa Jambi mengalami kesulitan akses air bersih. Dibutuhkan mahasiswa untuk membantu analisis kebutuhan dan merancang solusi sistem penyediaan air bersih yang berkelanjutan.',
-                'background' => 'Desa Jambi terletak di dataran tinggi dengan sumber air yang terbatas. Mayoritas warga masih menggunakan air sungai yang kualitasnya kurang baik untuk kebutuhan sehari-hari.',
-                'objectives' => 'Mengidentifikasi sumber air potensial, merancang sistem distribusi air bersih, dan memberikan edukasi kepada warga tentang pengelolaan air.',
-                'scope' => 'Survei lapangan, analisis kualitas air, perancangan sistem, dan sosialisasi kepada masyarakat.',
-                'province_id' => 1,
-                'regency_id' => 1,
-                'village' => 'Desa Jambi',
-                'sdg_categories' => json_encode([6, 11, 13]),
-                'required_students' => 8,
-                'required_skills' => json_encode(['Teknik Sipil', 'Analisis Data', 'Komunikasi']),
-                'start_date' => now()->addDays(30)->format('Y-m-d'),
-                'end_date' => now()->addDays(120)->format('Y-m-d'),
-                'application_deadline' => now()->addDays(20)->format('Y-m-d'),
-                'duration_months' => 3,
-                'difficulty_level' => 'intermediate',
-                'status' => 'open',
-                'facilities_provided' => json_encode(['Akomodasi', 'Transportasi', 'Konsumsi']),
-                'is_featured' => true,
-                'is_urgent' => false,
-            ],
-            [
-                'title' => 'Analisa Kebutuhan Infrastruktur Pedesaan',
-                'description' => 'Penelitian mendalam tentang kebutuhan infrastruktur di wilayah pedesaan Sumatera Selatan. Butuh 10 mahasiswa yang siap turun ke lapangan.',
-                'background' => 'Wilayah ini membutuhkan kajian mendalam tentang kebutuhan infrastruktur untuk meningkatkan kesejahteraan masyarakat.',
-                'province_id' => 5,
-                'regency_id' => 1,
-                'village' => 'Desa Makmur',
-                'sdg_categories' => json_encode([9, 11]),
-                'required_students' => 10,
-                'required_skills' => json_encode(['Riset', 'Analisis Data', 'Presentasi']),
-                'start_date' => now()->addDays(45)->format('Y-m-d'),
-                'end_date' => now()->addDays(225)->format('Y-m-d'),
-                'application_deadline' => now()->addDays(30)->format('Y-m-d'),
-                'duration_months' => 6,
-                'difficulty_level' => 'advanced',
-                'status' => 'open',
-                'facilities_provided' => json_encode(['Akomodasi', 'Transportasi']),
-                'is_featured' => false,
-                'is_urgent' => false,
-            ],
-            [
-                'title' => 'Program Edukasi Kesehatan Masyarakat',
-                'description' => 'Membantu puskesmas dalam menjalankan program edukasi kesehatan untuk masyarakat pedesaan.',
-                'province_id' => 1,
-                'regency_id' => 2,
-                'sdg_categories' => json_encode([3, 4]),
-                'required_students' => 5,
-                'required_skills' => json_encode(['Komunikasi', 'Public Speaking', 'Desain Grafis']),
-                'start_date' => now()->addDays(20)->format('Y-m-d'),
-                'end_date' => now()->addDays(80)->format('Y-m-d'),
-                'application_deadline' => now()->addDays(15)->format('Y-m-d'),
-                'duration_months' => 2,
-                'difficulty_level' => 'beginner',
-                'status' => 'open',
-                'facilities_provided' => json_encode(['Konsumsi', 'Sertifikat']),
-                'is_featured' => true,
-                'is_urgent' => true,
-            ],
-            [
-                'title' => 'Digitalisasi UMKM Desa',
-                'description' => 'Membantu pelaku UMKM desa untuk go digital dengan membuat website dan optimasi social media.',
-                'province_id' => 1,
-                'regency_id' => 3,
-                'sdg_categories' => json_encode([8, 9, 11]),
-                'required_students' => 6,
-                'required_skills' => json_encode(['Web Development', 'Digital Marketing', 'Fotografi']),
-                'start_date' => now()->addDays(60)->format('Y-m-d'),
-                'end_date' => now()->addDays(180)->format('Y-m-d'),
-                'application_deadline' => now()->addDays(45)->format('Y-m-d'),
-                'duration_months' => 4,
-                'difficulty_level' => 'advanced',
-                'status' => 'open',
-                'facilities_provided' => json_encode(['Akomodasi', 'Konsumsi', 'Laptop']),
-                'is_featured' => false,
-                'is_urgent' => false,
-            ],
-            [
-                'title' => 'Pemberdayaan Petani Melalui Teknologi',
-                'description' => 'Implementasi teknologi pertanian modern untuk meningkatkan produktivitas petani lokal.',
-                'province_id' => 1,
-                'regency_id' => 4,
-                'sdg_categories' => json_encode([2, 8, 9]),
-                'required_students' => 7,
-                'required_skills' => json_encode(['Pertanian', 'IoT', 'Penyuluhan']),
-                'start_date' => now()->addDays(90)->format('Y-m-d'),
-                'end_date' => now()->addDays(210)->format('Y-m-d'),
-                'application_deadline' => now()->addDays(60)->format('Y-m-d'),
-                'duration_months' => 4,
-                'difficulty_level' => 'intermediate',
-                'status' => 'open',
-                'facilities_provided' => json_encode(['Akomodasi', 'Transportasi', 'Peralatan']),
-                'is_featured' => true,
-                'is_urgent' => false,
-            ],
-        ];
+        // setiap instansi buat 1-2 problems
+        foreach ($institutions as $institution) {
+            $numProblems = rand(1, 2);
 
-        foreach ($problems as $problemData) {
-            // assign problem ke institution secara random
-            $institution = $institutions->random();
-            
-            Problem::create(array_merge($problemData, [
-                'institution_id' => $institution->id,
-            ]));
+            for ($j = 0; $j < $numProblems; $j++) {
+                $judul = $judulProyek[array_rand($judulProyek)];
+                
+                Problem::create([
+                    'institution_id' => $institution->id,
+                    'title' => $judul . ' - ' . $institution->name,
+                    'description' => 'Program untuk meningkatkan kesejahteraan masyarakat melalui ' . strtolower($judul) . '. Kegiatan ini melibatkan partisipasi aktif masyarakat lokal dan bertujuan menciptakan dampak berkelanjutan.',
+                    'background' => 'Kondisi masyarakat saat ini memerlukan intervensi untuk meningkatkan kualitas hidup dan pemberdayaan ekonomi. Berbagai tantangan seperti keterbatasan akses, rendahnya keterampilan, dan minimnya infrastruktur menjadi fokus utama program ini.',
+                    'objectives' => 'Meningkatkan partisipasi masyarakat, menciptakan dampak positif, dan keberlanjutan program melalui pendampingan intensif dan transfer knowledge.',
+                    'scope' => 'Meliputi kegiatan pelatihan, pendampingan, monitoring, evaluasi program, serta dokumentasi best practices untuk replikasi di wilayah lain.',
+                    'province_id' => $institution->province_id,
+                    'regency_id' => $institution->regency_id,
+                    'village' => $namaDesa[array_rand($namaDesa)],
+                    'detailed_location' => 'RT 02/RW 05, ' . $namaDesa[array_rand($namaDesa)],
+                    'sdg_categories' => json_encode([$kategorSDG[array_rand($kategorSDG)], $kategorSDG[array_rand($kategorSDG)]]),
+                    'required_students' => rand(3, 10),
+                    'required_skills' => json_encode(['Komunikasi', 'Analisis Data', 'Perencanaan Program', 'Kerja Tim']),
+                    'required_majors' => json_encode(['Ilmu Komunikasi', 'Kesehatan Masyarakat', 'Ekonomi Pembangunan', 'Sosiologi']),
+                    'start_date' => now()->addDays(rand(100, 120)),
+                    'end_date' => now()->addDays(rand(150, 210)),
+                    'application_deadline' => now()->addDays(rand(30, 90)),
+                    'duration_months' => [2, 3, 4, 6][array_rand([2, 3, 4, 6])],
+                    'difficulty_level' => ['beginner', 'intermediate', 'advanced'][array_rand(['beginner', 'intermediate', 'advanced'])],
+                    'status' => ['open', 'open', 'in_progress'][array_rand(['open', 'open', 'in_progress'])], // lebih banyak open
+                    'expected_outcomes' => 'Peningkatan keterampilan masyarakat, peningkatan pendapatan rumah tangga, dan perubahan perilaku positif yang dapat diukur secara kuantitatif dan kualitatif.',
+                    'deliverables' => json_encode(['Laporan Akhir', 'Dokumentasi Kegiatan', 'Modul Pelatihan', 'Video Dokumenter']),
+                    'facilities_provided' => json_encode(['Akomodasi', 'Konsumsi 3x sehari', 'Transportasi lokal', 'Sertifikat', 'Uang saku']),
+                    'views_count' => rand(10, 500),
+                    'applications_count' => rand(0, 15),
+                    'accepted_students' => 0,
+                    'is_featured' => rand(0, 10) > 7, // 30% kemungkinan featured
+                    'is_urgent' => rand(0, 10) > 8, // 20% kemungkinan urgent
+                ]);
+            }
         }
+
+        $this->command->info('✓ ' . Problem::count() . ' problems berhasil dibuat');
     }
 }
