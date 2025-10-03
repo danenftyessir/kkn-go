@@ -10,14 +10,17 @@ use App\Models\Student;
 use App\Models\Institution;
 use App\Models\University;
 use App\Models\Province;
+use App\Models\Regency;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\VerifyEmailMail;
 
 /**
- * RegisterController
+ * register controller
  * 
  * handle registrasi untuk student dan institution
  */
@@ -107,6 +110,22 @@ class RegisterController extends Controller
             // commit transaction
             DB::commit();
 
+            // kirim email verifikasi
+            try {
+                Mail::to($user->email)->send(new VerifyEmailMail($user));
+                
+                Log::info('verification email sent to student', [
+                    'user_id' => $user->id,
+                    'email' => $user->email
+                ]);
+            } catch (\Exception $e) {
+                // jika email gagal terkirim, jangan hentikan proses. cukup log error.
+                Log::error('gagal mengirim email verifikasi saat registrasi student', [
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+
             // log successful registration
             Log::info('student registered successfully', [
                 'user_id' => $user->id,
@@ -114,15 +133,11 @@ class RegisterController extends Controller
                 'email' => $user->email
             ]);
 
-            // TODO: kirim email verifikasi
-            // dispatch(new SendEmailVerificationNotification($user));
-
             // login otomatis setelah registrasi
             Auth::login($user);
 
-            // redirect ke dashboard student dengan success message
-            return redirect()->route('student.dashboard')
-                ->with('success', 'registrasi berhasil! selamat datang di KKN-GO.');
+            // redirect ke halaman verifikasi email
+            return redirect()->route('verification.notice');
 
         } catch (\Exception $e) {
             // rollback jika ada error
@@ -182,18 +197,34 @@ class RegisterController extends Controller
                 'province_id' => $request->province_id,
                 'regency_id' => $request->regency_id,
                 'email' => $request->official_email,
-                'phone' => $request->phone,
+                'phone' => $request->phone_number,
                 'logo_path' => $logoPath,
                 'pic_name' => $request->pic_name,
                 'pic_position' => $request->pic_position,
                 'verification_document_path' => $verificationDocPath,
                 'is_verified' => false, // default belum terverifikasi, perlu approval admin
                 'verified_at' => null,
-                'description' => null,
+                'description' => $request->description,
+                'website' => $request->website,
             ]);
 
             // commit transaction
             DB::commit();
+
+            // kirim email verifikasi
+            try {
+                Mail::to($user->email)->send(new VerifyEmailMail($user));
+                
+                Log::info('verification email sent to institution', [
+                    'user_id' => $user->id,
+                    'email' => $user->email
+                ]);
+            } catch (\Exception $e) {
+                Log::error('gagal mengirim email verifikasi saat registrasi instansi', [
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
 
             // log successful registration
             Log::info('institution registered successfully', [
@@ -202,15 +233,13 @@ class RegisterController extends Controller
                 'email' => $user->email
             ]);
 
-            // TODO: kirim email verifikasi
             // TODO: kirim notifikasi ke admin untuk approval
 
             // login otomatis setelah registrasi
             Auth::login($user);
 
-            // redirect ke dashboard institution dengan info message
-            return redirect()->route('institution.dashboard')
-                ->with('info', 'registrasi berhasil! akun anda akan diverifikasi oleh admin dalam 1-3 hari kerja.');
+            // redirect ke halaman verifikasi email
+            return redirect()->route('verification.notice');
 
         } catch (\Exception $e) {
             // rollback jika ada error

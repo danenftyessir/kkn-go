@@ -3,121 +3,101 @@
 @section('title', 'Verifikasi Email')
 
 @section('content')
-<div class="bg-white rounded-2xl shadow-xl p-8 page-transition">
-    <!-- icon -->
-    <div class="flex justify-center mb-6">
-        <div class="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center">
-            <svg class="w-10 h-10 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-            </svg>
-        </div>
-    </div>
-
-    <!-- header -->
-    <div class="text-center mb-8">
-        <h2 class="text-3xl font-bold text-gray-900">verifikasi email anda</h2>
-        <p class="text-gray-600 mt-2">
-            kami telah mengirim link verifikasi ke email anda
-        </p>
-    </div>
-
-    <!-- content -->
-    <div class="space-y-6">
-        <!-- email info -->
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div class="flex items-start">
-                <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+<div class="max-w-xl mx-auto py-12 px-4">
+    <div class="bg-white rounded-2xl shadow-xl p-8 page-transition">
+        {{-- icon --}}
+        <div class="flex justify-center mb-6">
+            <div class="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center">
+                <svg class="w-10 h-10 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                 </svg>
-                <div class="flex-1">
-                    <p class="text-sm text-blue-900 font-medium">email terkirim ke:</p>
-                    <p class="text-sm text-blue-800 mt-1">{{ auth()->user()->email }}</p>
-                </div>
             </div>
         </div>
 
-        <!-- instruksi -->
-        <div class="space-y-3">
-            <p class="text-sm text-gray-700">
-                <strong>langkah selanjutnya:</strong>
+        {{-- header --}}
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold text-gray-900">verifikasi email anda</h2>
+            <p class="text-gray-600 mt-2">
+                kami telah mengirimkan link verifikasi ke email anda.
             </p>
-            <ol class="text-sm text-gray-600 space-y-2 ml-4">
-                <li class="flex items-start">
-                    <span class="font-semibold mr-2">1.</span>
-                    <span>buka email anda dan cari email dari KKN-GO</span>
-                </li>
-                <li class="flex items-start">
-                    <span class="font-semibold mr-2">2.</span>
-                    <span>klik link verifikasi yang ada di email</span>
-                </li>
-                <li class="flex items-start">
-                    <span class="font-semibold mr-2">3.</span>
-                    <span>anda akan diarahkan kembali ke website dan akun anda akan aktif</span>
-                </li>
-            </ol>
         </div>
 
-        <!-- resend form -->
-        <div class="border-t pt-6">
-            <form method="POST" action="{{ route('verification.resend') }}">
-                @csrf
-                
-                <p class="text-sm text-gray-600 mb-4">
-                    tidak menerima email?
-                    <button type="submit" class="text-primary-600 hover:text-primary-700 font-medium transition-colors">
-                        kirim ulang
+        {{-- content --}}
+        <div class="space-y-6">
+            @if (session('success'))
+                <div class="bg-green-50 border border-green-200 text-sm text-green-800 rounded-lg p-4" role="alert">
+                    <div class="flex items-start">
+                        <svg class="w-5 h-5 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span>{{ session('success') }}</span>
+                    </div>
+                </div>
+            @endif
+
+            {{-- email info --}}
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div class="flex items-start">
+                    <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                    </svg>
+                    <div class="flex-1">
+                        <p class="text-sm text-blue-900 font-medium">email terkirim ke:</p>
+                        <p class="text-sm text-blue-800 font-semibold mt-1">{{ auth()->user()->email }}</p>
+                    </div>
+                </div>
+            </div>
+
+            {{-- instruksi --}}
+            <div class="text-sm text-gray-700 space-y-3">
+                <p>silakan buka inbox email anda dan klik link verifikasi yang telah kami kirimkan untuk mengaktifkan akun anda.</p>
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                    <p class="text-xs text-gray-600 font-medium mb-2">tips:</p>
+                    <ul class="text-xs text-gray-600 space-y-1 list-disc list-inside">
+                        <li>periksa folder spam jika email tidak muncul di inbox</li>
+                        <li>pastikan email berasal dari domain resmi KKN-GO</li>
+                        <li>link verifikasi berlaku selama 60 menit</li>
+                    </ul>
+                </div>
+            </div>
+
+            {{-- resend form --}}
+            <div class="border-t pt-6">
+                <form method="POST" action="{{ route('verification.resend') }}">
+                    @csrf
+                    
+                    <p class="text-sm text-gray-600 mb-3">
+                        tidak menerima email?
+                    </p>
+
+                    <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-3 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        kirim ulang email verifikasi
                     </button>
-                </p>
 
-                @error('email')
-                    <div class="text-red-600 text-sm mb-3">{{ $message }}</div>
-                @enderror
-            </form>
-        </div>
+                    @error('email')
+                        <p class="text-red-600 text-sm mt-2 flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                            {{ $message }}
+                        </p>
+                    @enderror
+                </form>
+            </div>
 
-        <!-- tips -->
-        <div class="bg-gray-50 rounded-lg p-4 text-sm text-gray-600">
-            <p class="font-medium text-gray-900 mb-2">tips:</p>
-            <ul class="space-y-1 ml-4 list-disc">
-                <li>periksa folder spam atau junk email</li>
-                <li>pastikan email yang anda daftarkan benar</li>
-                <li>tunggu beberapa menit untuk email masuk</li>
-            </ul>
-        </div>
-
-        <!-- logout -->
-        <div class="text-center pt-4">
-            <form method="POST" action="{{ route('logout') }}" class="inline">
-                @csrf
-                <button type="submit" class="text-sm text-gray-500 hover:text-gray-700 transition-colors">
-                    keluar
-                </button>
-            </form>
+            {{-- logout --}}
+            <div class="text-center pt-4 border-t">
+                <form method="POST" action="{{ route('logout') }}" class="inline">
+                    @csrf
+                    <button type="submit" class="text-sm text-gray-500 hover:text-gray-700 underline transition-colors">
+                        bukan anda? keluar
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
 @endsection
-
-@push('scripts')
-<script>
-// auto refresh setiap 30 detik untuk cek verifikasi
-let checkInterval = setInterval(async () => {
-    try {
-        const response = await fetch('/api/check-verification', {
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-            }
-        });
-        
-        const data = await response.json();
-        
-        if (data.verified) {
-            clearInterval(checkInterval);
-            window.location.href = '/';
-        }
-    } catch (error) {
-        console.error('error checking verification:', error);
-    }
-}, 30000);
-</script>
-@endpush

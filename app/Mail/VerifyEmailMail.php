@@ -24,7 +24,7 @@ class VerifyEmailMail extends Mailable
     public $verificationUrl;
 
     /**
-     * create a new message instance
+     * buat instance message baru
      */
     public function __construct(User $user)
     {
@@ -50,7 +50,7 @@ class VerifyEmailMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.verify-email',
+            view: 'emails.verification',
             with: [
                 'user' => $this->user,
                 'verificationUrl' => $this->verificationUrl,

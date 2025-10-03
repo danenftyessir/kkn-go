@@ -8,7 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 /**
- * Model User
+ * model user
  * 
  * model utama untuk autentikasi user di sistem
  * support multi-type user: student, institution, admin
@@ -30,6 +30,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'user_type',
         'is_active',
         'email_verified_at',
+        'email_verification_token', 
     ];
 
     /**

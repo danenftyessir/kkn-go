@@ -1,5 +1,7 @@
 <?php
 
+// path: routes/web.php
+
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
@@ -20,8 +22,8 @@ use App\Http\Controllers\Institution\ProfileController as InstitutionProfileCont
 
 /*
 |--------------------------------------------------------------------------
+| web routes
 | path: routes/web.php
-| web routes untuk aplikasi KKN-GO
 |--------------------------------------------------------------------------
 */
 
@@ -59,7 +61,7 @@ Route::middleware('auth')->group(function () {
     // logout
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
     
-    // email verification
+    // email verification routes
     Route::get('/email/verify', [EmailVerificationController::class, 'notice'])->name('verification.notice');
     Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])->name('verification.verify');
     Route::post('/email/resend', [EmailVerificationController::class, 'resend'])->name('verification.resend');
@@ -67,17 +69,26 @@ Route::middleware('auth')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| public portfolio routes (dapat diakses tanpa login)
+| public routes (dapat diakses tanpa login)
 |--------------------------------------------------------------------------
 */
+
+// public portfolio
 Route::get('/portfolio/{slug}', [PortfolioController::class, 'publicView'])->name('portfolio.public');
+
+// public student profile
+Route::get('/student/profile/{username}', [StudentProfileController::class, 'publicProfile'])->name('student.profile.public');
+
+// public institution profile
+Route::get('/institution/profile/{id}', [InstitutionProfileController::class, 'publicProfile'])->name('institution.profile.public');
 
 /*
 |--------------------------------------------------------------------------
-| student routes
+| student routes (memerlukan auth + verified email)
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'user.type:student'])->prefix('student')->name('student.')->group(function () {
+
+Route::middleware(['auth', 'user.type:student', 'verified'])->prefix('student')->name('student.')->group(function () {
     
     // dashboard
     Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
@@ -98,11 +109,12 @@ Route::middleware(['auth', 'user.type:student'])->prefix('student')->name('stude
     // wishlist
     Route::prefix('wishlist')->name('wishlist.')->group(function () {
         Route::get('/', [WishlistController::class, 'index'])->name('index');
-        Route::post('/toggle/{problemId}', [WishlistController::class, 'toggle'])->name('toggle');
-        Route::delete('/{id}', [WishlistController::class, 'destroy'])->name('destroy');
+        Route::post('/{problemId}/toggle', [WishlistController::class, 'toggle'])->name('toggle');
+        Route::get('/{problemId}/check', [WishlistController::class, 'check'])->name('check');
+        Route::patch('/{problemId}/notes', [WishlistController::class, 'updateNotes'])->name('notes');
     });
     
-    // projects
+    // projects (my projects)
     Route::prefix('projects')->name('projects.')->group(function () {
         Route::get('/', [MyProjectsController::class, 'index'])->name('index');
         Route::get('/{id}', [MyProjectsController::class, 'show'])->name('show');
@@ -138,39 +150,66 @@ Route::middleware(['auth', 'user.type:student'])->prefix('student')->name('stude
         Route::post('/{id}/report', [KnowledgeRepositoryController::class, 'report'])->name('report');
     });
     
-    // profile
-    Route::prefix('profile')->name('profile.')->group(function () {
-        Route::get('/', [StudentProfileController::class, 'index'])->name('index');
-        Route::get('/edit', [StudentProfileController::class, 'edit'])->name('edit');
-        Route::put('/update', [StudentProfileController::class, 'update'])->name('update');
-        Route::get('/public/{id}', [StudentProfileController::class, 'publicView'])->name('public');
-    });
+    // profile routes
+    Route::get('/profile', [StudentProfileController::class, 'index'])->name('profile.index');
+    Route::get('/profile/edit', [StudentProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [StudentProfileController::class, 'update'])->name('profile.update');
+    Route::patch('/profile/password', [StudentProfileController::class, 'updatePassword'])->name('profile.password.update');
 });
 
 /*
 |--------------------------------------------------------------------------
-| institution routes
+| institution routes (memerlukan auth + verified email)
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'user.type:institution'])->prefix('institution')->name('institution.')->group(function () {
+
+Route::middleware(['auth', 'user.type:institution', 'verified'])->prefix('institution')->name('institution.')->group(function () {
     
     // dashboard
     Route::get('/dashboard', [InstitutionDashboardController::class, 'index'])->name('dashboard');
     
-    // profile
-    Route::prefix('profile')->name('profile.')->group(function () {
-        Route::get('/', [InstitutionProfileController::class, 'index'])->name('index');
-        Route::get('/edit', [InstitutionProfileController::class, 'edit'])->name('edit');
-        Route::put('/update', [InstitutionProfileController::class, 'update'])->name('update');
-        Route::get('/public/{id}', [InstitutionProfileController::class, 'publicView'])->name('public');
-    });
+    // profile routes
+    Route::get('/profile', [InstitutionProfileController::class, 'index'])->name('profile.index');
+    Route::get('/profile/edit', [InstitutionProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [InstitutionProfileController::class, 'update'])->name('profile.update');
     
-    // TODO: tambahkan routes untuk mengelola problems, mereview aplikasi, dll
+    // TODO: problems/projects management
+    // TODO: applications review
+    // TODO: project management
 });
 
 /*
 |--------------------------------------------------------------------------
-| admin routes (coming soon)
+| public API routes (untuk AJAX calls tanpa auth)
 |--------------------------------------------------------------------------
 */
-// TODO: tambahkan admin routes untuk mengelola users, approve documents, dll
+
+Route::prefix('api')->name('api.public.')->group(function () {
+    // endpoint untuk get regencies berdasarkan province (digunakan di form registrasi)
+    Route::get('/regencies/{provinceId}', [BrowseProblemsController::class, 'getRegencies'])
+         ->name('regencies');
+});
+
+/*
+|--------------------------------------------------------------------------
+| admin routes (TODO)
+|--------------------------------------------------------------------------
+*/
+
+// Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+//     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+//     Route::resource('users', UserController::class);
+//     Route::resource('verifications', VerificationController::class);
+// });
+
+/*
+|--------------------------------------------------------------------------
+| dev routes (development only)
+|--------------------------------------------------------------------------
+*/
+
+if (app()->environment('local')) {
+    Route::get('/dev/login', function () {
+        return view('dev.login');
+    })->name('dev.login');
+}
