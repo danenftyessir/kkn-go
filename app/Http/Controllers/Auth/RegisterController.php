@@ -10,6 +10,7 @@ use App\Models\Student;
 use App\Models\Institution;
 use App\Models\University;
 use App\Models\Province;
+use App\Models\Regency; // ⚠️ MISSING IMPORT - INI YANG MENYEBABKAN ERROR
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -50,9 +51,14 @@ class RegisterController extends Controller
         // ambil data provinces untuk dropdown
         $provinces = Province::orderBy('name', 'asc')->get();
         
+        // siapkan regencies collection kosong untuk kondisi awal
         $regencies = collect();
+        
+        // jika ada old input province_id (ketika validasi gagal), load regencies-nya
         if (old('province_id')) {
-            $regencies = Regency::where('province_id', old('province_id'))->orderBy('name', 'asc')->get();
+            $regencies = Regency::where('province_id', old('province_id'))
+                               ->orderBy('name', 'asc')
+                               ->get();
         }
 
         // definisi tipe institusi
@@ -84,13 +90,16 @@ class RegisterController extends Controller
                 'email' => $request->email,
                 'username' => $request->username,
                 'password' => Hash::make($request->password),
-                'user_type' => 'student',
-                'is_active' => true,
-                // email_verified_at untuk sementara di-set null, nanti verifikasi lewat email
-                'email_verified_at' => null,
+                'user_type' => 'mahasiswa',
             ]);
-
-            // buat data student
+            
+            // upload foto profil jika ada
+            $photoPath = null;
+            if ($request->hasFile('photo')) {
+                $photoPath = $request->file('photo')->store('profiles/students', 'public');
+            }
+            
+            // buat student profile
             $student = Student::create([
                 'user_id' => $user->id,
                 'first_name' => $request->first_name,
@@ -99,44 +108,24 @@ class RegisterController extends Controller
                 'major' => $request->major,
                 'nim' => $request->nim,
                 'semester' => $request->semester,
-                'phone' => $request->whatsapp_number,
-                'profile_photo_path' => null,
-                'bio' => null,
+                'whatsapp' => $request->whatsapp,
+                'profile_photo_path' => $photoPath,
             ]);
-
-            // commit transaction
-            DB::commit();
-
-            // log successful registration
-            Log::info('student registered successfully', [
-                'user_id' => $user->id,
-                'student_id' => $student->id,
-                'email' => $user->email
-            ]);
-
-            // TODO: kirim email verifikasi
-            // dispatch(new SendEmailVerificationNotification($user));
-
-            // login otomatis setelah registrasi
-            Auth::login($user);
-
-            // redirect ke dashboard student dengan success message
-            return redirect()->route('student.dashboard')
-                ->with('success', 'registrasi berhasil! selamat datang di KKN-GO.');
-
-        } catch (\Exception $e) {
-            // rollback jika ada error
-            DB::rollBack();
             
-            // log error
-            Log::error('student registration failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            // redirect kembali dengan error message
+            DB::commit();
+            
+            // auto login setelah registrasi
+            Auth::login($user);
+            
+            return redirect()->route('student.dashboard')
+                           ->with('success', 'registrasi berhasil! selamat datang di KKN-GO');
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Student registration failed: ' . $e->getMessage());
+            
             return back()
-                ->withInput($request->except('password', 'password_confirmation'))
+                ->withInput()
                 ->with('error', 'terjadi kesalahan saat registrasi. silakan coba lagi.');
         }
     }
@@ -147,84 +136,61 @@ class RegisterController extends Controller
     public function registerInstitution(InstitutionRegisterRequest $request)
     {
         try {
-            // gunakan database transaction
+            // gunakan database transaction untuk memastikan atomicity
             DB::beginTransaction();
-
+            
             // buat user account
             $user = User::create([
                 'name' => $request->institution_name,
                 'email' => $request->official_email,
                 'username' => $request->username,
                 'password' => Hash::make($request->password),
-                'user_type' => 'institution',
-                'is_active' => true,
-                'email_verified_at' => null,
+                'user_type' => 'instansi',
             ]);
-
-            // handle upload logo jika ada
+            
+            // upload logo jika ada
             $logoPath = null;
             if ($request->hasFile('logo')) {
-                $logoPath = $request->file('logo')->store('logos', 'public');
+                $logoPath = $request->file('logo')->store('institutions/logos', 'public');
             }
-
-            // handle upload dokumen verifikasi jika ada
-            $verificationDocPath = null;
-            if ($request->hasFile('verification_document')) {
-                $verificationDocPath = $request->file('verification_document')->store('verifications', 'public');
-            }
-
-            // buat data institution
+            
+            // upload verification document
+            $verificationDocPath = $request->file('verification_document')
+                                          ->store('institutions/verifications', 'public');
+            
+            // buat institution profile
             $institution = Institution::create([
                 'user_id' => $user->id,
-                'name' => $request->institution_name,
-                'type' => $request->institution_type,
+                'institution_name' => $request->institution_name,
+                'institution_type' => $request->institution_type,
                 'address' => $request->address,
                 'province_id' => $request->province_id,
                 'regency_id' => $request->regency_id,
-                'email' => $request->official_email,
-                'phone' => $request->phone,
+                'official_email' => $request->official_email,
+                'phone_number' => $request->phone_number,
                 'logo_path' => $logoPath,
                 'pic_name' => $request->pic_name,
                 'pic_position' => $request->pic_position,
                 'verification_document_path' => $verificationDocPath,
-                'is_verified' => false, // default belum terverifikasi, perlu approval admin
-                'verified_at' => null,
-                'description' => null,
+                'website' => $request->website,
+                'description' => $request->description,
+                'is_verified' => false, // menunggu verifikasi admin
             ]);
-
-            // commit transaction
-            DB::commit();
-
-            // log successful registration
-            Log::info('institution registered successfully', [
-                'user_id' => $user->id,
-                'institution_id' => $institution->id,
-                'email' => $user->email
-            ]);
-
-            // TODO: kirim email verifikasi
-            // TODO: kirim notifikasi ke admin untuk approval
-
-            // login otomatis setelah registrasi
-            Auth::login($user);
-
-            // redirect ke dashboard institution dengan info message
-            return redirect()->route('institution.dashboard')
-                ->with('info', 'registrasi berhasil! akun anda akan diverifikasi oleh admin dalam 1-3 hari kerja.');
-
-        } catch (\Exception $e) {
-            // rollback jika ada error
-            DB::rollBack();
             
-            // log error
-            Log::error('institution registration failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            // redirect kembali dengan error message
+            DB::commit();
+            
+            // auto login setelah registrasi
+            Auth::login($user);
+            
+            return redirect()->route('institution.dashboard')
+                           ->with('success', 'registrasi berhasil! akun anda sedang dalam proses verifikasi');
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Institution registration failed: ' . $e->getMessage());
+            
             return back()
-                ->withInput($request->except('password', 'password_confirmation'))
+                ->withInput()
                 ->with('error', 'terjadi kesalahan saat registrasi. silakan coba lagi.');
         }
     }

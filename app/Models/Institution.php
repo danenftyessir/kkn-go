@@ -14,20 +14,21 @@ class Institution extends Model
 
     protected $fillable = [
         'user_id',
-        'name',
-        'type',
+        'institution_name',
+        'institution_type',
         'address',
         'province_id',
         'regency_id',
-        'email',
-        'phone',
+        'official_email',
+        'phone_number',
         'logo_path',
         'pic_name',
         'pic_position',
         'verification_document_path',
+        'website',
+        'description',
         'is_verified',
         'verified_at',
-        'description',
     ];
 
     protected $casts = [
