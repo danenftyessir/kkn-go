@@ -4,8 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+
 /**
- * Model Application
+ * model untuk tabel applications
+ * 
+ * path: app/Models/Application.php (UPDATED)
  */
 class Application extends Model
 {
@@ -49,30 +52,107 @@ class Application extends Model
     }
 
     /**
+     * relasi ke project (jika aplikasi diterima)
+     */
+    public function project()
+    {
+        return $this->hasOne(Project::class);
+    }
+
+    /**
+     * scope untuk filter by status
+     */
+    public function scopeOfStatus($query, $status)
+    {
+        return $query->where('status', $status);
+    }
+
+    /**
+     * scope untuk aplikasi pending
+     */
+    public function scopePending($query)
+    {
+        return $query->where('status', 'pending');
+    }
+
+    /**
+     * scope untuk aplikasi accepted
+     */
+    public function scopeAccepted($query)
+    {
+        return $query->where('status', 'accepted');
+    }
+
+    /**
+     * scope untuk aplikasi rejected
+     */
+    public function scopeRejected($query)
+    {
+        return $query->where('status', 'rejected');
+    }
+
+    /**
+     * mark application as reviewed
+     */
+    public function markAsReviewed()
+    {
+        $this->update([
+            'status' => 'reviewed',
+            'reviewed_at' => now(),
+        ]);
+    }
+
+    /**
+     * mark application as accepted
+     */
+    public function markAsAccepted($feedback = null)
+    {
+        $this->update([
+            'status' => 'accepted',
+            'accepted_at' => now(),
+            'feedback' => $feedback,
+        ]);
+    }
+
+    /**
+     * mark application as rejected
+     */
+    public function markAsRejected($feedback = null)
+    {
+        $this->update([
+            'status' => 'rejected',
+            'rejected_at' => now(),
+            'feedback' => $feedback,
+        ]);
+    }
+
+    /**
      * get status badge color
      */
-    public function getStatusBadgeColor(): string
+    public function getStatusBadgeAttribute()
     {
         return match($this->status) {
-            'pending' => 'bg-yellow-100 text-yellow-800',
-            'reviewed' => 'bg-blue-100 text-blue-800',
-            'accepted' => 'bg-green-100 text-green-800',
-            'rejected' => 'bg-red-100 text-red-800',
-            default => 'bg-gray-100 text-gray-800',
+            'pending' => ['text' => 'Pending', 'color' => 'yellow'],
+            'reviewed' => ['text' => 'Direview', 'color' => 'blue'],
+            'accepted' => ['text' => 'Diterima', 'color' => 'green'],
+            'rejected' => ['text' => 'Ditolak', 'color' => 'red'],
+            default => ['text' => 'Unknown', 'color' => 'gray'],
         };
     }
 
     /**
-     * get status label
+     * cek apakah aplikasi bisa di-withdraw
      */
-    public function getStatusLabel(): string
+    public function canWithdraw()
     {
-        return match($this->status) {
-            'pending' => 'Menunggu Review',
-            'reviewed' => 'Sedang Direview',
-            'accepted' => 'Diterima',
-            'rejected' => 'Ditolak',
-            default => 'Tidak Diketahui',
-        };
+        return in_array($this->status, ['pending', 'reviewed']);
+    }
+
+    /**
+     * cek apakah aplikasi sudah memiliki project
+     */
+    public function hasProject()
+    {
+        return $this->project()->exists();
     }
 }

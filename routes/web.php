@@ -11,13 +11,17 @@ use App\Http\Controllers\Student\DashboardController as StudentDashboardControll
 use App\Http\Controllers\Student\BrowseProblemsController;
 use App\Http\Controllers\Student\ApplicationController;
 use App\Http\Controllers\Student\WishlistController;
+use App\Http\Controllers\Student\MyProjectsController;
+use App\Http\Controllers\Student\PortfolioController;
+use App\Http\Controllers\Student\KnowledgeRepositoryController;
 use App\Http\Controllers\Student\ProfileController as StudentProfileController;
 use App\Http\Controllers\Institution\DashboardController as InstitutionDashboardController;
 use App\Http\Controllers\Institution\ProfileController as InstitutionProfileController;
 
 /*
 |--------------------------------------------------------------------------
-| Web Routes
+| path: routes/web.php
+| web routes untuk aplikasi KKN-GO
 |--------------------------------------------------------------------------
 */
 
@@ -26,7 +30,7 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 
 /*
 |--------------------------------------------------------------------------
-| Auth Routes
+| auth routes
 |--------------------------------------------------------------------------
 */
 
@@ -63,10 +67,16 @@ Route::middleware('auth')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Student Routes
+| public portfolio routes (dapat diakses tanpa login)
 |--------------------------------------------------------------------------
 */
+Route::get('/portfolio/{slug}', [PortfolioController::class, 'publicView'])->name('portfolio.public');
 
+/*
+|--------------------------------------------------------------------------
+| student routes
+|--------------------------------------------------------------------------
+*/
 Route::middleware(['auth', 'user.type:student'])->prefix('student')->name('student.')->group(function () {
     
     // dashboard
@@ -88,100 +98,79 @@ Route::middleware(['auth', 'user.type:student'])->prefix('student')->name('stude
     // wishlist
     Route::prefix('wishlist')->name('wishlist.')->group(function () {
         Route::get('/', [WishlistController::class, 'index'])->name('index');
-        Route::post('/{problemId}/toggle', [WishlistController::class, 'toggle'])->name('toggle');
-        Route::get('/{problemId}/check', [WishlistController::class, 'check'])->name('check');
-        Route::patch('/{problemId}/notes', [WishlistController::class, 'updateNotes'])->name('notes');
+        Route::post('/toggle/{problemId}', [WishlistController::class, 'toggle'])->name('toggle');
+        Route::delete('/{id}', [WishlistController::class, 'destroy'])->name('destroy');
     });
     
-    // profile routes
-    Route::get('/profile', [StudentProfileController::class, 'index'])->name('profile.index');
-    Route::get('/profile/edit', [StudentProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [StudentProfileController::class, 'update'])->name('profile.update');
-    Route::patch('/profile/password', [StudentProfileController::class, 'updatePassword'])->name('profile.password.update');
+    // projects
+    Route::prefix('projects')->name('projects.')->group(function () {
+        Route::get('/', [MyProjectsController::class, 'index'])->name('index');
+        Route::get('/{id}', [MyProjectsController::class, 'show'])->name('show');
+        
+        // milestones
+        Route::post('/milestones/{milestoneId}/update', [MyProjectsController::class, 'updateMilestone'])->name('milestones.update');
+        
+        // reports
+        Route::get('/{projectId}/reports/create', [MyProjectsController::class, 'createReport'])->name('create-report');
+        Route::post('/{projectId}/reports/store', [MyProjectsController::class, 'storeReport'])->name('store-report');
+        Route::get('/reports/{reportId}/download', [MyProjectsController::class, 'downloadReport'])->name('download-report');
+        
+        // final report
+        Route::get('/{projectId}/final-report/create', [MyProjectsController::class, 'createFinalReport'])->name('create-final-report');
+        Route::post('/{projectId}/final-report/store', [MyProjectsController::class, 'storeFinalReport'])->name('store-final-report');
+    });
     
-    // TODO: my projects routes
-    // Route::get('/projects', [MyProjectsController::class, 'index'])->name('projects.index');
-    // Route::get('/projects/{id}', [MyProjectsController::class, 'show'])->name('projects.show');
+    // portfolio
+    Route::prefix('portfolio')->name('portfolio.')->group(function () {
+        Route::get('/', [PortfolioController::class, 'index'])->name('index');
+        Route::get('/share-link', [PortfolioController::class, 'getShareLink'])->name('share-link');
+        Route::post('/projects/{projectId}/toggle-visibility', [PortfolioController::class, 'toggleProjectVisibility'])->name('toggle-visibility');
+        Route::get('/download-pdf', [PortfolioController::class, 'downloadPDF'])->name('download-pdf');
+    });
     
-    // TODO: portfolio routes
-    // Route::get('/portfolio', [PortfolioController::class, 'index'])->name('portfolio.index');
-    // Route::get('/portfolio/edit', [PortfolioController::class, 'edit'])->name('portfolio.edit');
+    // knowledge repository
+    Route::prefix('repository')->name('repository.')->group(function () {
+        Route::get('/', [KnowledgeRepositoryController::class, 'index'])->name('index');
+        Route::get('/{id}', [KnowledgeRepositoryController::class, 'show'])->name('show');
+        Route::get('/{id}/download', [KnowledgeRepositoryController::class, 'download'])->name('download');
+        Route::get('/{id}/citation', [KnowledgeRepositoryController::class, 'getCitation'])->name('citation');
+        Route::post('/{id}/bookmark', [KnowledgeRepositoryController::class, 'bookmark'])->name('bookmark');
+        Route::post('/{id}/report', [KnowledgeRepositoryController::class, 'report'])->name('report');
+    });
     
-    // TODO: knowledge repository routes
-    // Route::get('/knowledge', [KnowledgeRepositoryController::class, 'index'])->name('knowledge.index');
-    // Route::get('/knowledge/{id}', [KnowledgeRepositoryController::class, 'show'])->name('knowledge.show');
+    // profile
+    Route::prefix('profile')->name('profile.')->group(function () {
+        Route::get('/', [StudentProfileController::class, 'index'])->name('index');
+        Route::get('/edit', [StudentProfileController::class, 'edit'])->name('edit');
+        Route::put('/update', [StudentProfileController::class, 'update'])->name('update');
+        Route::get('/public/{id}', [StudentProfileController::class, 'publicView'])->name('public');
+    });
 });
-
-// public student profile (tanpa auth)
-Route::get('/student/profile/{username}', [StudentProfileController::class, 'publicProfile'])->name('student.profile.public');
 
 /*
 |--------------------------------------------------------------------------
-| Institution Routes
+| institution routes
 |--------------------------------------------------------------------------
 */
-
 Route::middleware(['auth', 'user.type:institution'])->prefix('institution')->name('institution.')->group(function () {
     
     // dashboard
     Route::get('/dashboard', [InstitutionDashboardController::class, 'index'])->name('dashboard');
     
-    // profile routes
-    Route::get('/profile', [InstitutionProfileController::class, 'index'])->name('profile.index');
-    Route::get('/profile/edit', [InstitutionProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [InstitutionProfileController::class, 'update'])->name('profile.update');
+    // profile
+    Route::prefix('profile')->name('profile.')->group(function () {
+        Route::get('/', [InstitutionProfileController::class, 'index'])->name('index');
+        Route::get('/edit', [InstitutionProfileController::class, 'edit'])->name('edit');
+        Route::put('/update', [InstitutionProfileController::class, 'update'])->name('update');
+        Route::get('/public/{id}', [InstitutionProfileController::class, 'publicView'])->name('public');
+    });
     
-    // TODO: problems/projects management
-    // Route::resource('problems', ProblemController::class);
-    
-    // TODO: applications review
-    // Route::get('/applications', [ApplicationReviewController::class, 'index'])->name('applications.index');
-    // Route::get('/applications/{id}', [ApplicationReviewController::class, 'show'])->name('applications.show');
-    // Route::patch('/applications/{id}/review', [ApplicationReviewController::class, 'review'])->name('applications.review');
-    
-    // TODO: project management
-    // Route::get('/projects', [ProjectManagementController::class, 'index'])->name('projects.index');
-    // Route::get('/projects/{id}', [ProjectManagementController::class, 'show'])->name('projects.show');
+    // TODO: tambahkan routes untuk mengelola problems, mereview aplikasi, dll
 });
 
-// public institution profile (tanpa auth)
-Route::get('/institution/profile/{id}', [InstitutionProfileController::class, 'publicProfile'])->name('institution.profile.public');
-
-// ==========================================================
-// TAMBAHKAN BLOK BARU INI UNTUK API PUBLIK
-// ==========================================================
 /*
 |--------------------------------------------------------------------------
-| Public API Routes (untuk AJAX calls)
+| admin routes (coming soon)
 |--------------------------------------------------------------------------
 */
-Route::prefix('api')->name('api.public.')->group(function () {
-    Route::get('/regencies/{provinceId}', [BrowseProblemsController::class, 'getRegencies'])
-         ->name('regencies'); // Nama rutenya akan menjadi 'api.public.regencies'
-});
-// ==========================================================
-
-
-/*
-|--------------------------------------------------------------------------
-| Admin Routes (TODO)
-|--------------------------------------------------------------------------
-*/
-
-// Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-//     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
-//     Route::resource('users', UserController::class);
-//     Route::resource('verifications', VerificationController::class);
-// });
-
-/*
-|--------------------------------------------------------------------------
-| Dev Routes (Development Only)
-|--------------------------------------------------------------------------
-*/
-
-if (app()->environment('local')) {
-    Route::get('/dev/login', function () {
-        return view('dev.login');
-    })->name('dev.login');
-}
+// TODO: tambahkan admin routes untuk mengelola users, approve documents, dll

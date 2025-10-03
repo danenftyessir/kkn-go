@@ -5,6 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * model untuk tabel students
+ * 
+ * path: app/Models/Student.php (UPDATED)
+ */
 class Student extends Model
 {
     use HasFactory;
@@ -13,19 +18,13 @@ class Student extends Model
         'user_id',
         'first_name',
         'last_name',
-        'nim',
         'university_id',
         'major',
+        'nim',
         'semester',
-        'whatsapp',
         'phone',
-        'bio',
-        'skills',
         'profile_photo_path',
-    ];
-
-    protected $casts = [
-        'skills' => 'array',
+        'bio',
     ];
 
     /**
@@ -53,7 +52,7 @@ class Student extends Model
     }
 
     /**
-     * relasi ke wishlists
+     * relasi ke wishlist
      */
     public function wishlists()
     {
@@ -61,11 +60,19 @@ class Student extends Model
     }
 
     /**
-     * get full name
+     * relasi ke projects
      */
-    public function getFullNameAttribute()
+    public function projects()
     {
-        return "{$this->first_name} {$this->last_name}";
+        return $this->hasMany(Project::class);
+    }
+
+    /**
+     * relasi ke project reports
+     */
+    public function projectReports()
+    {
+        return $this->hasMany(ProjectReport::class);
     }
 
     /**
@@ -73,77 +80,51 @@ class Student extends Model
      */
     public function hasWishlisted($problemId)
     {
-        try {
-            return $this->wishlists()
-                        ->where('problem_id', $problemId)
-                        ->exists();
-        } catch (\Exception $e) {
-            // jika table wishlists belum ada atau error
-            return false;
-        }
+        return $this->wishlists()->where('problem_id', $problemId)->exists();
     }
 
     /**
-     * toggle wishlist untuk problem
+     * cek apakah student sudah apply ke problem tertentu
      */
-    public function toggleWishlist($problemId, $notes = null)
+    public function hasApplied($problemId)
     {
-        $wishlist = $this->wishlists()
-                        ->where('problem_id', $problemId)
-                        ->first();
+        return $this->applications()->where('problem_id', $problemId)->exists();
+    }
 
-        if ($wishlist) {
-            $wishlist->delete();
-            return ['action' => 'removed', 'saved' => false];
-        } else {
-            $this->wishlists()->create([
-                'problem_id' => $problemId,
-                'notes' => $notes
-            ]);
-            return ['action' => 'added', 'saved' => true];
-        }
+    /**
+     * get active projects count
+     */
+    public function getActiveProjectsCountAttribute()
+    {
+        return $this->projects()->where('status', 'active')->count();
     }
 
     /**
      * get completed projects count
      */
-    public function getCompletedProjectsCount()
+    public function getCompletedProjectsCountAttribute()
     {
-        return $this->applications()
-                    ->where('status', 'accepted')
-                    ->whereHas('problem', function($query) {
-                        $query->where('status', 'completed');
-                    })
-                    ->count();
+        return $this->projects()->where('status', 'completed')->count();
     }
 
     /**
-     * get pending applications count
+     * get average rating dari semua reviews
      */
-    public function getPendingApplicationsCount()
+    public function getAverageRatingAttribute()
     {
-        return $this->applications()
-                    ->whereIn('status', ['pending', 'under_review'])
-                    ->count();
+        $reviews = Review::where('type', 'institution_to_student')
+                        ->where('reviewee_id', $this->user_id)
+                        ->where('is_public', true)
+                        ->get();
+
+        return $reviews->isEmpty() ? 0 : round($reviews->avg('rating'), 1);
     }
 
     /**
-     * get accepted applications count
+     * get full name
      */
-    public function getAcceptedApplicationsCount()
+    public function getFullNameAttribute()
     {
-        return $this->applications()
-                    ->where('status', 'accepted')
-                    ->count();
-    }
-
-    /**
-     * cek apakah sudah apply ke problem tertentu
-     */
-    public function hasAppliedTo($problemId)
-    {
-        return $this->applications()
-                    ->where('problem_id', $problemId)
-                    ->exists();
+        return $this->first_name . ' ' . $this->last_name;
     }
 }
