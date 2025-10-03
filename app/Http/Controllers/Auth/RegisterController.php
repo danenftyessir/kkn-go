@@ -10,12 +10,13 @@ use App\Models\Student;
 use App\Models\Institution;
 use App\Models\University;
 use App\Models\Province;
-use App\Models\Regency; // ⚠️ MISSING IMPORT - INI YANG MENYEBABKAN ERROR
+use App\Models\Regency;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Auth\Events\Registered;
 
 /**
  * RegisterController
@@ -90,7 +91,7 @@ class RegisterController extends Controller
                 'email' => $request->email,
                 'username' => $request->username,
                 'password' => Hash::make($request->password),
-                'user_type' => 'mahasiswa',
+                'user_type' => 'student',
             ]);
             
             // upload foto profil jika ada
@@ -108,18 +109,22 @@ class RegisterController extends Controller
                 'major' => $request->major,
                 'nim' => $request->nim,
                 'semester' => $request->semester,
-                'whatsapp' => $request->whatsapp,
+                'phone' => $request->whatsapp_number,
                 'profile_photo_path' => $photoPath,
             ]);
             
             DB::commit();
             
             // auto login setelah registrasi
+            // Picu event bahwa user baru telah terdaftar
+            event(new Registered($user));
+
+            // Auto login setelah registrasi
             Auth::login($user);
-            
-            return redirect()->route('student.dashboard')
-                           ->with('success', 'registrasi berhasil! selamat datang di KKN-GO');
-            
+
+            // Redirect ke halaman verifikasi email, bukan ke dashboard
+            return redirect()->route('verification.notice');
+
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Student registration failed: ' . $e->getMessage());
@@ -145,7 +150,7 @@ class RegisterController extends Controller
                 'email' => $request->official_email,
                 'username' => $request->username,
                 'password' => Hash::make($request->password),
-                'user_type' => 'instansi',
+                'user_type' => 'institution',
             ]);
             
             // upload logo jika ada
@@ -180,11 +185,15 @@ class RegisterController extends Controller
             DB::commit();
             
             // auto login setelah registrasi
+            // Picu event bahwa user baru telah terdaftar
+            event(new Registered($user));
+
+            // Auto login setelah registrasi
             Auth::login($user);
-            
-            return redirect()->route('institution.dashboard')
-                           ->with('success', 'registrasi berhasil! akun anda sedang dalam proses verifikasi');
-            
+
+            // Redirect ke halaman verifikasi email, bukan ke dashboard
+            return redirect()->route('verification.notice');
+
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Institution registration failed: ' . $e->getMessage());

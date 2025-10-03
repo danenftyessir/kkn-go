@@ -64,10 +64,11 @@ class InstitutionRegisterRequest extends FormRequest
                 'string',
                 'confirmed',
                 Password::min(8)
-                    ->mixedCase()
-                    ->numbers()
-                    ->symbols()
-                    ->uncompromised()
+                ->mixedCase()
+                ->numbers()
+                ->symbols()
+                ->uncompromised(app()->isProduction() ? 3 : 0) // Cek hanya di produksi
+
             ],
             'pic_name' => [
                 'required',

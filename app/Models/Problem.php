@@ -225,6 +225,35 @@ class Problem extends Model
     }
 
     /**
+     * Get the difficulty label for display.
+     * Mendapatkan label tingkat kesulitan yang mudah dibaca.
+     */
+    public function getDifficultyLabel(): string
+    {
+        return match($this->difficulty_level) {
+            'beginner' => 'Pemula',
+            'intermediate' => 'Menengah',
+            'advanced' => 'Lanjutan',
+            default => ucfirst($this->difficulty_level),
+        };
+    }
+
+    /**
+     * Get the badge color classes for difficulty level.
+     * Mendapatkan kelas warna Tailwind CSS untuk lencana tingkat kesulitan.
+     */
+    public function getDifficultyBadgeColor(): string
+    {
+        return match($this->difficulty_level) {
+            'beginner' => 'bg-green-100 text-green-700',
+            'intermediate' => 'bg-yellow-100 text-yellow-700',
+            'advanced' => 'bg-red-100 text-red-700',
+            default => 'bg-gray-100 text-gray-700',
+        };
+    }
+
+
+    /**
      * get days until deadline
      */
     public function getDaysUntilDeadline()

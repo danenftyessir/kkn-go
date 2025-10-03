@@ -58,7 +58,7 @@ class StudentRegisterRequest extends FormRequest
                     ->mixedCase()
                     ->numbers()
                     ->symbols()
-                    ->uncompromised()
+                    ->uncompromised(app()->isProduction() ? 3 : 0) // Cek hanya di produksi
             ],
             'university_id' => [
                 'required',
