@@ -28,6 +28,7 @@ class Project extends Model
         'end_date',
         'actual_start_date',
         'actual_end_date',
+        'completed_at',
         'progress_percentage',
         'final_report_path',
         'final_report_summary',
@@ -45,6 +46,7 @@ class Project extends Model
         'end_date' => 'date',
         'actual_start_date' => 'date',
         'actual_end_date' => 'date',
+        'completed_at' => 'datetime',
         'submitted_at' => 'datetime',
         'reviewed_at' => 'datetime',
         'impact_metrics' => 'array',
@@ -85,6 +87,34 @@ class Project extends Model
     }
 
     /**
+     * relasi ke institution review (dari tabel reviews)
+     * review yang diberikan institution ke student untuk project ini
+     */
+    public function institutionReview()
+    {
+        return $this->hasOne(Review::class, 'project_id')
+                    ->where('type', 'institution_to_student');
+    }
+
+    /**
+     * relasi ke student review (dari tabel reviews)
+     * review yang diberikan student ke institution untuk project ini
+     */
+    public function studentReview()
+    {
+        return $this->hasOne(Review::class, 'project_id')
+                    ->where('type', 'student_to_institution');
+    }
+
+    /**
+     * relasi ke semua reviews untuk project ini
+     */
+    public function reviews()
+    {
+        return $this->hasMany(Review::class, 'project_id');
+    }
+
+    /**
      * relasi ke milestones
      */
     public function milestones()
@@ -97,7 +127,7 @@ class Project extends Model
      */
     public function reports()
     {
-        return $this->hasMany(ProjectReport::class)->latest();
+        return $this->hasMany(ProjectReport::class)->orderBy('created_at', 'desc');
     }
 
     /**
@@ -109,23 +139,23 @@ class Project extends Model
     }
 
     /**
-     * relasi ke reviews
+     * scope untuk filter by status
      */
-    public function reviews()
+    public function scopeOfStatus($query, $status)
     {
-        return $this->hasMany(Review::class);
+        return $query->where('status', $status);
     }
 
     /**
-     * scope untuk filter proyek aktif
+     * scope untuk ongoing projects
      */
-    public function scopeActive($query)
+    public function scopeOngoing($query)
     {
-        return $query->where('status', 'active');
+        return $query->where('status', 'ongoing');
     }
 
     /**
-     * scope untuk filter proyek completed
+     * scope untuk completed projects
      */
     public function scopeCompleted($query)
     {
@@ -133,88 +163,111 @@ class Project extends Model
     }
 
     /**
-     * scope untuk filter proyek visible di portfolio
+     * scope untuk portfolio visible projects
      */
     public function scopePortfolioVisible($query)
     {
-        return $query->where('is_portfolio_visible', true)
-                     ->where('status', 'completed');
+        return $query->where('is_portfolio_visible', true);
     }
 
     /**
-     * scope untuk search by title
+     * update progress percentage berdasarkan milestones
      */
-    public function scopeSearch($query, $keyword)
+    public function updateProgress()
     {
-        return $query->where('title', 'like', '%' . $keyword . '%')
-                     ->orWhere('description', 'like', '%' . $keyword . '%');
-    }
-
-    /**
-     * hitung durasi proyek dalam hari
-     */
-    public function getDurationDaysAttribute()
-    {
-        if ($this->actual_end_date && $this->actual_start_date) {
-            return $this->actual_start_date->diffInDays($this->actual_end_date);
-        }
+        $totalMilestones = $this->milestones()->count();
         
-        return $this->start_date->diffInDays($this->end_date);
+        if ($totalMilestones === 0) {
+            return;
+        }
+
+        $completedMilestones = $this->milestones()->completed()->count();
+        $progressPercentage = round(($completedMilestones / $totalMilestones) * 100);
+
+        $this->update(['progress_percentage' => $progressPercentage]);
     }
 
     /**
-     * cek apakah proyek overdue
+     * mark project as completed
      */
-    public function getIsOverdueAttribute()
+    public function markAsCompleted()
+    {
+        $this->update([
+            'status' => 'completed',
+            'completed_at' => now(),
+            'actual_end_date' => now(),
+            'progress_percentage' => 100,
+        ]);
+    }
+
+    /**
+     * submit final report
+     */
+    public function submitFinalReport($filePath, $summary)
+    {
+        $this->update([
+            'final_report_path' => $filePath,
+            'final_report_summary' => $summary,
+            'submitted_at' => now(),
+        ]);
+    }
+
+    /**
+     * get status badge info
+     */
+    public function getStatusBadgeAttribute()
+    {
+        return match($this->status) {
+            'pending' => ['text' => 'Menunggu', 'color' => 'yellow'],
+            'ongoing' => ['text' => 'Berlangsung', 'color' => 'blue'],
+            'completed' => ['text' => 'Selesai', 'color' => 'green'],
+            'cancelled' => ['text' => 'Dibatalkan', 'color' => 'red'],
+            default => ['text' => 'Unknown', 'color' => 'gray'],
+        };
+    }
+
+    /**
+     * get progress status
+     */
+    public function getProgressStatusAttribute()
+    {
+        if ($this->status === 'completed') {
+            return 'Selesai';
+        }
+
+        if ($this->progress_percentage >= 75) {
+            return 'Hampir Selesai';
+        } elseif ($this->progress_percentage >= 50) {
+            return 'Setengah Jalan';
+        } elseif ($this->progress_percentage >= 25) {
+            return 'Tahap Awal';
+        } else {
+            return 'Baru Dimulai';
+        }
+    }
+
+    /**
+     * check jika project overdue
+     */
+    public function isOverdue()
     {
         if ($this->status === 'completed') {
             return false;
         }
-        
+
         return now()->isAfter($this->end_date);
     }
 
     /**
-     * hitung progress dari milestones
+     * get days remaining
      */
-    public function calculateProgress()
+    public function getDaysRemaining()
     {
-        $milestones = $this->milestones;
-        
-        if ($milestones->isEmpty()) {
+        if ($this->status === 'completed') {
             return 0;
         }
-        
-        $totalProgress = $milestones->sum('progress_percentage');
-        return round($totalProgress / $milestones->count());
-    }
 
-    /**
-     * update progress percentage
-     */
-    public function updateProgress()
-    {
-        $this->progress_percentage = $this->calculateProgress();
-        $this->save();
-    }
-
-    /**
-     * cek apakah sudah ada review dari institusi
-     */
-    public function hasInstitutionReview()
-    {
-        return $this->reviews()
-                    ->where('type', 'institution_to_student')
-                    ->exists();
-    }
-
-    /**
-     * get average rating dari review
-     */
-    public function getAverageRatingAttribute()
-    {
-        return $this->reviews()
-                    ->where('type', 'institution_to_student')
-                    ->avg('rating') ?? 0;
+        $days = now()->diffInDays($this->end_date, false);
+        return max(0, $days);
     }
 }

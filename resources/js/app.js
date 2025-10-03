@@ -5,8 +5,6 @@
 
 import './bootstrap';
 
-// SKIP navbar.js - navbar akan pakai Alpine.js dari CDN
-
 /**
  * notification helper
  * untuk menampilkan flash messages dari session

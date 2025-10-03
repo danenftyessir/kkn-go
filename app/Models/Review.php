@@ -35,9 +35,16 @@ class Review extends Model
     ];
 
     protected $casts = [
+        'rating' => 'float',
+        'professionalism_rating' => 'integer',
+        'communication_rating' => 'integer',
+        'quality_rating' => 'integer',
+        'timeliness_rating' => 'integer',
         'is_public' => 'boolean',
         'is_featured' => 'boolean',
         'responded_at' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
@@ -49,7 +56,7 @@ class Review extends Model
     }
 
     /**
-     * relasi ke reviewer
+     * relasi ke reviewer (user yang memberi review)
      */
     public function reviewer()
     {
@@ -57,7 +64,7 @@ class Review extends Model
     }
 
     /**
-     * relasi ke reviewee
+     * relasi ke reviewee (user yang menerima review)
      */
     public function reviewee()
     {
@@ -73,6 +80,14 @@ class Review extends Model
     }
 
     /**
+     * scope untuk featured reviews
+     */
+    public function scopeFeatured($query)
+    {
+        return $query->where('is_featured', true);
+    }
+
+    /**
      * scope untuk filter by type
      */
     public function scopeOfType($query, $type)
@@ -81,7 +96,7 @@ class Review extends Model
     }
 
     /**
-     * scope untuk reviews to student
+     * scope untuk reviews yang diberikan institution ke student
      */
     public function scopeToStudent($query, $studentUserId)
     {
@@ -90,7 +105,7 @@ class Review extends Model
     }
 
     /**
-     * scope untuk reviews to institution
+     * scope untuk reviews yang diberikan student ke institution
      */
     public function scopeToInstitution($query, $institutionUserId)
     {
@@ -99,7 +114,16 @@ class Review extends Model
     }
 
     /**
+     * scope untuk filter by project
+     */
+    public function scopeForProject($query, $projectId)
+    {
+        return $query->where('project_id', $projectId);
+    }
+
+    /**
      * hitung average rating dari detail ratings
+     * untuk institution_to_student reviews
      */
     public function calculateDetailedRating()
     {
@@ -118,7 +142,7 @@ class Review extends Model
         
         return !empty($filteredRatings) 
             ? round(array_sum($filteredRatings) / count($filteredRatings), 1)
-            : $this->rating;
+            : 0;
     }
 
     /**
@@ -133,31 +157,46 @@ class Review extends Model
     }
 
     /**
-     * get star rating display
+     * get review type label
      */
-    public function getStarRatingAttribute()
+    public function getTypeLabel()
     {
-        $fullStars = floor($this->rating);
-        $halfStar = ($this->rating - $fullStars) >= 0.5;
-        $emptyStars = 5 - $fullStars - ($halfStar ? 1 : 0);
-
-        return [
-            'full' => $fullStars,
-            'half' => $halfStar,
-            'empty' => $emptyStars,
-        ];
+        return match($this->type) {
+            'institution_to_student' => 'Review dari Instansi',
+            'student_to_institution' => 'Review dari Mahasiswa',
+            default => 'Review',
+        };
     }
 
     /**
-     * get rating color class
+     * get rating badge color
      */
-    public function getRatingColorAttribute()
+    public function getRatingColor()
     {
-        return match(true) {
-            $this->rating >= 4.5 => 'text-green-600',
-            $this->rating >= 3.5 => 'text-blue-600',
-            $this->rating >= 2.5 => 'text-yellow-600',
-            default => 'text-red-600',
-        };
+        if ($this->rating >= 4.5) {
+            return 'green';
+        } elseif ($this->rating >= 3.5) {
+            return 'blue';
+        } elseif ($this->rating >= 2.5) {
+            return 'yellow';
+        } else {
+            return 'red';
+        }
+    }
+
+    /**
+     * get rating description
+     */
+    public function getRatingDescription()
+    {
+        if ($this->rating >= 4.5) {
+            return 'Excellent';
+        } elseif ($this->rating >= 3.5) {
+            return 'Good';
+        } elseif ($this->rating >= 2.5) {
+            return 'Fair';
+        } else {
+            return 'Needs Improvement';
+        }
     }
 }

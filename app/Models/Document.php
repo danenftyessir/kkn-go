@@ -6,12 +6,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-/**
- * model untuk tabel documents
- * mengelola dokumen untuk knowledge repository
- * 
- * path: app/Models/Document.php
- */
 class Document extends Model
 {
     use HasFactory, SoftDeletes;
@@ -34,11 +28,9 @@ class Document extends Model
         'regency_id',
         'download_count',
         'view_count',
-        'citation_count',
         'is_public',
         'is_featured',
-        'status',
-        'approved_at',
+        'citation_count',
     ];
 
     protected $casts = [
@@ -46,7 +38,8 @@ class Document extends Model
         'tags' => 'array',
         'is_public' => 'boolean',
         'is_featured' => 'boolean',
-        'approved_at' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
@@ -82,20 +75,37 @@ class Document extends Model
     }
 
     /**
-     * scope untuk filter public documents
+     * scope untuk dokumen publik
      */
     public function scopePublic($query)
     {
-        return $query->where('is_public', true)
-                     ->where('status', 'approved');
+        return $query->where('is_public', true);
     }
 
     /**
-     * scope untuk filter by status
+     * scope untuk dokumen featured
      */
-    public function scopeApproved($query)
+    public function scopeFeatured($query)
     {
-        return $query->where('status', 'approved');
+        return $query->where('is_featured', true)
+                    ->orderBy('view_count', 'desc')
+                    ->orderBy('download_count', 'desc');
+    }
+
+    /**
+     * scope untuk filter by kategori
+     */
+    public function scopeByCategory($query, $category)
+    {
+        return $query->whereJsonContains('categories', $category);
+    }
+
+    /**
+     * scope untuk filter by tag
+     */
+    public function scopeByTag($query, $tag)
+    {
+        return $query->whereJsonContains('tags', $tag);
     }
 
     /**
@@ -103,33 +113,11 @@ class Document extends Model
      */
     public function scopeSearch($query, $keyword)
     {
-        return $query->where('title', 'like', '%' . $keyword . '%')
-                     ->orWhere('description', 'like', '%' . $keyword . '%')
-                     ->orWhere('author_name', 'like', '%' . $keyword . '%');
-    }
-
-    /**
-     * scope untuk filter by category
-     */
-    public function scopeByCategory($query, $category)
-    {
-        return $query->whereJsonContains('categories', (int)$category);
-    }
-
-    /**
-     * scope untuk filter by year
-     */
-    public function scopeByYear($query, $year)
-    {
-        return $query->where('year', $year);
-    }
-
-    /**
-     * scope untuk featured documents
-     */
-    public function scopeFeatured($query)
-    {
-        return $query->where('is_featured', true);
+        return $query->where(function($q) use ($keyword) {
+            $q->where('title', 'like', "%{$keyword}%")
+              ->orWhere('description', 'like', "%{$keyword}%")
+              ->orWhere('author_name', 'like', "%{$keyword}%");
+        });
     }
 
     /**
@@ -149,50 +137,36 @@ class Document extends Model
     }
 
     /**
-     * increment citation count
+     * get formatted file size
      */
-    public function incrementCitations()
+    public function getFormattedFileSizeAttribute()
     {
-        $this->increment('citation_count');
+        $bytes = $this->file_size;
+        
+        if ($bytes >= 1073741824) {
+            return number_format($bytes / 1073741824, 2) . ' GB';
+        } elseif ($bytes >= 1048576) {
+            return number_format($bytes / 1048576, 2) . ' MB';
+        } elseif ($bytes >= 1024) {
+            return number_format($bytes / 1024, 2) . ' KB';
+        } else {
+            return $bytes . ' bytes';
+        }
     }
 
     /**
-     * get file size in readable format
+     * get file extension
+     */
+    public function getFileExtensionAttribute()
+    {
+        return pathinfo($this->file_path, PATHINFO_EXTENSION);
+    }
+
+    /**
+     * accessor untuk readable file size
      */
     public function getReadableFileSizeAttribute()
     {
-        $bytes = $this->file_size;
-        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
-        
-        for ($i = 0; $bytes > 1024 && $i < count($units) - 1; $i++) {
-            $bytes /= 1024;
-        }
-        
-        return round($bytes, 2) . ' ' . $units[$i];
-    }
-
-    /**
-     * get file type icon
-     */
-    public function getFileIconAttribute()
-    {
-        return match($this->file_type) {
-            'pdf' => 'file-text',
-            'docx', 'doc' => 'file-text',
-            'xlsx', 'xls' => 'file-spreadsheet',
-            'pptx', 'ppt' => 'file-presentation',
-            default => 'file',
-        };
-    }
-
-    /**
-     * approve document
-     */
-    public function approve()
-    {
-        $this->update([
-            'status' => 'approved',
-            'approved_at' => now(),
-        ]);
+        return $this->getFormattedFileSizeAttribute();
     }
 }

@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // register middleware aliases untuk Laravel 11
         $middleware->alias([
             'user.type' => \App\Http\Middleware\CheckUserType::class,
+            'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

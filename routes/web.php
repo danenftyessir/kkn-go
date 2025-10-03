@@ -1,7 +1,5 @@
 <?php
 
-// path: routes/web.php
-
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
@@ -19,13 +17,6 @@ use App\Http\Controllers\Student\KnowledgeRepositoryController;
 use App\Http\Controllers\Student\ProfileController as StudentProfileController;
 use App\Http\Controllers\Institution\DashboardController as InstitutionDashboardController;
 use App\Http\Controllers\Institution\ProfileController as InstitutionProfileController;
-
-/*
-|--------------------------------------------------------------------------
-| web routes
-| path: routes/web.php
-|--------------------------------------------------------------------------
-*/
 
 // homepage
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -69,7 +60,7 @@ Route::middleware('auth')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| public routes (dapat diakses tanpa login)
+| public routes
 |--------------------------------------------------------------------------
 */
 
@@ -118,18 +109,9 @@ Route::middleware(['auth', 'user.type:student', 'verified'])->prefix('student')-
     Route::prefix('projects')->name('projects.')->group(function () {
         Route::get('/', [MyProjectsController::class, 'index'])->name('index');
         Route::get('/{id}', [MyProjectsController::class, 'show'])->name('show');
-        
-        // milestones
-        Route::post('/milestones/{milestoneId}/update', [MyProjectsController::class, 'updateMilestone'])->name('milestones.update');
-        
-        // reports
-        Route::get('/{projectId}/reports/create', [MyProjectsController::class, 'createReport'])->name('create-report');
-        Route::post('/{projectId}/reports/store', [MyProjectsController::class, 'storeReport'])->name('store-report');
-        Route::get('/reports/{reportId}/download', [MyProjectsController::class, 'downloadReport'])->name('download-report');
-        
-        // final report
-        Route::get('/{projectId}/final-report/create', [MyProjectsController::class, 'createFinalReport'])->name('create-final-report');
-        Route::post('/{projectId}/final-report/store', [MyProjectsController::class, 'storeFinalReport'])->name('store-final-report');
+        Route::post('/{id}/report', [MyProjectsController::class, 'storeReport'])->name('report.store');
+        Route::post('/{id}/final-report', [MyProjectsController::class, 'storeFinalReport'])->name('final-report.store');
+        Route::patch('/{id}/milestone/{milestoneId}', [MyProjectsController::class, 'updateMilestone'])->name('milestone.update');
     });
     
     // portfolio

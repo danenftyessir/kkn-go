@@ -2,75 +2,63 @@
 
 namespace App\Services;
 
-use App\Models\Student;
 use App\Models\Project;
-use App\Models\Review;
+use App\Models\Student;
+use App\Models\Review;  // ✅ PERBAIKAN: gunakan Review bukan InstitutionReview
+use Illuminate\Support\Facades\DB;
 
-/**
- * service untuk mengelola portfolio mahasiswa
- * berisi business logic untuk portfolio display & statistics
- * 
- * path: app/Services/PortfolioService.php
- */
 class PortfolioService
 {
     /**
-     * get portfolio data lengkap untuk mahasiswa
+     * get portfolio data untuk mahasiswa
      */
     public function getPortfolioData($studentId)
     {
-        $student = Student::with([
-            'user',
-            'university',
-        ])->findOrFail($studentId);
+        $student = Student::with('user')->findOrFail($studentId);
 
-        // ambil completed projects yang visible
-        $projects = Project::where('student_id', $studentId)
-                          ->portfolioVisible()
-                          ->with([
-                              'problem',
-                              'institution',
-                              'reviews' => function($query) {
-                                  $query->where('type', 'institution_to_student')
-                                        ->where('is_public', true);
-                              }
-                          ])
-                          ->latest()
-                          ->get();
+        // ambil completed projects
+        $completedProjects = Project::with([
+            'problem.institution',
+            'problem.province',
+            'problem.regency',
+            'institutionReview'  // relasi ini sudah diperbaiki di Project model
+        ])
+        ->where('student_id', $studentId)
+        ->where('status', 'completed')
+        ->orderBy('completed_at', 'desc')
+        ->get();
+
+        // ✅ PERBAIKAN: gunakan Review bukan InstitutionReview
+        $reviews = Review::where('type', 'institution_to_student')
+            ->whereIn('project_id', $completedProjects->pluck('id'))
+            ->get();
 
         // hitung statistics
-        $stats = $this->calculateStats($studentId, $projects);
+        $statistics = $this->calculateStatistics($completedProjects, $reviews);
 
-        // ambil skills dari completed projects
-        $skills = $this->extractSkills($projects);
+        // extract skills dan SDG categories
+        $skills = $this->extractSkills($completedProjects);
+        $sdgCategories = $this->extractSDGCategories($completedProjects);
 
-        // ambil SDG categories yang pernah dikerjakan
-        $sdgAddressed = $this->extractSDGCategories($projects);
+        // get achievements
+        $achievements = $this->getAchievements($student, $completedProjects, $reviews);
 
         return [
             'student' => $student,
-            'projects' => $projects,
-            'stats' => $stats,
+            'projects' => $completedProjects,
+            'statistics' => $statistics,
             'skills' => $skills,
-            'sdg_addressed' => $sdgAddressed,
+            'sdg_categories' => $sdgCategories,
+            'achievements' => $achievements,
         ];
     }
 
     /**
-     * calculate portfolio statistics
+     * calculate statistics dari completed projects
      */
-    protected function calculateStats($studentId, $projects)
+    protected function calculateStatistics($projects, $reviews)
     {
         // hitung average rating
-        $reviews = Review::where('type', 'institution_to_student')
-                        ->where('reviewee_id', function($query) use ($studentId) {
-                            $query->select('user_id')
-                                  ->from('students')
-                                  ->where('id', $studentId);
-                        })
-                        ->where('is_public', true)
-                        ->get();
-
         $averageRating = $reviews->isEmpty() ? 0 : $reviews->avg('rating');
 
         // hitung total impact
@@ -79,8 +67,12 @@ class PortfolioService
 
         foreach ($projects as $project) {
             if ($project->impact_metrics) {
-                $totalBeneficiaries += $project->impact_metrics['beneficiaries'] ?? 0;
-                $totalActivities += $project->impact_metrics['activities'] ?? 0;
+                $metrics = is_array($project->impact_metrics) 
+                    ? $project->impact_metrics 
+                    : json_decode($project->impact_metrics, true) ?? [];
+                
+                $totalBeneficiaries += $metrics['beneficiaries'] ?? 0;
+                $totalActivities += $metrics['activities'] ?? 0;
             }
         }
 
@@ -102,7 +94,19 @@ class PortfolioService
 
         foreach ($projects as $project) {
             if ($project->problem && $project->problem->required_skills) {
-                $allSkills = array_merge($allSkills, $project->problem->required_skills);
+                $skills = $project->problem->required_skills;
+                
+                // pastikan skills adalah array
+                if (is_string($skills)) {
+                    $skills = json_decode($skills, true);
+                }
+                
+                // jika masih bukan array atau decode gagal, skip
+                if (!is_array($skills)) {
+                    continue;
+                }
+                
+                $allSkills = array_merge($allSkills, $skills);
             }
         }
 
@@ -119,7 +123,19 @@ class PortfolioService
 
         foreach ($projects as $project) {
             if ($project->problem && $project->problem->sdg_categories) {
-                $allSDGs = array_merge($allSDGs, $project->problem->sdg_categories);
+                $categories = $project->problem->sdg_categories;
+                
+                // pastikan categories adalah array
+                if (is_string($categories)) {
+                    $categories = json_decode($categories, true);
+                }
+                
+                // jika masih bukan array atau decode gagal, skip
+                if (!is_array($categories)) {
+                    continue;
+                }
+                
+                $allSDGs = array_merge($allSDGs, $categories);
             }
         }
 
@@ -130,60 +146,76 @@ class PortfolioService
     /**
      * get portfolio achievements
      */
-    public function getAchievements($studentId)
+    public function getAchievements($student, $projects, $reviews)
     {
-        $projects = Project::where('student_id', $studentId)
-                          ->completed()
-                          ->get();
-
         $achievements = [];
 
-        // achievement: first project completed
-        if ($projects->count() >= 1) {
+        // project completion milestones
+        $projectCount = $projects->count();
+        if ($projectCount >= 1) {
             $achievements[] = [
-                'title' => 'Proyek Pertama',
+                'title' => 'First Project',
                 'description' => 'Menyelesaikan proyek KKN pertama',
-                'icon' => 'award',
-                'color' => 'blue',
-            ];
-        }
-
-        // achievement: 5 projects completed
-        if ($projects->count() >= 5) {
-            $achievements[] = [
-                'title' => 'Kontributor Aktif',
-                'description' => 'Menyelesaikan 5 proyek KKN',
                 'icon' => 'star',
-                'color' => 'yellow',
+                'color' => 'blue',
+                'earned_at' => $projects->first()->completed_at
             ];
         }
 
-        // achievement: high rating
-        $avgRating = Review::where('type', 'institution_to_student')
-                          ->where('reviewee_id', function($query) use ($studentId) {
-                              $query->select('user_id')
-                                    ->from('students')
-                                    ->where('id', $studentId);
-                          })
-                          ->avg('rating');
-
-        if ($avgRating >= 4.5) {
+        if ($projectCount >= 5) {
             $achievements[] = [
-                'title' => 'Bintang Lima',
-                'description' => 'Mempertahankan rating rata-rata 4.5+',
+                'title' => 'Experienced Contributor',
+                'description' => 'Menyelesaikan 5 proyek KKN',
+                'icon' => 'award',
+                'color' => 'green',
+                'earned_at' => $projects->take(5)->last()->completed_at
+            ];
+        }
+
+        if ($projectCount >= 10) {
+            $achievements[] = [
+                'title' => 'Master Contributor',
+                'description' => 'Menyelesaikan 10 proyek KKN',
                 'icon' => 'trophy',
                 'color' => 'yellow',
+                'earned_at' => $projects->take(10)->last()->completed_at
             ];
         }
 
-        // achievement: multiple SDGs
-        $sdgCount = count($this->extractSDGCategories($projects));
-        if ($sdgCount >= 5) {
+        // rating achievements
+        $averageRating = $reviews->isEmpty() ? 0 : $reviews->avg('rating');
+        
+        if ($averageRating >= 4.5 && $reviews->count() >= 3) {
+            $achievements[] = [
+                'title' => 'Excellence Award',
+                'description' => 'Mendapat rating rata-rata 4.5+ dari 3+ review',
+                'icon' => 'star',
+                'color' => 'purple',
+                'earned_at' => $reviews->first()->created_at
+            ];
+        }
+
+        // SDG diversity
+        $uniqueSDGs = $this->extractSDGCategories($projects);
+        if (count($uniqueSDGs) >= 5) {
             $achievements[] = [
                 'title' => 'SDG Champion',
-                'description' => 'Berkontribusi pada 5+ kategori SDG',
-                'icon' => 'target',
+                'description' => 'Berkontribusi pada 5+ kategori SDG berbeda',
+                'icon' => 'globe',
                 'color' => 'green',
+                'earned_at' => $projects->first()->completed_at
+            ];
+        }
+
+        // skill diversity
+        $uniqueSkills = $this->extractSkills($projects);
+        if (count($uniqueSkills) >= 10) {
+            $achievements[] = [
+                'title' => 'Multi-Talented',
+                'description' => 'Menguasai 10+ skill berbeda',
+                'icon' => 'briefcase',
+                'color' => 'blue',
+                'earned_at' => $projects->first()->completed_at
             ];
         }
 
@@ -191,36 +223,38 @@ class PortfolioService
     }
 
     /**
-     * generate portfolio slug/shareable link
+     * check jika portfolio visible untuk public
      */
-    public function generatePortfolioSlug(Student $student)
+    public function isPortfolioVisible($studentId)
     {
-        // gunakan NIM sebagai unique identifier
-        return strtolower($student->nim);
+        $student = Student::findOrFail($studentId);
+        return $student->portfolio_visible;
     }
 
     /**
-     * get public portfolio by slug
+     * toggle portfolio visibility
      */
-    public function getPublicPortfolio($slug)
+    public function togglePortfolioVisibility($studentId)
     {
-        // cari student by NIM (slug)
-        $student = Student::where('nim', strtoupper($slug))->firstOrFail();
+        $student = Student::findOrFail($studentId);
+        $student->portfolio_visible = !$student->portfolio_visible;
+        $student->save();
 
-        return $this->getPortfolioData($student->id);
+        return $student->portfolio_visible;
     }
 
     /**
-     * toggle project visibility in portfolio
+     * get public portfolio data
      */
-    public function toggleProjectVisibility($projectId)
+    public function getPublicPortfolioData($studentId)
     {
-        $project = Project::findOrFail($projectId);
-        
-        $project->update([
-            'is_portfolio_visible' => !$project->is_portfolio_visible,
-        ]);
+        $student = Student::with('user')->findOrFail($studentId);
 
-        return $project;
+        // check jika portfolio visible
+        if (!$student->portfolio_visible) {
+            return null;
+        }
+
+        return $this->getPortfolioData($studentId);
     }
 }

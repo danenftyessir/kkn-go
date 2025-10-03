@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateStudentPasswordRequest;
 use App\Http\Requests\UpdateStudentProfileRequest;
+use App\Models\University;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 
@@ -27,7 +28,8 @@ class ProfileController extends Controller
     {
         $student = auth()->user()->student;
         $user = auth()->user();
-        return view('student.profile.edit', compact('student', 'user'));
+        $universities = University::all();
+        return view('student.profile.edit', compact('student', 'user', 'universities'));
     }
 
     /**

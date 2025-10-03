@@ -31,7 +31,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm text-gray-600 mb-1">Total Downloads</p>
-                        <p class="text-3xl font-bold text-green-600">{{ $stats['total_downloads'] }}</p>
+                        <p class="text-3xl font-bold text-green-600">{{ number_format($stats['total_downloads']) }}</p>
                     </div>
                     <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                         <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -44,7 +44,7 @@
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 fade-in-up" style="animation-delay: 0.15s;">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-gray-600 mb-1">Institusi Kontributor</p>
+                        <p class="text-sm text-gray-600 mb-1">Instansi Berkontribusi</p>
                         <p class="text-3xl font-bold text-purple-600">{{ $stats['total_institutions'] }}</p>
                     </div>
                     <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -61,27 +61,47 @@
             <div class="mb-8 fade-in-up" style="animation-delay: 0.2s;">
                 <h2 class="text-2xl font-bold text-gray-900 mb-4">Dokumen Unggulan</h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    @foreach($featuredDocuments as $doc)
-                        <div class="bg-gradient-to-br from-blue-600 to-green-600 rounded-xl shadow-lg overflow-hidden group">
-                            <div class="p-6 text-white">
-                                <div class="flex items-start justify-between mb-4">
-                                    <div class="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                        </svg>
-                                    </div>
-                                    <span class="px-2 py-1 bg-white/20 rounded text-xs">Featured</span>
-                                </div>
-                                <h3 class="font-bold text-lg mb-2 line-clamp-2">{{ $doc->title }}</h3>
-                                <p class="text-sm text-white/80 mb-4">{{ $doc->institution_name }}</p>
-                                <div class="flex items-center justify-between text-sm">
-                                    <span>{{ $doc->download_count }} downloads</span>
-                                    <a href="{{ route('student.repository.show', $doc->id) }}" 
-                                       class="px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-white/90 transition-colors font-semibold">
-                                        Lihat Detail
-                                    </a>
-                                </div>
+                    @foreach($featuredDocuments as $featured)
+                        <div class="bg-gradient-to-br from-blue-50 to-green-50 rounded-xl shadow-sm border-2 border-blue-200 p-6 hover:shadow-lg transition-all">
+                            <div class="flex items-start justify-between mb-3">
+                                <span class="px-3 py-1 bg-blue-600 text-white text-xs font-bold rounded-full">
+                                    FEATURED
+                                </span>
+                                <span class="px-2 py-1 bg-white text-blue-700 text-xs font-bold rounded uppercase">
+                                    {{ $featured->file_type }}
+                                </span>
                             </div>
+                            
+                            <h3 class="text-lg font-bold text-gray-900 mb-2 line-clamp-2">
+                                {{ $featured->title }}
+                            </h3>
+                            
+                            @if($featured->description)
+                                <p class="text-sm text-gray-600 mb-3 line-clamp-2">
+                                    {{ $featured->description }}
+                                </p>
+                            @endif
+                            
+                            <div class="flex items-center gap-3 text-xs text-gray-500 mb-3">
+                                <span class="flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
+                                    {{ $featured->view_count }}
+                                </span>
+                                <span class="flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                    </svg>
+                                    {{ $featured->download_count }}
+                                </span>
+                            </div>
+                            
+                            <a href="{{ route('student.repository.show', $featured->id) }}" 
+                               class="block w-full px-4 py-2 bg-blue-600 text-white text-center rounded-lg hover:bg-blue-700 transition-colors text-sm font-semibold">
+                                Lihat Detail
+                            </a>
                         </div>
                     @endforeach
                 </div>
@@ -189,124 +209,164 @@
                 @else
                     <div class="space-y-4">
                         @foreach($documents as $index => $document)
-                            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-all fade-in-up" 
+                            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all fade-in-up" 
                                  style="animation-delay: {{ 0.3 + ($index * 0.05) }}s;">
-                                <div class="flex items-start gap-4">
-                                    {{-- file icon --}}
-                                    <div class="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                        </svg>
-                                    </div>
-
-                                    {{-- content --}}
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex items-start justify-between mb-2">
-                                            <div class="flex-1">
-                                                <a href="{{ route('student.repository.show', $document->id) }}" 
-                                                   class="block">
-                                                    <h3 class="text-lg font-bold text-gray-900 hover:text-blue-600 transition-colors mb-1">
-                                                        {{ $document->title }}
-                                                    </h3>
-                                                </a>
-                                                <div class="flex flex-wrap gap-2 items-center text-sm text-gray-600">
-                                                    @if($document->author_name)
-                                                        <span>{{ $document->author_name }}</span>
-                                                        <span>•</span>
-                                                    @endif
-                                                    @if($document->university_name)
-                                                        <span>{{ $document->university_name }}</span>
-                                                        <span>•</span>
-                                                    @endif
-                                                    @if($document->year)
-                                                        <span>{{ $document->year }}</span>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        </div>
-
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="flex-1">
+                                        <h3 class="text-lg font-bold text-gray-900 mb-2 hover:text-blue-600 transition-colors">
+                                            <a href="{{ route('student.repository.show', $document->id) }}">
+                                                {{ $document->title }}
+                                            </a>
+                                        </h3>
                                         @if($document->description)
-                                            <p class="text-sm text-gray-600 mb-3 line-clamp-2">{{ $document->description }}</p>
+                                            <p class="text-sm text-gray-600 mb-3 line-clamp-2">
+                                                {{ $document->description }}
+                                            </p>
                                         @endif
-
-                                        {{-- metadata --}}
-                                        <div class="flex flex-wrap items-center gap-4 text-xs text-gray-500 mb-3">
-                                            <span class="flex items-center">
-                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                                </svg>
-                                                {{ $document->view_count }} views
-                                            </span>
-                                            <span class="flex items-center">
-                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                                                </svg>
-                                                {{ $document->download_count }} downloads
-                                            </span>
-                                            <span class="flex items-center">
-                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
-                                                </svg>
-                                                {{ $document->citation_count }} citations
-                                            </span>
-                                            <span class="px-2 py-1 bg-gray-100 rounded">{{ strtoupper($document->file_type) }}</span>
-                                            <span>{{ $document->readable_file_size }}</span>
-                                        </div>
-
-                                        {{-- categories --}}
-                                        @if($document->categories)
-                                            <div class="flex flex-wrap gap-2 mb-3">
-                                                @foreach($document->categories as $category)
-                                                    <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">SDG {{ $category }}</span>
-                                                @endforeach
-                                            </div>
-                                        @endif
-
-                                        {{-- actions --}}
-                                        <div class="flex gap-2">
-                                            <a href="{{ route('student.repository.show', $document->id) }}" 
-                                               class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-semibold">
-                                                Lihat Detail
-                                            </a>
-                                            <a href="{{ route('student.repository.download', $document->id) }}" 
-                                               class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-semibold">
-                                                Download
-                                            </a>
-                                        </div>
                                     </div>
+                                    
+                                    {{-- file type badge --}}
+                                    <span class="ml-4 px-3 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-lg uppercase">
+                                        {{ $document->file_type }}
+                                    </span>
+                                </div>
+
+                                {{-- metadata --}}
+                                <div class="flex flex-wrap items-center gap-3 text-xs text-gray-500 mb-3">
+                                    @if($document->author_name)
+                                        <span class="flex items-center">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                            </svg>
+                                            {{ $document->author_name }}
+                                        </span>
+                                    @endif
+                                    @if($document->institution_name)
+                                        <span class="flex items-center">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                            </svg>
+                                            {{ $document->institution_name }}
+                                        </span>
+                                    @endif
+                                    @if($document->year)
+                                        <span class="flex items-center">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                            </svg>
+                                            {{ $document->year }}
+                                        </span>
+                                    @endif
+                                </div>
+
+                                {{-- statistics --}}
+                                <div class="flex flex-wrap items-center gap-3 text-xs text-gray-500 mb-3">
+                                    <span class="flex items-center">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                        </svg>
+                                        {{ $document->view_count }} views
+                                    </span>
+                                    <span class="flex items-center">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                        </svg>
+                                        {{ $document->download_count }} downloads
+                                    </span>
+                                    <span class="flex items-center">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
+                                        </svg>
+                                        {{ $document->citation_count }} citations
+                                    </span>
+                                    <span class="px-2 py-1 bg-gray-100 rounded text-xs">
+                                        {{ $document->readable_file_size ?? 'N/A' }}
+                                    </span>
+                                </div>
+
+                                {{-- categories - PERBAIKAN BUG --}}
+                                @php
+                                    // parse categories dengan aman
+                                    $categories = [];
+                                    if ($document->categories) {
+                                        if (is_array($document->categories)) {
+                                            $categories = $document->categories;
+                                        } elseif (is_string($document->categories)) {
+                                            $decoded = json_decode($document->categories, true);
+                                            $categories = is_array($decoded) ? $decoded : [];
+                                        }
+                                    }
+                                @endphp
+                                
+                                @if(!empty($categories))
+                                    <div class="flex flex-wrap gap-2 mb-3">
+                                        @foreach($categories as $category)
+                                            <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-semibold">
+                                                SDG {{ $category }}
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                @endif
+
+                                {{-- actions --}}
+                                <div class="flex gap-2">
+                                    <a href="{{ route('student.repository.show', $document->id) }}" 
+                                       class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-semibold">
+                                        Lihat Detail
+                                    </a>
+                                    <a href="{{ route('student.repository.download', $document->id) }}" 
+                                       class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm font-semibold">
+                                        Download
+                                    </a>
                                 </div>
                             </div>
                         @endforeach
                     </div>
 
                     {{-- pagination --}}
-                    <div class="mt-8 fade-in-up" style="animation-delay: 0.5s;">
-                        {{ $documents->withQueryString()->links() }}
+                    <div class="mt-8">
+                        {{ $documents->links() }}
                     </div>
                 @endif
             </div>
-
         </div>
-
     </div>
 </div>
 
+{{-- custom styles --}}
 <style>
-@keyframes fadeInUp {
-    from {
+    .fade-in-up {
+        animation: fadeInUp 0.6s ease-out forwards;
         opacity: 0;
-        transform: translateY(20px);
     }
-    to {
-        opacity: 1;
-        transform: translateY(0);
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
-}
-
-.fade-in-up {
-    animation: fadeInUp 0.6s ease-out forwards;
-    opacity: 0;
-}
+    
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    
+    /* smooth hover transitions */
+    a, button {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    /* smooth scrolling */
+    html {
+        scroll-behavior: smooth;
+    }
 </style>
 @endsection
