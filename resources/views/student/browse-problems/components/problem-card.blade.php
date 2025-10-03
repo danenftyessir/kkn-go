@@ -6,14 +6,23 @@
     $isUrgent = $daysLeft <= 7 && $daysLeft >= 0;
     
     // cek apakah user sudah wishlist problem ini
-    // SAFETY CHECK: cek apakah table wishlists sudah ada
     $isSaved = false;
     if (auth()->check() && auth()->user()->student) {
         try {
             $isSaved = auth()->user()->student->hasWishlisted($problem->id);
-        } catch (\Illuminate\Database\QueryException $e) {
-            // table wishlists belum ada, skip check
+        } catch (\Exception $e) {
+            // jika terjadi error, default false
             $isSaved = false;
+        }
+    }
+    
+    // parse sdg_categories dengan aman
+    $sdgCategories = [];
+    if ($problem->sdg_categories) {
+        if (is_array($problem->sdg_categories)) {
+            $sdgCategories = $problem->sdg_categories;
+        } elseif (is_string($problem->sdg_categories)) {
+            $sdgCategories = json_decode($problem->sdg_categories, true) ?? [];
         }
     }
 @endphp
@@ -51,28 +60,21 @@
                 @endif
             </div>
 
-            <!-- wishlist button - hanya tampil jika table wishlists sudah ada -->
+            <!-- wishlist button - hanya tampil untuk student yang sudah login -->
             @auth
-                @if(auth()->user()->user_type === 'student' && Schema::hasTable('wishlists'))
-                <div class="absolute top-3 right-3">
+                @if(auth()->user()->user_type === 'student')
+                <div class="absolute top-3 right-3" x-data="wishlistButton({{ $problem->id }}, {{ $isSaved ? 'true' : 'false' }})">
                     <button @click.prevent="toggle()"
-                            x-data="wishlistButton({{ $problem->id }}, {{ $isSaved ? 'true' : 'false' }})"
-                            :class="getButtonClass()"
                             :disabled="loading"
-                            class="wishlist-btn p-2 rounded-full shadow-lg transition-all duration-300 hover:scale-110"
-                            title="Simpan ke wishlist">
-                        <svg class="wishlist-icon w-5 h-5" 
-                             :class="getIconClass()"
+                            :class="saved ? 'bg-red-50 border-red-300' : 'bg-white border-gray-300'"
+                            class="p-2 rounded-lg border hover:shadow-lg transition-all duration-200 backdrop-blur-sm">
+                        <svg :class="saved ? 'text-red-600' : 'text-gray-600'" 
+                             class="w-5 h-5 transition-colors" 
+                             :fill="saved ? 'currentColor' : 'none'" 
                              stroke="currentColor" 
                              viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
                         </svg>
-                        <span x-show="loading" class="absolute inset-0 flex items-center justify-center">
-                            <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                        </span>
                     </button>
                 </div>
                 @endif
@@ -82,93 +84,65 @@
 
     <!-- content -->
     <div class="p-5">
-        <!-- institution -->
-        <div class="flex items-center mb-3">
+        <!-- instansi -->
+        <div class="flex items-center space-x-2 mb-3">
             @if($problem->institution->logo_path)
             <img src="{{ asset('storage/' . $problem->institution->logo_path) }}" 
                  alt="{{ $problem->institution->name }}"
-                 class="w-8 h-8 rounded-full object-cover mr-2">
+                 class="w-8 h-8 rounded-full object-cover">
             @else
-            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center mr-2">
+            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center">
                 <span class="text-white text-xs font-bold">
                     {{ strtoupper(substr($problem->institution->name, 0, 1)) }}
                 </span>
             </div>
             @endif
-            <span class="text-sm text-gray-600 truncate">{{ $problem->institution->name }}</span>
+            <span class="text-sm text-gray-600">{{ $problem->institution->name }}</span>
         </div>
 
         <!-- title -->
-        <a href="{{ route('student.problems.show', $problem->id) }}" 
-           class="block group">
-            <h3 class="text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+        <a href="{{ route('student.problems.show', $problem->id) }}" class="block group">
+            <h3 class="text-lg font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors line-clamp-2">
                 {{ $problem->title }}
             </h3>
         </a>
 
-        <!-- description -->
-        <p class="text-sm text-gray-600 mb-4 line-clamp-2">
-            {{ Str::limit($problem->description, 100) }}
-        </p>
-
-        <!-- details -->
-        <div class="space-y-2 mb-4">
-            <div class="flex items-center text-sm text-gray-600">
-                <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                </svg>
-                <span class="truncate">{{ $problem->regency->name }}, {{ $problem->province->name }}</span>
-            </div>
-            <div class="flex items-center text-sm text-gray-600">
-                <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                </svg>
-                {{ $problem->required_students }} mahasiswa dibutuhkan
-            </div>
-            <div class="flex items-center text-sm text-gray-600">
-                <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                {{ $problem->duration_months }} bulan
-            </div>
+        <!-- location -->
+        <div class="flex items-center text-sm text-gray-600 mb-3">
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+            <span>{{ $problem->regency->name ?? '' }}, {{ $problem->province->name ?? '' }}</span>
         </div>
 
-        <!-- tags/skills -->
-        @php
-            // handle both string (JSON) and array format
-            $skills = $problem->required_skills;
-            if (is_string($skills)) {
-                $skills = json_decode($skills, true) ?? [];
-            }
-            $skills = is_array($skills) ? $skills : [];
-        @endphp
-        @if(count($skills) > 0)
-        <div class="flex flex-wrap gap-1 mb-4">
-            @foreach(array_slice($skills, 0, 3) as $skill)
-            <span class="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-md">
-                {{ $skill }}
+        <!-- sdg badges -->
+        @if(!empty($sdgCategories))
+        <div class="flex flex-wrap gap-2 mb-3">
+            @foreach(array_slice($sdgCategories, 0, 3) as $sdg)
+            <span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+                SDG {{ $sdg }}
             </span>
             @endforeach
-            @if(count($skills) > 3)
-            <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-md">
-                +{{ count($skills) - 3 }}
+            @if(count($sdgCategories) > 3)
+            <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">
+                +{{ count($sdgCategories) - 3 }}
             </span>
             @endif
         </div>
         @endif
 
-        <!-- footer -->
-        <div class="pt-4 border-t border-gray-200 flex items-center justify-between">
-            <div class="flex items-center text-xs text-gray-500">
+        <!-- stats -->
+        <div class="flex items-center justify-between pt-3 border-t border-gray-100">
+            <div class="flex items-center text-sm text-gray-600">
                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                 </svg>
-                {{ $problem->views_count }} views
+                <span>{{ $problem->required_students }} mahasiswa</span>
             </div>
             
-            @if($isUrgent)
-            <span class="text-xs font-semibold {{ $daysLeft <= 3 ? 'text-red-600' : 'text-orange-600' }}">
+            @if($daysLeft >= 0)
+            <span class="text-xs {{ $isUrgent ? 'text-red-600' : 'text-orange-600' }}">
                 {{ abs($daysLeft) }} hari lagi
             </span>
             @else
@@ -190,8 +164,8 @@
 @once
 @push('scripts')
 <script>
-// import wishlist functionality
-function wishlistButton(problemId, initialSaved = false) {
+// alpine.js component untuk wishlist button
+window.wishlistButton = function(problemId, initialSaved = false) {
     return {
         problemId: problemId,
         saved: initialSaved,
@@ -212,14 +186,23 @@ function wishlistButton(problemId, initialSaved = false) {
                     }
                 });
 
-                if (!response.ok) throw new Error('gagal toggle wishlist');
+                if (!response.ok) {
+                    throw new Error('gagal toggle wishlist');
+                }
 
                 const data = await response.json();
                 
                 if (data.success) {
                     this.saved = data.saved;
                     this.showNotification(data.message);
-                    this.animateButton();
+                    
+                    // trigger animation
+                    if (this.saved) {
+                        this.$el.querySelector('button').classList.add('animate-bounce');
+                        setTimeout(() => {
+                            this.$el.querySelector('button').classList.remove('animate-bounce');
+                        }, 500);
+                    }
                 }
             } catch (error) {
                 console.error('error toggle wishlist:', error);
@@ -229,71 +212,39 @@ function wishlistButton(problemId, initialSaved = false) {
             }
         },
         
-        animateButton() {
-            if (this.saved) {
-                this.$el.classList.add('animate-heart-beat');
-                setTimeout(() => {
-                    this.$el.classList.remove('animate-heart-beat');
-                }, 1000);
-            }
-        },
-        
         showNotification(message, type = 'success') {
+            // hapus notification sebelumnya jika ada
+            const existing = document.querySelector('.wishlist-toast');
+            if (existing) {
+                existing.remove();
+            }
+            
+            // buat toast notification
             const toast = document.createElement('div');
-            toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white z-50 transform transition-all duration-300 ${
-                type === 'success' ? 'bg-green-500' : 'bg-red-500'
+            toast.className = `wishlist-toast fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white z-50 transform transition-all duration-300 ${
+                type === 'success' ? 'bg-gray-900' : 'bg-red-600'
             }`;
-            toast.textContent = message;
             toast.style.opacity = '0';
             toast.style.transform = 'translateY(20px)';
+            toast.textContent = message;
             
             document.body.appendChild(toast);
             
-            requestAnimationFrame(() => {
+            // animate in
+            setTimeout(() => {
                 toast.style.opacity = '1';
                 toast.style.transform = 'translateY(0)';
-            });
+            }, 10);
             
+            // animate out dan remove
             setTimeout(() => {
                 toast.style.opacity = '0';
                 toast.style.transform = 'translateY(20px)';
-                setTimeout(() => {
-                    document.body.removeChild(toast);
-                }, 300);
-            }, 3000);
-        },
-        
-        getButtonClass() {
-            if (this.saved) {
-                return 'bg-red-500 text-white hover:bg-red-600';
-            }
-            return 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300';
-        },
-        
-        getIconClass() {
-            return this.saved ? 'fill-current' : 'fill-none';
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
         }
     };
-}
-
-// tambahkan animation styles
-if (!document.getElementById('wishlist-animation-styles')) {
-    const style = document.createElement('style');
-    style.id = 'wishlist-animation-styles';
-    style.textContent = `
-        @keyframes heartBeat {
-            0%, 100% { transform: scale(1); }
-            10%, 30% { transform: scale(0.9); }
-            20%, 40%, 60%, 80% { transform: scale(1.1); }
-            50%, 70% { transform: scale(1.05); }
-        }
-        
-        .animate-heart-beat {
-            animation: heartBeat 1s ease-in-out;
-        }
-    `;
-    document.head.appendChild(style);
-}
+};
 </script>
 @endpush
 @endonce

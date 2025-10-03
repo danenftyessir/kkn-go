@@ -150,7 +150,9 @@ class BrowseProblemsController extends Controller
         }
 
         // similar problems berdasarkan lokasi dan kategori SDG
-        $similarProblems = Problem::open()
+        // PERBAIKAN: tambahkan eager loading untuk images, institution, province, regency
+        $similarProblems = Problem::with(['institution', 'province', 'regency', 'images'])
+            ->open()
             ->where('id', '!=', $problem->id)
             ->where(function($query) use ($problem) {
                 $query->where('province_id', $problem->province_id)

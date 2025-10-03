@@ -2,7 +2,7 @@
 // utility functions untuk wishlist functionality
 
 /**
- * toggle wishlist dengan smooth animation
+ * toggle wishlist dengan smooth animation (vanilla JS approach)
  */
 async function toggleWishlist(problemId, button) {
     // disable button sementara
@@ -104,7 +104,7 @@ function showNotification(message, type = 'success') {
     
     // buat notification element
     const notification = document.createElement('div');
-    notification.className = `wishlist-notification fixed top-4 right-4 z-50 flex items-center space-x-3 px-4 py-3 rounded-lg shadow-lg transition-all duration-300 ${
+    notification.className = `wishlist-notification fixed bottom-4 right-4 z-50 flex items-center space-x-3 px-4 py-3 rounded-lg shadow-lg transition-all duration-300 ${
         type === 'success' ? 'bg-gray-900 text-white' : 'bg-red-600 text-white'
     }`;
     
@@ -168,7 +168,7 @@ async function batchToggleWishlist(problemIds) {
  */
 async function checkWishlistStatus(problemId) {
     try {
-        const response = await fetch(`/student/wishlist/${problemId}/status`, {
+        const response = await fetch(`/student/wishlist/${problemId}/check`, {
             headers: {
                 'Accept': 'application/json'
             }
@@ -213,6 +213,67 @@ function initWishlistSync() {
     });
 }
 
+/**
+ * TAMBAHAN: Alpine.js component untuk wishlist button
+ * digunakan di blade dengan x-data="wishlistButton(problemId, initialSaved)"
+ */
+window.wishlistButton = function(problemId, initialSaved = false) {
+    return {
+        problemId: problemId,
+        saved: initialSaved,
+        loading: false,
+        
+        async toggle() {
+            if (this.loading) return;
+            
+            this.loading = true;
+            
+            try {
+                const response = await fetch(`/student/wishlist/${this.problemId}/toggle`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('gagal toggle wishlist');
+                }
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    this.saved = data.saved;
+                    showNotification(data.message);
+                    
+                    // trigger animation
+                    if (this.saved) {
+                        const button = this.$el.querySelector('button');
+                        if (button) {
+                            button.classList.add('animate-bounce');
+                            setTimeout(() => {
+                                button.classList.remove('animate-bounce');
+                            }, 500);
+                        }
+                    }
+                    
+                    // dispatch event untuk sync
+                    window.dispatchEvent(new CustomEvent('wishlistUpdated', {
+                        detail: { problemId: this.problemId, saved: this.saved }
+                    }));
+                }
+            } catch (error) {
+                console.error('error toggle wishlist:', error);
+                showNotification('terjadi kesalahan, silakan coba lagi', 'error');
+            } finally {
+                this.loading = false;
+            }
+        }
+    };
+};
+
 // inisialisasi saat DOM ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initWishlistSync);
@@ -220,7 +281,7 @@ if (document.readyState === 'loading') {
     initWishlistSync();
 }
 
-// export functions
+// export functions untuk digunakan di tempat lain
 export {
     toggleWishlist,
     checkWishlistStatus,
