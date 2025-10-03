@@ -166,10 +166,17 @@ Route::middleware(['auth', 'user.type:institution', 'verified'])->prefix('instit
 |--------------------------------------------------------------------------
 */
 
-Route::prefix('api')->name('api.public.')->group(function () {
+Route::prefix('api/public')->name('api.public.')->group(function () {
     // endpoint untuk get regencies berdasarkan province (digunakan di form registrasi)
     Route::get('/regencies/{provinceId}', [BrowseProblemsController::class, 'getRegencies'])
          ->name('regencies');
+
+    // === TAMBAHKAN KODE DI BAWAH INI ===
+    Route::post('/validate-registration/student', [\App\Http\Controllers\Auth\ValidationController::class, 'validateStudentStep'])
+         ->name('validate.student.step');
+    // Route::post('/validate-registration/institution', [\App\Http\Controllers\Auth\ValidationController::class, 'validateInstitutionStep'])
+    //      ->name('validate.institution.step');
+    // ===================================
 });
 
 /*

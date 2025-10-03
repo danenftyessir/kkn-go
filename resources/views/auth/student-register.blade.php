@@ -103,14 +103,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                                         </svg>
                                     </div>
-                                    @error('first_name')
-                                        <p class="error-message">
-                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                                            </svg>
-                                            {{ $message }}
-                                        </p>
-                                    @enderror
+                                    <p id="error-first_name" class="error-message hidden"></p>
                                 </div>
 
                                 {{-- nama belakang --}}
@@ -128,14 +121,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                                         </svg>
                                     </div>
-                                    @error('last_name')
-                                        <p class="error-message">
-                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                                            </svg>
-                                            {{ $message }}
-                                        </p>
-                                    @enderror
+                                    <p id="error-last_name" class="error-message mt-2 text-sm text-red-600 hidden"></p>
                                 </div>
 
                                 {{-- email --}}
@@ -153,14 +139,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                                         </svg>
                                     </div>
-                                    @error('email')
-                                        <p class="error-message">
-                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                                            </svg>
-                                            {{ $message }}
-                                        </p>
-                                    @enderror
+                                    <p id="error-email" class="error-message mt-2 text-sm text-red-600 hidden"></p>
                                 </div>
 
                                 {{-- no whatsapp --}}
@@ -178,14 +157,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
                                         </svg>
                                     </div>
-                                    @error('whatsapp_number')
-                                        <p class="error-message">
-                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                                            </svg>
-                                            {{ $message }}
-                                        </p>
-                                    @enderror
+                                    <p id="error-whatsapp_number" class="error-message mt-2 text-sm text-red-600 hidden"></p>
                                 </div>
                             </div>
 
@@ -386,14 +358,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                                         </svg>
                                     </div>
-                                    @error('username')
-                                        <p class="error-message">
-                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                                            </svg>
-                                            {{ $message }}
-                                        </p>
-                                    @enderror
+                                    <p id="error-username" class="error-message mt-2 text-sm text-red-600 hidden"></p>
                                 </div>
 
                                 {{-- password --}}
@@ -418,20 +383,14 @@
                                             </svg>
                                         </button>
                                     </div>
-                                    @error('password')
-                                        <p class="error-message">
-                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                                            </svg>
-                                            {{ $message }}
-                                        </p>
-                                    @enderror
+                                    <p id="error-password" class="error-message mt-2 text-sm text-red-600 hidden"></p>
                                 </div>
 
                                 {{-- konfirmasi password --}}
                                 <div class="form-field-group">
                                     <label for="password_confirmation" class="form-label required">konfirmasi password</label>
                                     <div class="form-input-wrapper">
+                                        <p id="error-password_confirmation" class="error-message mt-2 text-sm text-red-600 hidden"></p>
                                         <input type="password" 
                                                id="password_confirmation" 
                                                name="password_confirmation" 
@@ -510,37 +469,103 @@
     <script>
     let currentStep = 1;
 
-    // fungsi navigasi step
-    function nextStep(step) {
-        if (!validateStep(currentStep)) return;
-        
-        // hapus class active dari step saat ini
-        const currentCircle = document.getElementById(`step${currentStep}-circle`);
-        const currentContent = document.getElementById(`step${currentStep}-content`);
-        
-        currentContent.classList.add('hidden');
-        currentCircle.classList.remove('active');
-        currentCircle.classList.add('completed');
-        
-        // tambahkan class active ke step berikutnya
-        const nextCircle = document.getElementById(`step${step}-circle`);
-        const nextContent = document.getElementById(`step${step}-content`);
-        
-        nextContent.classList.remove('hidden');
-        nextCircle.classList.remove('inactive');
-        nextCircle.classList.add('active');
-        
-        // update connector jika maju
-        if (currentStep < step) {
-            document.getElementById(`connector${currentStep}`).classList.add('completed');
+    // ==========================================================
+    // FUNGSI BARU: Menampilkan/Menyembunyikan Error Secara Dinamis
+    // ==========================================================
+    function handleValidationErrors(errors) {
+        // Sembunyikan semua error lama terlebih dahulu
+        document.querySelectorAll('.error-message').forEach(el => {
+            el.textContent = '';
+            el.classList.add('hidden');
+        });
+        document.querySelectorAll('.form-input, .form-select').forEach(el => el.classList.remove('error'));
+
+        // Tampilkan error baru yang diterima dari backend
+        for (const field in errors) {
+            const errorElement = document.getElementById(`error-${field}`);
+            const inputElement = document.getElementById(field);
+
+            if (errorElement) {
+                errorElement.textContent = errors[field][0]; // Tampilkan hanya pesan error pertama
+                errorElement.classList.remove('hidden');
+            }
+            if (inputElement) {
+                inputElement.classList.add('error');
+                // Scroll ke input pertama yang error
+                if (Object.keys(errors)[0] === field) {
+                    inputElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
         }
-        
-        currentStep = step;
-        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    // ==========================================================
+    // FUNGSI NAVIGASI YANG DIMODIFIKASI DENGAN VALIDASI AJAX
+    // ==========================================================
+    async function nextStep(step) {
+        const form = document.getElementById('studentRegisterForm');
+        const formData = new FormData(form);
+        formData.append('step', currentStep); // Menambahkan informasi langkah saat ini ke request
+
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        loadingOverlay.classList.add('active'); // Tampilkan loading
+
+        try {
+            const response = await fetch("{{ route('api.public.validate.student.step') }}", {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: formData
+            });
+
+            if (!response.ok) {
+                if (response.status === 422) { // Kode 422 berarti error validasi
+                    const data = await response.json();
+                    handleValidationErrors(data.errors);
+                } else {
+                    alert('Terjadi kesalahan pada server. Silakan coba lagi.');
+                }
+                return; // Hentikan fungsi jika validasi gagal
+            }
+
+            // --- Jika validasi berhasil, lanjutkan alur visual ---
+            handleValidationErrors({}); // Bersihkan error lama
+            
+            // Logika visual untuk pindah step (sama seperti sebelumnya)
+            const currentCircle = document.getElementById(`step${currentStep}-circle`);
+            const currentContent = document.getElementById(`step${currentStep}-content`);
+            
+            currentContent.classList.add('hidden');
+            currentCircle.classList.remove('active');
+            currentCircle.classList.add('completed');
+            
+            const nextCircle = document.getElementById(`step${step}-circle`);
+            const nextContent = document.getElementById(`step${step}-content`);
+            
+            nextContent.classList.remove('hidden');
+            nextCircle.classList.remove('inactive');
+            nextCircle.classList.add('active');
+            
+            if (currentStep < step) {
+                document.getElementById(`connector${currentStep}`).classList.add('completed');
+            }
+            
+            currentStep = step;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        } catch (error) {
+            console.error('Terjadi kesalahan saat validasi:', error);
+            alert('Tidak dapat terhubung ke server. Periksa koneksi internet Anda.');
+        } finally {
+            loadingOverlay.classList.remove('active'); // Selalu sembunyikan loading
+        }
+    }
+
+    // Fungsi prevStep tidak perlu diubah
     function prevStep(step) {
-        // hapus class dari step saat ini
+        handleValidationErrors({}); // Bersihkan error saat kembali
         const currentCircle = document.getElementById(`step${currentStep}-circle`);
         const currentContent = document.getElementById(`step${currentStep}-content`);
         
@@ -548,7 +573,6 @@
         currentCircle.classList.remove('active');
         currentCircle.classList.add('inactive');
         
-        // tambahkan class active ke step sebelumnya
         const prevCircle = document.getElementById(`step${step}-circle`);
         const prevContent = document.getElementById(`step${step}-content`);
         
@@ -556,7 +580,6 @@
         prevCircle.classList.remove('completed');
         prevCircle.classList.add('active');
         
-        // hapus completed dari connector jika mundur
         if (currentStep > step) {
             document.getElementById(`connector${step}`).classList.remove('completed');
         }
@@ -565,44 +588,14 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // validasi step
-    function validateStep(step) {
-        const form = document.getElementById('studentRegisterForm');
-        
-        if (step === 1) {
-            // validasi data pribadi
-            const requiredFields = ['first_name', 'last_name', 'email', 'whatsapp_number'];
-            for (let field of requiredFields) {
-                const input = form.querySelector(`[name="${field}"]`);
-                if (!input || !input.value.trim()) {
-                    alert(`mohon lengkapi field ${field.replace('_', ' ')}`);
-                    input?.focus();
-                    return false;
-                }
-            }
-        } else if (step === 2) {
-            // validasi data akademik
-            const requiredFields = ['university_id', 'major', 'nim', 'semester'];
-            for (let field of requiredFields) {
-                const input = form.querySelector(`[name="${field}"]`);
-                if (!input || !input.value.trim()) {
-                    alert(`mohon lengkapi field ${field.replace('_', ' ')}`);
-                    input?.focus();
-                    return false;
-                }
-            }
-        }
-        
-        return true;
-    }
-
-    // toggle password visibility
+    // ==========================================================
+    // FUNGSI UTILITAS (TIDAK BERUBAH)
+    // ==========================================================
     function togglePassword(inputId) {
         const input = document.getElementById(inputId);
         input.type = input.type === 'password' ? 'text' : 'password';
     }
 
-    // preview image upload
     function previewImage(event) {
         const file = event.target.files[0];
         const preview = document.getElementById('imagePreview');
@@ -619,14 +612,83 @@
         }
     }
 
-    // handle form submission
-    document.getElementById('studentRegisterForm')?.addEventListener('submit', function(e) {
+    // ==========================================================
+    // EVENT LISTENER UNTUK SUBMIT FORM (DIMODIFIKASI)
+    // ==========================================================
+    document.getElementById('studentRegisterForm')?.addEventListener('submit', async function(e) {
+        e.preventDefault(); // Selalu batalkan submit bawaan terlebih dahulu
+
         const loadingOverlay = document.getElementById('loadingOverlay');
-        if (loadingOverlay) {
-            loadingOverlay.classList.add('active');
+        loadingOverlay.classList.add('active');
+        
+        // Lakukan validasi terakhir untuk semua data sebelum submit
+        const formData = new FormData(this);
+        // Kita tidak perlu mengirim `step` karena kita ingin backend memvalidasi semua
+        
+        try {
+            const response = await fetch("{{ route('register.student.submit') }}", {
+                method: 'POST',
+                headers: { 
+                    'Accept': 'application/json' 
+                    // CSRF token sudah otomatis ditangani oleh FormData
+                },
+                body: formData
+            });
+
+            // Jika backend mengembalikan error validasi saat submit akhir
+            if (response.status === 422) {
+                const data = await response.json();
+                
+                // Cari tahu di langkah mana error pertama terjadi
+                const errorFields = Object.keys(data.errors);
+                const step1Fields = ['first_name', 'last_name', 'email', 'whatsapp_number', 'profile_photo'];
+                const step2Fields = ['university_id', 'major', 'nim', 'semester'];
+
+                let errorStep = 3;
+                if (errorFields.some(field => step1Fields.includes(field))) {
+                    errorStep = 1;
+                } else if (errorFields.some(field => step2Fields.includes(field))) {
+                    errorStep = 2;
+                }
+                
+                // Pindah ke step yang error dan tampilkan pesan
+                if (currentStep !== errorStep) {
+                    // Reset semua step indicator
+                    for(let i=1; i<=3; i++) {
+                        document.getElementById(`step${i}-content`).classList.add('hidden');
+                        document.getElementById(`step${i}-circle`).className = 'step-circle inactive';
+                        if(i < 3) document.getElementById(`connector${i}`).classList.remove('completed');
+                    }
+                    // Setup ulang ke step yang error
+                    for(let i=1; i<errorStep; i++) {
+                        document.getElementById(`step${i}-circle`).classList.add('completed');
+                        if(i < 3) document.getElementById(`connector${i}`).classList.add('completed');
+                    }
+                    document.getElementById(`step${errorStep}-content`).classList.remove('hidden');
+                    document.getElementById(`step${errorStep}-circle`).classList.add('active');
+                    currentStep = errorStep;
+                }
+
+                handleValidationErrors(data.errors);
+                loadingOverlay.classList.remove('active');
+                return;
+            }
+
+            // Jika sukses, Laravel akan me-redirect. Kita cek jika ada URL redirect
+            if (response.redirected) {
+                window.location.href = response.url;
+            } else {
+                 // Fallback jika tidak ada redirect, reload halaman
+                window.location.reload();
+            }
+
+        } catch(error) {
+            console.error('Submit error:', error);
+            alert('Terjadi kesalahan saat mengirimkan formulir.');
+            loadingOverlay.classList.remove('active');
         }
     });
-    </script>
+</script>
 
     @vite(['resources/js/app.js'])
 </body>
