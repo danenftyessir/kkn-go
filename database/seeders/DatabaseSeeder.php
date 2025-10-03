@@ -7,8 +7,7 @@ use Illuminate\Database\Seeder;
 /**
  * database seeder utama
  * menjalankan semua seeder dalam urutan yang benar
- * 
- * jalankan: php artisan db:seed
+ * * jalankan: php artisan db:seed
  * atau: php artisan migrate:fresh --seed
  */
 class DatabaseSeeder extends Seeder
@@ -23,12 +22,24 @@ class DatabaseSeeder extends Seeder
         $this->command->info('==========================================');
         $this->command->newLine();
 
-        // jalankan seeder dalam urutan yang benar
+        // PERBAIKAN: Memanggil seeder dalam urutan yang benar dan logis.
+        // 1. Panggil seeder untuk data master (provinsi & kabupaten) terlebih dahulu.
+        //    Ini memastikan data lokasi tersedia sebelum data lain yang bergantung padanya dibuat.
         $this->call([
-            DummyDataSeeder::class,      // provinces, regencies, universities, students, institutions
-            ProblemsSeeder::class,        // problems data
-            ApplicationsSeeder::class,    // applications data
+            ProvincesRegenciesSeeder::class, // Menggunakan seeder yang lebih andal dengan ID statis
         ]);
+
+        // 2. Panggil seeder lain yang bergantung pada data master.
+        //    DummyDataSeeder akan mengisi data universitas, mahasiswa, dan instansi.
+        //    ProblemsSeeder akan mengisi data proyek.
+        //    ApplicationsSeeder akan mengisi data pendaftaran mahasiswa ke proyek.
+        $this->call([
+            DummyDataSeeder::class,      
+            ProblemsSeeder::class,       
+            ApplicationsSeeder::class,    
+            ProjectsSeeder::class,
+        ]);
+
 
         $this->command->newLine();
         $this->command->info('==========================================');

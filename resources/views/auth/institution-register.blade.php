@@ -623,145 +623,101 @@
     </div>
 
     <script>
-    // fungsi alpine.js untuk multi-step form
-    function institutionForm(regenciesUrlTemplate, initialStep) {
-        return {
-            currentStep: 1,
-            provinceId: '{{ old("province_id") }}' || null,
-            regencyId: '{{ old("regency_id") }}' || null,
-            regencies: {!! $regencies->toJson() !!},
-            loadingRegencies: false,
+    let currentStep = 1;
 
-            init() {
-                // langsung lompat ke step yang benar saat inisialisasi
-                if (initialStep > 1) {
-                    for (let i = 1; i < initialStep; i++) {
-                        this.updateStepUI(i + 1, true, false);
-                    }
-                }
-                
-                // urus state dropdown regency jika ada old input
-                this.$watch('regencies', () => {
-                    setTimeout(() => {
-                        if (this.regencyId) {
-                            this.$el.querySelector('#regency_id').value = this.regencyId;
-                        }
-                    }, 50);
-                });
-                
-                // load regencies jika provinsi sudah terpilih
-                if (this.provinceId) {
-                    this.loadRegencies();
-                }
-            },
-
-            // fungsi navigasi step
-            nextStep(step) {
-                if (!this.validateStep(this.currentStep)) return;
-                this.updateStepUI(step, true, true);
-            },
-
-            prevStep(step) {
-                this.updateStepUI(step, false, true);
-            },
-
-            // fungsi helper untuk update UI step
-            updateStepUI(step, isForward, doScroll) {
-                document.getElementById(`step${this.currentStep}-content`).classList.add('hidden');
-                const currentCircle = document.getElementById(`step${this.currentStep}-circle`);
-                
-                if (isForward) {
-                    currentCircle.classList.remove('active');
-                    currentCircle.classList.add('completed');
-                    document.getElementById(`connector${this.currentStep}`).classList.add('completed');
-                } else {
-                    currentCircle.classList.remove('active');
-                    currentCircle.classList.add('inactive');
-                    document.getElementById(`connector${step}`).classList.remove('completed');
-                }
-
-                document.getElementById(`step${step}-content`).classList.remove('hidden');
-                const nextCircle = document.getElementById(`step${step}-circle`);
-                nextCircle.classList.remove('inactive', 'completed');
-                nextCircle.classList.add('active');
-
-                this.currentStep = step;
-                if (doScroll) window.scrollTo({ top: 0, behavior: 'smooth' });
-            },
-
-            // fungsi validasi per step
-            validateStep(step) {
-                const form = document.getElementById('institutionRegisterForm');
-                
-                if (step === 1) {
-                    const fields = ['institution_name', 'institution_type', 'province_id', 'regency_id', 'address', 'official_email'];
-                    for (let field of fields) {
-                        const input = form.querySelector(`[name="${field}"]`);
-                        if (!input || !input.value.trim()) {
-                            const label = input.closest('.form-field-group').querySelector('label').innerText.replace('*', '').trim();
-                            alert(`mohon lengkapi: ${label}`);
-                            input.focus();
-                            return false;
-                        }
-                    }
-                } else if (step === 2) {
-                    const fields = ['pic_name', 'pic_position', 'phone_number'];
-                    for (let field of fields) {
-                        const input = form.querySelector(`[name="${field}"]`);
-                        if (!input || !input.value.trim()) {
-                            const label = input.closest('.form-field-group').querySelector('label').innerText.replace('*', '').trim();
-                            alert(`mohon lengkapi: ${label}`);
-                            input.focus();
-                            return false;
-                        }
-                    }
-                }
-                return true;
-            },
-
-            // fungsi load regencies via API
-            async loadRegencies() {
-                this.regencyId = '';
-                
-                if (!this.provinceId) {
-                    this.regencies = [];
-                    return;
-                }
-                
-                this.loadingRegencies = true;
-                const url = regenciesUrlTemplate.replace('PLACEHOLDER', this.provinceId);
-                
-                try {
-                    const response = await fetch(url);
-                    
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    
-                    const data = await response.json();
-                    this.regencies = data;
-                    
-                    if (data.length === 0) {
-                        alert('tidak ada kabupaten/kota untuk provinsi ini. silakan hubungi admin.');
-                    }
-                    
-                } catch (error) {
-                    alert('gagal memuat kabupaten/kota. silakan coba lagi atau hubungi admin.');
-                    this.regencies = [];
-                } finally {
-                    this.loadingRegencies = false;
-                }
-            }
-        };
+    // fungsi navigasi step
+    function nextStep(step) {
+        if (!validateStep(currentStep)) return;
+        
+        // hapus class active dari step saat ini
+        const currentCircle = document.getElementById(`step${currentStep}-circle`);
+        const currentContent = document.getElementById(`step${currentStep}-content`);
+        
+        currentContent.classList.add('hidden');
+        currentCircle.classList.remove('active');
+        currentCircle.classList.add('completed');
+        
+        // tambahkan class active ke step berikutnya
+        const nextCircle = document.getElementById(`step${step}-circle`);
+        const nextContent = document.getElementById(`step${step}-content`);
+        
+        nextContent.classList.remove('hidden');
+        nextCircle.classList.remove('inactive');
+        nextCircle.classList.add('active');
+        
+        // update connector jika maju
+        if (currentStep < step) {
+            document.getElementById(`connector${currentStep}`).classList.add('completed');
+        }
+        
+        currentStep = step;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // fungsi helper untuk toggle password visibility
+    function prevStep(step) {
+        // hapus class dari step saat ini
+        const currentCircle = document.getElementById(`step${currentStep}-circle`);
+        const currentContent = document.getElementById(`step${currentStep}-content`);
+        
+        currentContent.classList.add('hidden');
+        currentCircle.classList.remove('active');
+        currentCircle.classList.add('inactive');
+        
+        // tambahkan class active ke step sebelumnya
+        const prevCircle = document.getElementById(`step${step}-circle`);
+        const prevContent = document.getElementById(`step${step}-content`);
+        
+        prevContent.classList.remove('hidden');
+        prevCircle.classList.remove('completed');
+        prevCircle.classList.add('active');
+        
+        // hapus completed dari connector jika mundur
+        if (currentStep > step) {
+            document.getElementById(`connector${step}`).classList.remove('completed');
+        }
+        
+        currentStep = step;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // validasi step
+    function validateStep(step) {
+        const form = document.getElementById('institutionRegisterForm');
+        
+        if (step === 1) {
+            // validasi data instansi
+            const requiredFields = ['institution_name', 'institution_type', 'province_id', 'regency_id', 'address', 'official_email'];
+            for (let field of requiredFields) {
+                const input = form.querySelector(`[name="${field}"]`);
+                if (!input || !input.value.trim()) {
+                    alert(`mohon lengkapi field ${field.replace('_', ' ')}`);
+                    input?.focus();
+                    return false;
+                }
+            }
+        } else if (step === 2) {
+            // validasi penanggung jawab
+            const requiredFields = ['pic_name', 'pic_position', 'phone_number'];
+            for (let field of requiredFields) {
+                const input = form.querySelector(`[name="${field}"]`);
+                if (!input || !input.value.trim()) {
+                    alert(`mohon lengkapi field ${field.replace('_', ' ')}`);
+                    input?.focus();
+                    return false;
+                }
+            }
+        }
+        
+        return true;
+    }
+
+    // toggle password visibility
     function togglePassword(inputId) {
         const input = document.getElementById(inputId);
         input.type = input.type === 'password' ? 'text' : 'password';
     }
 
-    // fungsi preview logo upload
+    // preview logo upload
     function previewLogo(event) {
         const file = event.target.files[0];
         const preview = document.getElementById('logoPreview');
@@ -778,7 +734,7 @@
         }
     }
 
-    // fungsi preview document upload
+    // preview document upload
     function previewDocument(event) {
         const file = event.target.files[0];
         const label = document.getElementById('docLabel');
@@ -788,16 +744,59 @@
         }
     }
 
-    // show loading overlay saat submit form
+    // handle form submission
     document.getElementById('institutionRegisterForm')?.addEventListener('submit', function(e) {
-        const loadingOverlay = document.getElementById('loadingOverlay');
-        if (loadingOverlay) {
-            loadingOverlay.classList.add('active');
-        }
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    if (loadingOverlay) {
+        loadingOverlay.classList.add('active');
+    }
     });
-    </script>
 
-@vite(['resources/js/app.js'])
+    function institutionForm(regenciesUrlTemplate) {
+        return {
+            provinceId: '{{ old("province_id") }}',
+            regencyId: '{{ old("regency_id") }}',
+            regencies: {!! $regencies->toJson() !!},
+            loadingRegencies: false,
+
+            init() {
+                // Ini akan memastikan dropdown regency tetap terisi setelah validasi gagal
+                // dan Alpine.js mengambil alih
+                this.$watch('regencies', () => {
+                    // Set timeout agar DOM sempat di-update oleh Alpine
+                    setTimeout(() => {
+                        if (this.regencyId) {
+                            this.$el.querySelector('#regency_id').value = this.regencyId;
+                        }
+                    }, 50);
+                });
+            },
+
+            async loadRegencies() {
+                this.regencyId = ''; // Reset pilihan regency
+                if (!this.provinceId) {
+                    this.regencies = [];
+                    return;
+                }
+
+                this.loadingRegencies = true;
+                
+                const url = regenciesUrlTemplate.replace('PLACEHOLDER', this.provinceId);
+
+                try {
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    this.regencies = data;
+                } catch (error) {
+                    console.error('Gagal memuat kabupaten/kota:', error);
+                    this.regencies = [];
+                } finally {
+                    this.loadingRegencies = false;
+                }
+            }
+        };
+    }
+    </script>
 
     @vite(['resources/js/app.js'])
 </body>

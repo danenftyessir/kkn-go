@@ -1,7 +1,4 @@
 <?php
-
-// path: database/seeders/ProvincesRegenciesSeeder.php
-
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
