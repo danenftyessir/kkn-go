@@ -79,13 +79,33 @@ class ProfileController extends Controller
     /**
      * tampilkan public profile student
      */
-    public function publicProfile($id)
+    public function publicProfile($username)
     {
-        $student = \App\Models\Student::with(['user', 'university'])
-                                      ->findOrFail($id);
+        // cari student berdasarkan username dari user
+        $student = \App\Models\Student::whereHas('user', function($query) use ($username) {
+            $query->where('username', $username);
+        })
+        ->with(['user', 'university'])
+        ->firstOrFail();
         
-        // TODO: load completed projects, achievements, dll
+        // ambil user dari relasi student
+        $user = $student->user;
         
-        return view('student.profile.public', compact('student'));
+        // TODO: load completed projects dari database
+        $completedProjects = [];
+        
+        // TODO: load achievements
+        $achievements = [];
+        
+        // hitung statistik untuk portfolio
+        $stats = [
+            'total_projects' => 0, // TODO: hitung dari completed projects
+            'sdgs_addressed' => 0, // TODO: hitung unique SDGs dari projects
+            'positive_reviews' => 0, // TODO: hitung dari reviews
+            'average_rating' => 0.0, // TODO: hitung average rating dari reviews
+            'impact_metrics' => 0, // TODO: hitung impact metrics
+        ];
+        
+        return view('student.profile.public', compact('student', 'user', 'stats', 'completedProjects', 'achievements'));
     }
 }
