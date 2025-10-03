@@ -1,3 +1,4 @@
+{{-- resources/views/components/navbar.blade.php --}}
 <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
@@ -20,16 +21,28 @@
                             Dashboard
                         </a>
                         <a href="{{ route('student.browse-problems') }}" 
-                           class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('student.browse-problems') ? 'text-blue-600' : '' }}">
+                           class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('student.browse-problems') || request()->routeIs('student.problems.show') ? 'text-blue-600' : '' }}">
                             Cari Proyek
                         </a>
-                        <!-- TODO: tambahkan link lain sesuai kebutuhan -->
+                        <a href="{{ route('student.applications.index') }}" 
+                           class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('student.applications.*') ? 'text-blue-600' : '' }}">
+                            Aplikasi Saya
+                        </a>
+                        <a href="{{ route('student.wishlist.index') }}" 
+                           class="relative text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('student.wishlist.*') ? 'text-blue-600' : '' }}">
+                            <span class="flex items-center">
+                                <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                </svg>
+                                Wishlist
+                            </span>
+                        </a>
                     @elseif(auth()->user()->user_type === 'institution')
                         <a href="{{ route('institution.dashboard') }}" 
                            class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('institution.dashboard') ? 'text-blue-600' : '' }}">
                             Dashboard
                         </a>
-                        <!-- TODO: tambahkan link untuk instansi -->
+                        {{-- TODO: tambahkan link untuk instansi --}}
                     @endif
                 </div>
 
@@ -117,8 +130,26 @@
                                     <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                                     </svg>
-                                    <span>Profile</span>
+                                    <span>Profil</span>
                                 </a>
+
+                                @if($user->user_type === 'student')
+                                <a href="{{ route('student.wishlist.index') }}" 
+                                   class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                                    <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                    </svg>
+                                    <span>Wishlist</span>
+                                </a>
+
+                                <a href="{{ route('student.applications.index') }}" 
+                                   class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                                    <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                    </svg>
+                                    <span>Aplikasi Saya</span>
+                                </a>
+                                @endif
 
                                 <div class="border-t border-gray-100"></div>
                                 
@@ -129,7 +160,7 @@
                                         <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
                                         </svg>
-                                        <span>logout</span>
+                                        <span>Logout</span>
                                     </button>
                                 </form>
                             </div>
