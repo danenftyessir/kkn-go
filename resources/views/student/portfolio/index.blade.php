@@ -43,7 +43,7 @@
                             <p class="text-sm text-gray-500">{{ $student->major }} • Semester {{ $student->semester }}</p>
                         </div>
                     </div>
-                    <a href="{{ route('student.portfolio.public', $portfolio_slug) }}" 
+                    <a href="{{ route('portfolio.public', $portfolio_slug) }}" 
                        target="_blank"
                        class="mb-4 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
                         Preview Public View

@@ -19,17 +19,13 @@
                            class="px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors {{ request()->routeIs('student.dashboard') ? 'bg-gray-100 font-semibold' : '' }}">
                             Dashboard
                         </a>
-                        <a href="{{ route('student.browse-problems') }}" 
-                           class="px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors {{ request()->routeIs('student.browse-problems*') || request()->routeIs('student.problems.*') ? 'bg-gray-100 font-semibold' : '' }}">
-                            Cari Proyek
-                        </a>
                         <a href="{{ route('student.applications.index') }}" 
                            class="px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors {{ request()->routeIs('student.applications.*') ? 'bg-gray-100 font-semibold' : '' }}">
-                            Aplikasi
+                            Apply
                         </a>
                         <a href="{{ route('student.projects.index') }}" 
                            class="px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors {{ request()->routeIs('student.projects.*') ? 'bg-gray-100 font-semibold' : '' }}">
-                            Proyek Saya
+                            My projects
                         </a>
                         <a href="{{ route('student.portfolio.index') }}" 
                            class="px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors {{ request()->routeIs('student.portfolio.*') ? 'bg-gray-100 font-semibold' : '' }}">

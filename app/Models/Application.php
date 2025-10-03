@@ -141,6 +141,34 @@ class Application extends Model
     }
 
     /**
+     * get status badge color class (untuk compatibility dengan view lama)
+     */
+    public function getStatusBadgeColor()
+    {
+        return match($this->status) {
+            'pending' => 'bg-yellow-100 text-yellow-700 border-yellow-300',
+            'reviewed' => 'bg-blue-100 text-blue-700 border-blue-300',
+            'accepted' => 'bg-green-100 text-green-700 border-green-300',
+            'rejected' => 'bg-red-100 text-red-700 border-red-300',
+            default => 'bg-gray-100 text-gray-700 border-gray-300',
+        };
+    }
+
+    /**
+     * get status label (untuk compatibility dengan view lama)
+     */
+    public function getStatusLabel()
+    {
+        return match($this->status) {
+            'pending' => 'Menunggu Review',
+            'reviewed' => 'Sedang Direview',
+            'accepted' => 'Diterima',
+            'rejected' => 'Ditolak',
+            default => ucfirst($this->status),
+        };
+    }
+
+    /**
      * cek apakah aplikasi bisa di-withdraw
      */
     public function canWithdraw()
