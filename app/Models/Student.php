@@ -5,11 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-/**
- * Model Student
- * 
- * representasi data mahasiswa dalam sistem
- */
 class Student extends Model
 {
     use HasFactory;
@@ -18,19 +13,18 @@ class Student extends Model
         'user_id',
         'first_name',
         'last_name',
+        'nim',
         'university_id',
         'major',
-        'nim',
         'semester',
+        'whatsapp',
         'phone',
-        'profile_photo_path',
         'bio',
         'skills',
-        'portfolio_visible',
+        'profile_photo_path',
     ];
 
     protected $casts = [
-        'portfolio_visible' => 'boolean',
         'skills' => 'array',
     ];
 
@@ -67,82 +61,89 @@ class Student extends Model
     }
 
     /**
-     * relasi ke wishlisted problems (many-to-many melalui wishlist)
-     */
-    public function wishlistedProblems()
-    {
-        return $this->belongsToMany(Problem::class, 'wishlists')
-                    ->withTimestamps()
-                    ->withPivot('notes');
-    }
-
-    /**
-     * cek apakah student sudah save problem tertentu
-     */
-    public function hasWishlisted($problemId): bool
-    {
-        return $this->wishlists()
-                    ->where('problem_id', $problemId)
-                    ->exists();
-    }
-
-    /**
-     * TODO: relasi ke projects (completed)
-     */
-    // public function completedProjects()
-    // {
-    //     return $this->hasMany(Project::class)->where('status', 'completed');
-    // }
-
-    /**
-     * TODO: relasi ke reviews/ratings
-     */
-    // public function reviews()
-    // {
-    //     return $this->hasMany(Review::class);
-    // }
-
-    /**
      * get full name
      */
-    public function getFullName(): string
+    public function getFullNameAttribute()
     {
-        return trim("{$this->first_name} {$this->last_name}");
+        return "{$this->first_name} {$this->last_name}";
     }
 
     /**
-     * get full name attribute
+     * cek apakah student sudah wishlist problem tertentu
      */
-    public function getFullNameAttribute(): string
+    public function hasWishlisted($problemId)
     {
-        return $this->getFullName();
-    }
-
-    /**
-     * get profile photo url
-     */
-    public function getProfilePhotoUrl(): string
-    {
-        if ($this->profile_photo_path) {
-            return asset('storage/' . $this->profile_photo_path);
+        try {
+            return $this->wishlists()
+                        ->where('problem_id', $problemId)
+                        ->exists();
+        } catch (\Exception $e) {
+            // jika table wishlists belum ada atau error
+            return false;
         }
-        
-        // default avatar dengan initial
-        return 'https://ui-avatars.com/api/?name=' . urlencode($this->getFullName()) . '&color=3B82F6&background=EFF6FF';
     }
 
     /**
-     * get statistics untuk dashboard/portfolio
+     * toggle wishlist untuk problem
      */
-    public function getStatistics(): array
+    public function toggleWishlist($problemId, $notes = null)
     {
-        return [
-            'total_applications' => $this->applications()->count(),
-            'pending_applications' => $this->applications()->where('status', 'pending')->count(),
-            'accepted_applications' => $this->applications()->where('status', 'accepted')->count(),
-            'wishlist_count' => $this->wishlists()->count(),
-            // TODO: tambahkan completed projects count
-            // 'completed_projects' => $this->completedProjects()->count(),
-        ];
+        $wishlist = $this->wishlists()
+                        ->where('problem_id', $problemId)
+                        ->first();
+
+        if ($wishlist) {
+            $wishlist->delete();
+            return ['action' => 'removed', 'saved' => false];
+        } else {
+            $this->wishlists()->create([
+                'problem_id' => $problemId,
+                'notes' => $notes
+            ]);
+            return ['action' => 'added', 'saved' => true];
+        }
+    }
+
+    /**
+     * get completed projects count
+     */
+    public function getCompletedProjectsCount()
+    {
+        return $this->applications()
+                    ->where('status', 'accepted')
+                    ->whereHas('problem', function($query) {
+                        $query->where('status', 'completed');
+                    })
+                    ->count();
+    }
+
+    /**
+     * get pending applications count
+     */
+    public function getPendingApplicationsCount()
+    {
+        return $this->applications()
+                    ->whereIn('status', ['pending', 'under_review'])
+                    ->count();
+    }
+
+    /**
+     * get accepted applications count
+     */
+    public function getAcceptedApplicationsCount()
+    {
+        return $this->applications()
+                    ->where('status', 'accepted')
+                    ->count();
+    }
+
+    /**
+     * cek apakah sudah apply ke problem tertentu
+     */
+    public function hasAppliedTo($problemId)
+    {
+        return $this->applications()
+                    ->where('problem_id', $problemId)
+                    ->exists();
     }
 }

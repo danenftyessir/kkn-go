@@ -1,437 +1,429 @@
 // resources/js/pages/browse-problems.js
-// javascript untuk interaktivitas pada halaman browse problems
+// ajax filtering real-time untuk browse problems page
 
-/**
- * smooth scroll dengan GPU acceleration
- */
-class SmoothScroll {
-    constructor() {
-        this.init();
-    }
+import { throttle, debounce } from 'lodash';
 
-    init() {
-        // enable smooth scrolling untuk semua anchor links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', (e) => {
-                e.preventDefault();
-                const target = document.querySelector(anchor.getAttribute('href'));
-                if (target) {
-                    this.scrollTo(target);
-                }
-            });
-        });
+// state management untuk filters
+const filterState = {
+    search: '',
+    province_id: '',
+    regency_id: '',
+    sdg: '',
+    difficulty: '',
+    duration: '',
+    sort: 'latest',
+    page: 1
+};
 
-        // scroll ke top button
-        this.initScrollToTop();
-    }
+// dom elements
+let filterForm;
+let problemsContainer;
+let paginationContainer;
+let loadingIndicator;
 
-    scrollTo(element) {
-        element.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
-        });
-    }
-
-    initScrollToTop() {
-        const scrollBtn = document.getElementById('scroll-to-top');
-        if (!scrollBtn) return;
-
-        // throttle scroll event untuk performa
-        let ticking = false;
-        
-        window.addEventListener('scroll', () => {
-            if (!ticking) {
-                window.requestAnimationFrame(() => {
-                    if (window.pageYOffset > 300) {
-                        scrollBtn.classList.remove('hidden');
-                    } else {
-                        scrollBtn.classList.add('hidden');
-                    }
-                    ticking = false;
-                });
-                ticking = true;
-            }
-        }, { passive: true });
-
-        scrollBtn.addEventListener('click', () => {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-        });
-    }
-}
-
-/**
- * lazy loading untuk images dengan intersection observer
- */
-class LazyLoader {
-    constructor() {
-        this.images = document.querySelectorAll('img[data-src]');
-        this.init();
-    }
-
-    init() {
-        if ('IntersectionObserver' in window) {
-            const imageObserver = new IntersectionObserver((entries, observer) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        this.loadImage(entry.target);
-                        observer.unobserve(entry.target);
-                    }
-                });
-            }, {
-                rootMargin: '50px 0px',
-                threshold: 0.01
-            });
-
-            this.images.forEach(img => imageObserver.observe(img));
-        } else {
-            // fallback untuk browser yang tidak support intersection observer
-            this.images.forEach(img => this.loadImage(img));
-        }
-    }
-
-    loadImage(img) {
-        const src = img.getAttribute('data-src');
-        if (!src) return;
-
-        img.src = src;
-        img.removeAttribute('data-src');
-        img.classList.remove('skeleton');
-        
-        // fade in animation
-        img.style.opacity = '0';
-        img.style.transition = 'opacity 0.3s ease';
-        img.onload = () => {
-            img.style.opacity = '1';
-        };
-    }
-}
-
-/**
- * filter handler untuk browse problems
- */
-class FilterHandler {
-    constructor() {
-        this.form = document.getElementById('filter-form');
-        this.provinceSelect = document.querySelector('select[name="province_id"]');
-        this.regencySelect = document.querySelector('select[name="regency_id"]');
-        this.init();
-    }
-
-    init() {
-        if (!this.form) return;
-
-        // handle province change untuk load regencies
-        if (this.provinceSelect) {
-            this.provinceSelect.addEventListener('change', (e) => {
-                this.loadRegencies(e.target.value);
-            });
-        }
-
-        // auto-submit untuk radio buttons (dengan debounce)
-        const radioButtons = this.form.querySelectorAll('input[type="radio"]');
-        radioButtons.forEach(radio => {
-            radio.addEventListener('change', () => {
-                this.debounce(() => this.form.submit(), 300);
-            });
-        });
-    }
-
-    async loadRegencies(provinceId) {
-        if (!provinceId || !this.regencySelect) {
-            return;
-        }
-
-        try {
-            // tampilkan loading state
-            this.regencySelect.disabled = true;
-            this.regencySelect.innerHTML = '<option value="">Loading...</option>';
-
-            const response = await fetch(`/api/regencies/${provinceId}`);
-            const regencies = await response.json();
-
-            // populate regency options
-            let options = '<option value="">Semua Kabupaten/Kota</option>';
-            regencies.forEach(regency => {
-                options += `<option value="${regency.id}">${regency.name}</option>`;
-            });
-
-            this.regencySelect.innerHTML = options;
-            this.regencySelect.disabled = false;
-
-        } catch (error) {
-            console.error('Error loading regencies:', error);
-            this.regencySelect.innerHTML = '<option value="">Error loading data</option>';
-        }
-    }
-
-    debounce(func, wait) {
-        let timeout;
-        return function executedFunction(...args) {
-            const later = () => {
-                clearTimeout(timeout);
-                func(...args);
-            };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-        };
-    }
-}
-
-/**
- * card animations dengan intersection observer
- */
-class CardAnimations {
-    constructor() {
-        this.cards = document.querySelectorAll('.problem-card');
-        this.init();
-    }
-
-    init() {
-        if ('IntersectionObserver' in window) {
-            const cardObserver = new IntersectionObserver((entries) => {
-                entries.forEach((entry, index) => {
-                    if (entry.isIntersecting) {
-                        // stagger animation
-                        setTimeout(() => {
-                            entry.target.classList.add('fade-in-up');
-                            entry.target.style.opacity = '1';
-                        }, index * 50);
-                        cardObserver.unobserve(entry.target);
-                    }
-                });
-            }, {
-                threshold: 0.1
-            });
-
-            this.cards.forEach(card => {
-                card.style.opacity = '0';
-                cardObserver.observe(card);
-            });
-        } else {
-            // fallback: langsung tampilkan semua cards
-            this.cards.forEach(card => {
-                card.classList.add('fade-in-up');
-            });
-        }
-    }
-}
-
-/**
- * wishlist handler (TODO: integrate dengan backend)
- */
-class WishlistHandler {
-    constructor() {
-        this.init();
-    }
-
-    init() {
-        document.addEventListener('click', (e) => {
-            const wishlistBtn = e.target.closest('[data-wishlist]');
-            if (wishlistBtn) {
-                e.preventDefault();
-                this.toggleWishlist(wishlistBtn);
-            }
-        });
-    }
-
-    async toggleWishlist(button) {
-        const problemId = button.getAttribute('data-problem-id');
-        
-        try {
-            // TODO: implementasi API call ke backend
-            // const response = await fetch('/api/wishlist/toggle', {
-            //     method: 'POST',
-            //     headers: {
-            //         'Content-Type': 'application/json',
-            //         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-            //     },
-            //     body: JSON.stringify({ problem_id: problemId })
-            // });
-
-            // toggle UI state
-            button.classList.toggle('active');
-            const icon = button.querySelector('svg');
-            if (button.classList.contains('active')) {
-                icon.setAttribute('fill', 'currentColor');
-                this.showNotification('Berhasil ditambahkan ke wishlist', 'success');
-            } else {
-                icon.setAttribute('fill', 'none');
-                this.showNotification('Berhasil dihapus dari wishlist', 'info');
-            }
-
-        } catch (error) {
-            console.error('Error toggling wishlist:', error);
-            this.showNotification('Gagal memperbarui wishlist', 'error');
-        }
-    }
-
-    showNotification(message, type) {
-        // gunakan notification system yang sudah ada di app.blade.php
-        if (window.notificationManager) {
-            window.notificationManager.show(message, type);
-        }
-    }
-}
-
-/**
- * search autocomplete dengan debouncing
- */
-class SearchAutocomplete {
-    constructor() {
-        this.searchInput = document.querySelector('input[name="search"]');
-        this.resultsContainer = null;
-        this.debounceTimer = null;
-        this.init();
-    }
-
-    init() {
-        if (!this.searchInput) return;
-
-        // buat container untuk results
-        this.createResultsContainer();
-
-        // handle input dengan debounce
-        this.searchInput.addEventListener('input', (e) => {
-            clearTimeout(this.debounceTimer);
-            this.debounceTimer = setTimeout(() => {
-                this.search(e.target.value);
-            }, 300);
-        });
-
-        // close results saat click di luar
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.search-autocomplete')) {
-                this.hideResults();
-            }
-        });
-    }
-
-    createResultsContainer() {
-        const wrapper = this.searchInput.parentElement;
-        wrapper.classList.add('search-autocomplete', 'relative');
-
-        this.resultsContainer = document.createElement('div');
-        this.resultsContainer.className = 'absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg mt-1 hidden z-50 max-h-96 overflow-y-auto';
-        wrapper.appendChild(this.resultsContainer);
-    }
-
-    async search(query) {
-        if (query.length < 2) {
-            this.hideResults();
-            return;
-        }
-
-        try {
-            // TODO: implementasi API call untuk autocomplete
-            // const response = await fetch(`/api/problems/search?q=${encodeURIComponent(query)}&limit=5`);
-            // const results = await response.json();
-            // this.displayResults(results);
-
-            // sementara hide results karena belum ada API
-            this.hideResults();
-
-        } catch (error) {
-            console.error('Search error:', error);
-            this.hideResults();
-        }
-    }
-
-    displayResults(results) {
-        if (results.length === 0) {
-            this.hideResults();
-            return;
-        }
-
-        let html = '<div class="py-2">';
-        results.forEach(result => {
-            html += `
-                <a href="/student/problems/${result.id}" 
-                   class="block px-4 py-2 hover:bg-gray-50 transition-colors">
-                    <div class="font-medium text-gray-900">${result.title}</div>
-                    <div class="text-sm text-gray-600">${result.institution_name}</div>
-                </a>
-            `;
-        });
-        html += '</div>';
-
-        this.resultsContainer.innerHTML = html;
-        this.resultsContainer.classList.remove('hidden');
-    }
-
-    hideResults() {
-        if (this.resultsContainer) {
-            this.resultsContainer.classList.add('hidden');
-        }
-    }
-}
-
-/**
- * initialize semua functionality saat DOM ready
- */
-document.addEventListener('DOMContentLoaded', () => {
-    // init smooth scroll
-    new SmoothScroll();
-    
-    // init lazy loading
-    new LazyLoader();
-    
-    // init filter handler
-    new FilterHandler();
-    
-    // init card animations
-    new CardAnimations();
-    
-    // init wishlist handler
-    new WishlistHandler();
-    
-    // init search autocomplete
-    new SearchAutocomplete();
-
-    // preload images untuk better UX
-    preloadImages();
+// inisialisasi saat dom ready
+document.addEventListener('DOMContentLoaded', function() {
+    initializeElements();
+    attachEventListeners();
+    initializeFromUrl();
 });
 
-/**
- * preload images untuk smooth experience
- */
-function preloadImages() {
-    const images = document.querySelectorAll('img[loading="lazy"]');
+// inisialisasi element references
+function initializeElements() {
+    filterForm = document.getElementById('filter-form');
+    problemsContainer = document.getElementById('problems-container');
+    paginationContainer = document.getElementById('pagination-container');
     
-    if ('loading' in HTMLImageElement.prototype) {
-        // browser support native lazy loading
-        return;
-    }
-    
-    // fallback untuk browser yang tidak support
-    images.forEach(img => {
-        img.loading = 'eager';
-    });
+    // buat loading indicator
+    createLoadingIndicator();
 }
 
-/**
- * performance monitoring (optional)
- */
-if ('PerformanceObserver' in window) {
-    const perfObserver = new PerformanceObserver((list) => {
-        for (const entry of list.getEntries()) {
-            if (entry.duration > 100) {
-                console.warn('Slow operation detected:', entry.name, entry.duration + 'ms');
+// buat loading indicator element
+function createLoadingIndicator() {
+    loadingIndicator = document.createElement('div');
+    loadingIndicator.id = 'loading-indicator';
+    loadingIndicator.className = 'hidden';
+    loadingIndicator.innerHTML = `
+        <div class="flex items-center justify-center py-12">
+            <div class="relative">
+                <div class="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+        <p class="text-center text-gray-600 mt-4">Memuat data...</p>
+    `;
+}
+
+// attach event listeners
+function attachEventListeners() {
+    // search input dengan debounce
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+        searchInput.addEventListener('input', debounce(function(e) {
+            filterState.search = e.target.value;
+            filterState.page = 1;
+            applyFilters();
+        }, 500));
+    }
+    
+    // province change - load regencies
+    const provinceSelect = document.getElementById('province-select');
+    if (provinceSelect) {
+        provinceSelect.addEventListener('change', function(e) {
+            filterState.province_id = e.target.value;
+            filterState.regency_id = '';
+            filterState.page = 1;
+            
+            // load regencies untuk province yang dipilih
+            if (e.target.value) {
+                loadRegencies(e.target.value);
+            } else {
+                clearRegencies();
             }
+            
+            applyFilters();
+        });
+    }
+    
+    // regency change
+    const regencySelect = document.getElementById('regency-select');
+    if (regencySelect) {
+        regencySelect.addEventListener('change', function(e) {
+            filterState.regency_id = e.target.value;
+            filterState.page = 1;
+            applyFilters();
+        });
+    }
+    
+    // sdg filter
+    const sdgSelect = document.getElementById('sdg-select');
+    if (sdgSelect) {
+        sdgSelect.addEventListener('change', function(e) {
+            filterState.sdg = e.target.value;
+            filterState.page = 1;
+            applyFilters();
+        });
+    }
+    
+    // difficulty filter
+    const difficultySelect = document.getElementById('difficulty-select');
+    if (difficultySelect) {
+        difficultySelect.addEventListener('change', function(e) {
+            filterState.difficulty = e.target.value;
+            filterState.page = 1;
+            applyFilters();
+        });
+    }
+    
+    // duration filter
+    const durationSelect = document.getElementById('duration-select');
+    if (durationSelect) {
+        durationSelect.addEventListener('change', function(e) {
+            filterState.duration = e.target.value;
+            filterState.page = 1;
+            applyFilters();
+        });
+    }
+    
+    // sort change
+    const sortSelect = document.getElementById('sort-select');
+    if (sortSelect) {
+        sortSelect.addEventListener('change', function(e) {
+            filterState.sort = e.target.value;
+            filterState.page = 1;
+            applyFilters();
+        });
+    }
+    
+    // reset filters button
+    const resetButton = document.getElementById('reset-filters');
+    if (resetButton) {
+        resetButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            resetFilters();
+        });
+    }
+}
+
+// inisialisasi state dari url parameters
+function initializeFromUrl() {
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    filterState.search = urlParams.get('search') || '';
+    filterState.province_id = urlParams.get('province_id') || '';
+    filterState.regency_id = urlParams.get('regency_id') || '';
+    filterState.sdg = urlParams.get('sdg') || '';
+    filterState.difficulty = urlParams.get('difficulty') || '';
+    filterState.duration = urlParams.get('duration') || '';
+    filterState.sort = urlParams.get('sort') || 'latest';
+    filterState.page = parseInt(urlParams.get('page')) || 1;
+    
+    // set form values
+    setFormValues();
+    
+    // load regencies jika province sudah dipilih
+    if (filterState.province_id) {
+        loadRegencies(filterState.province_id, filterState.regency_id);
+    }
+}
+
+// set form values dari state
+function setFormValues() {
+    const searchInput = document.getElementById('search-input');
+    const provinceSelect = document.getElementById('province-select');
+    const sdgSelect = document.getElementById('sdg-select');
+    const difficultySelect = document.getElementById('difficulty-select');
+    const durationSelect = document.getElementById('duration-select');
+    const sortSelect = document.getElementById('sort-select');
+    
+    if (searchInput) searchInput.value = filterState.search;
+    if (provinceSelect) provinceSelect.value = filterState.province_id;
+    if (sdgSelect) sdgSelect.value = filterState.sdg;
+    if (difficultySelect) difficultySelect.value = filterState.difficulty;
+    if (durationSelect) durationSelect.value = filterState.duration;
+    if (sortSelect) sortSelect.value = filterState.sort;
+}
+
+// load regencies berdasarkan province
+async function loadRegencies(provinceId, selectedRegencyId = null) {
+    const regencySelect = document.getElementById('regency-select');
+    if (!regencySelect) return;
+    
+    // tampilkan loading state
+    regencySelect.disabled = true;
+    regencySelect.innerHTML = '<option value="">Memuat...</option>';
+    
+    try {
+        const response = await fetch(`/api/regencies/${provinceId}`);
+        const regencies = await response.json();
+        
+        // populate regency options
+        regencySelect.innerHTML = '<option value="">Semua Kabupaten/Kota</option>';
+        regencies.forEach(regency => {
+            const option = document.createElement('option');
+            option.value = regency.id;
+            option.textContent = regency.name;
+            if (selectedRegencyId && regency.id == selectedRegencyId) {
+                option.selected = true;
+            }
+            regencySelect.appendChild(option);
+        });
+        
+        regencySelect.disabled = false;
+    } catch (error) {
+        console.error('Error loading regencies:', error);
+        regencySelect.innerHTML = '<option value="">Gagal memuat kabupaten</option>';
+        regencySelect.disabled = false;
+    }
+}
+
+// clear regencies dropdown
+function clearRegencies() {
+    const regencySelect = document.getElementById('regency-select');
+    if (!regencySelect) return;
+    
+    regencySelect.innerHTML = '<option value="">Pilih Provinsi Dulu</option>';
+    regencySelect.disabled = true;
+}
+
+// apply filters dengan ajax
+async function applyFilters() {
+    showLoading();
+    
+    // build query params
+    const queryParams = new URLSearchParams();
+    
+    Object.keys(filterState).forEach(key => {
+        if (filterState[key]) {
+            queryParams.append(key, filterState[key]);
         }
     });
     
-    perfObserver.observe({ entryTypes: ['measure'] });
+    // update url tanpa reload
+    const newUrl = `${window.location.pathname}?${queryParams.toString()}`;
+    window.history.pushState({}, '', newUrl);
+    
+    try {
+        const response = await fetch(`/student/browse-problems?${queryParams.toString()}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        });
+        
+        if (!response.ok) throw new Error('Network response was not ok');
+        
+        const data = await response.json();
+        
+        // update dom dengan smooth transition
+        await updateProblemsContainer(data.html);
+        updatePagination(data.pagination);
+        updateStats(data.stats);
+        
+        // scroll ke top dengan smooth behavior
+        smoothScrollToTop();
+        
+    } catch (error) {
+        console.error('Error applying filters:', error);
+        showError('Terjadi kesalahan saat memuat data. Silakan coba lagi.');
+    } finally {
+        hideLoading();
+    }
 }
 
-// export untuk digunakan di tempat lain
+// update problems container dengan fade animation
+async function updateProblemsContainer(html) {
+    if (!problemsContainer) return;
+    
+    // fade out
+    problemsContainer.style.transition = 'opacity 0.3s ease';
+    problemsContainer.style.opacity = '0';
+    
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    // update content
+    problemsContainer.innerHTML = html;
+    
+    // fade in
+    problemsContainer.style.opacity = '1';
+    
+    // trigger entrance animations
+    const cards = problemsContainer.querySelectorAll('.problem-card');
+    cards.forEach((card, index) => {
+        card.style.animation = 'none';
+        card.offsetHeight; // trigger reflow
+        card.style.animation = `fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.05}s forwards`;
+    });
+}
+
+// update pagination
+function updatePagination(paginationHtml) {
+    if (!paginationContainer) return;
+    
+    paginationContainer.innerHTML = paginationHtml;
+    
+    // attach click handlers untuk pagination links
+    const paginationLinks = paginationContainer.querySelectorAll('a[data-page]');
+    paginationLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            filterState.page = parseInt(this.dataset.page);
+            applyFilters();
+        });
+    });
+}
+
+// update stats
+function updateStats(stats) {
+    if (!stats) return;
+    
+    const totalProblemsEl = document.getElementById('total-problems-stat');
+    const totalSlotsEl = document.getElementById('total-slots-stat');
+    const urgentCountEl = document.getElementById('urgent-count-stat');
+    
+    if (totalProblemsEl) {
+        animateNumber(totalProblemsEl, stats.total_problems);
+    }
+    if (totalSlotsEl) {
+        animateNumber(totalSlotsEl, stats.total_slots);
+    }
+    if (urgentCountEl) {
+        animateNumber(urgentCountEl, stats.urgent_count);
+    }
+}
+
+// animate number counting
+function animateNumber(element, targetNumber) {
+    const currentNumber = parseInt(element.textContent) || 0;
+    const duration = 500; // ms
+    const steps = 30;
+    const increment = (targetNumber - currentNumber) / steps;
+    let current = currentNumber;
+    let step = 0;
+    
+    const timer = setInterval(() => {
+        step++;
+        current += increment;
+        element.textContent = Math.round(current);
+        
+        if (step >= steps) {
+            element.textContent = targetNumber;
+            clearInterval(timer);
+        }
+    }, duration / steps);
+}
+
+// smooth scroll ke top
+function smoothScrollToTop() {
+    const targetPosition = problemsContainer.offsetTop - 100;
+    window.scrollTo({
+        top: targetPosition,
+        behavior: 'smooth'
+    });
+}
+
+// show loading indicator
+function showLoading() {
+    if (!problemsContainer || !loadingIndicator) return;
+    
+    // insert loading indicator
+    problemsContainer.style.opacity = '0.5';
+    problemsContainer.style.pointerEvents = 'none';
+    
+    if (!document.getElementById('loading-indicator')) {
+        problemsContainer.parentNode.insertBefore(loadingIndicator, problemsContainer);
+    }
+    
+    loadingIndicator.classList.remove('hidden');
+}
+
+// hide loading indicator
+function hideLoading() {
+    if (!problemsContainer || !loadingIndicator) return;
+    
+    problemsContainer.style.opacity = '1';
+    problemsContainer.style.pointerEvents = 'auto';
+    loadingIndicator.classList.add('hidden');
+}
+
+// show error message
+function showError(message) {
+    // TODO: implementasi toast notification yang lebih baik
+    alert(message);
+}
+
+// reset semua filters
+function resetFilters() {
+    filterState.search = '';
+    filterState.province_id = '';
+    filterState.regency_id = '';
+    filterState.sdg = '';
+    filterState.difficulty = '';
+    filterState.duration = '';
+    filterState.sort = 'latest';
+    filterState.page = 1;
+    
+    setFormValues();
+    clearRegencies();
+    applyFilters();
+}
+
+// throttle scroll event untuk performance
+const handleScroll = throttle(function() {
+    // TODO: implementasi infinite scroll jika diperlukan
+    // atau lazy loading untuk images
+}, 200);
+
+window.addEventListener('scroll', handleScroll);
+
+// export untuk digunakan di tempat lain jika diperlukan
 export {
-    SmoothScroll,
-    LazyLoader,
-    FilterHandler,
-    CardAnimations,
-    WishlistHandler,
-    SearchAutocomplete
+    filterState,
+    applyFilters,
+    loadRegencies,
+    resetFilters
 };

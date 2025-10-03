@@ -1,308 +1,243 @@
 {{-- resources/views/student/browse-problems/components/map-view.blade.php --}}
-{{-- component untuk menampilkan problems di peta menggunakan leaflet --}}
+{{-- component untuk menampilkan map view dengan leaflet --}}
 
-<div class="map-container bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden" 
-     x-data="problemsMap()"
-     x-init="initMap()">
+<div x-data="mapView()" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    {{-- map container --}}
+    <div id="problems-map" class="w-full h-[600px]"></div>
     
-    <!-- map controls -->
-    <div class="p-4 border-b border-gray-200 bg-gray-50">
-        <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-4">
-                <button @click="showMap = !showMap" 
-                        class="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
-                    </svg>
-                    <span x-text="showMap ? 'Sembunyikan Peta' : 'Tampilkan Peta'"></span>
+    {{-- map controls overlay --}}
+    <div class="absolute top-4 left-4 z-[1000] space-y-2">
+        {{-- zoom controls sudah ada di leaflet --}}
+        
+        {{-- filter toggle --}}
+        <button @click="showFilters = !showFilters"
+                class="bg-white px-4 py-2 rounded-lg shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors flex items-center space-x-2">
+            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+            </svg>
+            <span class="text-sm font-medium text-gray-700">Filter</span>
+        </button>
+        
+        {{-- filter panel --}}
+        <div x-show="showFilters" 
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             class="bg-white rounded-lg shadow-lg border border-gray-200 p-4 w-64"
+             style="display: none;">
+            <h3 class="font-semibold text-gray-900 mb-3">Filter Peta</h3>
+            
+            <div class="space-y-3">
+                {{-- difficulty filter --}}
+                <div>
+                    <label class="text-xs font-medium text-gray-700 mb-1 block">Tingkat Kesulitan</label>
+                    <select @change="filterMarkers()" x-model="filters.difficulty" class="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Semua</option>
+                        <option value="beginner">Beginner</option>
+                        <option value="intermediate">Intermediate</option>
+                        <option value="advanced">Advanced</option>
+                    </select>
+                </div>
+                
+                {{-- urgent filter --}}
+                <div>
+                    <label class="flex items-center">
+                        <input type="checkbox" @change="filterMarkers()" x-model="filters.urgentOnly" class="rounded text-blue-600 focus:ring-2 focus:ring-blue-500">
+                        <span class="ml-2 text-sm text-gray-700">Hanya Mendesak</span>
+                    </label>
+                </div>
+                
+                {{-- featured filter --}}
+                <div>
+                    <label class="flex items-center">
+                        <input type="checkbox" @change="filterMarkers()" x-model="filters.featuredOnly" class="rounded text-blue-600 focus:ring-2 focus:ring-blue-500">
+                        <span class="ml-2 text-sm text-gray-700">Hanya Unggulan</span>
+                    </label>
+                </div>
+                
+                {{-- reset button --}}
+                <button @click="resetMapFilters()" class="w-full px-3 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200 transition-colors">
+                    Reset Filter
                 </button>
-
-                <div x-show="showMap" class="text-sm text-gray-600">
-                    <span class="font-semibold" x-text="markerCount"></span> lokasi proyek ditampilkan
-                </div>
-            </div>
-
-            <!-- legend -->
-            <div x-show="showMap" class="flex items-center space-x-4 text-sm">
-                <div class="flex items-center">
-                    <div class="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
-                    <span class="text-gray-600">Open</span>
-                </div>
-                <div class="flex items-center">
-                    <div class="w-3 h-3 rounded-full bg-yellow-500 mr-2"></div>
-                    <span class="text-gray-600">Urgent</span>
-                </div>
-                <div class="flex items-center">
-                    <div class="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
-                    <span class="text-gray-600">Featured</span>
-                </div>
             </div>
         </div>
     </div>
-
-    <!-- map canvas -->
-    <div x-show="showMap" 
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0 transform scale-95"
-         x-transition:enter-end="opacity-100 transform scale-100"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100 transform scale-100"
-         x-transition:leave-end="opacity-0 transform scale-95"
-         class="relative">
-        <div id="problems-map" class="w-full" style="height: 600px;"></div>
-        
-        <!-- loading overlay -->
-        <div x-show="loading" class="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center">
-            <div class="text-center">
-                <svg class="animate-spin h-12 w-12 text-blue-600 mx-auto mb-3" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <p class="text-sm text-gray-600">Memuat peta...</p>
+    
+    {{-- legend --}}
+    <div class="absolute bottom-4 right-4 z-[1000] bg-white rounded-lg shadow-lg border border-gray-200 p-3">
+        <h4 class="text-xs font-semibold text-gray-900 mb-2">Legenda</h4>
+        <div class="space-y-1">
+            <div class="flex items-center space-x-2">
+                <div class="w-3 h-3 rounded-full bg-blue-500"></div>
+                <span class="text-xs text-gray-600">Normal</span>
+            </div>
+            <div class="flex items-center space-x-2">
+                <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                <span class="text-xs text-gray-600">Unggulan</span>
+            </div>
+            <div class="flex items-center space-x-2">
+                <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                <span class="text-xs text-gray-600">Mendesak</span>
             </div>
         </div>
     </div>
 </div>
 
-@push('styles')
-<style>
-/* leaflet custom styles */
-.leaflet-container {
-    font-family: inherit;
-}
-
-.custom-popup .leaflet-popup-content-wrapper {
-    border-radius: 12px;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-}
-
-.custom-popup .leaflet-popup-content {
-    margin: 12px;
-    min-width: 250px;
-}
-
-.custom-popup .leaflet-popup-tip {
-    box-shadow: 0 3px 14px rgba(0, 0, 0, 0.1);
-}
-
-/* marker cluster custom styles */
-.marker-cluster-small {
-    background-color: rgba(59, 130, 246, 0.6);
-}
-
-.marker-cluster-small div {
-    background-color: rgba(59, 130, 246, 0.8);
-    color: white;
-    font-weight: bold;
-}
-
-.marker-cluster-medium {
-    background-color: rgba(16, 185, 129, 0.6);
-}
-
-.marker-cluster-medium div {
-    background-color: rgba(16, 185, 129, 0.8);
-    color: white;
-    font-weight: bold;
-}
-
-.marker-cluster-large {
-    background-color: rgba(239, 68, 68, 0.6);
-}
-
-.marker-cluster-large div {
-    background-color: rgba(239, 68, 68, 0.8);
-    color: white;
-    font-weight: bold;
-}
-
-/* smooth zoom animation */
-.leaflet-container {
-    transition: opacity 0.3s ease;
-}
-
-/* map card hover effect */
-.map-card {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.map-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-</style>
-@endpush
-
 @push('scripts')
-<!-- leaflet CDN -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<!-- marker cluster plugin -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.min.css" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.min.css" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
 
 <script>
-// alpine.js component untuk problems map
-function problemsMap() {
+function mapView() {
     return {
         map: null,
-        markers: null,
-        showMap: false,
-        loading: true,
-        markerCount: 0,
+        markers: [],
+        markerCluster: null,
+        showFilters: false,
+        filters: {
+            difficulty: '',
+            urgentOnly: false,
+            featuredOnly: false
+        },
+        problems: @json($problems),
         
-        // data problems dari backend
-        problems: @json($problems->items()),
-        
-        initMap() {
-            // tunggu sampai map container terlihat
-            this.$watch('showMap', value => {
-                if (value && !this.map) {
-                    // timeout untuk transisi
+        init() {
+            this.initializeMap();
+            this.loadMarkers();
+            
+            // listen untuk map view activated event
+            window.addEventListener('mapViewActivated', () => {
+                if (this.map) {
                     setTimeout(() => {
-                        this.createMap();
+                        this.map.invalidateSize();
                     }, 100);
                 }
             });
         },
         
-        createMap() {
-            this.loading = true;
-            
-            // inisialisasi map centered di Indonesia
+        initializeMap() {
+            // inisialisasi map
             this.map = L.map('problems-map', {
-                center: [-2.5, 118], // center Indonesia
+                center: [-2.5, 118], // koordinat tengah Indonesia
                 zoom: 5,
-                scrollWheelZoom: true,
                 zoomControl: true,
-                attributionControl: true
+                scrollWheelZoom: true
             });
             
-            // tambahkan tile layer (OpenStreetMap)
+            // tambahkan tile layer
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-                maxZoom: 18,
-                minZoom: 5
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
             }).addTo(this.map);
             
             // inisialisasi marker cluster
-            this.markers = L.markerClusterGroup({
+            this.markerCluster = L.markerClusterGroup({
+                maxClusterRadius: 50,
                 spiderfyOnMaxZoom: true,
                 showCoverageOnHover: false,
-                zoomToBoundsOnClick: true,
-                maxClusterRadius: 50,
-                iconCreateFunction: function(cluster) {
-                    const count = cluster.getChildCount();
-                    let className = 'marker-cluster-';
-                    if (count < 10) {
-                        className += 'small';
-                    } else if (count < 50) {
-                        className += 'medium';
-                    } else {
-                        className += 'large';
-                    }
-                    return L.divIcon({
-                        html: '<div><span>' + count + '</span></div>',
-                        className: 'marker-cluster ' + className,
-                        iconSize: new L.Point(40, 40)
-                    });
-                }
+                zoomToBoundsOnClick: true
             });
             
-            // tambahkan markers untuk setiap problem
-            this.addMarkers();
-            
-            // tambahkan markers ke map
-            this.map.addLayer(this.markers);
-            
-            // fit bounds jika ada markers
-            if (this.markerCount > 0) {
-                this.map.fitBounds(this.markers.getBounds(), {
-                    padding: [50, 50]
-                });
-            }
-            
-            this.loading = false;
-            
-            // fix untuk leaflet tiles tidak muncul
-            setTimeout(() => {
-                this.map.invalidateSize();
-            }, 200);
+            this.map.addLayer(this.markerCluster);
         },
         
-        addMarkers() {
-            this.markerCount = 0;
+        loadMarkers() {
+            // bersihkan markers existing
+            this.markerCluster.clearLayers();
+            this.markers = [];
             
+            // tambahkan marker untuk setiap problem
             this.problems.forEach(problem => {
-                // TODO: koordinat perlu ditambahkan di database atau geocoding API
-                // untuk demo, gunakan koordinat acak di Indonesia
-                const lat = this.getRandomLatIndonesia();
-                const lng = this.getRandomLngIndonesia();
-                
-                // tentukan warna marker berdasarkan status
-                let markerColor = 'green'; // open
-                if (problem.is_urgent) {
-                    markerColor = 'red';
-                } else if (problem.is_featured) {
-                    markerColor = 'blue';
+                const marker = this.createMarker(problem);
+                if (marker) {
+                    this.markers.push({ marker, problem });
+                    this.markerCluster.addLayer(marker);
                 }
-                
-                // custom icon
-                const customIcon = L.divIcon({
-                    className: 'custom-marker',
-                    html: `<div style="background-color: ${markerColor}; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>`,
-                    iconSize: [30, 30],
-                    iconAnchor: [15, 15]
-                });
-                
-                // buat marker
-                const marker = L.marker([lat, lng], { icon: customIcon });
-                
-                // popup content
-                const popupContent = this.createPopupContent(problem);
-                marker.bindPopup(popupContent, {
-                    className: 'custom-popup',
-                    maxWidth: 300
-                });
-                
-                // tambahkan ke cluster
-                this.markers.addLayer(marker);
-                this.markerCount++;
             });
+            
+            // fit bounds jika ada markers
+            if (this.markers.length > 0) {
+                const group = new L.featureGroup(this.markers.map(m => m.marker));
+                this.map.fitBounds(group.getBounds().pad(0.1));
+            }
+        },
+        
+        createMarker(problem) {
+            // TODO: gunakan koordinat real dari database
+            // sementara gunakan koordinat random di Indonesia
+            const lat = problem.latitude || this.getRandomLatIndonesia();
+            const lng = problem.longitude || this.getRandomLngIndonesia();
+            
+            // tentukan warna marker berdasarkan status
+            const markerColor = this.getMarkerColor(problem);
+            
+            // buat custom icon
+            const icon = L.divIcon({
+                className: 'custom-marker',
+                html: `
+                    <div class="relative">
+                        <div class="w-8 h-8 rounded-full ${markerColor} border-2 border-white shadow-lg flex items-center justify-center transform hover:scale-110 transition-transform cursor-pointer">
+                            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        ${problem.is_urgent ? '<div class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border border-white animate-pulse"></div>' : ''}
+                    </div>
+                `,
+                iconSize: [32, 32],
+                iconAnchor: [16, 32],
+                popupAnchor: [0, -32]
+            });
+            
+            const marker = L.marker([lat, lng], { icon });
+            
+            // tambahkan popup
+            const popupContent = this.createPopupContent(problem);
+            marker.bindPopup(popupContent, {
+                maxWidth: 300,
+                className: 'custom-popup'
+            });
+            
+            // event handlers
+            marker.on('click', () => {
+                this.onMarkerClick(problem);
+            });
+            
+            return marker;
         },
         
         createPopupContent(problem) {
-            const deadline = new Date(problem.application_deadline);
-            const now = new Date();
-            const daysLeft = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
+            const daysLeft = this.calculateDaysLeft(problem.application_deadline);
             
             return `
-                <div class="map-card">
-                    <h3 class="font-bold text-gray-900 mb-2 text-sm line-clamp-2">${problem.title}</h3>
-                    <p class="text-xs text-gray-600 mb-2">${problem.institution.name}</p>
-                    
-                    <div class="space-y-1 mb-3">
-                        <div class="flex items-center text-xs text-gray-600">
+                <div class="p-2">
+                    <h3 class="font-bold text-gray-900 mb-2 text-sm">${problem.title}</h3>
+                    <div class="space-y-1 text-xs text-gray-600 mb-3">
+                        <div class="flex items-center">
+                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                            </svg>
+                            ${problem.institution.name}
+                        </div>
+                        <div class="flex items-center">
                             <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                             </svg>
-                            ${problem.regency.name}
+                            ${problem.regency.name}, ${problem.province.name}
                         </div>
-                        <div class="flex items-center text-xs text-gray-600">
-                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                            </svg>
-                            ${problem.required_students} mahasiswa
-                        </div>
-                        <div class="flex items-center text-xs ${daysLeft <= 7 ? 'text-red-600 font-semibold' : 'text-gray-600'}">
+                        <div class="flex items-center ${daysLeft <= 7 ? 'text-red-600 font-semibold' : ''}">
                             <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                             ${daysLeft} hari lagi
                         </div>
                     </div>
-                    
                     <a href="/student/problems/${problem.id}" 
                        class="block w-full px-3 py-2 bg-blue-600 text-white text-xs font-semibold text-center rounded-lg hover:bg-blue-700 transition-colors">
                         Lihat Detail
@@ -311,8 +246,69 @@ function problemsMap() {
             `;
         },
         
-        // helper untuk generate koordinat acak di Indonesia
-        // TODO: ganti dengan koordinat real dari database atau geocoding
+        getMarkerColor(problem) {
+            if (problem.is_urgent) return 'bg-red-500';
+            if (problem.is_featured) return 'bg-yellow-500';
+            return 'bg-blue-500';
+        },
+        
+        onMarkerClick(problem) {
+            // optional: tambahkan analytics atau tracking
+            console.log('Marker clicked:', problem.title);
+        },
+        
+        filterMarkers() {
+            this.markerCluster.clearLayers();
+            
+            const filteredMarkers = this.markers.filter(({ problem }) => {
+                // filter by difficulty
+                if (this.filters.difficulty && problem.difficulty_level !== this.filters.difficulty) {
+                    return false;
+                }
+                
+                // filter urgent only
+                if (this.filters.urgentOnly && !problem.is_urgent) {
+                    return false;
+                }
+                
+                // filter featured only
+                if (this.filters.featuredOnly && !problem.is_featured) {
+                    return false;
+                }
+                
+                return true;
+            });
+            
+            filteredMarkers.forEach(({ marker }) => {
+                this.markerCluster.addLayer(marker);
+            });
+            
+            // fit bounds ke filtered markers
+            if (filteredMarkers.length > 0) {
+                const group = new L.featureGroup(filteredMarkers.map(m => m.marker));
+                this.map.fitBounds(group.getBounds().pad(0.1));
+            }
+        },
+        
+        resetMapFilters() {
+            this.filters = {
+                difficulty: '',
+                urgentOnly: false,
+                featuredOnly: false
+            };
+            this.filterMarkers();
+        },
+        
+        calculateDaysLeft(deadline) {
+            const now = new Date();
+            const deadlineDate = new Date(deadline);
+            const diffTime = deadlineDate - now;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            return Math.max(0, diffDays);
+        },
+        
+        // helper untuk generate koordinat random di Indonesia
+        // TODO: ganti dengan koordinat real dari database
         getRandomLatIndonesia() {
             // Indonesia latitude range: -11 to 6
             return -11 + Math.random() * 17;
@@ -325,4 +321,27 @@ function problemsMap() {
     };
 }
 </script>
+
+<style>
+/* custom marker styles */
+.custom-marker {
+    background: transparent;
+    border: none;
+}
+
+/* custom popup styles */
+.custom-popup .leaflet-popup-content-wrapper {
+    border-radius: 0.75rem;
+    padding: 0;
+}
+
+.custom-popup .leaflet-popup-content {
+    margin: 0;
+    width: 100% !important;
+}
+
+.custom-popup .leaflet-popup-tip {
+    background: white;
+}
+</style>
 @endpush

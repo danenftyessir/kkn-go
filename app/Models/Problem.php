@@ -4,11 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Problem extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     protected $fillable = [
         'institution_id',
@@ -21,124 +20,33 @@ class Problem extends Model
         'regency_id',
         'village',
         'detailed_location',
-        'sdg_categories',
+        'latitude',
+        'longitude',
         'required_students',
         'required_skills',
-        'required_majors',
+        'duration_months',
+        'application_deadline',
         'start_date',
         'end_date',
-        'application_deadline',
-        'duration_months',
+        'sdg_categories',
         'difficulty_level',
-        'status',
-        'expected_outcomes',
-        'deliverables',
         'facilities_provided',
-        'views_count',
-        'applications_count',
-        'accepted_students',
+        'expected_outcomes',
+        'status',
         'is_featured',
         'is_urgent',
+        'views_count',
     ];
 
     protected $casts = [
-        'sdg_categories' => 'array',
         'required_skills' => 'array',
-        'required_majors' => 'array',
-        'deliverables' => 'array',
-        'facilities_provided' => 'array',
-        'start_date' => 'date',
-        'end_date' => 'date',
-        'application_deadline' => 'date',
+        'sdg_categories' => 'array',
+        'application_deadline' => 'datetime',
+        'start_date' => 'datetime',
+        'end_date' => 'datetime',
         'is_featured' => 'boolean',
         'is_urgent' => 'boolean',
     ];
-
-    /**
-     * accessor untuk required_skills - ensure always returns array
-     */
-    public function getRequiredSkillsAttribute($value)
-    {
-        if (is_null($value)) {
-            return [];
-        }
-        
-        if (is_array($value)) {
-            return $value;
-        }
-        
-        // jika string, decode JSON
-        $decoded = json_decode($value, true);
-        return is_array($decoded) ? $decoded : [];
-    }
-
-    /**
-     * accessor untuk sdg_categories - ensure always returns array
-     */
-    public function getSdgCategoriesAttribute($value)
-    {
-        if (is_null($value)) {
-            return [];
-        }
-        
-        if (is_array($value)) {
-            return $value;
-        }
-        
-        $decoded = json_decode($value, true);
-        return is_array($decoded) ? $decoded : [];
-    }
-
-    /**
-     * accessor untuk required_majors - ensure always returns array
-     */
-    public function getRequiredMajorsAttribute($value)
-    {
-        if (is_null($value)) {
-            return [];
-        }
-        
-        if (is_array($value)) {
-            return $value;
-        }
-        
-        $decoded = json_decode($value, true);
-        return is_array($decoded) ? $decoded : [];
-    }
-
-    /**
-     * accessor untuk deliverables - ensure always returns array
-     */
-    public function getDeliverablesAttribute($value)
-    {
-        if (is_null($value)) {
-            return [];
-        }
-        
-        if (is_array($value)) {
-            return $value;
-        }
-        
-        $decoded = json_decode($value, true);
-        return is_array($decoded) ? $decoded : [];
-    }
-
-    /**
-     * accessor untuk facilities_provided - ensure always returns array
-     */
-    public function getFacilitiesProvidedAttribute($value)
-    {
-        if (is_null($value)) {
-            return [];
-        }
-        
-        if (is_array($value)) {
-            return $value;
-        }
-        
-        $decoded = json_decode($value, true);
-        return is_array($decoded) ? $decoded : [];
-    }
 
     /**
      * relasi ke institution
@@ -165,19 +73,19 @@ class Problem extends Model
     }
 
     /**
+     * relasi ke images
+     */
+    public function images()
+    {
+        return $this->hasMany(ProblemImage::class);
+    }
+
+    /**
      * relasi ke applications
      */
     public function applications()
     {
         return $this->hasMany(Application::class);
-    }
-
-    /**
-     * relasi ke problem images
-     */
-    public function images()
-    {
-        return $this->hasMany(ProblemImage::class)->orderBy('order');
     }
 
     /**
@@ -189,54 +97,12 @@ class Problem extends Model
     }
 
     /**
-     * relasi ke students yang wishlist problem ini (many-to-many)
-     */
-    public function wishlistedBy()
-    {
-        return $this->belongsToMany(Student::class, 'wishlists')
-                    ->withTimestamps()
-                    ->withPivot('notes');
-    }
-
-    /**
-     * scope untuk filter by status
+     * scope untuk problem yang open/terbuka
      */
     public function scopeOpen($query)
     {
         return $query->where('status', 'open')
                     ->where('application_deadline', '>=', now());
-    }
-
-    /**
-     * scope untuk filter by difficulty
-     */
-    public function scopeDifficulty($query, $level)
-    {
-        return $query->where('difficulty_level', $level);
-    }
-
-    /**
-     * scope untuk filter by location
-     */
-    public function scopeInProvince($query, $provinceId)
-    {
-        return $query->where('province_id', $provinceId);
-    }
-
-    /**
-     * scope untuk filter by regency
-     */
-    public function scopeInRegency($query, $regencyId)
-    {
-        return $query->where('regency_id', $regencyId);
-    }
-
-    /**
-     * scope untuk filter by SDG category
-     */
-    public function scopeHasSdg($query, $sdgNumber)
-    {
-        return $query->whereJsonContains('sdg_categories', $sdgNumber);
     }
 
     /**
@@ -247,14 +113,13 @@ class Problem extends Model
         return $query->where(function($q) use ($keyword) {
             $q->where('title', 'like', "%{$keyword}%")
               ->orWhere('description', 'like', "%{$keyword}%")
-              ->orWhereHas('institution', function($q) use ($keyword) {
-                  $q->where('name', 'like', "%{$keyword}%");
-              });
+              ->orWhere('background', 'like', "%{$keyword}%")
+              ->orWhere('village', 'like', "%{$keyword}%");
         });
     }
 
     /**
-     * increment views counter
+     * increment views count
      */
     public function incrementViews()
     {
@@ -262,85 +127,143 @@ class Problem extends Model
     }
 
     /**
-     * cek apakah masih menerima aplikasi
+     * cek apakah problem sudah disimpan/wishlist oleh student tertentu
      */
-    public function isAcceptingApplications(): bool
+    public function isSavedBy($student)
     {
-        return $this->status === 'open' 
-            && $this->application_deadline >= now()
-            && $this->accepted_students < $this->required_students;
+        if (!$student) {
+            return false;
+        }
+
+        try {
+            return $this->wishlists()
+                        ->where('student_id', $student->id)
+                        ->exists();
+        } catch (\Exception $e) {
+            // jika table wishlists belum ada atau error
+            return false;
+        }
     }
 
     /**
-     * get status badge color class
+     * get aplikasi count untuk problem ini
      */
-    public function getStatusBadgeColor(): string
+    public function getApplicationsCountAttribute()
     {
-        return match($this->status) {
-            'open' => 'bg-green-100 text-green-800',
-            'in_progress' => 'bg-blue-100 text-blue-800',
-            'completed' => 'bg-gray-100 text-gray-800',
-            'closed' => 'bg-red-100 text-red-800',
-            default => 'bg-yellow-100 text-yellow-800',
-        };
+        return $this->applications()->count();
     }
 
     /**
-     * get difficulty badge color class
+     * get sisa slot mahasiswa
      */
-    public function getDifficultyBadgeColor(): string
+    public function getRemainingSlots()
+    {
+        $acceptedCount = $this->applications()
+                             ->where('status', 'accepted')
+                             ->count();
+        
+        return max(0, $this->required_students - $acceptedCount);
+    }
+
+    /**
+     * cek apakah masih ada slot tersedia
+     */
+    public function hasSlotsAvailable()
+    {
+        return $this->getRemainingSlots() > 0;
+    }
+
+    /**
+     * get badge color berdasarkan difficulty
+     */
+    public function getDifficultyColorAttribute()
     {
         return match($this->difficulty_level) {
-            'beginner' => 'bg-green-100 text-green-800',
-            'intermediate' => 'bg-yellow-100 text-yellow-800',
-            'advanced' => 'bg-red-100 text-red-800',
-            default => 'bg-gray-100 text-gray-800',
+            'beginner' => 'green',
+            'intermediate' => 'yellow',
+            'advanced' => 'red',
+            default => 'gray'
         };
     }
 
     /**
-     * get difficulty label
+     * get badge color class untuk difficulty
      */
-    public function getDifficultyLabel(): string
+    public function getDifficultyBadgeColor()
+    {
+        return match($this->difficulty_level) {
+            'beginner' => 'bg-green-100 text-green-700',
+            'intermediate' => 'bg-yellow-100 text-yellow-700',
+            'advanced' => 'bg-red-100 text-red-700',
+            default => 'bg-gray-100 text-gray-700'
+        };
+    }
+
+    /**
+     * get difficulty label dalam bahasa indonesia
+     */
+    public function getDifficultyLabel()
     {
         return match($this->difficulty_level) {
             'beginner' => 'Pemula',
             'intermediate' => 'Menengah',
-            'advanced' => 'Lanjut',
-            default => 'Tidak Diketahui',
+            'advanced' => 'Lanjutan',
+            default => ucfirst($this->difficulty_level)
         };
     }
 
     /**
-     * get days until deadline
+     * get status label dalam bahasa indonesia
      */
-    public function getDaysUntilDeadline(): int
+    public function getStatusLabelAttribute()
     {
-        return now()->diffInDays($this->application_deadline, false);
+        return match($this->status) {
+            'draft' => 'Draft',
+            'open' => 'Terbuka',
+            'in_progress' => 'Berlangsung',
+            'completed' => 'Selesai',
+            'closed' => 'Ditutup',
+            default => ucfirst($this->status)
+        };
     }
 
     /**
-     * cek apakah deadline sudah lewat
+     * cek apakah deadline sudah dekat (7 hari atau kurang)
      */
-    public function isDeadlinePassed(): bool
+    public function isDeadlineNear()
     {
-        return $this->application_deadline < now();
+        $daysLeft = now()->diffInDays($this->application_deadline, false);
+        return $daysLeft <= 7 && $daysLeft >= 0;
     }
 
     /**
-     * get remaining slots
+     * get koordinat untuk map (default jika tidak ada)
      */
-    public function getRemainingSlots(): int
+    public function getMapCoordinates()
     {
-        return max(0, $this->required_students - $this->accepted_students);
+        return [
+            'lat' => $this->latitude ?? $this->getDefaultLatitude(),
+            'lng' => $this->longitude ?? $this->getDefaultLongitude()
+        ];
     }
 
     /**
-     * get fill percentage
+     * get default latitude berdasarkan province
+     * TODO: isi dengan koordinat real per province
      */
-    public function getFillPercentage(): int
+    private function getDefaultLatitude()
     {
-        if ($this->required_students == 0) return 0;
-        return (int) (($this->accepted_students / $this->required_students) * 100);
+        // sementara return koordinat tengah Indonesia
+        return -2.5;
+    }
+
+    /**
+     * get default longitude berdasarkan province
+     * TODO: isi dengan koordinat real per province
+     */
+    private function getDefaultLongitude()
+    {
+        // sementara return koordinat tengah Indonesia
+        return 118;
     }
 }

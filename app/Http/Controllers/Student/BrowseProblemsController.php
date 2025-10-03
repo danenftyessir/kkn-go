@@ -14,10 +14,11 @@ class BrowseProblemsController extends Controller
 {
     /**
      * tampilkan halaman browse problems
+     * mendukung ajax request untuk filtering
      */
     public function index(Request $request)
     {
-        // TODO: implementasi caching untuk filter options
+        // query builder untuk problems
         $query = Problem::with(['institution', 'province', 'regency', 'images'])
                        ->open();
 
@@ -61,21 +62,8 @@ class BrowseProblemsController extends Controller
             }
         }
 
-        // filter by university partner (jika instansi mencari kerjasama dengan universitas tertentu)
-        // TODO: implementasi relasi university partner di tabel problems
-        if ($request->filled('university_id')) {
-            // query untuk filter university akan ditambahkan ketika relasi sudah dibuat
-        }
-
         // sorting
-        $sortBy = $request->get('sort', 'latest');
-        switch ($sortBy) {
-            case 'latest':
-                $query->latest();
-                break;
-            case 'oldest':
-                $query->oldest();
-                break;
+        switch ($request->input('sort', 'latest')) {
             case 'deadline':
                 $query->orderBy('application_deadline', 'asc');
                 break;
@@ -83,20 +71,18 @@ class BrowseProblemsController extends Controller
                 $query->orderBy('views_count', 'desc');
                 break;
             case 'most_applied':
-                $query->orderBy('applications_count', 'desc');
+                $query->withCount('applications')->orderBy('applications_count', 'desc');
                 break;
+            default:
+                $query->latest();
         }
-
-        // featured problems di top
-        $query->orderBy('is_featured', 'desc')
-              ->orderBy('is_urgent', 'desc');
 
         // pagination
         $problems = $query->paginate(12)->withQueryString();
 
-        // data untuk filter
+        // data untuk filter options
         $provinces = Province::orderBy('name')->get();
-        $regencies = collect();
+        $regencies = collect([]);
         
         if ($request->filled('province_id')) {
             $regencies = Regency::where('province_id', $request->province_id)
@@ -112,6 +98,21 @@ class BrowseProblemsController extends Controller
             'total_slots' => Problem::open()->sum('required_students'),
             'urgent_count' => Problem::open()->where('is_urgent', true)->count(),
         ];
+
+        // jika ajax request, return json
+        if ($request->ajax() || $request->wantsJson()) {
+            $html = '';
+            foreach ($problems as $index => $problem) {
+                $html .= view('student.browse-problems.components.problem-card', compact('problem', 'index'))->render();
+            }
+            
+            return response()->json([
+                'success' => true,
+                'html' => $html,
+                'pagination' => $problems->links()->render(),
+                'stats' => $stats
+            ]);
+        }
 
         return view('student.browse-problems.index', compact(
             'problems',
@@ -157,9 +158,6 @@ class BrowseProblemsController extends Controller
             })
             ->limit(3)
             ->get();
-
-        // TODO: implementasi Q&A section dari database
-        // TODO: implementasi wishlist check
 
         return view('student.browse-problems.detail', compact(
             'problem',
