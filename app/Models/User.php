@@ -6,7 +6,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-
+use App\Models\Notification;
 /**
  * model user
  * 
@@ -179,4 +179,25 @@ class User extends Authenticatable implements MustVerifyEmail
         
         return false;
     }
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class)->latest();
+    }
+
+    /**
+     * dapatkan notifikasi yang belum dibaca
+     */
+    public function unreadNotifications()
+    {
+        return $this->hasMany(Notification::class)->where('is_read', false)->latest();
+    }
+
+    /**
+     * hitung jumlah notifikasi yang belum dibaca
+     */
+    public function unreadNotificationsCount()
+    {
+        return $this->notifications()->where('is_read', false)->count();
+    }
 }
+

@@ -21,7 +21,7 @@ use App\Http\Controllers\Institution\ProblemController;
 use App\Http\Controllers\Institution\ApplicationReviewController;
 use App\Http\Controllers\Institution\ProjectManagementController;
 use App\Http\Controllers\Institution\ReviewController;
-
+use App\Http\Controllers\NotificationController;
 // homepage
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -127,6 +127,18 @@ Route::middleware(['auth', 'user.type:student', 'verified'])->prefix('student')-
     Route::patch('/profile/password', [StudentProfileController::class, 'updatePassword'])->name('profile.password.update');
 });
 
+// tambahkan di routes/web.php setelah authenticated routes
+
+// notification routes (untuk semua user yang login)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/latest', [NotificationController::class, 'getLatest'])->name('notifications.latest');
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+    Route::delete('/notifications/destroy-read', [NotificationController::class, 'destroyRead'])->name('notifications.destroy-read');
+});
+
 /*
 |--------------------------------------------------------------------------
 | institution routes (memerlukan auth + verified email)
@@ -187,7 +199,7 @@ Route::middleware(['auth', 'user.type:institution', 'verified'])->prefix('instit
         Route::delete('/{id}', [ReviewController::class, 'destroy'])->name('destroy');
     });
     
-    // profile routes
+        // profile routes
     Route::get('/profile', [InstitutionProfileController::class, 'index'])->name('profile.index');
     Route::get('/profile/edit', [InstitutionProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [InstitutionProfileController::class, 'update'])->name('profile.update');
