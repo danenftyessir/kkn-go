@@ -7,7 +7,8 @@ use Illuminate\Database\Seeder;
 /**
  * database seeder utama
  * menjalankan semua seeder dalam urutan yang benar
- * * jalankan: php artisan db:seed
+ * 
+ * jalankan: php artisan db:seed
  * atau: php artisan migrate:fresh --seed
  */
 class DatabaseSeeder extends Seeder
@@ -22,24 +23,40 @@ class DatabaseSeeder extends Seeder
         $this->command->info('==========================================');
         $this->command->newLine();
 
-        // PERBAIKAN: Memanggil seeder dalam urutan yang benar dan logis.
-        // 1. Panggil seeder untuk data master (provinsi & kabupaten) terlebih dahulu.
-        //    Ini memastikan data lokasi tersedia sebelum data lain yang bergantung padanya dibuat.
+        // 1. seed data master (provinsi & kabupaten) terlebih dahulu
         $this->call([
-            ProvincesRegenciesSeeder::class, // Menggunakan seeder yang lebih andal dengan ID statis
+            ProvincesRegenciesSeeder::class,
         ]);
 
-        // 2. Panggil seeder lain yang bergantung pada data master.
-        //    DummyDataSeeder akan mengisi data universitas, mahasiswa, dan instansi.
-        //    ProblemsSeeder akan mengisi data proyek.
-        //    ApplicationsSeeder akan mengisi data pendaftaran mahasiswa ke proyek.
+        // 2. seed data dummy (users, students, institutions, universities)
         $this->call([
-            DummyDataSeeder::class,      
-            ProblemsSeeder::class,       
-            ApplicationsSeeder::class,    
+            DummyDataSeeder::class,
+        ]);
+
+        // 3. seed problems
+        $this->call([
+            ProblemsSeeder::class,
+        ]);
+
+        // 4. seed problem images (BARU - menggunakan gambar yang sudah disiapkan)
+        $this->call([
+            ProblemImagesSeeder::class,
+        ]);
+
+        // 5. seed applications
+        $this->call([
+            ApplicationsSeeder::class,
+        ]);
+
+        // 6. seed projects
+        $this->call([
             ProjectsSeeder::class,
         ]);
 
+        // 7. seed documents
+        $this->call([
+            DocumentsSeeder::class,
+        ]);
 
         $this->command->newLine();
         $this->command->info('==========================================');
@@ -64,18 +81,15 @@ class DatabaseSeeder extends Seeder
             'Regencies' => \App\Models\Regency::count(),
             'Universities' => \App\Models\University::count(),
             'Problems' => \App\Models\Problem::count(),
+            'Problem Images' => \App\Models\ProblemImage::count(),
             'Applications' => \App\Models\Application::count(),
+            'Projects' => \App\Models\Project::count(),
+            'Documents' => \App\Models\Document::count(),
         ];
 
         $this->command->table(
             ['Entity', 'Count'],
             collect($stats)->map(fn($count, $name) => [$name, $count])->values()
         );
-
-        $this->command->newLine();
-        $this->command->info('🔑 Default Login Credentials:');
-        $this->command->line('   Student: budi.santoso@ui.ac.id / password123');
-        $this->command->line('   Institution: desa.sukamaju@example.com / password123');
-        $this->command->newLine();
     }
 }

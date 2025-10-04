@@ -17,6 +17,10 @@ use App\Http\Controllers\Student\KnowledgeRepositoryController;
 use App\Http\Controllers\Student\ProfileController as StudentProfileController;
 use App\Http\Controllers\Institution\DashboardController as InstitutionDashboardController;
 use App\Http\Controllers\Institution\ProfileController as InstitutionProfileController;
+use App\Http\Controllers\Institution\ProblemController;
+use App\Http\Controllers\Institution\ApplicationReviewController;
+use App\Http\Controllers\Institution\ProjectManagementController;
+use App\Http\Controllers\Institution\ReviewController;
 
 // homepage
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -52,26 +56,11 @@ Route::middleware('auth')->group(function () {
     // logout
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
     
-    // email verification routes
+    // email verification
     Route::get('/email/verify', [EmailVerificationController::class, 'notice'])->name('verification.notice');
     Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])->name('verification.verify');
     Route::post('/email/resend', [EmailVerificationController::class, 'resend'])->name('verification.resend');
 });
-
-/*
-|--------------------------------------------------------------------------
-| public routes
-|--------------------------------------------------------------------------
-*/
-
-// public portfolio
-Route::get('/portfolio/{slug}', [PortfolioController::class, 'publicView'])->name('portfolio.public');
-
-// public student profile
-Route::get('/student/profile/{username}', [StudentProfileController::class, 'publicProfile'])->name('student.profile.public');
-
-// public institution profile
-Route::get('/institution/profile/{id}', [InstitutionProfileController::class, 'publicProfile'])->name('institution.profile.public');
 
 /*
 |--------------------------------------------------------------------------
@@ -85,33 +74,32 @@ Route::middleware(['auth', 'user.type:student', 'verified'])->prefix('student')-
     Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
     
     // browse problems
-    Route::get('/browse-problems', [BrowseProblemsController::class, 'index'])->name('browse-problems');
+    Route::get('/problems', [BrowseProblemsController::class, 'index'])->name('problems.index');
     Route::get('/problems/{id}', [BrowseProblemsController::class, 'show'])->name('problems.show');
-    
-    // applications
-    Route::prefix('applications')->name('applications.')->group(function () {
-        Route::get('/', [ApplicationController::class, 'index'])->name('index');
-        Route::get('/{id}', [ApplicationController::class, 'show'])->name('show');
-        Route::get('/create/{problemId}', [ApplicationController::class, 'create'])->name('create');
-        Route::post('/store/{problemId}', [ApplicationController::class, 'store'])->name('store');
-        Route::delete('/{id}/withdraw', [ApplicationController::class, 'withdraw'])->name('withdraw');
-    });
     
     // wishlist
     Route::prefix('wishlist')->name('wishlist.')->group(function () {
         Route::get('/', [WishlistController::class, 'index'])->name('index');
-        Route::post('/{problemId}/toggle', [WishlistController::class, 'toggle'])->name('toggle');
-        Route::get('/{problemId}/check', [WishlistController::class, 'check'])->name('check');
-        Route::patch('/{problemId}/notes', [WishlistController::class, 'updateNotes'])->name('notes');
+        Route::post('/toggle/{problemId}', [WishlistController::class, 'toggle'])->name('toggle');
+        Route::delete('/{id}', [WishlistController::class, 'destroy'])->name('destroy');
     });
     
-    // projects (my projects)
+    // applications
+    Route::prefix('applications')->name('applications.')->group(function () {
+        Route::get('/', [ApplicationController::class, 'index'])->name('index');
+        Route::get('/create/{problemId}', [ApplicationController::class, 'create'])->name('create');
+        Route::post('/', [ApplicationController::class, 'store'])->name('store');
+        Route::get('/{id}', [ApplicationController::class, 'show'])->name('show');
+        Route::delete('/{id}', [ApplicationController::class, 'destroy'])->name('destroy');
+    });
+    
+    // my projects
     Route::prefix('projects')->name('projects.')->group(function () {
         Route::get('/', [MyProjectsController::class, 'index'])->name('index');
         Route::get('/{id}', [MyProjectsController::class, 'show'])->name('show');
-        Route::post('/{id}/report', [MyProjectsController::class, 'storeReport'])->name('report.store');
+        Route::post('/{id}/reports', [MyProjectsController::class, 'storeReport'])->name('reports.store');
         Route::post('/{id}/final-report', [MyProjectsController::class, 'storeFinalReport'])->name('final-report.store');
-        Route::patch('/{id}/milestone/{milestoneId}', [MyProjectsController::class, 'updateMilestone'])->name('milestone.update');
+        Route::patch('/{id}/milestones/{milestoneId}', [MyProjectsController::class, 'updateMilestone'])->name('milestones.update');
     });
     
     // portfolio
@@ -150,14 +138,61 @@ Route::middleware(['auth', 'user.type:institution', 'verified'])->prefix('instit
     // dashboard
     Route::get('/dashboard', [InstitutionDashboardController::class, 'index'])->name('dashboard');
     
+    // problems management (CRUD)
+    Route::prefix('problems')->name('problems.')->group(function () {
+        Route::get('/', [ProblemController::class, 'index'])->name('index');
+        Route::get('/create', [ProblemController::class, 'create'])->name('create');
+        Route::post('/', [ProblemController::class, 'store'])->name('store');
+        Route::get('/{id}', [ProblemController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [ProblemController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [ProblemController::class, 'update'])->name('update');
+        Route::delete('/{id}', [ProblemController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/toggle-status', [ProblemController::class, 'toggleStatus'])->name('toggle-status');
+        Route::get('/regencies/{provinceId}', [ProblemController::class, 'getRegencies'])->name('regencies');
+    });
+    
+    // applications review
+    Route::prefix('applications')->name('applications.')->group(function () {
+        Route::get('/', [ApplicationReviewController::class, 'index'])->name('index');
+        Route::get('/{id}', [ApplicationReviewController::class, 'show'])->name('show');
+        Route::get('/{id}/review', [ApplicationReviewController::class, 'review'])->name('review');
+        Route::post('/{id}/accept', [ApplicationReviewController::class, 'accept'])->name('accept');
+        Route::post('/{id}/reject', [ApplicationReviewController::class, 'reject'])->name('reject');
+        Route::post('/{id}/cancel', [ApplicationReviewController::class, 'cancel'])->name('cancel');
+        Route::post('/bulk-action', [ApplicationReviewController::class, 'bulkAction'])->name('bulk-action');
+    });
+    
+    // project management
+    Route::prefix('projects')->name('projects.')->group(function () {
+        Route::get('/', [ProjectManagementController::class, 'index'])->name('index');
+        Route::get('/{id}', [ProjectManagementController::class, 'show'])->name('show');
+        Route::get('/{id}/manage', [ProjectManagementController::class, 'manage'])->name('manage');
+        Route::post('/{id}/status', [ProjectManagementController::class, 'updateStatus'])->name('update-status');
+        Route::post('/{id}/milestones', [ProjectManagementController::class, 'addMilestone'])->name('add-milestone');
+        Route::put('/{id}/milestones/{milestoneId}', [ProjectManagementController::class, 'updateMilestone'])->name('update-milestone');
+        Route::delete('/{id}/milestones/{milestoneId}', [ProjectManagementController::class, 'deleteMilestone'])->name('delete-milestone');
+        Route::post('/{id}/reports/{reportId}/approve', [ProjectManagementController::class, 'approveReport'])->name('approve-report');
+        Route::post('/{id}/reports/{reportId}/reject', [ProjectManagementController::class, 'rejectReport'])->name('reject-report');
+        Route::post('/{id}/review', [ProjectManagementController::class, 'submitReview'])->name('submit-review');
+    });
+    
+    // reviews management
+    Route::prefix('reviews')->name('reviews.')->group(function () {
+        Route::get('/', [ReviewController::class, 'index'])->name('index');
+        Route::get('/create/{projectId}', [ReviewController::class, 'create'])->name('create');
+        Route::post('/{projectId}', [ReviewController::class, 'store'])->name('store');
+        Route::get('/{id}', [ReviewController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [ReviewController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [ReviewController::class, 'update'])->name('update');
+        Route::delete('/{id}', [ReviewController::class, 'destroy'])->name('destroy');
+    });
+    
     // profile routes
     Route::get('/profile', [InstitutionProfileController::class, 'index'])->name('profile.index');
     Route::get('/profile/edit', [InstitutionProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [InstitutionProfileController::class, 'update'])->name('profile.update');
-    
-    // TODO: problems/projects management
-    // TODO: applications review
-    // TODO: project management
+    Route::patch('/profile/password', [InstitutionProfileController::class, 'updatePassword'])->name('profile.password.update');
+    Route::get('/profile/regencies/{provinceId}', [InstitutionProfileController::class, 'getRegencies'])->name('profile.regencies');
 });
 
 /*
@@ -171,12 +206,9 @@ Route::prefix('api/public')->name('api.public.')->group(function () {
     Route::get('/regencies/{provinceId}', [BrowseProblemsController::class, 'getRegencies'])
          ->name('regencies');
 
-    // === TAMBAHKAN KODE DI BAWAH INI ===
+    // validation routes
     Route::post('/validate-registration/student', [\App\Http\Controllers\Auth\ValidationController::class, 'validateStudentStep'])
          ->name('validate.student.step');
-    // Route::post('/validate-registration/institution', [\App\Http\Controllers\Auth\ValidationController::class, 'validateInstitutionStep'])
-    //      ->name('validate.institution.step');
-    // ===================================
 });
 
 /*
