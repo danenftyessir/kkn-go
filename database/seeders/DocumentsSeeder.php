@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Document;
+use App\Models\User;
 use App\Models\Project;
 use App\Models\Province;
 use App\Models\Regency;
@@ -13,183 +14,251 @@ class DocumentsSeeder extends Seeder
 {
     /**
      * jalankan database seeds
+     * membuat dokumen dummy untuk knowledge repository
+     * 
+     * jalankan: php artisan db:seed --class=DocumentsSeeder
      */
     public function run(): void
     {
-        echo "\nSeeding documents...\n";
-
-        $pdfPath = 'documents/reports';
-        $fullPath = storage_path('app/public/' . $pdfPath);
-
-        // cek apakah folder ada
-        if (!is_dir($fullPath)) {
-            echo "⚠️  Folder {$fullPath} tidak ditemukan!\n";
-            echo "📁 Silakan buat folder dan masukkan file PDF terlebih dahulu.\n";
-            return;
-        }
-
-        // ambil semua file PDF dari folder
-        $files = array_filter(scandir($fullPath), function($file) {
-            return pathinfo($file, PATHINFO_EXTENSION) === 'pdf';
-        });
-
-        if (empty($files)) {
-            echo "⚠️  Tidak ada file PDF di folder {$fullPath}\n";
-            return;
-        }
-
-        echo "📄 Ditemukan " . count($files) . " file PDF\n";
-
-        // ambil completed projects dengan SEMUA relasi yang dibutuhkan
-        $completedProjects = Project::where('status', 'completed')
-            ->with([
-                'problem.regency.province',
-                'problem.institution.user',
-                'student.user',
-                'student.university'
-            ])
-            ->get();
-
-        // ambil data provinsi dan kabupaten untuk dokumen umum
-        $provinces = Province::with('regencies')->get();
+        echo "🔄 Membuat direktori dan file dummy...\n";
         
-        // validasi: pastikan ada province dengan regencies
-        $provincesWithRegencies = $provinces->filter(function($p) {
-            return $p->regencies->count() > 0;
-        });
-        
-        if ($provincesWithRegencies->count() === 0) {
-            echo "⚠️  Tidak ada data provinsi/kabupaten untuk dokumen umum!\n";
-            echo "💡 Jalankan: php artisan db:seed --class=ProvincesRegenciesSeeder\n";
-            return;
+        // pastikan direktori documents ada
+        if (!Storage::exists('public/documents')) {
+            Storage::makeDirectory('public/documents');
+            echo "✅ Direktori documents dibuat\n";
         }
 
-        // kategori SDG lengkap
-        $sdgCategories = [
-            'No Poverty',
-            'Zero Hunger', 
-            'Good Health and Well-being',
-            'Quality Education',
-            'Gender Equality',
-            'Clean Water and Sanitation',
-            'Affordable and Clean Energy',
-            'Decent Work and Economic Growth',
-            'Industry, Innovation and Infrastructure',
-            'Reduced Inequalities',
-            'Sustainable Cities and Communities',
-            'Responsible Consumption and Production',
-            'Climate Action',
-            'Life Below Water',
-            'Life on Land',
-            'Peace, Justice and Strong Institutions',
-            'Partnerships for the Goals'
-        ];
+        // buat dummy PDF file untuk testing
+        $pdfPath = $this->createDummyPDFFile();
+        echo "✅ File PDF dummy dibuat: {$pdfPath}\n";
 
-        // tags yang mungkin
-        $possibleTags = [
-            'KKN', 'Community Service', 'Research', 'Development',
-            'Education', 'Health', 'Environment', 'Technology',
-            'Agriculture', 'Infrastructure', 'Social', 'Economic',
-            'Cultural', 'Innovation', 'Sustainability'
-        ];
-
-        $documentsCreated = 0;
-        $withProject = 0;
-        $general = 0;
-
-        foreach ($files as $index => $file) {
-            $filePath = $pdfPath . '/' . $file;
-            
-            // tentukan apakah dokumen ini terkait project atau umum
-            $hasProject = $index < count($completedProjects);
-            $project = $hasProject ? $completedProjects[$index] : null;
-
-            // generate metadata
-            if ($project) {
-                // dokumen terkait project
-                $locationText = $project->problem->regency->name . ', ' . $project->problem->regency->province->name;
-                
-                $title = "Laporan KKN: " . $project->problem->title;
-                $description = "Laporan lengkap kegiatan KKN di " . $locationText . 
-                             " yang dilaksanakan oleh " . $project->student->user->name . 
-                             " dari " . $project->student->university->name;
-                $authorName = $project->student->user->name;
-                $institutionName = $project->problem->institution->name;
-                $universityName = $project->student->university->name;
-                $year = $project->end_date->year;
-                $provinceId = $project->problem->province_id;
-                $regencyId = $project->problem->regency_id;
-                $projectId = $project->id;
-                $uploadedBy = $project->student->user_id;
-                $withProject++;
-            } else {
-                // dokumen umum (tidak terkait project spesifik)
-                $randomProvince = $provincesWithRegencies->random();
-                $randomRegency = $randomProvince->regencies->random();
-                
-                $title = "Laporan KKN - " . fake()->words(3, true);
-                $description = "Dokumentasi kegiatan KKN yang telah dilaksanakan dengan fokus pada pemberdayaan masyarakat dan pengembangan daerah.";
-                $authorName = fake()->name();
-                $institutionName = fake()->randomElement([
-                    'Pemerintah Desa Sukamaju',
-                    'Dinas Kesehatan Kabupaten',
-                    'Dinas Pendidikan',
-                    'Puskesmas Kecamatan',
-                    'Kelurahan Makmur'
-                ]);
-                $universityName = fake()->randomElement([
-                    'Universitas Indonesia',
-                    'Institut Teknologi Bandung',
-                    'Universitas Gadjah Mada',
-                    'Institut Pertanian Bogor',
-                    'Universitas Airlangga'
-                ]);
-                $year = fake()->numberBetween(2020, 2024);
-                $provinceId = $randomProvince->id;
-                $regencyId = $randomRegency->id;
-                $projectId = null;
-                // untuk dokumen umum, ambil user pertama sebagai uploader
-                $uploadedBy = 1;
-                $general++;
-            }
-
-            // pilih random SDG categories (1-3 kategori)
-            $numCategories = fake()->numberBetween(1, 3);
-            $selectedSdgs = fake()->randomElements($sdgCategories, $numCategories);
-
-            // pilih random tags (2-5 tags)
-            $numTags = fake()->numberBetween(2, 5);
-            $selectedTags = fake()->randomElements($possibleTags, $numTags);
-
-            // buat document
-            Document::create([
-                'title' => $title,
-                'description' => $description,
-                'file_path' => $filePath,
-                'file_size' => filesize($fullPath . '/' . $file),
-                'file_type' => 'application/pdf',
-                'author_name' => $authorName,
-                'institution_name' => $institutionName,
-                'university_name' => $universityName,
-                'year' => $year,
-                'categories' => $selectedSdgs,
-                'tags' => $selectedTags,
-                'province_id' => $provinceId,
-                'regency_id' => $regencyId,
-                'project_id' => $projectId,
-                'uploaded_by' => $uploadedBy,
-                'is_featured' => fake()->boolean(20), // 20% chance jadi featured
-                'download_count' => fake()->numberBetween(0, 500),
-                'view_count' => fake()->numberBetween(0, 1000),
+        // ambil user untuk uploader (ambil beberapa user random)
+        $uploaders = User::where('user_type', 'student')->limit(5)->get();
+        
+        if ($uploaders->isEmpty()) {
+            echo "⚠️  Warning: Tidak ada user student. Jalankan seeder user terlebih dahulu.\n";
+            // buat minimal 1 user student untuk testing
+            $user = User::create([
+                'name' => 'Test Student',
+                'email' => 'student@test.com',
+                'username' => 'teststudent',
+                'password' => bcrypt('password'),
+                'user_type' => 'student',
+                'email_verified_at' => now(),
             ]);
-
-            $documentsCreated++;
+            
+            $student = \App\Models\Student::create([
+                'user_id' => $user->id,
+                'university_id' => 1,
+                'first_name' => 'Test',
+                'last_name' => 'Student',
+                'nim' => '1234567890',
+                'major' => 'Teknik Informatika',
+                'semester' => 6,
+                'whatsapp_number' => '081234567890',
+            ]);
+            
+            $uploaders = collect([$user]);
+            echo "✅ User student dummy dibuat\n";
         }
 
-        echo "✅ {$documentsCreated} documents berhasil di-seed!\n";
-        echo "📊 Statistik:\n";
-        echo "   - Dengan project: {$withProject}\n";
-        echo "   - Umum: {$general}\n";
-        echo "   - Featured: " . Document::where('is_featured', true)->count() . "\n";
+        // ambil provinces dan regencies
+        $provinces = Province::all();
+        if ($provinces->isEmpty()) {
+            echo "⚠️  Warning: Tidak ada data provinsi. Jalankan seeder provinsi terlebih dahulu.\n";
+            return;
+        }
+
+        $projects = Project::all();
+
+        // data dokumen dummy
+        $documents = [
+            [
+                'title' => 'Laporan KKN Pengembangan UMKM di Desa Sukamaju',
+                'description' => 'Dokumentasi lengkap program KKN dalam pengembangan usaha mikro kecil menengah di Desa Sukamaju, Kabupaten Bandung.',
+                'categories' => ['decent_work', 'reduced_inequality'],
+                'tags' => ['UMKM', 'Ekonomi', 'Desa'],
+                'author_name' => 'Tim KKN Universitas Indonesia',
+                'institution_name' => 'Desa Sukamaju',
+                'university_name' => 'Universitas Indonesia',
+                'year' => 2024,
+            ],
+            [
+                'title' => 'Program Literasi Digital untuk Guru SD',
+                'description' => 'Pelatihan literasi digital dan pemanfaatan teknologi dalam pembelajaran untuk guru sekolah dasar.',
+                'categories' => ['quality_education', 'industry_innovation'],
+                'tags' => ['Pendidikan', 'Digital', 'Guru'],
+                'author_name' => 'Mahasiswa KKN ITB',
+                'institution_name' => 'Dinas Pendidikan Kabupaten Bandung',
+                'university_name' => 'Institut Teknologi Bandung',
+                'year' => 2024,
+            ],
+            [
+                'title' => 'Pengelolaan Sampah Berbasis Masyarakat',
+                'description' => 'Implementasi sistem pengelolaan sampah terpadu dengan melibatkan partisipasi aktif masyarakat desa.',
+                'categories' => ['sustainable_cities', 'responsible_consumption'],
+                'tags' => ['Lingkungan', 'Sampah', 'Bank Sampah'],
+                'author_name' => 'KKN Universitas Padjadjaran',
+                'institution_name' => 'Desa Cibeunying',
+                'university_name' => 'Universitas Padjadjaran',
+                'year' => 2023,
+            ],
+            [
+                'title' => 'Pemberdayaan Perempuan melalui Pelatihan Kerajinan Tangan',
+                'description' => 'Program pelatihan kerajinan tangan untuk meningkatkan pendapatan ibu rumah tangga di pedesaan.',
+                'categories' => ['gender_equality', 'decent_work'],
+                'tags' => ['Pemberdayaan', 'Perempuan', 'Kerajinan'],
+                'author_name' => 'Tim KKN UGM',
+                'institution_name' => 'PKK Desa Sumberejo',
+                'university_name' => 'Universitas Gadjah Mada',
+                'year' => 2023,
+            ],
+            [
+                'title' => 'Sosialisasi Hidup Sehat dan Pencegahan Stunting',
+                'description' => 'Edukasi masyarakat tentang pola hidup sehat dan pencegahan stunting pada balita melalui posyandu.',
+                'categories' => ['good_health', 'zero_hunger'],
+                'tags' => ['Kesehatan', 'Stunting', 'Posyandu'],
+                'author_name' => 'Mahasiswa KKN UNAIR',
+                'institution_name' => 'Puskesmas Kecamatan Sukodono',
+                'university_name' => 'Universitas Airlangga',
+                'year' => 2024,
+            ],
+        ];
+
+        echo "🔄 Membuat dokumen di database...\n";
+        
+        // buat dokumen
+        foreach ($documents as $index => $docData) {
+            // pilih uploader random
+            $uploader = $uploaders->random();
+            
+            // pilih province dan regency random
+            $province = $provinces->random();
+            $regency = Regency::where('province_id', $province->id)->inRandomOrder()->first();
+            
+            // pilih project random (jika ada)
+            $project = $projects->isNotEmpty() ? $projects->random() : null;
+
+            Document::create([
+                'project_id' => $project?->id,
+                'uploaded_by' => $uploader->id,
+                'title' => $docData['title'],
+                'description' => $docData['description'],
+                'file_path' => $pdfPath, // gunakan path yang sama untuk semua
+                'file_type' => 'pdf',
+                'file_size' => Storage::size('public/' . $pdfPath), // ukuran file sebenarnya
+                'categories' => json_encode($docData['categories']),
+                'tags' => json_encode($docData['tags']),
+                'author_name' => $docData['author_name'],
+                'institution_name' => $docData['institution_name'],
+                'university_name' => $docData['university_name'],
+                'year' => $docData['year'],
+                'province_id' => $province->id,
+                'regency_id' => $regency?->id,
+                'download_count' => rand(10, 500),
+                'view_count' => rand(50, 1000),
+                'citation_count' => rand(0, 50),
+                'is_public' => true,
+                'is_featured' => $index < 3, // 3 dokumen pertama jadi featured
+                'status' => 'approved',
+                'approved_at' => now(),
+            ]);
+        }
+
+        echo "\n";
+        echo "✅ Berhasil membuat " . count($documents) . " dokumen dummy\n";
+        echo "✅ File PDF tersimpan di: storage/app/public/{$pdfPath}\n";
+        echo "✅ Akses via browser: http://127.0.0.1:8000/storage/{$pdfPath}\n";
+        echo "\n";
+        echo "🎉 Seeder selesai! Silakan test download di: http://127.0.0.1:8000/student/repository\n";
+    }
+
+    /**
+     * buat dummy PDF file untuk testing download
+     * return path relatif dari storage/app/public
+     */
+    protected function createDummyPDFFile()
+    {
+        // path relatif dari storage/app/public
+        $relativePath = 'documents/dummy-kkn-report.pdf';
+        
+        // konten PDF minimal yang valid
+        $pdfContent = "%PDF-1.4
+1 0 obj
+<<
+/Type /Catalog
+/Pages 2 0 R
+>>
+endobj
+2 0 obj
+<<
+/Type /Pages
+/Kids [3 0 R]
+/Count 1
+>>
+endobj
+3 0 obj
+<<
+/Type /Page
+/Parent 2 0 R
+/Resources <<
+/Font <<
+/F1 4 0 R
+>>
+>>
+/MediaBox [0 0 612 792]
+/Contents 5 0 R
+>>
+endobj
+4 0 obj
+<<
+/Type /Font
+/Subtype /Type1
+/BaseFont /Helvetica
+>>
+endobj
+5 0 obj
+<<
+/Length 200
+>>
+stream
+BT
+/F1 24 Tf
+50 700 Td
+(LAPORAN KKN - DOKUMEN DUMMY) Tj
+0 -30 Td
+/F1 14 Tf
+(Universitas XYZ) Tj
+0 -25 Td
+(Tahun 2024) Tj
+0 -40 Td
+/F1 12 Tf
+(Ini adalah dokumen PDF dummy untuk testing) Tj
+0 -20 Td
+(sistem download di platform KKN-GO.) Tj
+ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f
+0000000009 00000 n
+0000000058 00000 n
+0000000115 00000 n
+0000000274 00000 n
+0000000361 00000 n
+trailer
+<<
+/Size 6
+/Root 1 0 R
+>>
+startxref
+612
+%%EOF";
+
+        // simpan file
+        Storage::put('public/' . $relativePath, $pdfContent);
+        
+        return $relativePath;
     }
 }
