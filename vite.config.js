@@ -16,7 +16,11 @@ export default defineConfig({
         }),
         tailwindcss(),
     ],
-    base: process.env.APP_ENV === 'production' 
-        ? 'https://kkn-go.replit.app/' 
-        : '/',
+    base: 'https://kkn-go.replit.app/',
+    server: {
+        https: true,
+        hmr: {
+            protocol: 'wss',
+        },
+    },
 });
