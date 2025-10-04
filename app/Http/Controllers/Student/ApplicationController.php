@@ -5,52 +5,26 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\Application;
 use App\Models\Problem;
-use App\Models\Student;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
-/**
- * ApplicationController
- * 
- * handle aplikasi mahasiswa ke problems/proyek
- */
 class ApplicationController extends Controller
 {
     /**
-     * tampilkan halaman my applications
+     * tampilkan daftar aplikasi mahasiswa
      */
-    public function index(Request $request)
+    public function index()
     {
         $student = Auth::user()->student;
         
-        // ambil semua aplikasi mahasiswa dengan relasi
-        $query = Application::with(['problem.institution', 'problem.province', 'problem.regency'])
-                           ->where('student_id', $student->id);
+        $applications = Application::with(['problem.institution', 'problem.province', 'problem.regency'])
+                                  ->where('student_id', $student->id)
+                                  ->orderBy('applied_at', 'desc')
+                                  ->paginate(10);
         
-        // filter by status
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-        
-        // sorting
-        $sortBy = $request->get('sort', 'latest');
-        switch ($sortBy) {
-            case 'latest':
-                $query->latest('applied_at');
-                break;
-            case 'oldest':
-                $query->oldest('applied_at');
-                break;
-            case 'status':
-                $query->orderByRaw("FIELD(status, 'accepted', 'reviewed', 'pending', 'rejected')");
-                break;
-        }
-        
-        $applications = $query->paginate(10)->withQueryString();
-        
-        // statistik untuk dashboard
+        // hitung statistik
         $stats = [
             'total' => Application::where('student_id', $student->id)->count(),
             'pending' => Application::where('student_id', $student->id)->where('status', 'pending')->count(),
@@ -87,14 +61,14 @@ class ApplicationController extends Controller
         // validasi problem masih open
         if ($problem->status !== 'open') {
             return redirect()
-                ->route('student.browse-problems')
+                ->route('student.browse-problems.index')
                 ->with('error', 'Maaf, proyek ini sudah tidak menerima aplikasi');
         }
         
         // validasi deadline belum lewat
         if ($problem->application_deadline < now()) {
             return redirect()
-                ->route('student.problems.show', $problem->id)
+                ->route('student.browse-problems.show', $problem->id)
                 ->with('error', 'Maaf, deadline aplikasi sudah berakhir');
         }
         
@@ -106,7 +80,7 @@ class ApplicationController extends Controller
         
         if ($hasApplied) {
             return redirect()
-                ->route('student.problems.show', $problem->id)
+                ->route('student.browse-problems.show', $problem->id)
                 ->with('info', 'Anda sudah mengajukan aplikasi untuk proyek ini');
         }
         
@@ -114,25 +88,30 @@ class ApplicationController extends Controller
     }
     
     /**
-     * submit aplikasi baru
+     * simpan aplikasi baru
      */
-    public function store(Request $request, $problemId)
+    public function store(Request $request)
     {
-        $problem = Problem::findOrFail($problemId);
         $student = Auth::user()->student;
         
-        // validasi input
         $validated = $request->validate([
-            'motivation' => 'required|string|min:100|max:2000',
-            'cover_letter' => 'nullable|string|max:2000',
-            'proposal' => 'nullable|file|mimes:pdf,doc,docx|max:5120', // max 5MB
+            'problem_id' => 'required|exists:problems,id',
+            'motivation' => 'required|string|min:100',
+            'relevant_experience' => 'nullable|string',
+            'proposal' => 'required|file|mimes:pdf|max:5120', // max 5MB
         ], [
-            'motivation.required' => 'Motivasi wajib diisi',
             'motivation.min' => 'Motivasi minimal 100 karakter',
-            'motivation.max' => 'Motivasi maksimal 2000 karakter',
-            'proposal.mimes' => 'Proposal harus berformat PDF, DOC, atau DOCX',
+            'proposal.required' => 'Proposal wajib diunggah',
+            'proposal.mimes' => 'Proposal harus berformat PDF',
             'proposal.max' => 'Ukuran proposal maksimal 5MB',
         ]);
+        
+        $problem = Problem::findOrFail($validated['problem_id']);
+        
+        // validasi ulang
+        if ($problem->status !== 'open' || $problem->application_deadline < now()) {
+            return back()->with('error', 'Proyek sudah tidak menerima aplikasi');
+        }
         
         // cek apakah sudah pernah apply
         $hasApplied = Application::where('student_id', $student->id)
@@ -146,18 +125,15 @@ class ApplicationController extends Controller
         try {
             DB::beginTransaction();
             
-            // upload proposal jika ada
-            $proposalPath = null;
-            if ($request->hasFile('proposal')) {
-                $proposalPath = $request->file('proposal')->store('proposals', 'public');
-            }
+            // upload proposal
+            $proposalPath = $request->file('proposal')->store('proposals', 'public');
             
-            // buat aplikasi baru
+            // simpan aplikasi
             $application = Application::create([
                 'student_id' => $student->id,
                 'problem_id' => $problem->id,
                 'motivation' => $validated['motivation'],
-                'cover_letter' => $validated['cover_letter'] ?? null,
+                'relevant_experience' => $validated['relevant_experience'],
                 'proposal_path' => $proposalPath,
                 'status' => 'pending',
                 'applied_at' => now(),
@@ -167,7 +143,6 @@ class ApplicationController extends Controller
             $problem->increment('applications_count');
             
             // TODO: kirim notifikasi ke instansi
-            // TODO: kirim email konfirmasi ke mahasiswa
             
             DB::commit();
             
@@ -232,5 +207,13 @@ class ApplicationController extends Controller
             
             return back()->with('error', 'Terjadi kesalahan saat membatalkan aplikasi');
         }
+    }
+
+    /**
+     * hapus aplikasi (alias untuk withdraw untuk backward compatibility)
+     */
+    public function destroy($id)
+    {
+        return $this->withdraw($id);
     }
 }

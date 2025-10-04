@@ -101,7 +101,7 @@
         </div>
 
         <!-- title -->
-        <a href="{{ route('student.problems.show', $problem->id) }}" class="block group">
+        <a href="{{ route('student.browse-problems.show', $problem->id) }}" class="block group">
             <h3 class="text-lg font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors line-clamp-2">
                 {{ $problem->title }}
             </h3>

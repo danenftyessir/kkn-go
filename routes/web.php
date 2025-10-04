@@ -22,6 +22,7 @@ use App\Http\Controllers\Institution\ApplicationReviewController;
 use App\Http\Controllers\Institution\ProjectManagementController;
 use App\Http\Controllers\Institution\ReviewController;
 use App\Http\Controllers\NotificationController;
+
 // homepage
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -77,6 +78,10 @@ Route::middleware(['auth', 'user.type:student', 'verified'])->prefix('student')-
     Route::get('/problems', [BrowseProblemsController::class, 'index'])->name('browse-problems.index');
     Route::get('/problems/{id}', [BrowseProblemsController::class, 'show'])->name('browse-problems.show');
 
+    // alias untuk backward compatibility dan konsistensi
+    Route::get('/browse-problems', [BrowseProblemsController::class, 'index'])->name('problems.index');
+    Route::get('/browse-problems/{id}', [BrowseProblemsController::class, 'show'])->name('problems.show');
+
     // wishlist
     Route::prefix('wishlist')->name('wishlist.')->group(function () {
         Route::get('/', [WishlistController::class, 'index'])->name('index');
@@ -90,6 +95,7 @@ Route::middleware(['auth', 'user.type:student', 'verified'])->prefix('student')-
         Route::get('/create/{problemId}', [ApplicationController::class, 'create'])->name('create');
         Route::post('/', [ApplicationController::class, 'store'])->name('store');
         Route::get('/{id}', [ApplicationController::class, 'show'])->name('show');
+        Route::delete('/{id}/withdraw', [ApplicationController::class, 'withdraw'])->name('withdraw');
         Route::delete('/{id}', [ApplicationController::class, 'destroy'])->name('destroy');
     });
     
@@ -114,30 +120,26 @@ Route::middleware(['auth', 'user.type:student', 'verified'])->prefix('student')-
     Route::prefix('repository')->name('repository.')->group(function () {
         Route::get('/', [KnowledgeRepositoryController::class, 'index'])->name('index');
         Route::get('/{id}', [KnowledgeRepositoryController::class, 'show'])->name('show');
+        Route::post('/{id}/bookmark', [KnowledgeRepositoryController::class, 'toggleBookmark'])->name('bookmark');
         Route::get('/{id}/download', [KnowledgeRepositoryController::class, 'download'])->name('download');
         Route::get('/{id}/citation', [KnowledgeRepositoryController::class, 'getCitation'])->name('citation');
-        Route::post('/{id}/bookmark', [KnowledgeRepositoryController::class, 'bookmark'])->name('bookmark');
-        Route::post('/{id}/report', [KnowledgeRepositoryController::class, 'report'])->name('report');
     });
     
-    // profile routes
-    Route::get('/profile', [StudentProfileController::class, 'index'])->name('profile.index');
-    Route::get('/profile/edit', [StudentProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [StudentProfileController::class, 'update'])->name('profile.update');
-    Route::patch('/profile/password', [StudentProfileController::class, 'updatePassword'])->name('profile.password.update');
+    // profile
+    Route::prefix('profile')->name('profile.')->group(function () {
+        Route::get('/', [StudentProfileController::class, 'index'])->name('index');
+        Route::get('/edit', [StudentProfileController::class, 'edit'])->name('edit');
+        Route::put('/', [StudentProfileController::class, 'update'])->name('update');
+        Route::put('/password', [StudentProfileController::class, 'updatePassword'])->name('update-password');
+    });
 });
 
-// tambahkan di routes/web.php setelah authenticated routes
-
-// notification routes (untuk semua user yang login)
-Route::middleware(['auth'])->group(function () {
-    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
-    Route::get('/notifications/latest', [NotificationController::class, 'getLatest'])->name('notifications.latest');
-    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
-    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
-    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
-    Route::delete('/notifications/destroy-read', [NotificationController::class, 'destroyRead'])->name('notifications.destroy-read');
-});
+/*
+|--------------------------------------------------------------------------
+| public portfolio routes
+|--------------------------------------------------------------------------
+*/
+Route::get('/portfolio/{username}', [PortfolioController::class, 'public'])->name('portfolio.public');
 
 /*
 |--------------------------------------------------------------------------
@@ -179,70 +181,39 @@ Route::middleware(['auth', 'user.type:institution', 'verified'])->prefix('instit
         Route::get('/', [ProjectManagementController::class, 'index'])->name('index');
         Route::get('/{id}', [ProjectManagementController::class, 'show'])->name('show');
         Route::get('/{id}/manage', [ProjectManagementController::class, 'manage'])->name('manage');
-        Route::post('/{id}/status', [ProjectManagementController::class, 'updateStatus'])->name('update-status');
-        Route::post('/{id}/milestones', [ProjectManagementController::class, 'addMilestone'])->name('add-milestone');
-        Route::put('/{id}/milestones/{milestoneId}', [ProjectManagementController::class, 'updateMilestone'])->name('update-milestone');
-        Route::delete('/{id}/milestones/{milestoneId}', [ProjectManagementController::class, 'deleteMilestone'])->name('delete-milestone');
-        Route::post('/{id}/reports/{reportId}/approve', [ProjectManagementController::class, 'approveReport'])->name('approve-report');
-        Route::post('/{id}/reports/{reportId}/reject', [ProjectManagementController::class, 'rejectReport'])->name('reject-report');
-        Route::post('/{id}/review', [ProjectManagementController::class, 'submitReview'])->name('submit-review');
+        Route::post('/{id}/milestones', [ProjectManagementController::class, 'createMilestone'])->name('milestones.store');
+        Route::put('/{id}/milestones/{milestoneId}', [ProjectManagementController::class, 'updateMilestone'])->name('milestones.update');
+        Route::post('/{id}/complete', [ProjectManagementController::class, 'completeProject'])->name('complete');
     });
     
-    // reviews management
+    // reviews
     Route::prefix('reviews')->name('reviews.')->group(function () {
         Route::get('/', [ReviewController::class, 'index'])->name('index');
         Route::get('/create/{projectId}', [ReviewController::class, 'create'])->name('create');
-        Route::post('/{projectId}', [ReviewController::class, 'store'])->name('store');
+        Route::post('/', [ReviewController::class, 'store'])->name('store');
         Route::get('/{id}', [ReviewController::class, 'show'])->name('show');
         Route::get('/{id}/edit', [ReviewController::class, 'edit'])->name('edit');
         Route::put('/{id}', [ReviewController::class, 'update'])->name('update');
-        Route::delete('/{id}', [ReviewController::class, 'destroy'])->name('destroy');
     });
     
-        // profile routes
-    Route::get('/profile', [InstitutionProfileController::class, 'index'])->name('profile.index');
-    Route::get('/profile/edit', [InstitutionProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [InstitutionProfileController::class, 'update'])->name('profile.update');
-    Route::patch('/profile/password', [InstitutionProfileController::class, 'updatePassword'])->name('profile.password.update');
-    Route::get('/profile/regencies/{provinceId}', [InstitutionProfileController::class, 'getRegencies'])->name('profile.regencies');
+    // profile
+    Route::prefix('profile')->name('profile.')->group(function () {
+        Route::get('/', [InstitutionProfileController::class, 'index'])->name('index');
+        Route::get('/edit', [InstitutionProfileController::class, 'edit'])->name('edit');
+        Route::put('/', [InstitutionProfileController::class, 'update'])->name('update');
+        Route::put('/password', [InstitutionProfileController::class, 'updatePassword'])->name('update-password');
+    });
 });
 
 /*
 |--------------------------------------------------------------------------
-| public API routes (untuk AJAX calls tanpa auth)
+| notification routes (untuk semua authenticated users)
 |--------------------------------------------------------------------------
 */
 
-Route::prefix('api/public')->name('api.public.')->group(function () {
-    // endpoint untuk get regencies berdasarkan province (digunakan di form registrasi)
-    Route::get('/regencies/{provinceId}', [BrowseProblemsController::class, 'getRegencies'])
-         ->name('regencies');
-
-    // validation routes
-    Route::post('/validate-registration/student', [\App\Http\Controllers\Auth\ValidationController::class, 'validateStudentStep'])
-         ->name('validate.student.step');
+Route::middleware('auth')->prefix('notifications')->name('notifications.')->group(function () {
+    Route::get('/', [NotificationController::class, 'index'])->name('index');
+    Route::post('/{id}/mark-read', [NotificationController::class, 'markAsRead'])->name('mark-read');
+    Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
+    Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('destroy');
 });
-
-/*
-|--------------------------------------------------------------------------
-| admin routes (TODO)
-|--------------------------------------------------------------------------
-*/
-
-// Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-//     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
-//     Route::resource('users', UserController::class);
-//     Route::resource('verifications', VerificationController::class);
-// });
-
-/*
-|--------------------------------------------------------------------------
-| dev routes (development only)
-|--------------------------------------------------------------------------
-*/
-
-if (app()->environment('local')) {
-    Route::get('/dev/login', function () {
-        return view('dev.login');
-    })->name('dev.login');
-}

@@ -15,6 +15,7 @@ class DashboardController extends Controller
         // TODO: implementasi dashboard lengkap
         
         // untuk sementara redirect ke browse problems
-        return redirect()->route('student.browse-problems');
+        return redirect()->route('student.problems.index')
+            ->with('warning', 'Please complete your profile to get better recommendations.');
     }
 }
