@@ -26,6 +26,7 @@ class Application extends Model
         'accepted_at',
         'rejected_at',
         'feedback',
+        'institution_notes',
     ];
 
     protected $casts = [

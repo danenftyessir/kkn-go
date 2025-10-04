@@ -39,6 +39,8 @@ class Project extends Model
         'impact_metrics',
         'is_portfolio_visible',
         'is_featured',
+        'role_in_team',
+
     ];
 
     protected $casts = [

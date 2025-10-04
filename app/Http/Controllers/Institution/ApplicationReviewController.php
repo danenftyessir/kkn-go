@@ -188,6 +188,7 @@ class ApplicationReviewController extends Controller
 
             // buat project otomatis
             Project::create([
+                'application_id' => $application->id, // ← TAMBAHKAN INI
                 'student_id' => $application->student_id,
                 'problem_id' => $application->problem_id,
                 'institution_id' => $institution->id,
@@ -196,7 +197,7 @@ class ApplicationReviewController extends Controller
                 'start_date' => $problem->start_date,
                 'end_date' => $problem->end_date,
                 'status' => 'active',
-                'role_in_team' => 'Anggota Tim', // default role
+                'role_in_team' => 'Anggota Tim',
             ]);
 
             // update counter problem

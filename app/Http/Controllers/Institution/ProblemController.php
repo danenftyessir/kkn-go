@@ -12,9 +12,6 @@ use App\Services\ProblemService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
-/**
- * controller untuk manajemen masalah/proyek oleh instansi
- */
 class ProblemController extends Controller
 {
     protected $problemService;
@@ -63,7 +60,7 @@ class ProblemController extends Controller
 
         $problems = $query->paginate(10)->withQueryString();
 
-        // statistik untuk dashboard
+        // statistik
         $stats = [
             'total' => Problem::where('institution_id', $institution->id)->count(),
             'draft' => Problem::where('institution_id', $institution->id)->where('status', 'draft')->count(),
@@ -76,7 +73,7 @@ class ProblemController extends Controller
     }
 
     /**
-     * tampilkan form create masalah (wizard form)
+     * tampilkan form create masalah baru
      */
     public function create()
     {
@@ -90,6 +87,8 @@ class ProblemController extends Controller
      */
     public function store(Request $request)
     {
+        $institution = auth()->user()->institution;
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
@@ -100,36 +99,33 @@ class ProblemController extends Controller
             'regency_id' => 'required|exists:regencies,id',
             'village' => 'nullable|string|max:255',
             'detailed_location' => 'nullable|string',
-            'sdg_categories' => 'required|array|min:1',
-            'sdg_categories.*' => 'required|integer|min:1|max:17',
+            'sdg_categories' => 'required|array',
             'required_students' => 'required|integer|min:1',
-            'required_skills' => 'required|array|min:1',
-            'required_skills.*' => 'required|string',
-            'required_majors' => 'nullable|array',
-            'required_majors.*' => 'string',
-            'start_date' => 'required|date|after:today',
+            'required_skills' => 'nullable|string',
+            'required_majors' => 'nullable|string',
+            'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
-            'application_deadline' => 'required|date|after:today|before:start_date',
+            'application_deadline' => 'required|date|before:start_date',
             'difficulty_level' => 'required|in:beginner,intermediate,advanced',
             'expected_outcomes' => 'nullable|string',
-            'deliverables' => 'nullable|array',
-            'deliverables.*' => 'string',
-            'facilities_provided' => 'nullable|array',
-            'facilities_provided.*' => 'string',
-            'status' => 'required|in:draft,open',
-            'images' => 'nullable|array|max:5',
-            'images.*' => 'image|mimes:jpeg,jpg,png|max:2048',
+            'deliverables' => 'nullable|string',
+            'facilities_provided' => 'nullable|string',
+            'images.*' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
         ]);
 
         try {
             DB::beginTransaction();
 
-            $institution = auth()->user()->institution;
+            // hitung durasi
+            $startDate = new \DateTime($validated['start_date']);
+            $endDate = new \DateTime($validated['end_date']);
+            $durationMonths = $startDate->diff($endDate)->m + ($startDate->diff($endDate)->y * 12);
 
-            // hitung durasi dalam bulan
-            $startDate = \Carbon\Carbon::parse($validated['start_date']);
-            $endDate = \Carbon\Carbon::parse($validated['end_date']);
-            $durationMonths = $startDate->diffInMonths($endDate);
+            // convert skills dan majors ke array
+            $requiredSkills = $validated['required_skills'] ? array_map('trim', explode(',', $validated['required_skills'])) : [];
+            $requiredMajors = $validated['required_majors'] ? array_map('trim', explode(',', $validated['required_majors'])) : [];
+            $deliverables = $validated['deliverables'] ? array_map('trim', explode(',', $validated['deliverables'])) : [];
+            $facilities = $validated['facilities_provided'] ? array_map('trim', explode(',', $validated['facilities_provided'])) : [];
 
             // buat problem
             $problem = Problem::create([
@@ -143,29 +139,30 @@ class ProblemController extends Controller
                 'regency_id' => $validated['regency_id'],
                 'village' => $validated['village'] ?? null,
                 'detailed_location' => $validated['detailed_location'] ?? null,
-                'sdg_categories' => json_encode($validated['sdg_categories']),
+                'sdg_categories' => $validated['sdg_categories'],
                 'required_students' => $validated['required_students'],
-                'required_skills' => json_encode($validated['required_skills']),
-                'required_majors' => isset($validated['required_majors']) ? json_encode($validated['required_majors']) : null,
+                'required_skills' => $requiredSkills,
+                'required_majors' => !empty($requiredMajors) ? $requiredMajors : null,
                 'start_date' => $validated['start_date'],
                 'end_date' => $validated['end_date'],
                 'application_deadline' => $validated['application_deadline'],
                 'duration_months' => $durationMonths,
                 'difficulty_level' => $validated['difficulty_level'],
                 'expected_outcomes' => $validated['expected_outcomes'] ?? null,
-                'deliverables' => isset($validated['deliverables']) ? json_encode($validated['deliverables']) : null,
-                'facilities_provided' => isset($validated['facilities_provided']) ? json_encode($validated['facilities_provided']) : null,
-                'status' => $validated['status'],
+                'deliverables' => !empty($deliverables) ? $deliverables : null,
+                'facilities_provided' => !empty($facilities) ? $facilities : null,
+                'status' => 'draft',
             ]);
 
             // upload gambar jika ada
             if ($request->hasFile('images')) {
-                foreach ($request->file('images') as $image) {
+                foreach ($request->file('images') as $index => $image) {
                     $path = $image->store('problems', 'public');
                     
                     ProblemImage::create([
                         'problem_id' => $problem->id,
                         'image_path' => $path,
+                        'order' => $index,
                     ]);
                 }
             }
@@ -259,36 +256,35 @@ class ProblemController extends Controller
             'regency_id' => 'required|exists:regencies,id',
             'village' => 'nullable|string|max:255',
             'detailed_location' => 'nullable|string',
-            'sdg_categories' => 'required|array|min:1',
-            'sdg_categories.*' => 'required|integer|min:1|max:17',
+            'sdg_categories' => 'required|array',
             'required_students' => 'required|integer|min:1',
-            'required_skills' => 'required|array|min:1',
-            'required_skills.*' => 'required|string',
-            'required_majors' => 'nullable|array',
-            'required_majors.*' => 'string',
+            'required_skills' => 'nullable|string',
+            'required_majors' => 'nullable|string',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
             'application_deadline' => 'required|date|before:start_date',
             'difficulty_level' => 'required|in:beginner,intermediate,advanced',
             'expected_outcomes' => 'nullable|string',
-            'deliverables' => 'nullable|array',
-            'deliverables.*' => 'string',
-            'facilities_provided' => 'nullable|array',
-            'facilities_provided.*' => 'string',
-            'status' => 'required|in:draft,open,closed',
-            'images' => 'nullable|array|max:5',
-            'images.*' => 'image|mimes:jpeg,jpg,png|max:2048',
+            'deliverables' => 'nullable|string',
+            'facilities_provided' => 'nullable|string',
             'delete_images' => 'nullable|array',
-            'delete_images.*' => 'exists:problem_images,id',
+            'images.*' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
+            'status' => 'required|in:draft,open,closed',
         ]);
 
         try {
             DB::beginTransaction();
 
-            // hitung durasi dalam bulan
-            $startDate = \Carbon\Carbon::parse($validated['start_date']);
-            $endDate = \Carbon\Carbon::parse($validated['end_date']);
-            $durationMonths = $startDate->diffInMonths($endDate);
+            // hitung durasi
+            $startDate = new \DateTime($validated['start_date']);
+            $endDate = new \DateTime($validated['end_date']);
+            $durationMonths = $startDate->diff($endDate)->m + ($startDate->diff($endDate)->y * 12);
+
+            // convert ke array
+            $requiredSkills = $validated['required_skills'] ? array_map('trim', explode(',', $validated['required_skills'])) : [];
+            $requiredMajors = $validated['required_majors'] ? array_map('trim', explode(',', $validated['required_majors'])) : [];
+            $deliverables = $validated['deliverables'] ? array_map('trim', explode(',', $validated['deliverables'])) : [];
+            $facilities = $validated['facilities_provided'] ? array_map('trim', explode(',', $validated['facilities_provided'])) : [];
 
             // update problem
             $problem->update([
@@ -301,18 +297,18 @@ class ProblemController extends Controller
                 'regency_id' => $validated['regency_id'],
                 'village' => $validated['village'] ?? null,
                 'detailed_location' => $validated['detailed_location'] ?? null,
-                'sdg_categories' => json_encode($validated['sdg_categories']),
+                'sdg_categories' => $validated['sdg_categories'],
                 'required_students' => $validated['required_students'],
-                'required_skills' => json_encode($validated['required_skills']),
-                'required_majors' => isset($validated['required_majors']) ? json_encode($validated['required_majors']) : null,
+                'required_skills' => $requiredSkills,
+                'required_majors' => !empty($requiredMajors) ? $requiredMajors : null,
                 'start_date' => $validated['start_date'],
                 'end_date' => $validated['end_date'],
                 'application_deadline' => $validated['application_deadline'],
                 'duration_months' => $durationMonths,
                 'difficulty_level' => $validated['difficulty_level'],
                 'expected_outcomes' => $validated['expected_outcomes'] ?? null,
-                'deliverables' => isset($validated['deliverables']) ? json_encode($validated['deliverables']) : null,
-                'facilities_provided' => isset($validated['facilities_provided']) ? json_encode($validated['facilities_provided']) : null,
+                'deliverables' => !empty($deliverables) ? $deliverables : null,
+                'facilities_provided' => !empty($facilities) ? $facilities : null,
                 'status' => $validated['status'],
             ]);
 
