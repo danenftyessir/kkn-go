@@ -22,8 +22,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // force HTTPS di production
-        if ($this->app->environment('production')) {
-            URL::forceScheme('https');
+        if (config('app.env') === 'production') {
+            \URL::forceScheme('https');
         }
 
         // prevent lazy loading di development untuk menghindari N+1 queries
