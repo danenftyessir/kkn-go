@@ -74,9 +74,9 @@ Route::middleware(['auth', 'user.type:student', 'verified'])->prefix('student')-
     Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
     
     // browse problems
-    Route::get('/problems', [BrowseProblemsController::class, 'index'])->name('problems.index');
-    Route::get('/problems/{id}', [BrowseProblemsController::class, 'show'])->name('problems.show');
-    
+    Route::get('/problems', [BrowseProblemsController::class, 'index'])->name('browse-problems.index');
+    Route::get('/problems/{id}', [BrowseProblemsController::class, 'show'])->name('browse-problems.show');
+
     // wishlist
     Route::prefix('wishlist')->name('wishlist.')->group(function () {
         Route::get('/', [WishlistController::class, 'index'])->name('index');
