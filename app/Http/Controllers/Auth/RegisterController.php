@@ -28,7 +28,7 @@ class RegisterController extends Controller
     /**
      * tampilkan halaman pilihan registrasi
      */
-    public function showRegisterForm()
+    public function showRegistrationForm()
     {
         return view('auth.register');
     }
@@ -36,7 +36,7 @@ class RegisterController extends Controller
     /**
      * tampilkan form registrasi student
      */
-    public function showStudentRegisterForm()
+    public function showStudentForm()
     {
         // ambil data universities untuk dropdown
         $universities = University::orderBy('name', 'asc')->get();
@@ -47,7 +47,7 @@ class RegisterController extends Controller
     /**
      * tampilkan form registrasi institution
      */
-    public function showInstitutionRegisterForm()
+    public function showInstitutionForm()
     {
         // ambil data provinces untuk dropdown
         $provinces = Province::orderBy('name', 'asc')->get();
@@ -115,14 +115,13 @@ class RegisterController extends Controller
             
             DB::commit();
             
-            // auto login setelah registrasi
-            // Picu event bahwa user baru telah terdaftar
+            // picu event bahwa user baru telah terdaftar
             event(new Registered($user));
 
-            // Auto login setelah registrasi
+            // auto login setelah registrasi
             Auth::login($user);
 
-            // Redirect ke halaman verifikasi email, bukan ke dashboard
+            // redirect ke halaman verifikasi email
             return redirect()->route('verification.notice');
 
         } catch (\Exception $e) {
@@ -184,14 +183,13 @@ class RegisterController extends Controller
             
             DB::commit();
             
-            // auto login setelah registrasi
-            // Picu event bahwa user baru telah terdaftar
+            // picu event bahwa user baru telah terdaftar
             event(new Registered($user));
 
-            // Auto login setelah registrasi
+            // auto login setelah registrasi
             Auth::login($user);
 
-            // Redirect ke halaman verifikasi email, bukan ke dashboard
+            // redirect ke halaman verifikasi email
             return redirect()->route('verification.notice');
 
         } catch (\Exception $e) {
