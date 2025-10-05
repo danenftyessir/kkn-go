@@ -34,7 +34,7 @@ class RegisterController extends Controller
     }
 
     /**
-     * alias untuk showRegistrationForm (backward compatibility)
+     * alias untuk showRegistrationForm
      */
     public function showRegisterForm()
     {
@@ -53,7 +53,7 @@ class RegisterController extends Controller
     }
 
     /**
-     * alias untuk showStudentForm (backward compatibility)
+     * alias untuk showStudentForm
      */
     public function showStudentRegisterForm()
     {
@@ -93,7 +93,7 @@ class RegisterController extends Controller
     }
 
     /**
-     * alias untuk showInstitutionForm (backward compatibility)
+     * alias untuk showInstitutionForm
      */
     public function showInstitutionRegisterForm()
     {
@@ -186,23 +186,23 @@ class RegisterController extends Controller
             $verificationDocPath = $request->file('verification_document')
                                           ->store('institutions/verifications', 'public');
             
-            // buat institution profile
+            // buat institution profile - PERBAIKAN: sesuaikan dengan nama kolom di migration
             $institution = Institution::create([
                 'user_id' => $user->id,
-                'institution_name' => $request->institution_name,
-                'institution_type' => $request->institution_type,
+                'name' => $request->institution_name,
+                'type' => $request->institution_type,
                 'address' => $request->address,
                 'province_id' => $request->province_id,
                 'regency_id' => $request->regency_id,
-                'official_email' => $request->official_email,
-                'phone_number' => $request->phone_number,
+                'email' => $request->official_email,
+                'phone' => $request->phone_number,
                 'logo_path' => $logoPath,
                 'pic_name' => $request->pic_name,
                 'pic_position' => $request->pic_position,
                 'verification_document_path' => $verificationDocPath,
                 'website' => $request->website,
                 'description' => $request->description,
-                'is_verified' => false, // menunggu verifikasi admin
+                'is_verified' => false,
             ]);
             
             DB::commit();

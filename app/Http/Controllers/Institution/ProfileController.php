@@ -32,7 +32,18 @@ class ProfileController extends Controller
         $provinces = Province::orderBy('name')->get();
         $regencies = Regency::where('province_id', $institution->province_id)->orderBy('name')->get();
         
-        return view('institution.profile.edit', compact('institution', 'user', 'provinces', 'regencies'));
+        // definisi tipe institusi
+        $institutionTypes = [
+            'pemerintah_desa' => 'pemerintah desa',
+            'dinas' => 'dinas pemerintahan',
+            'ngo' => 'NGO / lembaga swadaya masyarakat',
+            'puskesmas' => 'puskesmas',
+            'sekolah' => 'sekolah',
+            'perguruan_tinggi' => 'perguruan tinggi',
+            'lainnya' => 'lainnya'
+        ];
+        
+        return view('institution.profile.edit', compact('institution', 'user', 'provinces', 'regencies', 'institutionTypes'));
     }
 
     /**
@@ -54,6 +65,8 @@ class ProfileController extends Controller
             'website' => 'nullable|url',
             'description' => 'nullable|string|max:1000',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'pic_name' => 'required|string|max:100',
+            'pic_position' => 'required|string|max:100',
         ]);
 
         // handle logo upload
@@ -64,8 +77,8 @@ class ProfileController extends Controller
             }
             
             // simpan logo baru
-            $path = $request->file('logo')->store('institutions/logos', 'public');
-            $validated['logo_path'] = $path;
+            $logoPath = $request->file('logo')->store('institutions/logos', 'public');
+            $validated['logo_path'] = $logoPath;
         }
 
         // update institution
@@ -78,6 +91,8 @@ class ProfileController extends Controller
             'phone' => $validated['phone'],
             'website' => $validated['website'] ?? null,
             'description' => $validated['description'] ?? null,
+            'pic_name' => $validated['pic_name'],
+            'pic_position' => $validated['pic_position'],
             'logo_path' => $validated['logo_path'] ?? $institution->logo_path,
         ]);
 
@@ -87,58 +102,44 @@ class ProfileController extends Controller
         }
 
         return redirect()->route('institution.profile.index')
-            ->with('success', 'Profil berhasil diperbarui!');
+                        ->with('success', 'profil berhasil diperbarui!');
     }
 
     /**
-     * update password institution
+     * update password
      */
     public function updatePassword(Request $request)
     {
-        $user = auth()->user();
-
         $validated = $request->validate([
             'current_password' => 'required',
-            'new_password' => 'required|min:8|confirmed',
+            'password' => 'required|min:8|confirmed',
         ]);
 
-        // cek current password
+        $user = auth()->user();
+
+        // cek password lama
         if (!Hash::check($validated['current_password'], $user->password)) {
-            return back()->withErrors(['current_password' => 'Password saat ini tidak sesuai']);
+            return back()->withErrors(['current_password' => 'password lama tidak sesuai']);
         }
 
         // update password
         $user->update([
-            'password' => Hash::make($validated['new_password'])
+            'password' => Hash::make($validated['password'])
         ]);
 
-        return redirect()->route('institution.profile.index')
-            ->with('success', 'Password berhasil diperbarui!');
+        return back()->with('success', 'password berhasil diperbarui!');
     }
 
     /**
-     * tampilkan public profile institution
+     * tampilkan profil publik institution
      */
-    public function publicProfile($id)
+    public function public($slug)
     {
-        $institution = \App\Models\Institution::with([
-            'user',
-            'province',
-            'regency',
-            'problems' => function($q) {
-                $q->where('status', 'open')->latest()->limit(5);
-            }
-        ])->findOrFail($id);
-
-        // statistik
-        $stats = [
-            'total_problems' => $institution->problems()->count(),
-            'active_problems' => $institution->problems()->where('status', 'open')->count(),
-            'completed_projects' => \App\Models\Project::whereHas('problem', function($q) use ($institution) {
-                $q->where('institution_id', $institution->id);
-            })->where('status', 'completed')->count(),
-        ];
-
-        return view('institution.profile.public', compact('institution', 'stats'));
+        // untuk saat ini gunakan id, nanti bisa diubah ke slug
+        $institution = Institution::with(['user', 'province', 'regency', 'problems' => function($q) {
+            $q->where('status', 'open')->orWhere('status', 'completed');
+        }])->findOrFail($slug);
+        
+        return view('institution.profile.public', compact('institution'));
     }
 }
