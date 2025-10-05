@@ -34,6 +34,14 @@ class RegisterController extends Controller
     }
 
     /**
+     * alias untuk showRegistrationForm (backward compatibility)
+     */
+    public function showRegisterForm()
+    {
+        return $this->showRegistrationForm();
+    }
+
+    /**
      * tampilkan form registrasi student
      */
     public function showStudentForm()
@@ -42,6 +50,14 @@ class RegisterController extends Controller
         $universities = University::orderBy('name', 'asc')->get();
         
         return view('auth.student-register', compact('universities'));
+    }
+
+    /**
+     * alias untuk showStudentForm (backward compatibility)
+     */
+    public function showStudentRegisterForm()
+    {
+        return $this->showStudentForm();
     }
 
     /**
@@ -77,6 +93,14 @@ class RegisterController extends Controller
     }
 
     /**
+     * alias untuk showInstitutionForm (backward compatibility)
+     */
+    public function showInstitutionRegisterForm()
+    {
+        return $this->showInstitutionForm();
+    }
+
+    /**
      * proses registrasi student
      */
     public function registerStudent(StudentRegisterRequest $request)
@@ -96,8 +120,8 @@ class RegisterController extends Controller
             
             // upload foto profil jika ada
             $photoPath = null;
-            if ($request->hasFile('profile_photo')) {
-                $photoPath = $request->file('profile_photo')->store('profiles/students', 'public');
+            if ($request->hasFile('photo')) {
+                $photoPath = $request->file('photo')->store('profiles/students', 'public');
             }
             
             // buat student profile
