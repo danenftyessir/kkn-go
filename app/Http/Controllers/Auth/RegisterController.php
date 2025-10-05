@@ -96,8 +96,8 @@ class RegisterController extends Controller
             
             // upload foto profil jika ada
             $photoPath = null;
-            if ($request->hasFile('photo')) {
-                $photoPath = $request->file('photo')->store('profiles/students', 'public');
+            if ($request->hasFile('profile_photo')) {
+                $photoPath = $request->file('profile_photo')->store('profiles/students', 'public');
             }
             
             // buat student profile

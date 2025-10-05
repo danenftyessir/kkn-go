@@ -106,24 +106,10 @@ Route::middleware(['auth', 'user.type:student', 'verified'])->prefix('student')-
     // dashboard
     Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
     
-    // browse problems - DIPERBAIKI: tambahkan route tanpa suffix
-    Route::get('/problems', [BrowseProblemsController::class, 'index'])->name('problems.index');
-    Route::get('/problems/{id}', [BrowseProblemsController::class, 'show'])->name('problems.show');
-    
-    // alias untuk konsistensi nama route
-    Route::get('/browse-problems', [BrowseProblemsController::class, 'index'])->name('browse-problems.index');
-    Route::get('/browse-problems/{id}', [BrowseProblemsController::class, 'show'])->name('browse-problems.show');
-    
-    // TAMBAHAN: route alias tanpa suffix untuk backward compatibility
-    Route::get('/browse-problems-redirect', function() {
-        return redirect()->route('student.browse-problems.index');
-    })->name('browse-problems');
-
-    // wishlist
-    Route::prefix('wishlist')->name('wishlist.')->group(function () {
-        Route::get('/', [WishlistController::class, 'index'])->name('index');
-        Route::post('/toggle/{problemId}', [WishlistController::class, 'toggle'])->name('toggle');
-        Route::delete('/{id}', [WishlistController::class, 'destroy'])->name('destroy');
+    // browse problems (marketplace)
+    Route::prefix('browse-problems')->name('browse-problems.')->group(function () {
+        Route::get('/', [BrowseProblemsController::class, 'index'])->name('index');
+        Route::get('/{id}', [BrowseProblemsController::class, 'show'])->name('show');
     });
     
     // applications
@@ -132,43 +118,38 @@ Route::middleware(['auth', 'user.type:student', 'verified'])->prefix('student')-
         Route::get('/create/{problemId}', [ApplicationController::class, 'create'])->name('create');
         Route::post('/', [ApplicationController::class, 'store'])->name('store');
         Route::get('/{id}', [ApplicationController::class, 'show'])->name('show');
-        Route::delete('/{id}/withdraw', [ApplicationController::class, 'withdraw'])->name('withdraw');
-        Route::delete('/{id}', [ApplicationController::class, 'destroy'])->name('destroy');
+        Route::delete('/{id}', [ApplicationController::class, 'withdraw'])->name('withdraw');
     });
     
     // my projects
     Route::prefix('projects')->name('projects.')->group(function () {
         Route::get('/', [MyProjectsController::class, 'index'])->name('index');
         Route::get('/{id}', [MyProjectsController::class, 'show'])->name('show');
-        Route::get('/{projectId}/reports/create', [MyProjectsController::class, 'createReport'])->name('reports.create');
-        Route::post('/{projectId}/reports', [MyProjectsController::class, 'storeReport'])->name('reports.store');
-        Route::get('/{projectId}/final-report/create', [MyProjectsController::class, 'createFinalReport'])->name('final-report.create');
-        Route::post('/{projectId}/final-report', [MyProjectsController::class, 'storeFinalReport'])->name('final-report.store');
+        Route::post('/{id}/upload-report', [MyProjectsController::class, 'uploadReport'])->name('upload-report');
+        Route::post('/{id}/submit-final', [MyProjectsController::class, 'submitFinal'])->name('submit-final');
     });
     
-    // portfolio
-    Route::prefix('portfolio')->name('portfolio.')->group(function () {
-        Route::get('/', [PortfolioController::class, 'index'])->name('index');
-        Route::get('/public/{username}', [PortfolioController::class, 'public'])->name('public');
-    });
+    // portfolio (public profile)
+    Route::get('/portfolio', [PortfolioController::class, 'index'])->name('portfolio');
     
-    // profile
+    // profile management
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [StudentProfileController::class, 'index'])->name('index');
-        Route::get('/edit', [StudentProfileController::class, 'edit'])->name('edit');
         Route::put('/', [StudentProfileController::class, 'update'])->name('update');
-        Route::patch('/', [StudentProfileController::class, 'update'])->name('update.patch'); // alias untuk PATCH
-        Route::put('/password', [StudentProfileController::class, 'updatePassword'])->name('password.update');
-        Route::patch('/password', [StudentProfileController::class, 'updatePassword'])->name('password.update.patch'); // alias untuk PATCH
-        Route::get('/public/{username}', [StudentProfileController::class, 'public'])->name('public');
+        Route::put('/password', [StudentProfileController::class, 'updatePassword'])->name('password');
+    });
+    
+    // wishlist
+    Route::prefix('wishlist')->name('wishlist.')->group(function () {
+        Route::get('/', [WishlistController::class, 'index'])->name('index');
+        Route::post('/{problemId}', [WishlistController::class, 'toggle'])->name('toggle');
     });
     
     // knowledge repository
-    Route::prefix('repository')->name('repository.')->group(function () {
+    Route::prefix('knowledge-repository')->name('knowledge-repository.')->group(function () {
         Route::get('/', [KnowledgeRepositoryController::class, 'index'])->name('index');
         Route::get('/{id}', [KnowledgeRepositoryController::class, 'show'])->name('show');
         Route::get('/{id}/download', [KnowledgeRepositoryController::class, 'download'])->name('download');
-        Route::post('/{id}/bookmark', [KnowledgeRepositoryController::class, 'toggleBookmark'])->name('bookmark');
     });
 });
 
@@ -183,18 +164,8 @@ Route::middleware(['auth', 'user.type:institution', 'verified'])->prefix('instit
     // dashboard
     Route::get('/dashboard', [InstitutionDashboardController::class, 'index'])->name('dashboard');
     
-    // problem management
-    Route::prefix('problems')->name('problems.')->group(function () {
-        Route::get('/', [ProblemController::class, 'index'])->name('index');
-        Route::get('/create', [ProblemController::class, 'create'])->name('create');
-        Route::post('/', [ProblemController::class, 'store'])->name('store');
-        Route::get('/{id}', [ProblemController::class, 'show'])->name('show');
-        Route::get('/{id}/edit', [ProblemController::class, 'edit'])->name('edit');
-        Route::put('/{id}', [ProblemController::class, 'update'])->name('update');
-        Route::delete('/{id}', [ProblemController::class, 'destroy'])->name('destroy');
-        Route::post('/{id}/publish', [ProblemController::class, 'publish'])->name('publish');
-        Route::post('/{id}/close', [ProblemController::class, 'close'])->name('close');
-    });
+    // problem management (CRUD masalah/proyek)
+    Route::resource('problems', ProblemController::class);
     
     // application review
     Route::prefix('applications')->name('applications.')->group(function () {
@@ -209,57 +180,32 @@ Route::middleware(['auth', 'user.type:institution', 'verified'])->prefix('instit
     Route::prefix('projects')->name('projects.')->group(function () {
         Route::get('/', [ProjectManagementController::class, 'index'])->name('index');
         Route::get('/{id}', [ProjectManagementController::class, 'show'])->name('show');
-        Route::get('/{id}/manage', [ProjectManagementController::class, 'manage'])->name('manage');
+        Route::post('/{id}/verify-report', [ProjectManagementController::class, 'verifyReport'])->name('verify-report');
         Route::post('/{id}/complete', [ProjectManagementController::class, 'complete'])->name('complete');
     });
     
-    // reviews
+    // student reviews
     Route::prefix('reviews')->name('reviews.')->group(function () {
-        Route::get('/', [ReviewController::class, 'index'])->name('index');
         Route::get('/create/{projectId}', [ReviewController::class, 'create'])->name('create');
         Route::post('/', [ReviewController::class, 'store'])->name('store');
-        Route::get('/{id}', [ReviewController::class, 'show'])->name('show');
-        Route::get('/{id}/edit', [ReviewController::class, 'edit'])->name('edit');
-        Route::put('/{id}', [ReviewController::class, 'update'])->name('update');
-        Route::delete('/{id}', [ReviewController::class, 'destroy'])->name('destroy');
     });
     
-    // profile
+    // profile management
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [InstitutionProfileController::class, 'index'])->name('index');
-        Route::get('/edit', [InstitutionProfileController::class, 'edit'])->name('edit');
         Route::put('/', [InstitutionProfileController::class, 'update'])->name('update');
-        Route::put('/password', [InstitutionProfileController::class, 'updatePassword'])->name('password.update');
-        Route::get('/public/{slug}', [InstitutionProfileController::class, 'public'])->name('public');
+        Route::put('/password', [InstitutionProfileController::class, 'updatePassword'])->name('password');
     });
 });
 
 /*
 |--------------------------------------------------------------------------
-| api routes untuk ajax requests
+| public routes (tidak perlu auth)
 |--------------------------------------------------------------------------
 */
 
-Route::prefix('api')->name('api.')->group(function () {
-    // public api (tidak perlu auth)
-    Route::get('/provinces', function() {
-        return response()->json(\App\Models\Province::orderBy('name')->get());
-    })->name('provinces');
-    
-    Route::get('/regencies/{provinceId}', function($provinceId) {
-        return response()->json(\App\Models\Regency::where('province_id', $provinceId)->orderBy('name')->get());
-    })->name('regencies');
-    
-    Route::get('/universities', function() {
-        return response()->json(\App\Models\University::orderBy('name')->get());
-    })->name('universities');
-    
-    // authenticated api
-    Route::middleware('auth')->group(function () {
-        Route::post('/problems/{id}/view', function($id) {
-            $problem = \App\Models\Problem::findOrFail($id);
-            $problem->increment('views_count');
-            return response()->json(['success' => true]);
-        })->name('problems.view');
-    });
-});
+// public portfolio
+Route::get('/portfolio/{username}', [PortfolioController::class, 'public'])->name('portfolio.public');
+
+// public institution profile
+Route::get('/institution/{username}', [InstitutionProfileController::class, 'public'])->name('institution.public');
