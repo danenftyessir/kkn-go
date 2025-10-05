@@ -204,33 +204,40 @@
                         </div>
 
                         {{-- step 2: data akademik --}}
-                        <div class="form-field-group">
-                            <label for="university_id" class="form-label required">universitas</label>
-                            <div class="form-input-wrapper">
-                                <select id="university_id" 
-                                        name="university_id" 
-                                        class="form-input form-select @error('university_id') error @enderror"
-                                        required>
-                                    <option value="">-- pilih universitas --</option>
-                                    @foreach($universities as $university)
-                                        <option value="{{ $university->id }}" {{ old('university_id') == $university->id ? 'selected' : '' }}>
-                                            {{ $university->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                                </svg>
+                        <div id="step2-content" class="step-content hidden">
+                            <div class="mb-8">
+                                <h2 class="text-2xl font-bold text-gray-800 mb-2">data akademik</h2>
+                                <p class="text-gray-600">informasi terkait kampus dan perkuliahan kamu</p>
                             </div>
-                            @error('university_id')
-                                <p class="error-message">
-                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                                    </svg>
-                                    {{ $message }}
-                                </p>
-                            @enderror
-                        </div>
+
+                            <div class="space-y-6">
+                                {{-- universitas --}}
+                                <div class="form-field-group">
+                                    <label for="university_id" class="form-label required">universitas</label>
+                                    <div class="form-input-wrapper">
+                                        <select id="university_id" 
+                                                name="university_id" 
+                                                class="form-input form-select @error('university_id') error @enderror"
+                                                required>
+                                            <option value="">-- pilih universitas --</option>
+                                            {{-- TODO: ambil dari database --}}
+                                            <option value="1" {{ old('university_id') == 1 ? 'selected' : '' }}>Universitas Indonesia</option>
+                                            <option value="2" {{ old('university_id') == 2 ? 'selected' : '' }}>Institut Teknologi Bandung</option>
+                                            <option value="3" {{ old('university_id') == 3 ? 'selected' : '' }}>Universitas Gadjah Mada</option>
+                                        </select>
+                                        <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                        </svg>
+                                    </div>
+                                    @error('university_id')
+                                        <p class="error-message">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            {{ $message }}
+                                        </p>
+                                    @enderror
+                                </div>
 
                                 {{-- jurusan --}}
                                 <div class="form-field-group">
