@@ -8,8 +8,6 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use App\Models\Student;
 use App\Models\Institution;
-use App\Models\Problem;
-use App\Models\Application;
 use App\Models\University;
 use App\Models\Province;
 use App\Models\Regency;
@@ -38,15 +36,18 @@ class DummyDataSeeder extends Seeder
         echo "akun testing (semua password: password123):\n";
         echo "\n";
         echo "mahasiswa pertama:\n";
-        $firstStudent = Student::with('user')->first();
+        $firstStudent = Student::with('user', 'university')->first();
         if ($firstStudent) {
+            echo "  nama     : " . $firstStudent->first_name . " " . $firstStudent->last_name . "\n";
             echo "  email    : " . $firstStudent->user->email . "\n";
             echo "  username : " . $firstStudent->user->username . "\n";
+            echo "  kampus   : " . $firstStudent->university->name . "\n";
         }
         echo "\n";
         echo "instansi pertama:\n";
         $firstInst = Institution::with('user')->first();
         if ($firstInst) {
+            echo "  nama     : " . $firstInst->name . "\n";
             echo "  email    : " . $firstInst->user->email . "\n";
             echo "  username : " . $firstInst->user->username . "\n";
         }
@@ -90,17 +91,17 @@ class DummyDataSeeder extends Seeder
         $universities = [
             // universitas di jakarta (province 31)
             ['name' => 'universitas indonesia', 'code' => 'UI', 'province_id' => 31, 'regency_id' => 3174, 'type' => 'negeri', 'accreditation' => 'A'],
-            ['name' => 'UIN Syarif Hidayatullah Jakarta', 'code' => 'UIN JKT', 'province_id' => 31, 'regency_id' => 3175, 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'UIN Syarif Hidayatullah Jakarta', 'code' => 'UIN JKT', 'province_id' => 31, 'regency_id' => 3174, 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'universitas bina nusantara', 'code' => 'BINUS', 'province_id' => 31, 'regency_id' => 3174, 'type' => 'swasta', 'accreditation' => 'A'],
             // universitas di jawa barat (province 32)
             ['name' => 'institut teknologi bandung', 'code' => 'ITB', 'province_id' => 32, 'regency_id' => 3273, 'type' => 'negeri', 'accreditation' => 'A'],
             ['name' => 'universitas padjadjaran', 'code' => 'UNPAD', 'province_id' => 32, 'regency_id' => 3273, 'type' => 'negeri', 'accreditation' => 'A'],
-            ['name' => 'institut pertanian bogor', 'code' => 'IPB', 'province_id' => 32, 'regency_id' => 3201, 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'UIN Sunan Gunung Djati Bandung', 'code' => 'UIN SGD', 'province_id' => 32, 'regency_id' => 3273, 'type' => 'negeri', 'accreditation' => 'A'],
             ['name' => 'universitas pendidikan indonesia', 'code' => 'UPI', 'province_id' => 32, 'regency_id' => 3273, 'type' => 'negeri', 'accreditation' => 'A'],
-            ['name' => 'universitas islam bandung', 'code' => 'UNISBA', 'province_id' => 32, 'regency_id' => 3273, 'type' => 'swasta', 'accreditation' => 'B'],
             // universitas di jawa tengah (province 33)
             ['name' => 'universitas diponegoro', 'code' => 'UNDIP', 'province_id' => 33, 'regency_id' => 3374, 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'UIN Walisongo Semarang', 'code' => 'UIN WALISONGO', 'province_id' => 33, 'regency_id' => 3374, 'type' => 'negeri', 'accreditation' => 'A'],
             ['name' => 'universitas negeri semarang', 'code' => 'UNNES', 'province_id' => 33, 'regency_id' => 3374, 'type' => 'negeri', 'accreditation' => 'B'],
-            ['name' => 'UIN Walisongo Semarang', 'code' => 'WALISONGO', 'province_id' => 33, 'regency_id' => 3374, 'type' => 'negeri', 'accreditation' => 'A'],
             ['name' => 'universitas sebelas maret', 'code' => 'UNS', 'province_id' => 33, 'regency_id' => 3372, 'type' => 'negeri', 'accreditation' => 'A'],
             ['name' => 'universitas jenderal soedirman', 'code' => 'UNSOED', 'province_id' => 33, 'regency_id' => 3302, 'type' => 'negeri', 'accreditation' => 'B'],
             ['name' => 'universitas islam sultan agung', 'code' => 'UNISSULA', 'province_id' => 33, 'regency_id' => 3374, 'type' => 'swasta', 'accreditation' => 'B'],
@@ -124,6 +125,7 @@ class DummyDataSeeder extends Seeder
 
     /**
      * seeding students dummy (30 students)
+     * FIXED: menggunakan email domain universitas yang benar
      */
     private function seedStudents(): void
     {
@@ -143,12 +145,17 @@ class DummyDataSeeder extends Seeder
             $username = strtolower($firstName . $lastName . rand(1, 99));
             $nim = '210' . str_pad($i, 7, '0', STR_PAD_LEFT);
             
+            // generate email berdasarkan kode universitas yang benar
+            $emailDomain = $this->getUniversityEmailDomain($university->code);
+            $email = $username . '@' . $emailDomain;
+            
             $user = User::create([
                 'name' => $firstName . ' ' . $lastName,
-                'email' => $username . '@student.ac.id',
+                'email' => $email,
                 'username' => $username,
                 'password' => Hash::make('password123'),
                 'user_type' => 'student',
+                'is_active' => true,
                 'email_verified_at' => now(),
             ]);
 
@@ -169,6 +176,7 @@ class DummyDataSeeder extends Seeder
 
     /**
      * seeding institutions dummy (15 institutions)
+     * FIXED: menggunakan nama kolom yang sesuai dengan migration
      */
     private function seedInstitutions(): void
     {
@@ -197,24 +205,29 @@ class DummyDataSeeder extends Seeder
             $type = $types[array_rand($types)];
             $username = strtolower(str_replace(' ', '', $instName)) . rand(1, 99);
             
+            // generate email yang lebih realistis untuk instansi
+            $email = $this->getInstitutionEmail($instName, $type, $index);
+            
             $user = User::create([
                 'name' => $instName,
-                'email' => $username . '@instansi.go.id',
+                'email' => $email,
                 'username' => $username,
                 'password' => Hash::make('password123'),
                 'user_type' => 'institution',
+                'is_active' => true,
                 'email_verified_at' => now(),
             ]);
 
+            // PERBAIKAN: gunakan nama kolom yang sesuai dengan migration
             Institution::create([
                 'user_id' => $user->id,
-                'name' => $instName,
-                'type' => $type,
+                'name' => $instName,  // bukan institution_name
+                'type' => $type,      // bukan institution_type
                 'address' => 'jl. ' . $instName . ' no. ' . rand(1, 100),
                 'province_id' => $province->id,
                 'regency_id' => $regency->id,
-                'email' => $username . '@instansi.go.id',
-                'phone' => '+6221' . rand(1000000, 9999999),
+                'email' => $email,    // bukan official_email
+                'phone' => '+6221' . rand(1000000, 9999999),  // bukan phone_number
                 'pic_name' => $picNames[array_rand($picNames)],
                 'pic_position' => $positions[array_rand($positions)],
                 'is_verified' => rand(0, 10) > 2, // 80% verified
@@ -225,5 +238,53 @@ class DummyDataSeeder extends Seeder
         echo "  -> " . Institution::count() . " institutions berhasil dibuat\n";
     }
 
+    /**
+     * helper: dapatkan email domain berdasarkan kode universitas
+     */
+    private function getUniversityEmailDomain(string $code): string
+    {
+        $domains = [
+            'UI' => 'ui.ac.id',
+            'UIN JKT' => 'uinjkt.ac.id',
+            'BINUS' => 'binus.ac.id',
+            'ITB' => 'itb.ac.id',
+            'UNPAD' => 'unpad.ac.id',
+            'UIN SGD' => 'uinsgd.ac.id',
+            'UPI' => 'upi.edu',
+            'UNDIP' => 'live.undip.ac.id',
+            'UIN WALISONGO' => 'walisongo.ac.id',
+            'UNNES' => 'students.unnes.ac.id',
+            'UNS' => 'student.uns.ac.id',
+            'UNSOED' => 'mhs.unsoed.ac.id',
+            'UNISSULA' => 'std.unissula.ac.id',
+            'UNIMUS' => 'students.unimus.ac.id',
+            'UGM' => 'mail.ugm.ac.id',
+            'UIN SUKA' => 'uin-suka.ac.id',
+            'UNY' => 'student.uny.ac.id',
+            'UII' => 'students.uii.ac.id',
+            'UNTIRTA' => 'untirta.ac.id',
+            'UMT' => 'umt.ac.id',
+        ];
 
+        return $domains[$code] ?? 'university.ac.id';
+    }
+
+    /**
+     * helper: dapatkan email instansi yang realistis
+     */
+    private function getInstitutionEmail(string $name, string $type, int $index): string
+    {
+        // buat email yang lebih realistis untuk instansi
+        $cleanName = strtolower(str_replace(' ', '', $name));
+        
+        $domains = [
+            'dinas' => '@' . $cleanName . '.go.id',
+            'pemerintah_desa' => '@' . $cleanName . '.desa.id',
+            'puskesmas' => '@' . $cleanName . '.kemkes.go.id',
+            'ngo' => '@' . $cleanName . '.org',
+            'perguruan_tinggi' => '@' . $cleanName . '.ac.id',
+        ];
+
+        return $cleanName . ($index + 1) . ($domains[$type] ?? '@institution.id');
+    }
 }

@@ -116,12 +116,13 @@ class RegisterController extends Controller
                 'username' => $request->username,
                 'password' => Hash::make($request->password),
                 'user_type' => 'student',
+                'is_active' => true,
             ]);
             
             // upload foto profil jika ada
             $photoPath = null;
-            if ($request->hasFile('photo')) {
-                $photoPath = $request->file('photo')->store('profiles/students', 'public');
+            if ($request->hasFile('profile_photo')) {
+                $photoPath = $request->file('profile_photo')->store('profiles/students', 'public');
             }
             
             // buat student profile
@@ -151,10 +152,11 @@ class RegisterController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Student registration failed: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
             
             return back()
                 ->withInput()
-                ->with('error', 'terjadi kesalahan saat registrasi. silakan coba lagi.');
+                ->with('error', 'terjadi kesalahan saat registrasi. silakan coba lagi. Error: ' . $e->getMessage());
         }
     }
 
@@ -174,6 +176,7 @@ class RegisterController extends Controller
                 'username' => $request->username,
                 'password' => Hash::make($request->password),
                 'user_type' => 'institution',
+                'is_active' => true,
             ]);
             
             // upload logo jika ada
@@ -183,10 +186,13 @@ class RegisterController extends Controller
             }
             
             // upload verification document
-            $verificationDocPath = $request->file('verification_document')
-                                          ->store('institutions/verifications', 'public');
+            $verificationDocPath = null;
+            if ($request->hasFile('verification_document')) {
+                $verificationDocPath = $request->file('verification_document')
+                                              ->store('institutions/verifications', 'public');
+            }
             
-            // buat institution profile - PERBAIKAN: sesuaikan dengan nama kolom di migration
+            // buat institution profile - PERBAIKAN: gunakan nama kolom yang sesuai dengan migration
             $institution = Institution::create([
                 'user_id' => $user->id,
                 'name' => $request->institution_name,
@@ -219,10 +225,11 @@ class RegisterController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Institution registration failed: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
             
             return back()
                 ->withInput()
-                ->with('error', 'terjadi kesalahan saat registrasi. silakan coba lagi.');
+                ->with('error', 'terjadi kesalahan saat registrasi. silakan coba lagi. Error: ' . $e->getMessage());
         }
     }
 }

@@ -6,7 +6,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use App\Models\Notification;
+
 /**
  * model user
  * 
@@ -19,8 +19,6 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * attributes yang dapat diisi mass assignment
-     *
-     * @var array<int, string>
      */
     protected $fillable = [
         'name',
@@ -30,23 +28,20 @@ class User extends Authenticatable implements MustVerifyEmail
         'user_type',
         'is_active',
         'email_verified_at',
-        'email_verification_token', 
+        'email_verification_token',
     ];
 
     /**
      * attributes yang harus disembunyikan saat serialisasi
-     *
-     * @var array<int, string>
      */
     protected $hidden = [
         'password',
         'remember_token',
+        'email_verification_token',
     ];
 
     /**
      * attributes yang di-cast ke tipe data tertentu
-     *
-     * @return array<string, string>
      */
     protected function casts(): array
     {
@@ -78,6 +73,14 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * relasi ke notifikasi
+     */
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
+    }
+
+    /**
      * cek apakah user adalah student
      */
     public function isStudent(): bool
@@ -102,102 +105,41 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * scope untuk filter berdasarkan user type
+     * get profile data berdasarkan user type
      */
-    public function scopeOfType($query, string $type)
+    public function getProfileAttribute()
     {
-        return $query->where('user_type', $type);
-    }
-
-    /**
-     * scope untuk filter user yang aktif
-     */
-    public function scopeActive($query)
-    {
-        return $query->where('is_active', true);
-    }
-
-    /**
-     * scope untuk filter user yang sudah verified email
-     */
-    public function scopeVerified($query)
-    {
-        return $query->whereNotNull('email_verified_at');
-    }
-
-    /**
-     * get display name
-     * 
-     * untuk student: nama lengkap dari data student
-     * untuk institution: nama instansi
-     * fallback: field name dari user
-     */
-    public function getDisplayName(): string
-    {
-        if ($this->isStudent() && $this->student) {
-            return $this->student->getFullName();
-        }
-        
-        if ($this->isInstitution() && $this->institution) {
-            return $this->institution->name;
-        }
-        
-        return $this->name;
-    }
-
-    /**
-     * get profile photo url
-     * 
-     * untuk student: foto dari data student
-     * untuk institution: logo dari data institution
-     */
-    public function getProfilePhotoUrl(): ?string
-    {
-        if ($this->isStudent() && $this->student) {
-            return $this->student->getProfilePhotoUrl();
-        }
-        
-        if ($this->isInstitution() && $this->institution) {
-            return $this->institution->getLogoUrl();
+        if ($this->isStudent()) {
+            return $this->student;
+        } elseif ($this->isInstitution()) {
+            return $this->institution;
         }
         
         return null;
     }
 
     /**
-     * cek apakah user sudah melengkapi profil
+     * get profile photo URL
      */
-    public function hasCompletedProfile(): bool
+    public function getProfilePhotoUrlAttribute()
     {
-        if ($this->isStudent()) {
-            return $this->student !== null;
+        if ($this->isStudent() && $this->student?->profile_photo_path) {
+            return asset('storage/' . $this->student->profile_photo_path);
+        } elseif ($this->isInstitution() && $this->institution?->logo_path) {
+            return asset('storage/' . $this->institution->logo_path);
         }
         
-        if ($this->isInstitution()) {
-            return $this->institution !== null;
-        }
-        
-        return false;
-    }
-    public function notifications()
-    {
-        return $this->hasMany(Notification::class)->latest();
+        // default avatar
+        return asset('images/default-avatar.png');
     }
 
     /**
-     * dapatkan notifikasi yang belum dibaca
+     * get unread notifications count
      */
-    public function unreadNotifications()
+    public function getUnreadNotificationsCountAttribute()
     {
-        return $this->hasMany(Notification::class)->where('is_read', false)->latest();
-    }
-
-    /**
-     * hitung jumlah notifikasi yang belum dibaca
-     */
-    public function unreadNotificationsCount()
-    {
-        return $this->notifications()->where('is_read', false)->count();
+        return $this->notifications()
+            ->where('is_read', false)
+            ->count();
     }
 }
-

@@ -8,12 +8,15 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * model untuk tabel students
  * 
- * path: app/Models/Student.php (UPDATED)
+ * representasi mahasiswa yang menggunakan platform KKN-GO
  */
 class Student extends Model
 {
     use HasFactory;
 
+    /**
+     * attributes yang dapat diisi mass assignment
+     */
     protected $fillable = [
         'user_id',
         'first_name',
@@ -25,6 +28,16 @@ class Student extends Model
         'phone',
         'profile_photo_path',
         'bio',
+        'skills',
+        'portfolio_visible',
+    ];
+
+    /**
+     * attributes yang di-cast ke tipe data tertentu
+     */
+    protected $casts = [
+        'skills' => 'array',
+        'portfolio_visible' => 'boolean',
     ];
 
     /**
@@ -96,7 +109,9 @@ class Student extends Model
      */
     public function getActiveProjectsCountAttribute()
     {
-        return $this->projects()->where('status', 'active')->count();
+        return $this->projects()
+            ->whereIn('status', ['active', 'in_progress'])
+            ->count();
     }
 
     /**
@@ -104,7 +119,9 @@ class Student extends Model
      */
     public function getCompletedProjectsCountAttribute()
     {
-        return $this->projects()->where('status', 'completed')->count();
+        return $this->projects()
+            ->where('status', 'completed')
+            ->count();
     }
 
     /**
@@ -112,8 +129,8 @@ class Student extends Model
      */
     public function getAverageRatingAttribute()
     {
-        $reviews = Review::where('type', 'institution_to_student')
-                        ->where('reviewee_id', $this->user_id)
+        $reviews = Review::where('reviewee_type', 'student')
+                        ->where('reviewee_id', $this->id)
                         ->where('is_public', true)
                         ->get();
 
@@ -126,5 +143,37 @@ class Student extends Model
     public function getFullNameAttribute()
     {
         return $this->first_name . ' ' . $this->last_name;
+    }
+
+    /**
+     * get profile photo URL
+     */
+    public function getProfilePhotoUrlAttribute()
+    {
+        if ($this->profile_photo_path) {
+            return asset('storage/' . $this->profile_photo_path);
+        }
+        
+        return asset('images/default-avatar.png');
+    }
+
+    /**
+     * get total SDGs addressed dari completed projects
+     */
+    public function getTotalSdgsAddressedAttribute()
+    {
+        $completedProjects = $this->projects()
+            ->where('status', 'completed')
+            ->with('problem')
+            ->get();
+
+        $sdgs = [];
+        foreach ($completedProjects as $project) {
+            if ($project->problem && $project->problem->sdg_categories) {
+                $sdgs = array_merge($sdgs, $project->problem->sdg_categories);
+            }
+        }
+
+        return count(array_unique($sdgs));
     }
 }
