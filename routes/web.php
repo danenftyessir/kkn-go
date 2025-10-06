@@ -263,3 +263,111 @@ Route::prefix('api')->name('api.')->group(function () {
         })->name('problems.view');
     });
 });
+
+// TAMBAHKAN DI AKHIR FILE routes/web.php UNTUK DEBUG
+// HAPUS SETELAH MASALAH SELESAI!
+
+if (app()->environment('local')) {
+    // route untuk test password hash
+    Route::get('/test-password', function() {
+        $testPassword = 'password123';
+        $hashed = Hash::make($testPassword);
+        
+        return response()->json([
+            'original_password' => $testPassword,
+            'hashed' => $hashed,
+            'check_result' => Hash::check($testPassword, $hashed),
+            'bcrypt_rounds' => config('hashing.bcrypt.rounds', 10),
+        ]);
+    });
+
+    // route untuk test user pertama
+    Route::get('/test-user', function() {
+        $student = \App\Models\Student::with('user')->first();
+        
+        if (!$student) {
+            return response()->json(['error' => 'Tidak ada student. Jalankan seeder dulu!']);
+        }
+
+        $user = $student->user;
+        $testPassword = 'password123';
+        
+        return response()->json([
+            'user_info' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'username' => $user->username,
+                'user_type' => $user->user_type,
+                'is_active' => $user->is_active,
+                'email_verified_at' => $user->email_verified_at,
+            ],
+            'password_hash' => $user->password,
+            'password_check_result' => Hash::check($testPassword, $user->password),
+            'test_credentials' => [
+                'email' => $user->email,
+                'username' => $user->username,
+                'password' => $testPassword,
+            ],
+        ]);
+    });
+
+    // route untuk test auth attempt langsung
+    Route::get('/test-auth/{username}', function($username) {
+        $user = \App\Models\User::where('username', $username)->first();
+        
+        if (!$user) {
+            return response()->json(['error' => 'User tidak ditemukan']);
+        }
+
+        $testPassword = 'password123';
+        
+        // test dengan email
+        $emailAttempt = Auth::attempt([
+            'email' => $user->email,
+            'password' => $testPassword,
+        ]);
+
+        // test dengan username
+        $usernameAttempt = Auth::attempt([
+            'username' => $user->username,
+            'password' => $testPassword,
+        ]);
+
+        return response()->json([
+            'user' => [
+                'email' => $user->email,
+                'username' => $user->username,
+                'is_active' => $user->is_active,
+                'email_verified' => $user->email_verified_at ? 'yes' : 'no',
+            ],
+            'password_check' => Hash::check($testPassword, $user->password),
+            'auth_attempt_email' => $emailAttempt,
+            'auth_attempt_username' => $usernameAttempt,
+            'currently_authed' => Auth::check(),
+            'authed_user_id' => Auth::id(),
+        ]);
+    });
+
+    // route untuk list semua user
+    Route::get('/list-users', function() {
+        $students = \App\Models\User::where('user_type', 'student')->limit(5)->get();
+        $institutions = \App\Models\User::where('user_type', 'institution')->limit(5)->get();
+        
+        return response()->json([
+            'students' => $students->map(fn($u) => [
+                'email' => $u->email,
+                'username' => $u->username,
+                'is_active' => $u->is_active,
+                'verified' => $u->email_verified_at ? 'yes' : 'no',
+            ]),
+            'institutions' => $institutions->map(fn($u) => [
+                'email' => $u->email,
+                'username' => $u->username,
+                'is_active' => $u->is_active,
+                'verified' => $u->email_verified_at ? 'yes' : 'no',
+            ]),
+            'total_users' => \App\Models\User::count(),
+        ]);
+    });
+}
