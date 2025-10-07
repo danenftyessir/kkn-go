@@ -264,9 +264,6 @@ Route::prefix('api')->name('api.')->group(function () {
     });
 });
 
-// TAMBAHKAN DI AKHIR FILE routes/web.php UNTUK DEBUG
-// HAPUS SETELAH MASALAH SELESAI!
-
 if (app()->environment('local')) {
     // route untuk test password hash
     Route::get('/test-password', function() {
@@ -371,3 +368,21 @@ if (app()->environment('local')) {
         ]);
     });
 }
+
+use Illuminate\Support\Facades\DB;
+
+Route::get('/test-db-connection', function () {
+    try {
+        DB::connection()->getPdo();
+        // Coba query sederhana untuk memastikan tabel 'users' ada
+        $user = DB::table('users')->first();
+        if ($user) {
+            return 'Koneksi ke database BERHASIL dan tabel users ditemukan.';
+        } else {
+            return 'Koneksi ke database BERHASIL, tetapi tidak ada data di tabel users. Jalankan seeder.';
+        }
+    } catch (\Exception $e) {
+        // Jika gagal, tampilkan pesan error yang sebenarnya
+        die("Gagal terhubung ke database. Error: " . $e->getMessage());
+    }
+});
