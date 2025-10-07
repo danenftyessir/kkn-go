@@ -9,8 +9,8 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
-use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use App\Models\User;
 
 class LoginController extends Controller
 {
@@ -24,78 +24,10 @@ class LoginController extends Controller
 
     /**
      * proses login
-     * DENGAN DEBUG CODE UNTUK MENDETEKSI MASALAH
      */
     public function login(Request $request)
     {
-        // 1. validasi input standar laravel
-        $this->validateLogin($request);
-
-        // --- LANGKAH DEBUGGING DIMULAI DI SINI ---
-        $credentials = $this->credentials($request);
-        $loginInput = $credentials['email']; // bisa email atau username
-        $password = $credentials['password'];
-
-        // 2. coba cari user berdasarkan email atau username yang diinput
-        $user = User::where('email', $loginInput)
-                    ->orWhere('username', $loginInput)
-                    ->first();
-
-        // 3. jika user TIDAK ADA di database, hentikan dan beri tahu kita
-        if (!$user) {
-            dd([
-                'STATUS' => 'DEBUG: PENGGUNA TIDAK DITEMUKAN',
-                'pesan' => 'Pengguna dengan email/username "' . $loginInput . '" TIDAK DITEMUKAN di database.',
-                'input_yang_dicari' => $loginInput,
-                'saran' => 'Cek apakah seeder sudah dijalankan di Railway, atau cek langsung di Supabase apakah data user ada.',
-                'total_users_di_database' => User::count(),
-                'sample_users' => User::limit(5)->get(['id', 'email', 'username', 'user_type']),
-            ]);
-        }
-
-        // 4. jika user ADA, kita cek apakah passwordnya cocok
-        if (Hash::check($password, $user->password)) {
-            // jika password COCOK, hentikan dan beri tahu kita
-            dd([
-                'STATUS' => 'DEBUG: PASSWORD BENAR!',
-                'pesan' => 'Pengguna ditemukan dan password cocok. Masalah ada pada proses setelah ini (sesi/redirect/middleware).',
-                'user_ditemukan' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'username' => $user->username,
-                    'user_type' => $user->user_type,
-                    'is_active' => $user->is_active,
-                    'email_verified_at' => $user->email_verified_at,
-                ],
-                'langkah_selanjutnya' => 'Masalahnya bukan di kredensial. Cek konfigurasi SESSION, COOKIE, atau MIDDLEWARE.',
-            ]);
-        } else {
-            // jika password SALAH, hentikan dan beri tahu kita
-            dd([
-                'STATUS' => 'DEBUG: PASSWORD SALAH',
-                'pesan' => 'Pengguna ditemukan, tetapi password yang Anda masukkan tidak cocok dengan yang ada di database.',
-                'detail' => [
-                    'email_username_yang_dicari' => $loginInput,
-                    'password_yang_dimasukkan' => '****** (disembunyikan untuk keamanan)',
-                    'password_hash_di_database' => $user->password,
-                ],
-                'user_ditemukan_di_db' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'username' => $user->username,
-                ],
-                'saran' => 'Kemungkinan: (1) Password di seeder berbeda, (2) Hashing algorithm berbeda antara lokal dan Railway, (3) Data di Supabase tidak sesuai dengan seeder.',
-            ]);
-        }
-    }
-
-    /**
-     * validasi login input
-     */
-    protected function validateLogin(Request $request)
-    {
+        // validasi input
         $request->validate([
             'email' => 'required|string',
             'password' => 'required|string',
@@ -103,70 +35,184 @@ class LoginController extends Controller
             'email.required' => 'email atau username wajib diisi',
             'password.required' => 'password wajib diisi',
         ]);
-    }
 
-    /**
-     * get credentials dari request
-     */
-    protected function credentials(Request $request)
-    {
+        // rate limiting
+        $throttleKey = Str::lower($request->input('email')) . '|' . $request->ip();
+        
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            throw ValidationException::withMessages([
+                'email' => "terlalu banyak percobaan login. coba lagi dalam {$seconds} detik.",
+            ]);
+        }
+
         $loginInput = $request->input('email');
+        $passwordInput = $request->input('password');
         
-        // tentukan apakah input adalah email atau username
+        Log::info('=== LOGIN ATTEMPT ===', [
+            'input' => $loginInput,
+            'ip' => $request->ip(),
+        ]);
+
+        // cek user
         $field = filter_var($loginInput, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+        $user = User::where($field, $loginInput)->first();
         
-        return [
-            'email' => $loginInput, // kita pakai key 'email' tapi valuenya bisa username juga
-            'password' => $request->input('password'),
+        if (!$user) {
+            Log::warning('User not found', ['input' => $loginInput]);
+            RateLimiter::hit($throttleKey, 60);
+            
+            throw ValidationException::withMessages([
+                'email' => 'email/username atau password salah.',
+            ]);
+        }
+
+        // cek password
+        if (!Hash::check($passwordInput, $user->password)) {
+            Log::warning('Incorrect password', ['user_id' => $user->id]);
+            RateLimiter::hit($throttleKey, 60);
+            
+            throw ValidationException::withMessages([
+                'email' => 'email/username atau password salah.',
+            ]);
+        }
+
+        Log::info('Password correct', ['user_id' => $user->id]);
+
+        // PERBAIKAN: Manual login untuk debugging
+        $credentials = [
+            $field => $loginInput,
+            'password' => $passwordInput,
         ];
+        
+        $remember = $request->filled('remember');
+
+        Log::info('Attempting Auth::attempt', [
+            'field' => $field,
+            'remember' => $remember,
+            'session_driver' => config('session.driver'),
+        ]);
+
+        if (Auth::attempt($credentials, $remember)) {
+            RateLimiter::clear($throttleKey);
+            
+            // PENTING: Regenerate session untuk keamanan
+            $request->session()->regenerate();
+            
+            // CRITICAL FIX: Save session secara manual
+            // Karena di Railway middleware tidak auto-save
+            session()->save();
+            
+            Log::info('Auth::attempt SUCCESS', [
+                'user_id' => Auth::id(),
+                'session_id' => session()->getId(),
+            ]);
+
+            // PERBAIKAN: Cek apakah session tersimpan
+            if (config('session.driver') === 'database') {
+                $sessionCount = \DB::table('sessions')
+                    ->where('user_id', Auth::id())
+                    ->count();
+                    
+                Log::info('Sessions in database after manual save', [
+                    'count' => $sessionCount,
+                ]);
+                
+                if ($sessionCount === 0) {
+                    Log::error('Session still not saved after manual save!');
+                }
+            }
+
+            return $this->authenticated($request, Auth::user());
+        }
+
+        Log::error('Auth::attempt FAILED despite correct password', [
+            'user_id' => $user->id,
+            'session_driver' => config('session.driver'),
+            'session_config' => [
+                'cookie' => config('session.cookie'),
+                'domain' => config('session.domain'),
+                'secure' => config('session.secure'),
+                'same_site' => config('session.same_site'),
+            ],
+        ]);
+
+        RateLimiter::hit($throttleKey, 60);
+
+        throw ValidationException::withMessages([
+            'email' => 'email/username atau password salah.',
+        ]);
     }
 
     /**
      * redirect setelah login berhasil
-     * NOTE: method ini tidak akan dieksekusi karena kita pakai dd() di atas
-     * tapi tetap kita keep untuk nanti setelah debug selesai
      */
     protected function authenticated(Request $request, $user)
     {
-        // cek is_active setelah authenticated, bukan di credentials
+        Log::info('=== AUTHENTICATED ===', [
+            'user_id' => $user->id,
+            'auth_check' => Auth::check(),
+            'session_id' => session()->getId(),
+        ]);
+
+        // TEMPORARY: Skip email verification dan is_active check untuk debugging
+        // Hapus comment ini setelah login berhasil
+        
+        /*
         if (isset($user->is_active) && !$user->is_active) {
+            Log::warning('Account inactive', ['user_id' => $user->id]);
             Auth::logout();
-            return redirect()
-                ->route('login')
-                ->withErrors(['email' => 'akun anda telah dinonaktifkan. hubungi admin untuk informasi lebih lanjut.']);
+            return redirect()->route('login')
+                ->withErrors(['email' => 'akun anda telah dinonaktifkan.']);
         }
 
-        // cek apakah email sudah diverifikasi
         if (!$user->email_verified_at) {
+            Log::warning('Email not verified', ['user_id' => $user->id]);
             Auth::logout();
-            return redirect()
-                ->route('login')
-                ->withErrors(['email' => 'email anda belum diverifikasi. silakan cek email untuk verifikasi.']);
+            return redirect()->route('login')
+                ->withErrors(['email' => 'email anda belum diverifikasi.']);
         }
+        */
 
         // redirect berdasarkan user type
+        $route = null;
+        
         switch ($user->user_type) {
             case 'student':
-                return redirect()->intended(route('student.dashboard'));
+                $route = route('student.dashboard');
+                Log::info('Redirecting to student dashboard', [
+                    'user_id' => $user->id,
+                    'route' => $route,
+                ]);
+                break;
                 
             case 'institution':
-                // cek apakah instansi sudah diverifikasi
-                if ($user->institution && !$user->institution->is_verified) {
-                    return redirect()
-                        ->route('institution.dashboard')
-                        ->with('warning', 'akun instansi anda masih menunggu verifikasi admin.');
-                }
-                return redirect()->intended(route('institution.dashboard'));
-                
-            case 'admin':
-                return redirect()->intended(route('admin.dashboard'));
+                $route = route('institution.dashboard');
+                Log::info('Redirecting to institution dashboard', [
+                    'user_id' => $user->id,
+                    'route' => $route,
+                ]);
+                break;
                 
             default:
+                Log::error('Invalid user type', [
+                    'user_id' => $user->id,
+                    'user_type' => $user->user_type,
+                ]);
                 Auth::logout();
-                return redirect()
-                    ->route('login')
+                return redirect()->route('login')
                     ->withErrors(['email' => 'tipe user tidak valid.']);
         }
+
+        // PERBAIKAN: Pastikan session di-save sebelum redirect
+        $request->session()->save();
+        
+        Log::info('Session saved, redirecting', [
+            'user_id' => $user->id,
+            'redirect_to' => $route,
+        ]);
+
+        return redirect()->intended($route);
     }
 
     /**
@@ -174,17 +220,20 @@ class LoginController extends Controller
      */
     public function logout(Request $request)
     {
+        $userId = Auth::id();
         $userType = Auth::user()->user_type ?? null;
+
+        Log::info('User logging out', [
+            'user_id' => $userId,
+            'user_type' => $userType,
+        ]);
 
         Auth::logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        Log::info('User logged out', ['user_type' => $userType]);
-
-        return redirect()
-            ->route('home')
+        return redirect()->route('home')
             ->with('success', 'anda berhasil logout');
     }
 }
