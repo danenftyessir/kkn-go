@@ -153,7 +153,7 @@ class DummyDataSeeder extends Seeder
                 'name' => $firstName . ' ' . $lastName,
                 'email' => $email,
                 'username' => $username,
-                'password' => Hash::make('password123'),
+                'password' => Hash::make(value: 'password123'),
                 'user_type' => 'student',
                 'is_active' => true,
                 'email_verified_at' => now(),
