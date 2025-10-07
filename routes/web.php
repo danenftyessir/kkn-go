@@ -386,3 +386,29 @@ Route::get('/test-db-connection', function () {
         die("Gagal terhubung ke database. Error: " . $e->getMessage());
     }
 });
+
+use App\Models\User;
+
+Route::get('/final-db-check', function () {
+    try {
+        // Ambil semua detail koneksi yang sedang digunakan oleh aplikasi
+        $connectionDetails = DB::connection()->getConfig();
+        
+        // Hitung jumlah user di database yang terhubung
+        $userCount = User::count();
+        
+        // Tampilkan semua informasinya
+        dd([
+            'status' => 'KONEKSI DATABASE AKTIF',
+            'host' => $connectionDetails['host'],
+            'port' => $connectionDetails['port'],
+            'database' => $connectionDetails['database'],
+            'username' => $connectionDetails['username'],
+            'total_users_ditemukan' => $userCount,
+        ]);
+
+    } catch (\Exception $e) {
+        // Jika gagal, tampilkan pesan error
+        die("Gagal terhubung ke database. Error: " . $e->getMessage());
+    }
+});
