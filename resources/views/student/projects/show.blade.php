@@ -311,7 +311,7 @@
                     <div class="space-y-3 text-sm">
                         <div>
                             <p class="text-gray-600 mb-1">Durasi</p>
-                            <p class="font-semibold text-gray-900">{{ $project->duration_days }} hari</p>
+                            <p class="font-semibold text-gray-900">{{ $project->duration_days ?? $project->start_date->diffInDays($project->end_date) }} hari</p>
                         </div>
                         <div>
                             <p class="text-gray-600 mb-1">Lokasi</p>
@@ -323,7 +323,17 @@
                             <div>
                                 <p class="text-gray-600 mb-2">Kategori SDG</p>
                                 <div class="flex flex-wrap gap-1">
-                                    @foreach($project->problem->sdg_categories as $sdg)
+                                    {{-- ✅ PERBAIKAN: tambahkan safety check untuk sdg_categories --}}
+                                    @php
+                                        // pastikan sdg_categories adalah array
+                                        $sdgCategories = is_array($project->problem->sdg_categories) 
+                                            ? $project->problem->sdg_categories 
+                                            : (is_string($project->problem->sdg_categories) 
+                                                ? json_decode($project->problem->sdg_categories, true) ?? [] 
+                                                : []);
+                                    @endphp
+                                    
+                                    @foreach($sdgCategories as $sdg)
                                         <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">SDG {{ $sdg }}</span>
                                     @endforeach
                                 </div>
@@ -337,13 +347,19 @@
                     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 fade-in-up" style="animation-delay: 0.25s;">
                         <h3 class="font-semibold text-gray-900 mb-4">Impact Metrics</h3>
                         <div class="space-y-4">
+                            @php
+                                // pastikan impact_metrics adalah array
+                                $impactMetrics = is_array($project->impact_metrics) 
+                                    ? $project->impact_metrics 
+                                    : json_decode($project->impact_metrics, true) ?? [];
+                            @endphp
                             <div class="text-center p-4 bg-blue-50 rounded-lg">
-                                <p class="text-3xl font-bold text-blue-600">{{ $project->impact_metrics['beneficiaries'] ?? 0 }}</p>
+                                <p class="text-3xl font-bold text-blue-600">{{ $impactMetrics['beneficiaries'] ?? 0 }}</p>
                                 <p class="text-sm text-gray-600 mt-1">Penerima Manfaat</p>
                             </div>
                             <div class="text-center p-4 bg-green-50 rounded-lg">
-                                <p class="text-3xl font-bold text-green-600">{{ $project->impact_metrics['activities'] ?? 0 }}</p>
-                                <p class="text-sm text-gray-600 mt-1">Kegiatan Terlaksana</p>
+                                <p class="text-3xl font-bold text-green-600">{{ $impactMetrics['activities'] ?? 0 }}</p>
+                                <p class="text-sm text-gray-600 mt-1">Kegiatan</p>
                             </div>
                         </div>
                     </div>

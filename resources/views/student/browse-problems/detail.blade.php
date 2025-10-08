@@ -10,7 +10,7 @@
         <nav class="mb-6" aria-label="Breadcrumb">
             <ol class="flex items-center space-x-2 text-sm text-gray-600">
                 <li>
-                    <a href="{{ route('student.browse-problems') }}" class="hover:text-blue-600 transition-colors">
+                    <a href="{{ route('student.browse-problems.index') }}" class="hover:text-blue-600 transition-colors">
                         Browse Problems
                     </a>
                 </li>

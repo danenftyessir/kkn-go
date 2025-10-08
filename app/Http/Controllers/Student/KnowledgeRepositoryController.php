@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\Document;
 use App\Models\Province;
+use App\Models\Institution;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -85,7 +86,7 @@ class KnowledgeRepositoryController extends Controller
             ->limit(3)
             ->get();
 
-        // statistik untuk cards
+        // ✅ PERBAIKAN: tambahkan total_institutions ke stats
         $stats = [
             'total_documents' => Document::where('is_public', true)
                                         ->where('status', 'approved')
@@ -96,6 +97,10 @@ class KnowledgeRepositoryController extends Controller
             'total_views' => Document::where('is_public', true)
                                     ->where('status', 'approved')
                                     ->sum('view_count'),
+            'total_institutions' => Document::where('is_public', true)
+                                           ->where('status', 'approved')
+                                           ->distinct('institution_name')
+                                           ->count('institution_name'),
         ];
 
         // data untuk filters
@@ -180,56 +185,5 @@ class KnowledgeRepositoryController extends Controller
 
             return back()->with('error', 'Terjadi kesalahan saat mengunduh file.');
         }
-    }
-
-    /**
-     * generate citation untuk dokumen
-     */
-    public function generateCitation(Request $request, $id)
-    {
-        $document = Document::findOrFail($id);
-        $style = $request->get('style', 'apa');
-
-        $authorName = $document->author_name ?? 'Unknown Author';
-        $title = $document->title;
-        $year = $document->year ?? date('Y');
-        $institution = $document->institution_name ?? 'Unknown Institution';
-
-        // generate citation berdasarkan style
-        switch ($style) {
-            case 'mla':
-                // format MLA: Author. "Title." Year.
-                $citation = "{$authorName}. \"{$title}.\" {$year}. {$institution}.";
-                break;
-
-            case 'ieee':
-                // format IEEE: Author, "Title," Year.
-                $citation = "{$authorName}, \"{$title},\" {$institution}, {$year}.";
-                break;
-
-            case 'apa':
-            default:
-                // format APA: Author. (Year). Title. Institution.
-                $citation = "{$authorName}. ({$year}). {$title}. {$institution}.";
-                break;
-        }
-
-        return response()->json([
-            'success' => true,
-            'citation' => $citation,
-            'style' => $style
-        ]);
-    }
-
-    /**
-     * bookmark dokumen (untuk fitur future)
-     */
-    public function bookmark($id)
-    {
-        // implementasi bookmark jika diperlukan
-        return response()->json([
-            'success' => true,
-            'message' => 'Dokumen berhasil di-bookmark'
-        ]);
     }
 }

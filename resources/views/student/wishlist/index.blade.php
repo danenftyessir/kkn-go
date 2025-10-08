@@ -82,7 +82,8 @@
                     <span class="px-4 py-2 bg-blue-100 text-blue-800 rounded-lg font-semibold">
                         {{ $wishlists->total() }} Proyek Tersimpan
                     </span>
-                    <a href="{{ route('student.browse-problems') }}" 
+                    {{-- ✅ PERBAIKAN: ganti route('student.browse-problems') menjadi route('student.browse-problems.index') --}}
+                    <a href="{{ route('student.browse-problems.index') }}" 
                        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 hover:shadow-lg">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -93,73 +94,63 @@
             </div>
         </div>
 
-        <!-- wishlist content -->
-        @if($wishlists->count() > 0)
+        @if($wishlists->isEmpty())
+            <!-- empty state -->
+            <div class="bg-white rounded-xl shadow-sm p-12 text-center slide-in-up">
+                <div class="inline-flex items-center justify-center w-20 h-20 bg-blue-100 rounded-full mb-4">
+                    <svg class="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Wishlist Masih Kosong</h3>
+                <p class="text-gray-600 mb-6">Mulai eksplorasi dan simpan proyek yang Anda minati!</p>
+                {{-- ✅ PERBAIKAN --}}
+                <a href="{{ route('student.browse-problems.index') }}" 
+                   class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 hover:shadow-lg">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    Jelajahi Proyek
+                </a>
+            </div>
+        @else
+            <!-- wishlist grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                @foreach($wishlists as $index => $wishlist)
-                <div class="wishlist-card bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden" 
-                     style="animation-delay: {{ $index * 0.1 }}s;"
-                     x-data="wishlistCard({{ $wishlist->id }}, {{ $wishlist->problem_id }})">
+                @foreach($wishlists as $wishlist)
+                <div class="wishlist-card bg-white rounded-xl shadow-sm hover:shadow-lg overflow-hidden border border-gray-100 slide-in-up" 
+                     style="animation-delay: {{ $loop->index * 0.1 }}s">
                     
-                    <!-- problem image -->
-                    <div class="relative h-48 overflow-hidden bg-gray-100">
-                        @if($wishlist->problem->images->isNotEmpty())
-                            <img src="{{ asset('storage/' . $wishlist->problem->images->first()->image_path) }}" 
-                                 alt="{{ $wishlist->problem->title }}"
-                                 class="w-full h-full object-cover"
-                                 loading="lazy">
-                        @else
-                            <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-green-500">
-                                <svg class="w-16 h-16 text-white opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                </svg>
-                            </div>
-                        @endif
-                        
-                        <!-- saved badge -->
-                        <div class="absolute top-3 left-3">
-                            <span class="heart-beat inline-flex items-center px-3 py-1 bg-red-500 text-white text-xs font-semibold rounded-full shadow-lg">
-                                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
-                                </svg>
-                                Tersimpan
-                            </span>
-                        </div>
-
-                        <!-- quick actions -->
-                        <div class="absolute top-3 right-3 flex space-x-2">
-                            <button @click="confirmDelete" 
-                                    class="delete-btn p-2 bg-white rounded-full shadow-lg hover:bg-red-50 transition-colors"
-                                    title="Hapus dari wishlist">
-                                <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                </svg>
-                            </button>
-                        </div>
-
-                        <!-- status badges -->
-                        @if($wishlist->problem->is_urgent || $wishlist->problem->is_featured)
-                        <div class="absolute bottom-3 left-3 flex space-x-2">
-                            @if($wishlist->problem->is_featured)
-                            <span class="px-2 py-1 bg-yellow-500 text-white text-xs font-semibold rounded-full shadow-lg">
-                                ⭐ Unggulan
-                            </span>
-                            @endif
-                            @if($wishlist->problem->is_urgent)
-                            <span class="px-2 py-1 bg-red-500 text-white text-xs font-semibold rounded-full shadow-lg animate-pulse">
-                                🔥 Mendesak
-                            </span>
-                            @endif
-                        </div>
-                        @endif
+                    <!-- saved badge -->
+                    <div class="absolute top-3 right-3 z-10">
+                        <span class="px-3 py-1.5 bg-red-500 text-white text-xs font-semibold rounded-full shadow-lg heart-beat flex items-center">
+                            <svg class="w-3 h-3 mr-1 fill-current" viewBox="0 0 24 24">
+                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>
+                            </svg>
+                            Tersimpan
+                        </span>
                     </div>
+
+                    <!-- thumbnail -->
+                    @if($wishlist->problem->images->isNotEmpty())
+                        <div class="relative h-48 overflow-hidden bg-gradient-to-br from-blue-500 to-green-500">
+                            <img src="{{ $wishlist->problem->images->first()->image_url }}" 
+                                 alt="{{ $wishlist->problem->title }}"
+                                 class="w-full h-full object-cover hover:scale-110 transition-transform duration-500">
+                        </div>
+                    @else
+                        <div class="h-48 bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center">
+                            <svg class="w-20 h-20 text-white opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                            </svg>
+                        </div>
+                    @endif
 
                     <!-- content -->
                     <div class="p-5">
                         <!-- institution -->
                         <div class="flex items-center mb-3">
                             @if($wishlist->problem->institution->logo_path)
-                            <img src="{{ asset('storage/' . $wishlist->problem->institution->logo_path) }}" 
+                            <img src="{{ storage_url($wishlist->problem->institution->logo_path) }}" 
                                  alt="{{ $wishlist->problem->institution->name }}"
                                  class="w-8 h-8 rounded-full object-cover mr-2">
                             @else
@@ -193,58 +184,30 @@
                             </div>
                             <div class="flex items-center text-sm text-gray-600">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                {{ $wishlist->problem->duration_months }} bulan
-                            </div>
-                            @php
-                                $daysLeft = now()->diffInDays($wishlist->problem->application_deadline, false);
-                            @endphp
-                            <div class="flex items-center text-sm {{ $daysLeft <= 7 ? 'text-red-600 font-semibold' : 'text-gray-600' }}">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                 </svg>
-                                Deadline: {{ abs($daysLeft) }} hari {{ $daysLeft >= 0 ? 'lagi' : 'yang lalu' }}
+                                Deadline: {{ $wishlist->problem->application_deadline->format('d M Y') }}
                             </div>
                         </div>
 
-                        <!-- personal notes -->
+                        <!-- notes (if any) -->
                         @if($wishlist->notes)
-                        <div class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                            <p class="text-sm text-gray-700">
-                                <span class="font-semibold text-yellow-800">Catatan:</span>
-                                {{ $wishlist->notes }}
-                            </p>
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                            <p class="text-xs text-gray-600 mb-1 font-semibold">Catatan Saya:</p>
+                            <p class="text-sm text-gray-700">{{ $wishlist->notes }}</p>
                         </div>
                         @endif
 
-                        <!-- notes textarea (collapsible) -->
-                        <div x-show="showNotesInput" 
-                             x-transition
-                             class="mb-4">
-                            <textarea x-model="notes"
-                                      @blur="saveNotes"
-                                      placeholder="Tambahkan catatan pribadi..."
-                                      rows="2"
-                                      class="notes-textarea w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"></textarea>
-                        </div>
-
-                        <!-- saved date -->
-                        <p class="text-xs text-gray-500 mb-4">
-                            Disimpan {{ $wishlist->created_at->diffForHumans() }}
-                        </p>
-
                         <!-- actions -->
-                        <div class="flex space-x-2">
-                            <a href="{{ route('student.problems.show', $wishlist->problem->id) }}" 
-                               class="flex-1 px-4 py-2 bg-blue-600 text-white text-sm font-semibold text-center rounded-lg hover:bg-blue-700 transition-all duration-200 hover:shadow-lg">
+                        <div class="flex items-center gap-2 pt-4 border-t border-gray-100">
+                            <a href="{{ route('student.browse-problems.detail', $wishlist->problem->id) }}" 
+                               class="flex-1 text-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-all duration-200 hover:shadow-md">
                                 Lihat Detail
                             </a>
-                            <button @click="showNotesInput = !showNotesInput"
-                                    class="px-4 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200 transition-colors"
-                                    title="Tambah catatan">
+                            <button onclick="removeFromWishlist({{ $wishlist->id }})" 
+                                    class="delete-btn px-4 py-2 border border-red-300 text-red-600 text-sm font-semibold rounded-lg hover:bg-red-50 hover:border-red-500 transition-all duration-200">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                 </svg>
                             </button>
                         </div>
@@ -254,26 +217,8 @@
             </div>
 
             <!-- pagination -->
-            @if($wishlists->hasPages())
             <div class="mt-8">
-                {{ $wishlists->links() }}
-            </div>
-            @endif
-        @else
-            <!-- empty state -->
-            <div class="slide-in-up bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
-                <svg class="mx-auto h-24 w-24 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                </svg>
-                <h3 class="text-xl font-bold text-gray-900 mb-2">Wishlist Kosong</h3>
-                <p class="text-gray-600 mb-6">Anda belum menyimpan proyek apapun. Mulai jelajahi dan simpan proyek yang menarik!</p>
-                <a href="{{ route('student.browse-problems') }}" 
-                   class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 hover:shadow-lg">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
-                    Jelajahi Proyek
-                </a>
+                {{ $wishlists->links('partials.pagination') }}
             </div>
         @endif
     </div>
@@ -282,93 +227,42 @@
 
 @push('scripts')
 <script>
-// alpine.js component untuk wishlist page
+// alpine component untuk wishlist page
 function wishlistPage() {
     return {
         init() {
-            // animasi entrance
-            this.animateCards();
-        },
-        
-        animateCards() {
-            const cards = document.querySelectorAll('.wishlist-card');
-            cards.forEach((card, index) => {
-                card.classList.add('slide-in-up');
-            });
+            console.log('Wishlist page initialized');
         }
-    };
+    }
 }
 
-// alpine.js component untuk individual wishlist card
-function wishlistCard(wishlistId, problemId) {
-    return {
-        notes: '',
-        showNotesInput: false,
-        
-        confirmDelete() {
-            if (confirm('Apakah Anda yakin ingin menghapus proyek ini dari wishlist?')) {
-                this.deleteWishlist();
+// fungsi untuk remove dari wishlist
+async function removeFromWishlist(wishlistId) {
+    if (!confirm('Apakah Anda yakin ingin menghapus proyek ini dari wishlist?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/student/wishlist/${wishlistId}/remove`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
             }
-        },
-        
-        async deleteWishlist() {
-            try {
-                const response = await fetch(`/student/wishlist/${problemId}/toggle`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    }
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    // animasi fade out
-                    this.$el.style.transition = 'all 0.3s ease';
-                    this.$el.style.opacity = '0';
-                    this.$el.style.transform = 'scale(0.9)';
-                    
-                    // reload setelah animasi
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 300);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Terjadi kesalahan. Silakan coba lagi.');
-            }
-        },
-        
-        async saveNotes() {
-            if (!this.notes.trim()) return;
-            
-            try {
-                const response = await fetch(`/student/wishlist/${problemId}/notes`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    },
-                    body: JSON.stringify({ notes: this.notes })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    // tutup input setelah save
-                    this.showNotesInput = false;
-                    
-                    // reload untuk update tampilan
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 300);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-            }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // reload page untuk update tampilan
+            window.location.reload();
+        } else {
+            alert(data.message || 'Gagal menghapus dari wishlist');
         }
-    };
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Terjadi kesalahan saat menghapus dari wishlist');
+    }
 }
 </script>
 @endpush
