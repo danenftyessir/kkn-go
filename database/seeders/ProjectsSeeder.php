@@ -11,9 +11,10 @@ use App\Models\Review;
 use App\Models\Application;
 use App\Models\Student;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 /**
- * seeder untuk membuat data dummy projects, milestones, reports, documents, dan reviews
+ * seeder untuk membuat data projects, milestones, reports, documents, dan reviews
  * 
  * path: database/seeders/ProjectsSeeder.php
  * jalankan: php artisan db:seed --class=ProjectsSeeder
@@ -25,7 +26,7 @@ class ProjectsSeeder extends Seeder
      */
     public function run(): void
     {
-        // PERBAIKAN: tambahkan eager loading untuk mencegah lazy loading violation
+        // ambil aplikasi yang diterima dengan eager loading
         $acceptedApplications = Application::with([
             'problem',
             'problem.institution',
@@ -44,6 +45,26 @@ class ProjectsSeeder extends Seeder
 
         $this->command->info('Membuat data projects...');
 
+        // ambil file PDF dari supabase untuk final report
+        $pdfFiles = [];
+        try {
+            $allPdfFiles = Storage::disk('supabase')->files('documents/reports');
+            $pdfFiles = array_filter($allPdfFiles, function($file) {
+                return strtolower(pathinfo($file, PATHINFO_EXTENSION)) === 'pdf';
+            });
+            $pdfFiles = array_values($pdfFiles);
+            
+            if (!empty($pdfFiles)) {
+                $this->command->info('📄 Ditemukan ' . count($pdfFiles) . ' file PDF untuk final reports');
+            }
+        } catch (\Exception $e) {
+            $this->command->warn('⚠️  Tidak bisa mengakses PDF files dari Supabase: ' . $e->getMessage());
+            $this->command->info('💡 Projects akan dibuat tanpa final_report_path');
+            $this->command->info('💡 Fix Supabase credentials lalu jalankan: php artisan db:seed --class=DocumentsSeeder');
+        }
+
+        $pdfIndex = 0;
+
         foreach ($acceptedApplications as $application) {
             // buat project dari aplikasi yang diterima
             $problem = $application->problem;
@@ -52,6 +73,17 @@ class ProjectsSeeder extends Seeder
             
             // tentukan status project (80% completed, 20% active)
             $isCompleted = rand(1, 100) <= 80;
+            
+            // tentukan final report path (gunakan file real dari supabase jika ada)
+            $finalReportPath = null;
+            if ($isCompleted && !empty($pdfFiles)) {
+                // cycle through available PDF files
+                if ($pdfIndex >= count($pdfFiles)) {
+                    $pdfIndex = 0;
+                }
+                $finalReportPath = $pdfFiles[$pdfIndex];
+                $pdfIndex++;
+            }
             
             $project = Project::create([
                 'application_id' => $application->id,
@@ -66,34 +98,47 @@ class ProjectsSeeder extends Seeder
                 'actual_start_date' => $startDate->copy()->addDays(rand(0, 7)),
                 'actual_end_date' => $isCompleted ? $endDate->copy()->subDays(rand(0, 7)) : null,
                 'progress_percentage' => $isCompleted ? 100 : rand(30, 90),
-                'final_report_path' => $isCompleted ? 'projects/final-reports/dummy-report-' . $application->id . '.pdf' : null,
+                'final_report_path' => $finalReportPath,
                 'final_report_summary' => $isCompleted ? 'Ringkasan laporan akhir untuk proyek ' . $problem->title : null,
                 'submitted_at' => $isCompleted ? now()->subDays(rand(1, 30)) : null,
                 'rating' => $isCompleted ? rand(4, 5) : null,
                 'institution_review' => $isCompleted ? $this->getRandomReviewText() : null,
                 'reviewed_at' => $isCompleted ? now()->subDays(rand(1, 15)) : null,
-                'impact_metrics' => json_encode([
-                    'beneficiaries' => rand(50, 500),
-                    'activities' => rand(5, 30),
-                ]),
-                'is_portfolio_visible' => true,
-                'is_featured' => rand(1, 100) <= 20, // 20% featured
+                'role_in_team' => $this->getRandomRole(),
             ]);
 
-            // buat milestones
+            // buat milestones untuk project
             $this->createMilestones($project);
 
-            // buat reports (2-5 reports per project)
-            $this->createReports($project, rand(2, 5));
+            // buat progress reports
+            $this->createProgressReports($project);
 
-            // jika project completed, buat review dan document
+            // jika completed, buat review dan document
             if ($isCompleted) {
                 $this->createReview($project);
                 $this->createDocument($project);
             }
         }
 
-        $this->command->info('✓ ' . Project::count() . ' projects berhasil dibuat!');
+        $this->command->info('✅ Berhasil membuat ' . $acceptedApplications->count() . ' projects');
+    }
+
+    /**
+     * dapatkan random role in team
+     */
+    protected function getRandomRole(): string
+    {
+        $roles = [
+            'Project Leader',
+            'Field Coordinator',
+            'Documentation Specialist',
+            'Community Liaison',
+            'Technical Advisor',
+            'Research Analyst',
+            'Team Member',
+        ];
+
+        return $roles[array_rand($roles)];
     }
 
     /**
@@ -101,73 +146,90 @@ class ProjectsSeeder extends Seeder
      */
     protected function createMilestones(Project $project)
     {
-        $duration = $project->start_date->diffInMonths($project->end_date);
-        
         $milestones = [
             [
-                'title' => 'Orientasi dan Persiapan',
-                'description' => 'Pengenalan lokasi, koordinasi dengan instansi, dan persiapan program kerja',
-                'order' => 1,
+                'title' => 'Survei dan Pemetaan Masalah',
+                'description' => 'Melakukan survei lapangan dan identifikasi masalah utama',
                 'target_date' => $project->start_date->copy()->addWeeks(1),
-                'progress_percentage' => 100,
                 'status' => 'completed',
-                'completed_at' => $project->start_date->copy()->addWeeks(1),
             ],
             [
-                'title' => 'Pelaksanaan Program Utama',
-                'description' => 'Implementasi kegiatan sesuai rencana kerja yang telah disusun',
-                'order' => 2,
-                'target_date' => $project->start_date->copy()->addMonths(floor($duration * 0.7)),
-                'progress_percentage' => $project->status === 'completed' ? 100 : rand(50, 90),
-                'status' => $project->status === 'completed' ? 'completed' : 'in_progress',
-                'completed_at' => $project->status === 'completed' ? $project->start_date->copy()->addMonths(floor($duration * 0.7)) : null,
+                'title' => 'Perencanaan Program',
+                'description' => 'Menyusun rencana program dan strategi pelaksanaan',
+                'target_date' => $project->start_date->copy()->addWeeks(2),
+                'status' => $project->progress_percentage >= 40 ? 'completed' : 'in_progress',
             ],
             [
-                'title' => 'Evaluasi dan Pelaporan',
-                'description' => 'Evaluasi hasil program dan penyusunan laporan akhir',
-                'order' => 3,
-                'target_date' => $project->end_date->copy()->subWeeks(1),
-                'progress_percentage' => $project->status === 'completed' ? 100 : rand(0, 50),
+                'title' => 'Pelaksanaan Kegiatan Utama',
+                'description' => 'Implementasi program sesuai rencana yang telah disusun',
+                'target_date' => $project->start_date->copy()->addWeeks(6),
+                'status' => $project->progress_percentage >= 70 ? 'completed' : 'pending',
+            ],
+            [
+                'title' => 'Evaluasi dan Dokumentasi',
+                'description' => 'Evaluasi hasil kegiatan dan penyusunan laporan akhir',
+                'target_date' => $project->end_date,
                 'status' => $project->status === 'completed' ? 'completed' : 'pending',
-                'completed_at' => $project->status === 'completed' ? $project->end_date->copy()->subWeeks(1) : null,
             ],
         ];
 
         foreach ($milestones as $milestone) {
-            ProjectMilestone::create(array_merge(['project_id' => $project->id], $milestone));
+            ProjectMilestone::create([
+                'project_id' => $project->id,
+                'title' => $milestone['title'],
+                'description' => $milestone['description'],
+                'target_date' => $milestone['target_date'],
+                'status' => $milestone['status'],
+                'completed_at' => $milestone['status'] === 'completed' 
+                    ? $milestone['target_date']->copy()->subDays(rand(0, 3)) 
+                    : null,
+            ]);
         }
     }
 
     /**
-     * buat reports untuk project
+     * buat progress reports untuk project
      */
-/**
-     * buat reports untuk project
-     */
-    protected function createReports(Project $project, int $count)
+    protected function createProgressReports(Project $project)
     {
-        for ($i = 0; $i < $count; $i++) {
-            $type = ['weekly', 'monthly'][rand(0, 1)];
-            $weekNumber = $i + 1;
+        $reportCount = rand(2, 4);
+        
+        for ($i = 0; $i < $reportCount; $i++) {
+            // tentukan tipe report
+            $type = $i === 0 ? 'weekly' : ($i === $reportCount - 1 ? 'final' : 'monthly');
             
             ProjectReport::create([
                 'project_id' => $project->id,
-                'student_id' => $project->student_id, // PERBAIKAN: tambahkan student_id
+                'student_id' => $project->student_id,
                 'type' => $type,
-                'title' => ($type === 'weekly' ? "Laporan Mingguan - Minggu ke-{$weekNumber}" : "Laporan Bulanan - Bulan ke-{$weekNumber}"),
-                'summary' => "Ringkasan kegiatan {$type} untuk proyek {$project->title}. Pada periode ini telah dilakukan berbagai kegiatan sesuai rencana kerja.",
-                'activities' => "Detail kegiatan yang dilakukan:\n1. Sosialisasi program kepada masyarakat\n2. Pelaksanaan kegiatan utama\n3. Dokumentasi dan monitoring progress\n4. Koordinasi dengan tim dan institusi",
-                'challenges' => rand(1, 100) <= 50 ? "Kendala yang dihadapi: cuaca tidak mendukung dan keterbatasan sumber daya" : null,
-                'next_plans' => "Rencana selanjutnya: melanjutkan kegiatan sesuai jadwal dan melakukan evaluasi berkala",
+                'title' => $this->getReportTitle($type, $i + 1),
+                'summary' => 'Ringkasan kegiatan minggu/bulan ini untuk project ' . $project->title,
+                'activities' => 'Kegiatan yang telah dilaksanakan: sosialisasi program, koordinasi dengan masyarakat, dan pelaksanaan kegiatan lapangan.',
+                'challenges' => rand(1, 100) <= 70 ? 'Cuaca yang kurang mendukung dan keterbatasan akses transportasi.' : null,
+                'next_plans' => 'Melanjutkan kegiatan sesuai rencana dan melakukan evaluasi berkala.',
                 'period_start' => $project->start_date->copy()->addWeeks($i * ($type === 'weekly' ? 1 : 4)),
                 'period_end' => $project->start_date->copy()->addWeeks(($i + 1) * ($type === 'weekly' ? 1 : 4)),
-                'document_path' => rand(1, 100) <= 70 ? 'reports/documents/dummy-report-' . $project->id . '-' . $i . '.pdf' : null,
-                'photos' => json_encode(rand(1, 100) <= 60 ? ['reports/photos/photo-1.jpg', 'reports/photos/photo-2.jpg'] : []),
+                'document_path' => null,
+                'photos' => json_encode([]),
                 'status' => ['pending', 'reviewed', 'approved'][rand(0, 2)],
                 'institution_feedback' => rand(1, 100) <= 50 ? 'Laporan sudah baik, lanjutkan kegiatan dengan semangat!' : null,
                 'reviewed_at' => rand(1, 100) <= 50 ? now()->subDays(rand(1, 7)) : null,
             ]);
         }
+    }
+
+    /**
+     * dapatkan judul report berdasarkan tipe
+     */
+    protected function getReportTitle(string $type, int $number): string
+    {
+        $titles = [
+            'weekly' => "Laporan Mingguan #{$number}",
+            'monthly' => "Laporan Bulanan #{$number}",
+            'final' => 'Laporan Akhir Pelaksanaan Program',
+        ];
+
+        return $titles[$type] ?? "Laporan #{$number}";
     }
 
     /**
@@ -201,9 +263,6 @@ class ProjectsSeeder extends Seeder
     /**
      * buat document untuk knowledge repository
      */
-/**
-     * buat document untuk knowledge repository
-     */
     protected function createDocument(Project $project)
     {
         // load relasi yang dibutuhkan jika belum
@@ -212,12 +271,17 @@ class ProjectsSeeder extends Seeder
         $student = $project->student;
         $problem = $project->problem;
         
+        // hanya buat document jika project punya final report path
+        if (empty($project->final_report_path)) {
+            return;
+        }
+        
         Document::create([
             'project_id' => $project->id,
             'uploaded_by' => $student->user_id,
             'title' => 'Laporan Akhir: ' . $project->title,
             'description' => 'Dokumentasi lengkap hasil pelaksanaan program KKN dengan fokus pada ' . strtolower($problem->title),
-            'file_path' => 'documents/final-reports/report-' . $project->id . '.pdf',
+            'file_path' => $project->final_report_path, // gunakan path real dari supabase
             'file_type' => 'pdf',
             'file_size' => rand(1000000, 5000000), // 1-5 MB
             'categories' => $problem->sdg_categories,

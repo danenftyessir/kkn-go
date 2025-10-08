@@ -7,13 +7,10 @@ use App\Models\Province;
 use App\Models\Regency;
 use App\Models\Institution;
 use App\Models\Problem;
-use App\Models\ProblemImage;
 use Carbon\Carbon;
 
 /**
  * seeder untuk problems (proyek/masalah) dari berbagai instansi
- * NOTE: seeder ini hanya untuk problems, tidak seed provinces/regencies/universities
- * karena sudah di-seed oleh DummyDataSeeder
  * 
  * jalankan: php artisan db:seed --class=ProblemsSeeder
  */
@@ -33,7 +30,7 @@ class ProblemsSeeder extends Seeder
 
         $this->command->info('Seeding problems...');
 
-        // ambil data yang sudah ada dengan eager loading untuk menghindari lazy loading violation
+        // ambil data yang sudah ada dengan eager loading
         $institutions = Institution::with(['province', 'regency'])->get();
 
         if ($institutions->isEmpty()) {
@@ -69,167 +66,193 @@ class ProblemsSeeder extends Seeder
                 'background' => 'Tingkat kemiskinan di wilayah ini masih cukup tinggi. Masyarakat memerlukan pendampingan dalam mengembangkan usaha mikro dan kecil.',
                 'objectives' => 'Meningkatkan pendapatan masyarakat melalui pengembangan keterampilan dan akses pasar yang lebih luas.',
                 'scope' => 'Pelatihan keterampilan, pendampingan UMKM, dan fasilitasi akses permodalan.',
-                'sdg' => [1, 8],
-                'skills' => ['Manajemen', 'Marketing', 'Komunikasi', 'Pembukuan'],
-                'difficulty' => 'intermediate',
+                'sdg_categories' => json_encode(['no_poverty', 'decent_work']),
+                'required_skills' => json_encode(['Manajemen UMKM', 'Kewirausahaan', 'Marketing']),
+                'difficulty_level' => 'intermediate',
             ],
             // sdg 2: zero hunger
             [
-                'title' => 'Ketahanan Pangan Desa',
-                'description' => 'Program peningkatan ketahanan pangan melalui optimalisasi lahan pertanian dan diversifikasi tanaman pangan.',
-                'background' => 'Desa menghadapi tantangan ketahanan pangan akibat lahan pertanian yang terbatas dan monokultur.',
-                'objectives' => 'Meningkatkan produksi pangan lokal dan diversifikasi tanaman untuk ketahanan pangan berkelanjutan.',
-                'scope' => 'Survey lahan, pelatihan pertanian organik, dan pendampingan petani.',
-                'sdg' => [2, 12],
-                'skills' => ['Pertanian', 'Analisis Data', 'Penyuluhan'],
-                'difficulty' => 'beginner',
+                'title' => 'Program Ketahanan Pangan Desa',
+                'description' => 'Inisiatif peningkatan ketahanan pangan melalui optimalisasi lahan pertanian dan pengembangan sistem irigasi berkelanjutan.',
+                'background' => 'Produksi pangan lokal masih rendah dan bergantung pada pasokan dari luar daerah.',
+                'objectives' => 'Meningkatkan produksi pangan lokal dan kemandirian pangan masyarakat.',
+                'scope' => 'Pelatihan pertanian modern, pengembangan irigasi, dan diversifikasi tanaman.',
+                'sdg_categories' => json_encode(['zero_hunger', 'responsible_consumption']),
+                'required_skills' => json_encode(['Pertanian', 'Agribisnis', 'Teknologi Pertanian']),
+                'difficulty_level' => 'intermediate',
             ],
             // sdg 3: good health
             [
-                'title' => 'Edukasi Kesehatan Masyarakat',
-                'description' => 'Program edukasi kesehatan untuk meningkatkan kesadaran masyarakat tentang pola hidup sehat dan pencegahan penyakit.',
-                'background' => 'Tingkat kesadaran masyarakat tentang kesehatan masih rendah, diperlukan program edukasi berkelanjutan.',
-                'objectives' => 'Meningkatkan pengetahuan dan kesadaran masyarakat tentang kesehatan preventif.',
-                'scope' => 'Penyuluhan kesehatan, pembuatan media edukasi, dan program posyandu.',
-                'sdg' => [3],
-                'skills' => ['Kesehatan Masyarakat', 'Komunikasi', 'Desain Grafis'],
-                'difficulty' => 'beginner',
+                'title' => 'Edukasi Kesehatan dan Sanitasi',
+                'description' => 'Program sosialisasi pentingnya sanitasi, air bersih, dan pola hidup sehat untuk meningkatkan derajat kesehatan masyarakat.',
+                'background' => 'Masih banyak masyarakat yang belum memahami pentingnya sanitasi dan pola hidup sehat.',
+                'objectives' => 'Meningkatkan kesadaran masyarakat tentang kesehatan dan sanitasi.',
+                'scope' => 'Sosialisasi kesehatan, pembangunan MCK, dan edukasi gizi.',
+                'sdg_categories' => json_encode(['good_health', 'clean_water']),
+                'required_skills' => json_encode(['Kesehatan Masyarakat', 'Pendidikan', 'Komunikasi']),
+                'difficulty_level' => 'beginner',
             ],
             // sdg 4: quality education
             [
-                'title' => 'Peningkatan Literasi Digital',
-                'description' => 'Program peningkatan literasi digital untuk siswa dan guru di sekolah-sekolah desa.',
-                'background' => 'Era digital menuntut kemampuan literasi digital yang memadai. Namun akses dan pemahaman teknologi di desa masih terbatas.',
-                'objectives' => 'Meningkatkan kemampuan literasi digital masyarakat desa, khususnya siswa dan guru.',
-                'scope' => 'Pelatihan digital, pembuatan konten edukatif, dan pendampingan penggunaan teknologi.',
-                'sdg' => [4, 9],
-                'skills' => ['Teknologi Informasi', 'Pendidikan', 'Public Speaking'],
-                'difficulty' => 'intermediate',
+                'title' => 'Literasi Digital untuk Generasi Muda',
+                'description' => 'Program pengenalan teknologi informasi dan literasi digital untuk anak-anak usia sekolah di daerah pedesaan.',
+                'background' => 'Gap literasi digital antara desa dan kota masih tinggi, perlu peningkatan akses dan pengetahuan teknologi.',
+                'objectives' => 'Meningkatkan kemampuan literasi digital generasi muda.',
+                'scope' => 'Pelatihan komputer dasar, internet sehat, dan penggunaan aplikasi edukatif.',
+                'sdg_categories' => json_encode(['quality_education', 'reduced_inequalities']),
+                'required_skills' => json_encode(['Teknologi Informasi', 'Pendidikan', 'Komunikasi']),
+                'difficulty_level' => 'beginner',
+            ],
+            // sdg 5: gender equality
+            [
+                'title' => 'Pemberdayaan Perempuan Melalui Keterampilan',
+                'description' => 'Program pelatihan keterampilan untuk perempuan dalam bidang kerajinan tangan dan kewirausahaan.',
+                'background' => 'Partisipasi ekonomi perempuan masih rendah, perlu peningkatan keterampilan dan akses modal.',
+                'objectives' => 'Meningkatkan kemandirian ekonomi perempuan melalui pengembangan keterampilan.',
+                'scope' => 'Pelatihan menjahit, kerajinan, dan manajemen usaha kecil.',
+                'sdg_categories' => json_encode(['gender_equality', 'decent_work']),
+                'required_skills' => json_encode(['Kewirausahaan', 'Kerajinan', 'Manajemen Usaha']),
+                'difficulty_level' => 'intermediate',
             ],
             // sdg 6: clean water
             [
-                'title' => 'Akses Air Bersih Berkelanjutan',
-                'description' => 'Program penyediaan akses air bersih melalui pembangunan sistem distribusi air dan edukasi konservasi air.',
-                'background' => 'Masyarakat mengalami kesulitan akses air bersih, terutama di musim kemarau.',
-                'objectives' => 'Menyediakan akses air bersih yang berkelanjutan dan meningkatkan kesadaran konservasi air.',
-                'scope' => 'Survey sumber air, desain sistem distribusi, dan program konservasi air.',
-                'sdg' => [6, 11],
-                'skills' => ['Teknik Sipil', 'Analisis Data', 'Survei Lapangan'],
-                'difficulty' => 'advanced',
+                'title' => 'Akses Air Bersih dan Sanitasi',
+                'description' => 'Pembangunan infrastruktur air bersih dan fasilitas sanitasi untuk meningkatkan kualitas hidup masyarakat.',
+                'background' => 'Akses air bersih masih terbatas, banyak warga yang menggunakan sumber air tidak layak.',
+                'objectives' => 'Menyediakan akses air bersih yang layak untuk seluruh warga.',
+                'scope' => 'Pembangunan sumur bor, instalasi pipa, dan fasilitas MCK.',
+                'sdg_categories' => json_encode(['clean_water', 'good_health']),
+                'required_skills' => json_encode(['Teknik Sipil', 'Kesehatan Lingkungan', 'Manajemen Proyek']),
+                'difficulty_level' => 'advanced',
             ],
             // sdg 7: affordable energy
             [
-                'title' => 'Energi Terbarukan untuk Desa',
-                'description' => 'Implementasi energi terbarukan (solar panel) untuk penerangan dan kebutuhan energi masyarakat desa.',
-                'background' => 'Akses listrik masih terbatas dan biaya energi tinggi. Energi terbarukan menjadi solusi berkelanjutan.',
-                'objectives' => 'Menyediakan akses energi bersih dan terjangkau melalui pemanfaatan energi surya.',
-                'scope' => 'Studi kelayakan, instalasi solar panel, dan pelatihan maintenance.',
-                'sdg' => [7, 13],
-                'skills' => ['Teknik Elektro', 'Manajemen Proyek', 'Analisis Teknis'],
-                'difficulty' => 'advanced',
+                'title' => 'Implementasi Energi Terbarukan',
+                'description' => 'Penerapan teknologi energi terbarukan seperti panel surya dan biogas untuk mengurangi ketergantungan pada energi fosil.',
+                'background' => 'Biaya energi tinggi dan akses listrik masih terbatas di beberapa area.',
+                'objectives' => 'Menyediakan akses energi bersih dan terjangkau untuk masyarakat.',
+                'scope' => 'Instalasi panel surya, pembuatan biogas, dan edukasi hemat energi.',
+                'sdg_categories' => json_encode(['affordable_energy', 'climate_action']),
+                'required_skills' => json_encode(['Teknik Elektro', 'Energi Terbarukan', 'Lingkungan']),
+                'difficulty_level' => 'advanced',
             ],
             // sdg 11: sustainable cities
             [
                 'title' => 'Pengelolaan Sampah Ramah Lingkungan',
-                'description' => 'Program pengelolaan sampah berbasis 3R (Reduce, Reuse, Recycle) dan bank sampah untuk desa bersih dan sehat.',
-                'background' => 'Volume sampah meningkat tanpa sistem pengelolaan yang baik, menyebabkan pencemaran lingkungan.',
-                'objectives' => 'Mengurangi volume sampah dan meningkatkan kesadaran masyarakat tentang pengelolaan sampah.',
-                'scope' => 'Pembentukan bank sampah, pelatihan 3R, dan kampanye lingkungan.',
-                'sdg' => [11, 12],
-                'skills' => ['Lingkungan', 'Manajemen', 'Sosialisasi'],
-                'difficulty' => 'intermediate',
+                'description' => 'Program pengelolaan sampah terpadu dengan sistem 3R (Reduce, Reuse, Recycle) dan pembuatan kompos.',
+                'background' => 'Masalah sampah semakin menumpuk, perlu sistem pengelolaan yang berkelanjutan.',
+                'objectives' => 'Mengurangi volume sampah dan menciptakan lingkungan yang bersih.',
+                'scope' => 'Bank sampah, pengomposan, dan edukasi pengelolaan sampah.',
+                'sdg_categories' => json_encode(['sustainable_cities', 'responsible_consumption']),
+                'required_skills' => json_encode(['Lingkungan', 'Manajemen', 'Pendidikan Masyarakat']),
+                'difficulty_level' => 'intermediate',
             ],
-            // sdg 8: decent work
+            // sdg 13: climate action
             [
-                'title' => 'Pengembangan Pariwisata Desa',
-                'description' => 'Pengembangan potensi wisata desa untuk menciptakan lapangan kerja dan meningkatkan ekonomi lokal.',
-                'background' => 'Desa memiliki potensi wisata alam dan budaya yang belum teroptimalkan.',
-                'objectives' => 'Mengembangkan desa wisata yang berkelanjutan dan menciptakan lapangan kerja baru.',
-                'scope' => 'Mapping potensi wisata, pelatihan pemandu wisata, dan strategi marketing.',
-                'sdg' => [8, 11],
-                'skills' => ['Pariwisata', 'Marketing', 'Fotografi', 'Desain'],
-                'difficulty' => 'intermediate',
+                'title' => 'Penghijauan dan Konservasi Lingkungan',
+                'description' => 'Program penanaman pohon dan konservasi lahan untuk mencegah erosi dan meningkatkan kualitas lingkungan.',
+                'background' => 'Lahan kritis semakin luas, diperlukan upaya penghijauan dan konservasi.',
+                'objectives' => 'Meningkatkan tutupan hijau dan mencegah kerusakan lingkungan.',
+                'scope' => 'Penanaman pohon, pembuatan terasering, dan edukasi lingkungan.',
+                'sdg_categories' => json_encode(['climate_action', 'life_on_land']),
+                'required_skills' => json_encode(['Kehutanan', 'Lingkungan', 'Pertanian']),
+                'difficulty_level' => 'beginner',
             ],
         ];
 
-        // pilih random template
+        // pilih template random
         $template = $problemTemplates[array_rand($problemTemplates)];
 
-        // tentukan lokasi (gunakan lokasi institution)
-        $provinceId = $institution->province_id;
-        $regencyId = $institution->regency_id;
-
-        // nama lokasi untuk title (gunakan nama regency dari relasi yang sudah di-load)
-        $locationName = $institution->regency ? $institution->regency->name : 'Indonesia';
-
-        // tentukan timeline
+        // tentukan tanggal
         $startDate = Carbon::now()->addMonths(rand(1, 3));
-        $durationMonths = rand(2, 6);
+        $durationMonths = rand(2, 4);
         $endDate = $startDate->copy()->addMonths($durationMonths);
         $applicationDeadline = $startDate->copy()->subWeeks(2);
 
-        // tentukan status dengan distribusi realistis
-        $rand = rand(1, 100);
-        if ($rand <= 60) {
-            $status = 'open'; // 60% open
-        } elseif ($rand <= 80) {
-            $status = 'in_progress'; // 20% in_progress
-        } elseif ($rand <= 95) {
-            $status = 'completed'; // 15% completed
-        } else {
-            $status = 'draft'; // 5% draft
-        }
-
         // buat problem
-        $problem = Problem::create([
+        Problem::create([
             'institution_id' => $institution->id,
-            'title' => $template['title'] . ' - ' . $locationName,
+            'title' => $template['title'],
             'description' => $template['description'],
             'background' => $template['background'],
             'objectives' => $template['objectives'],
             'scope' => $template['scope'],
-            'province_id' => $provinceId,
-            'regency_id' => $regencyId,
-            'village' => 'Desa ' . ['Sukamaju', 'Mekarjaya', 'Ciherang', 'Sindanglaya', 'Cibodas'][array_rand(['Sukamaju', 'Mekarjaya', 'Ciherang', 'Sindanglaya', 'Cibodas'])],
-            'detailed_location' => null,
-            'sdg_categories' => json_encode($template['sdg']),
-            'required_students' => rand(3, 8),
-            'required_skills' => json_encode($template['skills']),
-            'required_majors' => json_encode([
-                'Teknik Informatika',
-                'Sistem Informasi',
-                'Ilmu Komunikasi',
-                'Manajemen',
-                'Kesehatan Masyarakat'
-            ]),
+            'province_id' => $institution->province_id,
+            'regency_id' => $institution->regency_id,
+            'village' => 'Desa ' . $this->generateVillageName(),
+            'detailed_location' => 'RT ' . rand(1, 5) . '/RW ' . rand(1, 3) . ', Desa ' . $this->generateVillageName(),
+            'sdg_categories' => $template['sdg_categories'],
+            'required_students' => rand(2, 5),
+            'required_skills' => $template['required_skills'],
+            'required_majors' => json_encode($this->getRandomMajors()),
             'start_date' => $startDate,
             'end_date' => $endDate,
             'application_deadline' => $applicationDeadline,
             'duration_months' => $durationMonths,
-            'difficulty_level' => $template['difficulty'],
-            'status' => $status,
-            'expected_outcomes' => 'Peningkatan kualitas hidup masyarakat dan tercapainya target SDGs yang dicanangkan.',
+            'difficulty_level' => $template['difficulty_level'],
+            'expected_outcomes' => 'Peningkatan kualitas hidup masyarakat dan pemberdayaan komunitas lokal.',
             'deliverables' => json_encode([
-                'Laporan hasil survei',
+                'Laporan survei awal',
                 'Dokumentasi kegiatan',
                 'Laporan akhir program',
-                'Rekomendasi kebijakan'
+                'Evaluasi dampak'
             ]),
             'facilities_provided' => json_encode([
                 'Akomodasi',
                 'Konsumsi',
                 'Transportasi lokal',
-                'Sertifikat',
-                'Bimbingan lapangan'
+                'Sertifikat'
             ]),
-            'views_count' => rand(10, 500),
-            'applications_count' => 0, // akan di-update oleh ApplicationsSeeder
-            'accepted_students' => 0,
-            'is_featured' => rand(1, 100) <= 20, // 20% featured
-            'is_urgent' => rand(1, 100) <= 10, // 10% urgent
+            'status' => 'open',
         ]);
+    }
 
-        // TODO: tambahkan problem images jika ada
-        // ProblemImage::create([...]);
+    /**
+     * generate nama desa random
+     */
+    private function generateVillageName(): string
+    {
+        $prefixes = ['Suka', 'Mekar', 'Jaya', 'Maju', 'Sentosa', 'Bahagia', 'Makmur', 'Sejahtera'];
+        $suffixes = ['maju', 'jaya', 'raya', 'asri', 'indah', 'mulya', 'makmur', 'santosa'];
+
+        return $prefixes[array_rand($prefixes)] . $suffixes[array_rand($suffixes)];
+    }
+
+    /**
+     * dapatkan random majors
+     */
+    private function getRandomMajors(): array
+    {
+        $allMajors = [
+            'Teknik Sipil',
+            'Teknik Elektro',
+            'Teknik Industri',
+            'Teknik Informatika',
+            'Sistem Informasi',
+            'Manajemen',
+            'Ekonomi Pembangunan',
+            'Akuntansi',
+            'Ilmu Komunikasi',
+            'Sosiologi',
+            'Kesehatan Masyarakat',
+            'Gizi',
+            'Pertanian',
+            'Kehutanan',
+            'Peternakan',
+            'Pendidikan',
+        ];
+
+        // ambil 2-4 jurusan random
+        $count = rand(2, 4);
+        $selectedMajors = [];
+
+        for ($i = 0; $i < $count; $i++) {
+            $major = $allMajors[array_rand($allMajors)];
+            if (!in_array($major, $selectedMajors)) {
+                $selectedMajors[] = $major;
+            }
+        }
+
+        return $selectedMajors;
     }
 }
