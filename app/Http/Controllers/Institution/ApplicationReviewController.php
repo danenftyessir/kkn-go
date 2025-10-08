@@ -3,32 +3,29 @@
 namespace App\Http\Controllers\Institution;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Application;
 use App\Models\Problem;
 use App\Models\Project;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 /**
- * controller untuk review aplikasi mahasiswa oleh instansi
+ * controller untuk mengelola review aplikasi mahasiswa
+ * instansi dapat melihat, menerima, atau menolak aplikasi yang masuk
  */
 class ApplicationReviewController extends Controller
 {
     /**
-     * tampilkan daftar aplikasi yang perlu direview
+     * tampilkan daftar aplikasi yang masuk
      */
     public function index(Request $request)
     {
         $institution = auth()->user()->institution;
 
-        $query = Application::with([
-            'student.user',
-            'student.university',
-            'problem'
-        ])
-        ->whereHas('problem', function($q) use ($institution) {
-            $q->where('institution_id', $institution->id);
-        });
+        $query = Application::with(['student.user', 'student.university', 'problem'])
+                            ->whereHas('problem', function($q) use ($institution) {
+                                $q->where('institution_id', $institution->id);
+                            });
 
         // filter berdasarkan status
         if ($request->filled('status')) {
@@ -44,27 +41,13 @@ class ApplicationReviewController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->whereHas('student.user', function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%");
+                $q->where('name', 'LIKE', "%{$search}%");
             });
         }
 
-        // sorting
-        $sort = $request->input('sort', 'latest');
-        switch ($sort) {
-            case 'oldest':
-                $query->oldest();
-                break;
-            case 'problem':
-                $query->join('problems', 'applications.problem_id', '=', 'problems.id')
-                      ->orderBy('problems.title');
-                break;
-            default:
-                $query->latest();
-        }
+        $applications = $query->orderBy('applied_at', 'desc')->paginate(15);
 
-        $applications = $query->paginate(15)->withQueryString();
-
-        // statistik aplikasi
+        // statistik untuk summary cards
         $stats = [
             'total' => Application::whereHas('problem', function($q) use ($institution) {
                 $q->where('institution_id', $institution->id);
@@ -72,9 +55,9 @@ class ApplicationReviewController extends Controller
             'pending' => Application::whereHas('problem', function($q) use ($institution) {
                 $q->where('institution_id', $institution->id);
             })->where('status', 'pending')->count(),
-            'under_review' => Application::whereHas('problem', function($q) use ($institution) {
+            'reviewed' => Application::whereHas('problem', function($q) use ($institution) {
                 $q->where('institution_id', $institution->id);
-            })->where('status', 'under_review')->count(),
+            })->where('status', 'reviewed')->count(),
             'accepted' => Application::whereHas('problem', function($q) use ($institution) {
                 $q->where('institution_id', $institution->id);
             })->where('status', 'accepted')->count(),
@@ -84,9 +67,7 @@ class ApplicationReviewController extends Controller
         ];
 
         // daftar problems untuk filter dropdown
-        $problems = Problem::where('institution_id', $institution->id)
-                          ->orderBy('title')
-                          ->get(['id', 'title']);
+        $problems = $institution->problems()->orderBy('title')->get(['id', 'title']);
 
         return view('institution.applications.index', compact('applications', 'stats', 'problems'));
     }
@@ -110,9 +91,9 @@ class ApplicationReviewController extends Controller
         })
         ->findOrFail($id);
 
-        // tandai sebagai sudah direview (update status ke under_review jika masih pending)
+        // tandai sebagai sudah direview (update status ke reviewed jika masih pending)
         if ($application->status === 'pending') {
-            $application->update(['status' => 'under_review']);
+            $application->update(['status' => 'reviewed']);
         }
 
         return view('institution.applications.show', compact('application'));
@@ -135,8 +116,8 @@ class ApplicationReviewController extends Controller
         })
         ->findOrFail($id);
 
-        // hanya bisa review jika status pending atau under_review
-        if (!in_array($application->status, ['pending', 'under_review'])) {
+        // hanya bisa review jika status pending atau reviewed
+        if (!in_array($application->status, ['pending', 'reviewed'])) {
             return redirect()->route('institution.applications.show', $application->id)
                            ->with('error', 'Aplikasi ini sudah diproses.');
         }
@@ -158,7 +139,7 @@ class ApplicationReviewController extends Controller
             ->findOrFail($id);
 
         // validasi
-        if (!in_array($application->status, ['pending', 'under_review'])) {
+        if (!in_array($application->status, ['pending', 'reviewed'])) {
             return back()->with('error', 'Aplikasi ini sudah diproses.');
         }
 
@@ -188,7 +169,7 @@ class ApplicationReviewController extends Controller
 
             // buat project otomatis
             Project::create([
-                'application_id' => $application->id, // ← TAMBAHKAN INI
+                'application_id' => $application->id,
                 'student_id' => $application->student_id,
                 'problem_id' => $application->problem_id,
                 'institution_id' => $institution->id,
@@ -202,8 +183,6 @@ class ApplicationReviewController extends Controller
 
             // update counter problem
             $problem->increment('accepted_students');
-
-            // TODO: kirim notifikasi ke mahasiswa (email + in-app)
 
             DB::commit();
 
@@ -231,7 +210,7 @@ class ApplicationReviewController extends Controller
             ->findOrFail($id);
 
         // validasi
-        if (!in_array($application->status, ['pending', 'under_review'])) {
+        if (!in_array($application->status, ['pending', 'reviewed'])) {
             return back()->with('error', 'Aplikasi ini sudah diproses.');
         }
 
@@ -250,8 +229,6 @@ class ApplicationReviewController extends Controller
                 'feedback' => $validated['feedback'],
                 'rejection_reason' => $validated['rejection_reason'],
             ]);
-
-            // TODO: kirim notifikasi ke mahasiswa (email + in-app)
 
             DB::commit();
 
@@ -377,6 +354,7 @@ class ApplicationReviewController extends Controller
 
                             // buat project
                             Project::create([
+                                'application_id' => $application->id,
                                 'student_id' => $application->student_id,
                                 'problem_id' => $application->problem_id,
                                 'institution_id' => $institution->id,

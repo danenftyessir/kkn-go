@@ -38,6 +38,20 @@ if (!function_exists('supabase_url')) {
     }
 }
 
+if (!function_exists('document_url')) {
+    /**
+     * generate URL untuk mengakses dokumen
+     * alias untuk supabase_url() khusus dokumen
+     * 
+     * @param string|null $path path file dokumen di bucket
+     * @return string URL publik dokumen
+     */
+    function document_url(?string $path): string
+    {
+        return supabase_url($path);
+    }
+}
+
 if (!function_exists('format_file_size')) {
     /**
      * format file size dari bytes ke human readable format
@@ -87,109 +101,82 @@ if (!function_exists('time_ago')) {
     }
 }
 
-if (!function_exists('sdg_icon')) {
-    /**
-     * dapatkan icon atau badge untuk kategori SDG
-     * 
-     * @param string $category kode kategori SDG
-     * @return string class CSS atau path icon
-     */
-    function sdg_icon(string $category): string
-    {
-        $icons = [
-            'no_poverty' => 'icon-poverty',
-            'zero_hunger' => 'icon-hunger',
-            'good_health' => 'icon-health',
-            'quality_education' => 'icon-education',
-            'gender_equality' => 'icon-gender',
-            'clean_water' => 'icon-water',
-            'affordable_energy' => 'icon-energy',
-            'decent_work' => 'icon-work',
-            'industry_innovation' => 'icon-innovation',
-            'reduced_inequalities' => 'icon-inequalities',
-            'sustainable_cities' => 'icon-cities',
-            'responsible_consumption' => 'icon-consumption',
-            'climate_action' => 'icon-climate',
-            'life_below_water' => 'icon-water-life',
-            'life_on_land' => 'icon-land-life',
-            'peace_justice' => 'icon-peace',
-            'partnerships' => 'icon-partnerships',
-        ];
-        
-        return $icons[$category] ?? 'icon-default';
-    }
-}
-
-if (!function_exists('sdg_label')) {
-    /**
-     * dapatkan label dalam bahasa indonesia untuk kategori SDG
-     * 
-     * @param string $category kode kategori SDG
-     * @return string label kategori
-     */
-    function sdg_label(string $category): string
-    {
-        $labels = [
-            'no_poverty' => 'Tanpa Kemiskinan',
-            'zero_hunger' => 'Tanpa Kelaparan',
-            'good_health' => 'Kehidupan Sehat dan Sejahtera',
-            'quality_education' => 'Pendidikan Berkualitas',
-            'gender_equality' => 'Kesetaraan Gender',
-            'clean_water' => 'Air Bersih dan Sanitasi',
-            'affordable_energy' => 'Energi Bersih dan Terjangkau',
-            'decent_work' => 'Pekerjaan Layak dan Pertumbuhan Ekonomi',
-            'industry_innovation' => 'Industri, Inovasi dan Infrastruktur',
-            'reduced_inequalities' => 'Berkurangnya Kesenjangan',
-            'sustainable_cities' => 'Kota dan Komunitas Berkelanjutan',
-            'responsible_consumption' => 'Konsumsi dan Produksi Bertanggung Jawab',
-            'climate_action' => 'Penanganan Perubahan Iklim',
-            'life_below_water' => 'Ekosistem Laut',
-            'life_on_land' => 'Ekosistem Daratan',
-            'peace_justice' => 'Perdamaian, Keadilan dan Kelembagaan yang Kuat',
-            'partnerships' => 'Kemitraan untuk Mencapai Tujuan',
-        ];
-        
-        return $labels[$category] ?? ucfirst(str_replace('_', ' ', $category));
-    }
-}
-
 if (!function_exists('status_badge')) {
     /**
-     * generate HTML badge untuk status
+     * generate HTML badge untuk status dengan warna yang sesuai
      * 
-     * @param string $status status value
-     * @param string $type tipe status (application, project, problem, dll)
+     * @param string $status nama status
+     * @param string|null $type tipe badge (application, project, problem, document)
      * @return string HTML badge
      */
-    function status_badge(string $status, string $type = 'default'): string
+    function status_badge(string $status, ?string $type = null): string
     {
+        // definisi warna untuk setiap status berdasarkan tipe
         $colors = [
-            'pending' => 'bg-yellow-100 text-yellow-800',
-            'reviewed' => 'bg-blue-100 text-blue-800',
-            'accepted' => 'bg-green-100 text-green-800',
-            'rejected' => 'bg-red-100 text-red-800',
-            'draft' => 'bg-gray-100 text-gray-800',
-            'published' => 'bg-green-100 text-green-800',
-            'closed' => 'bg-red-100 text-red-800',
-            'in_progress' => 'bg-blue-100 text-blue-800',
-            'completed' => 'bg-purple-100 text-purple-800',
-            'approved' => 'bg-green-100 text-green-800',
+            'application' => [
+                'pending' => 'bg-yellow-100 text-yellow-800',
+                'reviewed' => 'bg-blue-100 text-blue-800',
+                'accepted' => 'bg-green-100 text-green-800',
+                'rejected' => 'bg-red-100 text-red-800',
+            ],
+            'project' => [
+                'active' => 'bg-green-100 text-green-800',
+                'on_hold' => 'bg-yellow-100 text-yellow-800',
+                'completed' => 'bg-blue-100 text-blue-800',
+                'cancelled' => 'bg-gray-100 text-gray-800',
+            ],
+            'problem' => [
+                'draft' => 'bg-gray-100 text-gray-800',
+                'open' => 'bg-green-100 text-green-800',
+                'in_progress' => 'bg-blue-100 text-blue-800',
+                'completed' => 'bg-purple-100 text-purple-800',
+                'closed' => 'bg-red-100 text-red-800',
+            ],
+            'document' => [
+                'pending' => 'bg-yellow-100 text-yellow-800',
+                'approved' => 'bg-green-100 text-green-800',
+                'rejected' => 'bg-red-100 text-red-800',
+            ],
+            'milestone' => [
+                'pending' => 'bg-gray-100 text-gray-800',
+                'in_progress' => 'bg-blue-100 text-blue-800',
+                'completed' => 'bg-green-100 text-green-800',
+                'delayed' => 'bg-red-100 text-red-800',
+            ],
         ];
         
+        // label indonesia untuk status
         $labels = [
             'pending' => 'Menunggu',
             'reviewed' => 'Ditinjau',
             'accepted' => 'Diterima',
             'rejected' => 'Ditolak',
-            'draft' => 'Draft',
-            'published' => 'Dipublikasikan',
-            'closed' => 'Ditutup',
-            'in_progress' => 'Berjalan',
+            'active' => 'Aktif',
+            'on_hold' => 'Ditahan',
             'completed' => 'Selesai',
+            'cancelled' => 'Dibatalkan',
+            'draft' => 'Draft',
+            'open' => 'Terbuka',
+            'in_progress' => 'Sedang Berjalan',
+            'closed' => 'Ditutup',
             'approved' => 'Disetujui',
+            'delayed' => 'Terlambat',
         ];
         
-        $color = $colors[$status] ?? 'bg-gray-100 text-gray-800';
+        // ambil warna berdasarkan tipe dan status
+        $color = 'bg-gray-100 text-gray-800'; // default
+        if ($type && isset($colors[$type][$status])) {
+            $color = $colors[$type][$status];
+        } else {
+            // coba cari di semua tipe
+            foreach ($colors as $typeColors) {
+                if (isset($typeColors[$status])) {
+                    $color = $typeColors[$status];
+                    break;
+                }
+            }
+        }
+        
         $label = $labels[$status] ?? ucfirst($status);
         
         return '<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ' . $color . '">' 
