@@ -23,7 +23,6 @@ return [
             'root' => storage_path('app/private'),
             'serve' => true,
             'throw' => false,
-            'report' => false,
         ],
 
         'public' => [
@@ -32,7 +31,6 @@ return [
             'url' => env('APP_URL').'/storage',
             'visibility' => 'public',
             'throw' => false,
-            'report' => false,
         ],
 
         's3' => [
@@ -45,10 +43,8 @@ return [
             'endpoint' => env('AWS_ENDPOINT'),
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
             'throw' => false,
-            'report' => false,
         ],
 
-        // disk supabase storage (S3 compatible)
         'supabase' => [
             'driver' => 's3',
             'key' => env('SUPABASE_ACCESS_KEY_ID'),
@@ -59,13 +55,6 @@ return [
             'endpoint' => env('SUPABASE_ENDPOINT'),
             'use_path_style_endpoint' => true,
             'throw' => false,
-            'report' => false,
-            // perbaikan untuk SSL certificate error di local development
-            'http' => [
-                'verify' => env('SUPABASE_SSL_VERIFY', !app()->environment('local')),
-                'connect_timeout' => 30,
-                'timeout' => 60,
-            ],
         ],
 
     ],
