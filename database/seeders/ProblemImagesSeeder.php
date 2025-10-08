@@ -8,8 +8,8 @@ use App\Models\ProblemImage;
 
 /**
  * seeder untuk problem images
- * SIMPLE VERSION - langsung hardcode list file yang ada di supabase
- * tidak perlu S3 driver, cukup simpan path saja
+ * simple version - langsung hardcode list file yang ada di supabase
+ * tidak perlu upload, cukup simpan path saja
  * 
  * jalankan: php artisan db:seed --class=ProblemImagesSeeder
  */
@@ -30,37 +30,57 @@ class ProblemImagesSeeder extends Seeder
             return;
         }
 
-        // HARDCODE list file yang ada di supabase bucket "kkn-go storage"
-        // sesuaikan dengan nama file yang BENAR-BENAR ada di bucket Anda
+        // hardcode list file yang ada di supabase bucket "kkn-go storage"
+        // file-file ini harus benar-benar sudah ada di supabase storage
         $availableImages = [
-            'problems/image-1.jpg',
-            'problems/image-2.jpg',
-            'problems/image-3.jpg',
-            'problems/image-4.jpg',
-            'problems/image-5.jpg',
-            'problems/image-6.jpg',
-            'problems/image-7.jpg',
-            'problems/image-8.jpg',
-            'problems/image-9.jpg',
-            'problems/image-10.jpg',
-            // tambahkan sesuai file yang ada
+            'problems/masalah-desa-1.jpg',
+            'problems/masalah-desa-2.jpg',
+            'problems/masalah-desa-3.jpeg',
+            'problems/masalah-desa-4.jpg',
+            'problems/masalah-desa-5.jpeg',
+            'problems/masalah-desa-6.jpg',
+            'problems/masalah-desa-7.jpeg',
+            'problems/masalah-desa-8.jpeg',
+            'problems/masalah-desa-9.jpg',
+            'problems/masalah-desa-10.jpg',
+            'problems/masalah-desa-11.jpg',
+            'problems/masalah-desa-12.jpg',
+            'problems/masalah-desa-13.jpg',
+            'problems/masalah-desa-14.jpg',
+            'problems/masalah-desa-15.jpg',
+            'problems/masalah-desa-15.jpeg',
+            'problems/masalah-desa-16.jpeg',
+            'problems/masalah-desa-17.jpeg',
+            'problems/masalah-desa-18.jpeg',
+            'problems/masalah-desa-19.jpeg',
+            'problems/masalah-desa-20.jpeg',
+            'problems/masalah-desa-21.jpeg',
+            'problems/masalah-desa-22.jpeg',
+            'problems/masalah-desa-23.jpeg',
+            'problems/masalah-desa-24.jpg',
+            'problems/masalah-desa-25.jpeg',
+            'problems/masalah-desa-26.jpeg',
+            'problems/masalah-desa-27.jpeg',
+            'problems/masalah-desa-28.jpg',
+            'problems/masalah-desa-29.jpg',
+            'problems/masalah-desa-30.jpeg',
         ];
 
         $this->command->info("🖼️  Ditemukan " . count($availableImages) . " gambar");
 
-        // hapus problem images lama
+        // hapus problem images lama untuk clean seeding
         ProblemImage::truncate();
 
         $imageIndex = 0;
         $totalSeeded = 0;
 
-        // distribusikan gambar ke problems
+        // distribusikan gambar ke setiap problem
         foreach ($problems as $problem) {
-            // setiap problem dapat 2-4 gambar
+            // setiap problem dapat 2-4 gambar secara acak
             $imagesPerProblem = min(rand(2, 4), count($availableImages));
             
             for ($i = 0; $i < $imagesPerProblem; $i++) {
-                // cycle through images
+                // cycle through images untuk distribusi merata
                 if ($imageIndex >= count($availableImages)) {
                     $imageIndex = 0;
                 }
@@ -68,12 +88,13 @@ class ProblemImagesSeeder extends Seeder
                 $imagePath = $availableImages[$imageIndex];
                 $imageIndex++;
                 
-                // tentukan cover (gambar pertama)
+                // gambar pertama (order 0) menjadi cover
                 $isCover = ($i === 0);
                 
+                // buat record problem image
                 ProblemImage::create([
                     'problem_id' => $problem->id,
-                    'image_path' => $imagePath, // simpan path saja
+                    'image_path' => $imagePath,
                     'caption' => $this->generateCaption($problem, $i),
                     'is_cover' => $isCover,
                     'order' => $i,
@@ -94,6 +115,10 @@ class ProblemImagesSeeder extends Seeder
 
     /**
      * generate caption untuk gambar
+     * 
+     * @param Problem $problem instance problem
+     * @param int $index index gambar (0, 1, 2, dst)
+     * @return string caption untuk gambar
      */
     protected function generateCaption(Problem $problem, int $index): string
     {
@@ -106,6 +131,7 @@ class ProblemImagesSeeder extends Seeder
             "Gambaran umum permasalahan",
         ];
 
+        // pilih caption berdasarkan index (cyclic)
         $captionIndex = $index % count($captions);
         return $captions[$captionIndex];
     }
