@@ -1,121 +1,133 @@
 <?php
 
-use Illuminate\Support\Facades\Storage;
+/**
+ * helper functions untuk aplikasi KKN-GO
+ * 
+ * file ini otomatis di-load oleh composer (lihat composer.json)
+ */
 
-if (!function_exists('storage_url')) {
+if (!function_exists('supabase_url')) {
     /**
-     * dapatkan URL publik untuk file di supabase storage
-     * LANGSUNG pakai public URL, tidak pakai S3 driver
+     * generate public URL untuk file di supabase storage
      * 
-     * @param string|null $path path file di storage
-     * @return string URL publik file
+     * @param string|null $path path file di bucket (contoh: 'problems/image.jpg')
+     * @param string|null $bucket nama bucket (default: 'kkn-go storage')
+     * @return string URL publik file atau placeholder jika path kosong
      */
-    function storage_url($path)
+    function supabase_url(?string $path, ?string $bucket = null): string
     {
+        // jika path kosong, return placeholder
         if (empty($path)) {
-            return '';
-        }
-
-        // supabase project ID
-        $projectId = 'zgpykwjzmiqxhweifmrn';
-        
-        // bucket name (pakai URL encode untuk handle space)
-        $bucket = rawurlencode('kkn-go storage');
-        
-        // clean path (hapus leading slash)
-        $cleanPath = ltrim($path, '/');
-        
-        // format URL supabase public:
-        // https://PROJECT_ID.supabase.co/storage/v1/object/public/BUCKET/PATH
-        return "https://{$projectId}.supabase.co/storage/v1/object/public/{$bucket}/{$cleanPath}";
-    }
-}
-
-if (!function_exists('problem_image_url')) {
-    /**
-     * dapatkan URL gambar problem dari supabase
-     * 
-     * @param string|null $imagePath path gambar (misal: problems/image1.jpg)
-     * @return string URL gambar
-     */
-    function problem_image_url($imagePath)
-    {
-        if (empty($imagePath)) {
-            return asset('images/placeholder-problem.jpg');
+            return asset('images/placeholder.jpg');
         }
         
-        return storage_url($imagePath);
-    }
-}
-
-if (!function_exists('document_url')) {
-    /**
-     * dapatkan URL dokumen dari supabase
-     * 
-     * @param string|null $filePath path file (misal: documents/reports/file.pdf)
-     * @return string URL file
-     */
-    function document_url($filePath)
-    {
-        if (empty($filePath)) {
-            return '';
-        }
+        // gunakan bucket dari config atau default
+        $bucket = $bucket ?? config('filesystems.disks.supabase.bucket', 'kkn-go storage');
         
-        return storage_url($filePath);
-    }
-}
-
-if (!function_exists('profile_photo_url')) {
-    /**
-     * dapatkan URL foto profil
-     * 
-     * @param string|null $photoPath path foto
-     * @param string $defaultType tipe default (student/institution)
-     * @return string URL foto atau default avatar
-     */
-    function profile_photo_url($photoPath, $defaultType = 'student')
-    {
-        if (!empty($photoPath)) {
-            return storage_url($photoPath);
-        }
+        // base URL dari supabase
+        $baseUrl = config('filesystems.disks.supabase.url');
         
-        // return default avatar
-        $defaults = [
-            'student' => asset('images/default-student-avatar.png'),
-            'institution' => asset('images/default-institution-logo.png'),
-        ];
+        // encode bucket name untuk URL (ganti spasi dengan %20)
+        $encodedBucket = str_replace(' ', '%20', $bucket);
         
-        return $defaults[$defaultType] ?? $defaults['student'];
+        // encode path jika perlu
+        $encodedPath = implode('/', array_map('rawurlencode', explode('/', $path)));
+        
+        // format: https://PROJECT_ID.supabase.co/storage/v1/object/public/BUCKET_NAME/PATH
+        return "{$baseUrl}/storage/v1/object/public/{$encodedBucket}/{$encodedPath}";
     }
 }
 
 if (!function_exists('format_file_size')) {
     /**
-     * format ukuran file ke format yang mudah dibaca
+     * format file size dari bytes ke human readable format
      * 
-     * @param int $bytes ukuran dalam bytes
-     * @param int $decimals jumlah desimal
-     * @return string ukuran terformat (e.g., "2.5 MB")
+     * @param int $bytes ukuran file dalam bytes
+     * @return string ukuran file yang mudah dibaca (contoh: "2.5 MB")
      */
-    function format_file_size($bytes, $decimals = 2)
+    function format_file_size(int $bytes): string
     {
-        if ($bytes === 0 || $bytes === null) {
-            return '0 Bytes';
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        
+        for ($i = 0; $bytes > 1024 && $i < count($units) - 1; $i++) {
+            $bytes /= 1024;
         }
-
-        $k = 1024;
-        $sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-        $i = floor(log($bytes) / log($k));
-
-        return round($bytes / pow($k, $i), $decimals) . ' ' . $sizes[$i];
+        
+        return round($bytes, 2) . ' ' . $units[$i];
     }
 }
 
-if (!function_exists('sdg_category_label')) {
+if (!function_exists('time_ago')) {
     /**
-     * dapatkan label untuk kategori SDG
+     * konversi timestamp ke format "time ago" dalam bahasa indonesia
+     * 
+     * @param \Carbon\Carbon|string $time waktu yang akan dikonversi
+     * @return string format waktu relatif (contoh: "2 jam yang lalu")
      */
-    function sdg_category_label($category)
+    function time_ago($time): string
+    {
+        $time = \Carbon\Carbon::parse($time);
+        $now = \Carbon\Carbon::now();
+        
+        $diff = $time->diff($now);
+        
+        if ($diff->y > 0) {
+            return $diff->y . ' tahun yang lalu';
+        } elseif ($diff->m > 0) {
+            return $diff->m . ' bulan yang lalu';
+        } elseif ($diff->d > 0) {
+            return $diff->d . ' hari yang lalu';
+        } elseif ($diff->h > 0) {
+            return $diff->h . ' jam yang lalu';
+        } elseif ($diff->i > 0) {
+            return $diff->i . ' menit yang lalu';
+        } else {
+            return 'baru saja';
+        }
+    }
+}
+
+if (!function_exists('sdg_icon')) {
+    /**
+     * dapatkan icon atau badge untuk kategori SDG
+     * 
+     * @param string $category kode kategori SDG
+     * @return string class CSS atau path icon
+     */
+    function sdg_icon(string $category): string
+    {
+        $icons = [
+            'no_poverty' => 'icon-poverty',
+            'zero_hunger' => 'icon-hunger',
+            'good_health' => 'icon-health',
+            'quality_education' => 'icon-education',
+            'gender_equality' => 'icon-gender',
+            'clean_water' => 'icon-water',
+            'affordable_energy' => 'icon-energy',
+            'decent_work' => 'icon-work',
+            'industry_innovation' => 'icon-innovation',
+            'reduced_inequalities' => 'icon-inequalities',
+            'sustainable_cities' => 'icon-cities',
+            'responsible_consumption' => 'icon-consumption',
+            'climate_action' => 'icon-climate',
+            'life_below_water' => 'icon-water-life',
+            'life_on_land' => 'icon-land-life',
+            'peace_justice' => 'icon-peace',
+            'partnerships' => 'icon-partnerships',
+        ];
+        
+        return $icons[$category] ?? 'icon-default';
+    }
+}
+
+if (!function_exists('sdg_label')) {
+    /**
+     * dapatkan label dalam bahasa indonesia untuk kategori SDG
+     * 
+     * @param string $category kode kategori SDG
+     * @return string label kategori
+     */
+    function sdg_label(string $category): string
     {
         $labels = [
             'no_poverty' => 'Tanpa Kemiskinan',
@@ -126,96 +138,85 @@ if (!function_exists('sdg_category_label')) {
             'clean_water' => 'Air Bersih dan Sanitasi',
             'affordable_energy' => 'Energi Bersih dan Terjangkau',
             'decent_work' => 'Pekerjaan Layak dan Pertumbuhan Ekonomi',
-            'industry_innovation' => 'Industri, Inovasi, dan Infrastruktur',
+            'industry_innovation' => 'Industri, Inovasi dan Infrastruktur',
             'reduced_inequalities' => 'Berkurangnya Kesenjangan',
             'sustainable_cities' => 'Kota dan Komunitas Berkelanjutan',
-            'responsible_consumption' => 'Konsumsi dan Produksi yang Bertanggung Jawab',
+            'responsible_consumption' => 'Konsumsi dan Produksi Bertanggung Jawab',
             'climate_action' => 'Penanganan Perubahan Iklim',
             'life_below_water' => 'Ekosistem Laut',
             'life_on_land' => 'Ekosistem Daratan',
-            'peace_justice' => 'Perdamaian, Keadilan, dan Kelembagaan yang Kuat',
+            'peace_justice' => 'Perdamaian, Keadilan dan Kelembagaan yang Kuat',
             'partnerships' => 'Kemitraan untuk Mencapai Tujuan',
         ];
-
+        
         return $labels[$category] ?? ucfirst(str_replace('_', ' ', $category));
     }
 }
 
-if (!function_exists('status_badge_class')) {
+if (!function_exists('status_badge')) {
     /**
-     * dapatkan class CSS untuk status badge
+     * generate HTML badge untuk status
+     * 
+     * @param string $status status value
+     * @param string $type tipe status (application, project, problem, dll)
+     * @return string HTML badge
      */
-    function status_badge_class($status)
+    function status_badge(string $status, string $type = 'default'): string
     {
-        $classes = [
+        $colors = [
+            'pending' => 'bg-yellow-100 text-yellow-800',
+            'reviewed' => 'bg-blue-100 text-blue-800',
+            'accepted' => 'bg-green-100 text-green-800',
+            'rejected' => 'bg-red-100 text-red-800',
             'draft' => 'bg-gray-100 text-gray-800',
-            'open' => 'bg-green-100 text-green-800',
+            'published' => 'bg-green-100 text-green-800',
             'closed' => 'bg-red-100 text-red-800',
             'in_progress' => 'bg-blue-100 text-blue-800',
             'completed' => 'bg-purple-100 text-purple-800',
-            'pending' => 'bg-yellow-100 text-yellow-800',
-            'accepted' => 'bg-green-100 text-green-800',
-            'rejected' => 'bg-red-100 text-red-800',
-            'under_review' => 'bg-blue-100 text-blue-800',
             'approved' => 'bg-green-100 text-green-800',
         ];
-
-        return $classes[$status] ?? 'bg-gray-100 text-gray-800';
-    }
-}
-
-if (!function_exists('status_label')) {
-    /**
-     * dapatkan label untuk status
-     */
-    function status_label($status)
-    {
+        
         $labels = [
-            'draft' => 'Draft',
-            'open' => 'Terbuka',
-            'closed' => 'Ditutup',
-            'in_progress' => 'Sedang Berjalan',
-            'completed' => 'Selesai',
             'pending' => 'Menunggu',
+            'reviewed' => 'Ditinjau',
             'accepted' => 'Diterima',
             'rejected' => 'Ditolak',
-            'under_review' => 'Dalam Review',
+            'draft' => 'Draft',
+            'published' => 'Dipublikasikan',
+            'closed' => 'Ditutup',
+            'in_progress' => 'Berjalan',
+            'completed' => 'Selesai',
             'approved' => 'Disetujui',
-            'active' => 'Aktif',
         ];
-
-        return $labels[$status] ?? ucfirst(str_replace('_', ' ', $status));
+        
+        $color = $colors[$status] ?? 'bg-gray-100 text-gray-800';
+        $label = $labels[$status] ?? ucfirst($status);
+        
+        return '<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ' . $color . '">' 
+               . $label . 
+               '</span>';
     }
 }
 
-if (!function_exists('difficulty_badge_class')) {
+if (!function_exists('user_avatar')) {
     /**
-     * dapatkan class CSS untuk difficulty badge
+     * generate avatar URL atau inisial untuk user
+     * 
+     * @param object|null $user user object
+     * @return string URL avatar atau data URI untuk inisial
      */
-    function difficulty_badge_class($difficulty)
+    function user_avatar($user): string
     {
-        $classes = [
-            'beginner' => 'bg-green-100 text-green-800',
-            'intermediate' => 'bg-yellow-100 text-yellow-800',
-            'advanced' => 'bg-red-100 text-red-800',
-        ];
-
-        return $classes[$difficulty] ?? 'bg-gray-100 text-gray-800';
-    }
-}
-
-if (!function_exists('difficulty_label')) {
-    /**
-     * dapatkan label untuk difficulty
-     */
-    function difficulty_label($difficulty)
-    {
-        $labels = [
-            'beginner' => 'Pemula',
-            'intermediate' => 'Menengah',
-            'advanced' => 'Lanjutan',
-        ];
-
-        return $labels[$difficulty] ?? ucfirst($difficulty);
+        if (!$user) {
+            return asset('images/default-avatar.png');
+        }
+        
+        // jika user punya photo_path, gunakan supabase URL
+        if (isset($user->photo_path) && !empty($user->photo_path)) {
+            return supabase_url($user->photo_path);
+        }
+        
+        // jika tidak ada photo, return default
+        return asset('images/default-avatar.png');
     }
 }

@@ -2,16 +2,20 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Model ProblemImage
+ * model ProblemImage
+ * untuk menyimpan gambar-gambar problem/masalah
+ * 
+ * CATATAN PENTING: file gambar disimpan di Supabase Storage
+ * - Bucket: "kkn-go storage"
+ * - Path: problems/FILENAME.jpg
+ * - Akses: Public URL via supabase_url() helper
  */
 class ProblemImage extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'problem_id',
         'image_path',
@@ -19,19 +23,59 @@ class ProblemImage extends Model
         'order',
     ];
 
-    /**
-     * relasi ke problem
-     */
-    public function problem()
+    protected $casts = [
+        'order' => 'integer',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
+
+    // relasi ke problem
+    public function problem(): BelongsTo
     {
         return $this->belongsTo(Problem::class);
     }
 
     /**
-     * get image URL
+     * accessor untuk mendapatkan URL publik gambar dari Supabase
+     * 
+     * usage di blade: 
+     * <img src="{{ $problemImage->image_url }}" alt="{{ $problemImage->caption }}">
+     * 
+     * atau untuk problem dengan images:
+     * @foreach($problem->images as $image)
+     *     <img src="{{ $image->image_url }}" alt="{{ $image->caption }}">
+     * @endforeach
+     * 
+     * @return string URL publik gambar
      */
-    public function getImageUrl(): string
+    public function getImageUrlAttribute(): string
     {
-        return asset('storage/' . $this->image_path);
+        // gunakan helper supabase_url untuk generate public URL
+        return supabase_url($this->image_path);
+    }
+
+    /**
+     * accessor untuk mendapatkan thumbnail URL (opsional, jika ada sistem thumbnail)
+     * untuk saat ini return URL yang sama dengan image_url
+     * 
+     * usage di blade: {{ $problemImage->thumbnail_url }}
+     * 
+     * @return string URL thumbnail
+     */
+    public function getThumbnailUrlAttribute(): string
+    {
+        // untuk saat ini, return URL yang sama
+        // nanti bisa dimodifikasi jika ada sistem thumbnail terpisah
+        return $this->image_url;
+    }
+
+    /**
+     * scope untuk mengurutkan berdasarkan order
+     * 
+     * usage: ProblemImage::ordered()->get()
+     */
+    public function scopeOrdered($query)
+    {
+        return $query->orderBy('order', 'asc');
     }
 }
