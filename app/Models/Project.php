@@ -16,6 +16,7 @@ class Project extends Model
 {
     use HasFactory, SoftDeletes;
 
+    // ✅ PERBAIKAN: hapus 'completed_at' dari fillable karena column tidak ada di migration
     protected $fillable = [
         'application_id',
         'student_id',
@@ -28,7 +29,6 @@ class Project extends Model
         'end_date',
         'actual_start_date',
         'actual_end_date',
-        'completed_at',
         'progress_percentage',
         'final_report_path',
         'final_report_summary',
@@ -40,15 +40,14 @@ class Project extends Model
         'is_portfolio_visible',
         'is_featured',
         'role_in_team',
-
     ];
 
+    // ✅ PERBAIKAN: hapus 'completed_at' dari casts
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
         'actual_start_date' => 'date',
         'actual_end_date' => 'date',
-        'completed_at' => 'datetime',
         'submitted_at' => 'datetime',
         'reviewed_at' => 'datetime',
         'impact_metrics' => 'array',
@@ -89,34 +88,6 @@ class Project extends Model
     }
 
     /**
-     * relasi ke institution review (dari tabel reviews)
-     * review yang diberikan institution ke student untuk project ini
-     */
-    public function institutionReview()
-    {
-        return $this->hasOne(Review::class, 'project_id')
-                    ->where('type', 'institution_to_student');
-    }
-
-    /**
-     * relasi ke student review (dari tabel reviews)
-     * review yang diberikan student ke institution untuk project ini
-     */
-    public function studentReview()
-    {
-        return $this->hasOne(Review::class, 'project_id')
-                    ->where('type', 'student_to_institution');
-    }
-
-    /**
-     * relasi ke semua reviews untuk project ini
-     */
-    public function reviews()
-    {
-        return $this->hasMany(Review::class, 'project_id');
-    }
-
-    /**
      * relasi ke milestones
      */
     public function milestones()
@@ -129,15 +100,15 @@ class Project extends Model
      */
     public function reports()
     {
-        return $this->hasMany(ProjectReport::class)->orderBy('created_at', 'desc');
+        return $this->hasMany(ProjectReport::class);
     }
 
     /**
-     * relasi ke documents
+     * relasi ke review dari institution
      */
-    public function documents()
+    public function institutionReview()
     {
-        return $this->hasMany(Document::class);
+        return $this->hasOne(Review::class)->where('type', 'institution_to_student');
     }
 
     /**
@@ -162,6 +133,14 @@ class Project extends Model
     public function scopeCompleted($query)
     {
         return $query->where('status', 'completed');
+    }
+
+    /**
+     * scope untuk active projects
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
     }
 
     /**
@@ -191,12 +170,12 @@ class Project extends Model
 
     /**
      * mark project as completed
+     * ✅ PERBAIKAN: hapus field completed_at, gunakan actual_end_date saja
      */
     public function markAsCompleted()
     {
         $this->update([
             'status' => 'completed',
-            'completed_at' => now(),
             'actual_end_date' => now(),
             'progress_percentage' => 100,
         ]);
@@ -215,61 +194,90 @@ class Project extends Model
     }
 
     /**
-     * get status badge info
+     * set institution review and rating
      */
-    public function getStatusBadgeAttribute()
+    public function setReview($rating, $review)
     {
-        return match($this->status) {
-            'pending' => ['text' => 'Menunggu', 'color' => 'yellow'],
-            'ongoing' => ['text' => 'Berlangsung', 'color' => 'blue'],
-            'completed' => ['text' => 'Selesai', 'color' => 'green'],
-            'cancelled' => ['text' => 'Dibatalkan', 'color' => 'red'],
-            default => ['text' => 'Unknown', 'color' => 'gray'],
-        };
+        $this->update([
+            'rating' => $rating,
+            'institution_review' => $review,
+            'reviewed_at' => now(),
+        ]);
     }
 
     /**
-     * get progress status
+     * cek apakah project overdue
      */
-    public function getProgressStatusAttribute()
+    public function getIsOverdueAttribute()
     {
-        if ($this->status === 'completed') {
-            return 'Selesai';
-        }
-
-        if ($this->progress_percentage >= 75) {
-            return 'Hampir Selesai';
-        } elseif ($this->progress_percentage >= 50) {
-            return 'Setengah Jalan';
-        } elseif ($this->progress_percentage >= 25) {
-            return 'Tahap Awal';
-        } else {
-            return 'Baru Dimulai';
-        }
-    }
-
-    /**
-     * check jika project overdue
-     */
-    public function isOverdue()
-    {
-        if ($this->status === 'completed') {
+        if ($this->status === 'completed' || $this->status === 'cancelled') {
             return false;
         }
-
+        
         return now()->isAfter($this->end_date);
     }
 
     /**
-     * get days remaining
+     * hitung days remaining
      */
-    public function getDaysRemaining()
+    public function getDaysRemainingAttribute()
     {
-        if ($this->status === 'completed') {
+        if ($this->status === 'completed' || $this->status === 'cancelled') {
             return 0;
         }
-
+        
         $days = now()->diffInDays($this->end_date, false);
-        return max(0, $days);
+        return max(0, ceil($days));
+    }
+
+    /**
+     * get status badge color
+     */
+    public function getStatusColorAttribute()
+    {
+        return match($this->status) {
+            'active' => 'blue',
+            'on_hold' => 'yellow',
+            'completed' => 'green',
+            'cancelled' => 'red',
+            default => 'gray',
+        };
+    }
+
+    /**
+     * get status label in indonesian
+     */
+    public function getStatusLabelAttribute()
+    {
+        return match($this->status) {
+            'active' => 'Aktif',
+            'on_hold' => 'Ditunda',
+            'completed' => 'Selesai',
+            'cancelled' => 'Dibatalkan',
+            default => 'Unknown',
+        };
+    }
+
+    /**
+     * get project duration in months
+     */
+    public function getDurationInMonthsAttribute()
+    {
+        return $this->start_date->diffInMonths($this->end_date);
+    }
+
+    /**
+     * calculate completion percentage
+     */
+    public function calculateCompletionPercentage()
+    {
+        $totalDays = $this->start_date->diffInDays($this->end_date);
+        $elapsedDays = $this->start_date->diffInDays(now());
+        
+        if ($totalDays <= 0) {
+            return 100;
+        }
+        
+        return min(100, round(($elapsedDays / $totalDays) * 100));
     }
 }
