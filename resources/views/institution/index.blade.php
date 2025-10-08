@@ -96,16 +96,35 @@
             </div>
         </div>
 
-        {{-- filter dan search --}}
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6 fade-in-up" style="animation-delay: 0.1s;">
-            <form method="GET" action="{{ route('institution.problems.index') }}" class="flex flex-wrap gap-4">
-                {{-- search --}}
-                <div class="flex-1 min-w-[250px]">
-                    <input type="text" 
-                           name="search" 
-                           value="{{ request('search') }}"
-                           placeholder="Cari judul atau deskripsi..."
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        {{-- search & filter bar --}}
+        <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+            <form method="GET" action="{{ route('student.browse-problems.index') }}" class="space-y-4">
+                
+                {{-- search bar --}}
+                <div class="flex flex-col md:flex-row gap-4">
+                    <div class="flex-1">
+                        <div class="relative">
+                            <input type="text"
+                                    name="search"
+                                    value="{{ request('search') }}"
+                                placeholder="Cari proyek berdasarkan judul, deskripsi, atau lokasi..."
+                                class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                            <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    {{-- button submit --}}
+                    <button type="submit" 
+                            class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 font-semibold hover:shadow-lg">
+                        <span class="flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                            Cari
+                        </span>
+                    </button>
                 </div>
 
                 {{-- filter status --}}
@@ -125,10 +144,6 @@
                     <option value="most_applied" {{ request('sort') == 'most_applied' ? 'selected' : '' }}>Paling Banyak Aplikasi</option>
                 </select>
 
-                {{-- submit button --}}
-                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold">
-                    Filter
-                </button>
 
                 {{-- reset button --}}
                 @if(request()->hasAny(['search', 'status', 'sort']))
