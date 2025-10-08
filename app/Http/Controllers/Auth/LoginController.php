@@ -204,7 +204,6 @@ class LoginController extends Controller
                     ->withErrors(['email' => 'tipe user tidak valid.']);
         }
 
-        // PERBAIKAN: Pastikan session di-save sebelum redirect
         $request->session()->save();
         
         Log::info('Session saved, redirecting', [
