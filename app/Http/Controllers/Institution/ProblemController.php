@@ -3,202 +3,255 @@
 namespace App\Http\Controllers\Institution;
 
 use App\Http\Controllers\Controller;
-use App\Models\Problem;
-use App\Models\ProblemImage;
-use App\Services\SupabaseStorageService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
+use App\Models\Problem;
+use App\Models\Province;
+use App\Models\Regency;
+use Illuminate\Support\Facades\Storage;
 
 /**
- * controller untuk handle problem CRUD oleh instansi
- * dengan upload gambar ke supabase storage
+ * controller untuk manajemen problems oleh institution
  */
 class ProblemController extends Controller
 {
-    protected $supabaseStorage;
-
-    public function __construct()
-    {
-        $this->supabaseStorage = new SupabaseStorageService();
-    }
-
     /**
-     * store problem baru dengan upload gambar ke supabase
+     * ✅ TAMBAHAN BARU: tampilkan daftar problems yang dibuat institution
+     */
+    public function index(Request $request)
+    {
+        $institution = auth()->user()->institution;
+        
+        $query = Problem::where('institution_id', $institution->id)
+                       ->with(['province', 'regency', 'images']);
+        
+        // filter by status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        
+        // search
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+        
+        // sorting
+        $sort = $request->input('sort', 'latest');
+        switch ($sort) {
+            case 'oldest':
+                $query->oldest();
+                break;
+            case 'title':
+                $query->orderBy('title');
+                break;
+            case 'applications':
+                $query->orderBy('applications_count', 'desc');
+                break;
+            case 'views':
+                $query->orderBy('views_count', 'desc');
+                break;
+            default:
+                $query->latest();
+        }
+        
+        $problems = $query->paginate(12)->withQueryString();
+        
+        // statistik
+        $stats = [
+            'total' => Problem::where('institution_id', $institution->id)->count(),
+            'draft' => Problem::where('institution_id', $institution->id)->where('status', 'draft')->count(),
+            'open' => Problem::where('institution_id', $institution->id)->where('status', 'open')->count(),
+            'in_progress' => Problem::where('institution_id', $institution->id)->where('status', 'in_progress')->count(),
+            'completed' => Problem::where('institution_id', $institution->id)->where('status', 'completed')->count(),
+            'closed' => Problem::where('institution_id', $institution->id)->where('status', 'closed')->count(),
+        ];
+        
+        return view('institution.problems.index', compact('problems', 'stats'));
+    }
+    
+    /**
+     * tampilkan form create problem
+     */
+    public function create()
+    {
+        $provinces = Province::orderBy('name')->get();
+        return view('institution.problems.create', compact('provinces'));
+    }
+    
+    /**
+     * simpan problem baru
      */
     public function store(Request $request)
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            // ... validasi lainnya
+            'background' => 'nullable|string',
+            'objectives' => 'nullable|string',
+            'scope' => 'nullable|string',
+            'province_id' => 'required|exists:provinces,id',
+            'regency_id' => 'required|exists:regencies,id',
+            'village' => 'nullable|string|max:255',
+            'detailed_location' => 'nullable|string',
+            'sdg_categories' => 'required|array|min:1',
+            'sdg_categories.*' => 'integer|between:1,17',
+            'required_students' => 'required|integer|min:1',
+            'required_skills' => 'required|array|min:1',
+            'required_majors' => 'nullable|array',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after:start_date',
+            'application_deadline' => 'required|date|before:start_date',
+            'duration_months' => 'required|integer|min:1',
+            'difficulty_level' => 'required|in:beginner,intermediate,advanced',
+            'status' => 'required|in:draft,open',
+            'expected_outcomes' => 'nullable|string',
+            'deliverables' => 'nullable|array',
+            'facilities_provided' => 'nullable|array',
             'images' => 'nullable|array|max:5',
-            'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120', // max 5MB per image
+            'images.*' => 'image|mimes:jpeg,png,jpg|max:5120',
         ]);
-
-        try {
-            DB::beginTransaction();
-
-            // buat problem
-            $problem = Problem::create([
-                'institution_id' => Auth::user()->institution->id,
-                'title' => $validated['title'],
-                'description' => $validated['description'],
-                // ... field lainnya
-            ]);
-
-            // upload gambar ke supabase (jika ada)
-            if ($request->hasFile('images')) {
-                foreach ($request->file('images') as $index => $image) {
-                    // generate unique filename
-                    $filename = Str::slug($problem->title) . '-' . time() . '-' . $index . '.' . $image->extension();
-                    $path = 'problems/' . $filename;
-
-                    // upload ke supabase
-                    $uploadedPath = $this->supabaseStorage->uploadFile($image, $path);
-
-                    if ($uploadedPath) {
-                        // simpan ke database
-                        ProblemImage::create([
-                            'problem_id' => $problem->id,
-                            'image_path' => $uploadedPath,
-                            'caption' => $request->input("captions.{$index}"),
-                            'is_cover' => $index === 0, // gambar pertama jadi cover
-                            'order' => $index,
-                        ]);
-                    }
-                }
+        
+        $validated['institution_id'] = auth()->user()->institution->id;
+        
+        $problem = Problem::create($validated);
+        
+        // upload images jika ada
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $index => $image) {
+                $path = $image->store('problems', 'public');
+                $problem->images()->create([
+                    'image_path' => $path,
+                    'order' => $index + 1,
+                ]);
             }
-
-            DB::commit();
-
-            return redirect()->route('institution.problems.show', $problem->id)
-                           ->with('success', 'Problem berhasil dibuat!');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            
-            return back()->withInput()
-                       ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
+        
+        return redirect()
+            ->route('institution.problems.show', $problem->id)
+            ->with('success', 'Problem berhasil dibuat!');
     }
-
+    
     /**
-     * update problem dan upload gambar baru
+     * tampilkan detail problem
      */
-    public function update(Request $request, Problem $problem)
+    public function show($id)
     {
-        // validasi ownership
-        if ($problem->institution_id !== Auth::user()->institution->id) {
-            abort(403);
-        }
-
+        $problem = Problem::where('institution_id', auth()->user()->institution->id)
+                         ->with(['province', 'regency', 'images', 'applications'])
+                         ->findOrFail($id);
+        
+        return view('institution.problems.show', compact('problem'));
+    }
+    
+    /**
+     * tampilkan form edit problem
+     */
+    public function edit($id)
+    {
+        $problem = Problem::where('institution_id', auth()->user()->institution->id)
+                         ->with(['images'])
+                         ->findOrFail($id);
+        
+        $provinces = Province::orderBy('name')->get();
+        $regencies = Regency::where('province_id', $problem->province_id)
+                           ->orderBy('name')
+                           ->get();
+        
+        return view('institution.problems.edit', compact('problem', 'provinces', 'regencies'));
+    }
+    
+    /**
+     * update problem
+     */
+    public function update(Request $request, $id)
+    {
+        $problem = Problem::where('institution_id', auth()->user()->institution->id)
+                         ->findOrFail($id);
+        
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            // ... validasi lainnya
+            'background' => 'nullable|string',
+            'objectives' => 'nullable|string',
+            'scope' => 'nullable|string',
+            'province_id' => 'required|exists:provinces,id',
+            'regency_id' => 'required|exists:regencies,id',
+            'village' => 'nullable|string|max:255',
+            'detailed_location' => 'nullable|string',
+            'sdg_categories' => 'required|array|min:1',
+            'required_students' => 'required|integer|min:1',
+            'required_skills' => 'required|array|min:1',
+            'required_majors' => 'nullable|array',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after:start_date',
+            'application_deadline' => 'required|date|before:start_date',
+            'duration_months' => 'required|integer|min:1',
+            'difficulty_level' => 'required|in:beginner,intermediate,advanced',
+            'status' => 'required|in:draft,open,in_progress,completed,closed',
+            'expected_outcomes' => 'nullable|string',
+            'deliverables' => 'nullable|array',
+            'facilities_provided' => 'nullable|array',
+            'delete_images' => 'nullable|array',
             'images' => 'nullable|array|max:5',
-            'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120',
-            'delete_images' => 'nullable|array', // IDs gambar yang dihapus
+            'images.*' => 'image|mimes:jpeg,png,jpg|max:5120',
         ]);
-
-        try {
-            DB::beginTransaction();
-
-            // update problem
-            $problem->update([
-                'title' => $validated['title'],
-                'description' => $validated['description'],
-                // ... field lainnya
-            ]);
-
-            // hapus gambar yang dipilih
-            if ($request->filled('delete_images')) {
-                foreach ($request->delete_images as $imageId) {
-                    $image = ProblemImage::find($imageId);
-                    if ($image && $image->problem_id == $problem->id) {
-                        // delete dari supabase
-                        $this->supabaseStorage->deleteFile($image->image_path);
-                        
-                        // delete dari database
-                        $image->delete();
-                    }
+        
+        // hapus gambar yang dipilih untuk dihapus
+        if ($request->filled('delete_images')) {
+            foreach ($request->delete_images as $imageId) {
+                $image = $problem->images()->find($imageId);
+                if ($image) {
+                    Storage::disk('public')->delete($image->image_path);
+                    $image->delete();
                 }
             }
-
-            // upload gambar baru (jika ada)
-            if ($request->hasFile('images')) {
-                $currentOrder = ProblemImage::where('problem_id', $problem->id)->max('order') ?? -1;
-                
-                foreach ($request->file('images') as $index => $image) {
-                    $filename = Str::slug($problem->title) . '-' . time() . '-' . $index . '.' . $image->extension();
-                    $path = 'problems/' . $filename;
-
-                    // upload ke supabase
-                    $uploadedPath = $this->supabaseStorage->uploadFile($image, $path);
-
-                    if ($uploadedPath) {
-                        ProblemImage::create([
-                            'problem_id' => $problem->id,
-                            'image_path' => $uploadedPath,
-                            'caption' => $request->input("captions.{$index}"),
-                            'is_cover' => false,
-                            'order' => $currentOrder + $index + 1,
-                        ]);
-                    }
-                }
-            }
-
-            DB::commit();
-
-            return redirect()->route('institution.problems.show', $problem->id)
-                           ->with('success', 'Problem berhasil diperbarui!');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            
-            return back()->withInput()
-                       ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
+        
+        // upload gambar baru
+        if ($request->hasFile('images')) {
+            $currentImageCount = $problem->images()->count();
+            foreach ($request->file('images') as $index => $imageFile) {
+                $path = $imageFile->store('problems', 'public');
+                $problem->images()->create([
+                    'image_path' => $path,
+                    'order' => $currentImageCount + $index + 1,
+                ]);
+            }
+        }
+        
+        $problem->update($validated);
+        
+        return redirect()
+            ->route('institution.problems.show', $problem->id)
+            ->with('success', 'Problem berhasil diperbarui!');
     }
-
+    
     /**
-     * delete problem dan semua gambarnya
+     * hapus problem
      */
-    public function destroy(Problem $problem)
+    public function destroy($id)
     {
-        // validasi ownership
-        if ($problem->institution_id !== Auth::user()->institution->id) {
-            abort(403);
+        $problem = Problem::where('institution_id', auth()->user()->institution->id)
+                         ->findOrFail($id);
+        
+        // cek apakah ada aplikasi yang sudah diterima
+        if ($problem->applications()->where('status', 'accepted')->exists()) {
+            return back()->with('error', 'Tidak dapat menghapus problem yang sudah memiliki aplikasi diterima!');
         }
-
-        // validasi: tidak bisa hapus jika sudah ada applications
-        if ($problem->applications()->exists()) {
-            return back()->with('error', 'Tidak dapat menghapus masalah yang sudah memiliki aplikasi.');
+        
+        // hapus semua gambar
+        foreach ($problem->images as $image) {
+            Storage::disk('public')->delete($image->image_path);
+            $image->delete();
         }
-
-        try {
-            DB::beginTransaction();
-
-            // hapus semua gambar dari supabase
-            foreach ($problem->images as $image) {
-                $this->supabaseStorage->deleteFile($image->image_path);
-                $image->delete();
-            }
-
-            // hapus problem
-            $problem->delete();
-
-            DB::commit();
-
-            return redirect()->route('institution.problems.index')
-                           ->with('success', 'Problem berhasil dihapus!');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            
-            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
-        }
+        
+        $problem->delete();
+        
+        return redirect()
+            ->route('institution.problems.index')
+            ->with('success', 'Problem berhasil dihapus!');
     }
 }

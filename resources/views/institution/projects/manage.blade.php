@@ -82,9 +82,9 @@
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                     </svg>
-                                    <span>Target: {{ $milestone->due_date->format('d M Y') }}</span>
-                                    @if($milestone->due_date < now() && $milestone->status != 'completed')
-                                    <span class="px-2 py-0.5 bg-red-100 text-red-700 text-xs font-semibold rounded">Overdue</span>
+                                    <span>Target: {{ $milestone->target_date ? $milestone->target_date->format('d M Y') : '-' }}</span>
+                                    @if($milestone->target_date && $milestone->target_date < now() && $milestone->status != 'completed')
+                                        <span class="px-2 py-0.5 bg-red-100 text-red-700 text-xs font-semibold rounded">Overdue</span>
                                     @endif
                                 </div>
                                 

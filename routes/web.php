@@ -217,7 +217,7 @@ Route::middleware(['auth', 'check.user.type:institution'])->prefix('institution'
         Route::get('/', [InstitutionProfileController::class, 'index'])->name('index');
         Route::get('/edit', [InstitutionProfileController::class, 'edit'])->name('edit');
         Route::put('/', [InstitutionProfileController::class, 'update'])->name('update');
-        Route::put('/password', [InstitutionProfileController::class, 'updatePassword'])->name('update-password');
+        Route::put('/password', [InstitutionProfileController::class, 'updatePassword'])->name('password.update');
     });
     
 });
@@ -253,7 +253,6 @@ Route::get('/institution/{id}', [InstitutionProfileController::class, 'showPubli
 |--------------------------------------------------------------------------
 */
 
-// ✅ TAMBAHAN BARU: public student profile (dari profile page, bukan portfolio page)
 Route::get('/student/profile/{username}', [StudentProfileController::class, 'publicProfile'])
     ->name('student.profile.public');
 

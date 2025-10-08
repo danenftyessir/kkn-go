@@ -131,9 +131,27 @@
                         <div class="flex items-start justify-between">
                             <div class="flex gap-4 flex-1">
                                 {{-- student avatar --}}
-                                <img src="{{ $review->student->user->profile_picture ? asset('storage/' . $review->student->user->profile_picture) : 'https://ui-avatars.com/api/?name=' . urlencode($review->student->user->name) }}" 
-                                     alt="{{ $review->student->user->name }}"
-                                     class="w-16 h-16 rounded-full object-cover border-2 border-gray-200">
+                                @if($review->reviewee)
+                                    @php
+                                        $reviewedStudent = \App\Models\Student::where('user_id', $review->reviewee_id)->first();
+                                    @endphp
+                                    
+                                    @if($reviewedStudent && $reviewedStudent->user)
+                                        <img src="{{ $reviewedStudent->user->profile_photo_url ?? 'https://ui-avatars.com/api/?name=' . urlencode($reviewedStudent->user->name) }}"
+                                            alt="{{ $reviewedStudent->user->name }}"
+                                            class="w-16 h-16 rounded-full object-cover border-2 border-gray-200">
+                                        
+                                        <div class="flex-1">
+                                            <h3 class="text-lg font-semibold text-gray-900">{{ $reviewedStudent->user->name }}</h3>
+                                            <p class="text-sm text-gray-600">{{ $reviewedStudent->university->name ?? '-' }}</p>
+                                            <p class="text-xs text-gray-500 mt-1">Proyek: {{ $review->project->problem->title }}</p>
+                                        </div>
+                                    @else
+                                        <div class="text-gray-500">Data mahasiswa tidak ditemukan</div>
+                                    @endif
+                                @else
+                                    <div class="text-gray-500">Data review tidak lengkap</div>
+                                @endif
                                 
                                 <div class="flex-1">
                                     {{-- student info --}}
