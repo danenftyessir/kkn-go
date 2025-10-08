@@ -4,57 +4,63 @@ use Illuminate\Support\Facades\Storage;
 
 if (!function_exists('storage_url')) {
     /**
-     * dapatkan URL publik untuk file di storage
-     * support local dan supabase storage
+     * dapatkan URL publik untuk file di supabase storage
+     * LANGSUNG pakai public URL, tidak pakai S3 driver
      * 
-     * @param string $path path file di storage
-     * @param string|null $disk disk yang digunakan (null = default disk)
+     * @param string|null $path path file di storage
      * @return string URL publik file
      */
-    function storage_url($path, $disk = null)
+    function storage_url($path)
     {
         if (empty($path)) {
             return '';
         }
 
-        $disk = $disk ?? config('filesystems.default');
+        // supabase project ID
+        $projectId = 'zgpykwjzmiqxhweifmrn';
         
-        // jika menggunakan supabase, return URL publik
-        if ($disk === 'supabase') {
-            $baseUrl = rtrim(config('filesystems.disks.supabase.url'), '/');
-            $bucket = config('filesystems.disks.supabase.bucket');
-            
-            // format URL supabase: https://project.supabase.co/storage/v1/object/public/bucket/path
-            return $baseUrl . '/' . $bucket . '/' . ltrim($path, '/');
-        }
+        // bucket name (pakai URL encode untuk handle space)
+        $bucket = rawurlencode('kkn-go storage');
         
-        // untuk disk lain, gunakan Storage::url()
-        return Storage::disk($disk)->url($path);
+        // clean path (hapus leading slash)
+        $cleanPath = ltrim($path, '/');
+        
+        // format URL supabase public:
+        // https://PROJECT_ID.supabase.co/storage/v1/object/public/BUCKET/PATH
+        return "https://{$projectId}.supabase.co/storage/v1/object/public/{$bucket}/{$cleanPath}";
     }
 }
 
 if (!function_exists('problem_image_url')) {
     /**
-     * dapatkan URL gambar problem
+     * dapatkan URL gambar problem dari supabase
      * 
-     * @param string $imagePath path gambar
+     * @param string|null $imagePath path gambar (misal: problems/image1.jpg)
      * @return string URL gambar
      */
     function problem_image_url($imagePath)
     {
+        if (empty($imagePath)) {
+            return asset('images/placeholder-problem.jpg');
+        }
+        
         return storage_url($imagePath);
     }
 }
 
 if (!function_exists('document_url')) {
     /**
-     * dapatkan URL dokumen
+     * dapatkan URL dokumen dari supabase
      * 
-     * @param string $filePath path file
+     * @param string|null $filePath path file (misal: documents/reports/file.pdf)
      * @return string URL file
      */
     function document_url($filePath)
     {
+        if (empty($filePath)) {
+            return '';
+        }
+        
         return storage_url($filePath);
     }
 }
@@ -75,8 +81,8 @@ if (!function_exists('profile_photo_url')) {
         
         // return default avatar
         $defaults = [
-            'student' => '/images/default-student-avatar.png',
-            'institution' => '/images/default-institution-logo.png',
+            'student' => asset('images/default-student-avatar.png'),
+            'institution' => asset('images/default-institution-logo.png'),
         ];
         
         return $defaults[$defaultType] ?? $defaults['student'];
@@ -93,7 +99,7 @@ if (!function_exists('format_file_size')) {
      */
     function format_file_size($bytes, $decimals = 2)
     {
-        if ($bytes === 0) {
+        if ($bytes === 0 || $bytes === null) {
             return '0 Bytes';
         }
 
@@ -105,68 +111,111 @@ if (!function_exists('format_file_size')) {
     }
 }
 
-if (!function_exists('sdg_label')) {
+if (!function_exists('sdg_category_label')) {
     /**
-     * dapatkan label SDG dari kode
-     * 
-     * @param string $code kode SDG (e.g., 'no_poverty')
-     * @return string label SDG
+     * dapatkan label untuk kategori SDG
      */
-    function sdg_label($code)
+    function sdg_category_label($category)
     {
         $labels = [
             'no_poverty' => 'Tanpa Kemiskinan',
             'zero_hunger' => 'Tanpa Kelaparan',
-            'good_health' => 'Kesehatan yang Baik',
+            'good_health' => 'Kehidupan Sehat dan Sejahtera',
             'quality_education' => 'Pendidikan Berkualitas',
             'gender_equality' => 'Kesetaraan Gender',
             'clean_water' => 'Air Bersih dan Sanitasi',
             'affordable_energy' => 'Energi Bersih dan Terjangkau',
-            'decent_work' => 'Pekerjaan Layak',
+            'decent_work' => 'Pekerjaan Layak dan Pertumbuhan Ekonomi',
             'industry_innovation' => 'Industri, Inovasi, dan Infrastruktur',
-            'reduced_inequalities' => 'Mengurangi Kesenjangan',
+            'reduced_inequalities' => 'Berkurangnya Kesenjangan',
             'sustainable_cities' => 'Kota dan Komunitas Berkelanjutan',
-            'responsible_consumption' => 'Konsumsi dan Produksi Bertanggung Jawab',
-            'climate_action' => 'Aksi Iklim',
-            'life_below_water' => 'Kehidupan di Bawah Air',
-            'life_on_land' => 'Kehidupan di Darat',
-            'peace_justice' => 'Perdamaian, Keadilan, dan Kelembagaan',
-            'partnerships' => 'Kemitraan untuk Tujuan',
+            'responsible_consumption' => 'Konsumsi dan Produksi yang Bertanggung Jawab',
+            'climate_action' => 'Penanganan Perubahan Iklim',
+            'life_below_water' => 'Ekosistem Laut',
+            'life_on_land' => 'Ekosistem Daratan',
+            'peace_justice' => 'Perdamaian, Keadilan, dan Kelembagaan yang Kuat',
+            'partnerships' => 'Kemitraan untuk Mencapai Tujuan',
         ];
 
-        return $labels[$code] ?? ucwords(str_replace('_', ' ', $code));
+        return $labels[$category] ?? ucfirst(str_replace('_', ' ', $category));
     }
 }
 
-if (!function_exists('sdg_color')) {
+if (!function_exists('status_badge_class')) {
     /**
-     * dapatkan warna SDG dari kode
-     * 
-     * @param string $code kode SDG
-     * @return string class tailwind color
+     * dapatkan class CSS untuk status badge
      */
-    function sdg_color($code)
+    function status_badge_class($status)
     {
-        $colors = [
-            'no_poverty' => 'bg-red-500',
-            'zero_hunger' => 'bg-amber-500',
-            'good_health' => 'bg-green-500',
-            'quality_education' => 'bg-red-600',
-            'gender_equality' => 'bg-orange-500',
-            'clean_water' => 'bg-cyan-400',
-            'affordable_energy' => 'bg-yellow-400',
-            'decent_work' => 'bg-rose-600',
-            'industry_innovation' => 'bg-orange-600',
-            'reduced_inequalities' => 'bg-pink-500',
-            'sustainable_cities' => 'bg-amber-600',
-            'responsible_consumption' => 'bg-yellow-600',
-            'climate_action' => 'bg-green-600',
-            'life_below_water' => 'bg-blue-500',
-            'life_on_land' => 'bg-lime-500',
-            'peace_justice' => 'bg-blue-600',
-            'partnerships' => 'bg-indigo-600',
+        $classes = [
+            'draft' => 'bg-gray-100 text-gray-800',
+            'open' => 'bg-green-100 text-green-800',
+            'closed' => 'bg-red-100 text-red-800',
+            'in_progress' => 'bg-blue-100 text-blue-800',
+            'completed' => 'bg-purple-100 text-purple-800',
+            'pending' => 'bg-yellow-100 text-yellow-800',
+            'accepted' => 'bg-green-100 text-green-800',
+            'rejected' => 'bg-red-100 text-red-800',
+            'under_review' => 'bg-blue-100 text-blue-800',
+            'approved' => 'bg-green-100 text-green-800',
         ];
 
-        return $colors[$code] ?? 'bg-gray-500';
+        return $classes[$status] ?? 'bg-gray-100 text-gray-800';
+    }
+}
+
+if (!function_exists('status_label')) {
+    /**
+     * dapatkan label untuk status
+     */
+    function status_label($status)
+    {
+        $labels = [
+            'draft' => 'Draft',
+            'open' => 'Terbuka',
+            'closed' => 'Ditutup',
+            'in_progress' => 'Sedang Berjalan',
+            'completed' => 'Selesai',
+            'pending' => 'Menunggu',
+            'accepted' => 'Diterima',
+            'rejected' => 'Ditolak',
+            'under_review' => 'Dalam Review',
+            'approved' => 'Disetujui',
+            'active' => 'Aktif',
+        ];
+
+        return $labels[$status] ?? ucfirst(str_replace('_', ' ', $status));
+    }
+}
+
+if (!function_exists('difficulty_badge_class')) {
+    /**
+     * dapatkan class CSS untuk difficulty badge
+     */
+    function difficulty_badge_class($difficulty)
+    {
+        $classes = [
+            'beginner' => 'bg-green-100 text-green-800',
+            'intermediate' => 'bg-yellow-100 text-yellow-800',
+            'advanced' => 'bg-red-100 text-red-800',
+        ];
+
+        return $classes[$difficulty] ?? 'bg-gray-100 text-gray-800';
+    }
+}
+
+if (!function_exists('difficulty_label')) {
+    /**
+     * dapatkan label untuk difficulty
+     */
+    function difficulty_label($difficulty)
+    {
+        $labels = [
+            'beginner' => 'Pemula',
+            'intermediate' => 'Menengah',
+            'advanced' => 'Lanjutan',
+        ];
+
+        return $labels[$difficulty] ?? ucfirst($difficulty);
     }
 }
