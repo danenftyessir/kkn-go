@@ -2,14 +2,20 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * model Document
+ * untuk menyimpan dokumen hasil KKN (laporan, final report, dll)
+ * 
+ * CATATAN PENTING: file disimpan di Supabase Storage
+ * - Bucket: "kkn-go storage"
+ * - Path: documents/reports/FILENAME.pdf
+ * - Akses: Public URL via supabase_url() helper
+ */
 class Document extends Model
 {
-    use HasFactory, SoftDeletes;
-
     protected $fillable = [
         'project_id',
         'uploaded_by',
@@ -28,9 +34,11 @@ class Document extends Model
         'regency_id',
         'download_count',
         'view_count',
+        'citation_count',
         'is_public',
         'is_featured',
-        'citation_count',
+        'status',
+        'approved_at',
     ];
 
     protected $casts = [
@@ -38,92 +46,124 @@ class Document extends Model
         'tags' => 'array',
         'is_public' => 'boolean',
         'is_featured' => 'boolean',
+        'approved_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
 
-    /**
-     * relasi ke project
-     */
-    public function project()
+    // relasi ke project
+    public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
     }
 
-    /**
-     * relasi ke uploader
-     */
-    public function uploader()
+    // relasi ke uploader (user)
+    public function uploader(): BelongsTo
     {
         return $this->belongsTo(User::class, 'uploaded_by');
     }
 
-    /**
-     * relasi ke province
-     */
-    public function province()
+    // relasi ke province
+    public function province(): BelongsTo
     {
         return $this->belongsTo(Province::class);
     }
 
-    /**
-     * relasi ke regency
-     */
-    public function regency()
+    // relasi ke regency
+    public function regency(): BelongsTo
     {
         return $this->belongsTo(Regency::class);
     }
 
     /**
-     * scope untuk dokumen publik
+     * accessor untuk mendapatkan URL publik file dari Supabase
+     * 
+     * usage di blade: {{ $document->file_url }}
+     * 
+     * @return string URL publik file
      */
-    public function scopePublic($query)
+    public function getFileUrlAttribute(): string
     {
-        return $query->where('is_public', true);
+        // gunakan helper supabase_url untuk generate public URL
+        return supabase_url($this->file_path);
     }
 
     /**
-     * scope untuk dokumen featured
+     * accessor untuk mendapatkan ukuran file dalam format readable
+     * 
+     * usage di blade: {{ $document->file_size_formatted }}
+     * 
+     * @return string ukuran file (contoh: "2.5 MB")
+     */
+    public function getFileSizeFormattedAttribute(): string
+    {
+        return format_file_size($this->file_size ?? 0);
+    }
+
+    /**
+     * accessor untuk mendapatkan label kategori SDG dalam bahasa indonesia
+     * 
+     * usage di blade: 
+     * @foreach($document->categories_labels as $label)
+     *     {{ $label }}
+     * @endforeach
+     * 
+     * @return array array of SDG labels
+     */
+    public function getCategoriesLabelsAttribute(): array
+    {
+        if (!$this->categories || !is_array($this->categories)) {
+            return [];
+        }
+        
+        return array_map(function($category) {
+            return sdg_label($category);
+        }, $this->categories);
+    }
+
+    /**
+     * scope untuk filter dokumen yang dipublikasikan
+     * 
+     * usage: Document::published()->get()
+     */
+    public function scopePublished($query)
+    {
+        return $query->where('is_public', true)
+                    ->where('status', 'approved');
+    }
+
+    /**
+     * scope untuk filter dokumen featured
+     * 
+     * usage: Document::featured()->get()
      */
     public function scopeFeatured($query)
     {
         return $query->where('is_featured', true)
-                    ->orderBy('view_count', 'desc')
-                    ->orderBy('download_count', 'desc');
+                    ->where('is_public', true)
+                    ->where('status', 'approved');
     }
 
     /**
-     * scope untuk filter by kategori
-     */
-    public function scopeByCategory($query, $category)
-    {
-        return $query->whereJsonContains('categories', $category);
-    }
-
-    /**
-     * scope untuk filter by tag
-     */
-    public function scopeByTag($query, $tag)
-    {
-        return $query->whereJsonContains('tags', $tag);
-    }
-
-    /**
-     * scope untuk search
+     * scope untuk search dokumen
+     * 
+     * usage: Document::search('keyword')->get()
      */
     public function scopeSearch($query, $keyword)
     {
         return $query->where(function($q) use ($keyword) {
             $q->where('title', 'like', "%{$keyword}%")
               ->orWhere('description', 'like', "%{$keyword}%")
-              ->orWhere('author_name', 'like', "%{$keyword}%");
+              ->orWhere('author_name', 'like', "%{$keyword}%")
+              ->orWhere('institution_name', 'like', "%{$keyword}%")
+              ->orWhere('university_name', 'like', "%{$keyword}%");
         });
     }
 
     /**
      * increment download count
      */
-    public function incrementDownloads()
+    public function incrementDownloads(): void
     {
         $this->increment('download_count');
     }
@@ -131,42 +171,16 @@ class Document extends Model
     /**
      * increment view count
      */
-    public function incrementViews()
+    public function incrementViews(): void
     {
         $this->increment('view_count');
     }
 
     /**
-     * get formatted file size
+     * increment citation count
      */
-    public function getFormattedFileSizeAttribute()
+    public function incrementCitations(): void
     {
-        $bytes = $this->file_size;
-        
-        if ($bytes >= 1073741824) {
-            return number_format($bytes / 1073741824, 2) . ' GB';
-        } elseif ($bytes >= 1048576) {
-            return number_format($bytes / 1048576, 2) . ' MB';
-        } elseif ($bytes >= 1024) {
-            return number_format($bytes / 1024, 2) . ' KB';
-        } else {
-            return $bytes . ' bytes';
-        }
-    }
-
-    /**
-     * get file extension
-     */
-    public function getFileExtensionAttribute()
-    {
-        return pathinfo($this->file_path, PATHINFO_EXTENSION);
-    }
-
-    /**
-     * accessor untuk readable file size
-     */
-    public function getReadableFileSizeAttribute()
-    {
-        return $this->getFormattedFileSizeAttribute();
+        $this->increment('citation_count');
     }
 }

@@ -11,10 +11,11 @@ use App\Models\Review;
 use App\Models\Application;
 use App\Models\Student;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * seeder untuk membuat data projects, milestones, reports, documents, dan reviews
+ * 
+ * FIXED: tidak pakai Storage::disk()->files() lagi, pakai hardcode list
  * 
  * path: database/seeders/ProjectsSeeder.php
  * jalankan: php artisan db:seed --class=ProjectsSeeder
@@ -45,22 +46,37 @@ class ProjectsSeeder extends Seeder
 
         $this->command->info('Membuat data projects...');
 
-        // ambil file PDF dari supabase untuk final report
-        $pdfFiles = [];
-        try {
-            $allPdfFiles = Storage::disk('supabase')->files('documents/reports');
-            $pdfFiles = array_filter($allPdfFiles, function($file) {
-                return strtolower(pathinfo($file, PATHINFO_EXTENSION)) === 'pdf';
-            });
-            $pdfFiles = array_values($pdfFiles);
-            
-            if (!empty($pdfFiles)) {
-                $this->command->info('📄 Ditemukan ' . count($pdfFiles) . ' file PDF untuk final reports');
-            }
-        } catch (\Exception $e) {
-            $this->command->warn('⚠️  Tidak bisa mengakses PDF files dari Supabase: ' . $e->getMessage());
-            $this->command->info('💡 Projects akan dibuat tanpa final_report_path');
-            $this->command->info('💡 Fix Supabase credentials lalu jalankan: php artisan db:seed --class=DocumentsSeeder');
+        // hardcode list file PDF yang ada di supabase (sama seperti DocumentsSeeder)
+        // FIXED: tidak pakai Storage::disk()->files() yang menyebabkan error S3 endpoint
+        $pdfFiles = [
+            'documents/reports/1.FORMAT-DAN-CONTOH-LAPORAN-INDIVIDU-KKN.pdf',
+            'documents/reports/3341b-laporan_kkn_hasbi_mudzaki_fix-1-.pdf',
+            'documents/reports/bc4f599c360deae829ef0952f9200a4f.pdf',
+            'documents/reports/d5460592f2ee74a2f9f5910138d650e6.pdf',
+            'documents/reports/download_252705030541_laporan-panitia-kegiatan-kknpmm-reguler-periode-i-tahun-2025.pdf',
+            'documents/reports/f3f3ec539ee2d963e804d3a964b3290f.pdf',
+            'documents/reports/KKN_III.D.3_REG.96_2022.pdf',
+            'documents/reports/LAPORAN AKHIR KKN .pdf',
+            'documents/reports/laporan akhir KKN PPM OK.pdf',
+            'documents/reports/LAPORAN KKN DEMAPESA.pdf',
+            'documents/reports/LAPORAN KKN KELOMPOK 2250.pdf',
+            'documents/reports/LAPORAN KKN Kelompok 5 fakultas teknik.pdf',
+            'documents/reports/LAPORAN KKN_1.A.2_REG.119_2024.pdf',
+            'documents/reports/LAPORAN KKN.pdf',
+            'documents/reports/laporan_3460160906115724.pdf',
+            'documents/reports/laporan_akhir_201_35_2.pdf',
+            'documents/reports/laporan_akhir_3011_45_5.pdf',
+            'documents/reports/Laporan-Akademik-KKN-Persemakmuran-2022.pdf',
+            'documents/reports/laporan-kelompok.pdf',
+            'documents/reports/Laporan-Tugas-Akhir-KKN-156.pdf',
+            'documents/reports/Partisipasi-Berbasis-Komunitas-Dalam-Rangka-Percepatan-Penurunan-Stunting.pdf',
+            'documents/reports/Peraturan_Akademik_UNP.pdf',
+            'documents/reports/Laporan-KKN-2019.pdf',
+            'documents/reports/Stimulasi-Masyarakat-Desa-Tiyohu-berbasis-Ekonomi-dan-Pengetahuan-Hukum-di-Kabupaten-Gorontalo.pdf',
+        ];
+
+        if (!empty($pdfFiles)) {
+            $this->command->info('📄 Menggunakan ' . count($pdfFiles) . ' file PDF untuk final reports');
         }
 
         $pdfIndex = 0;
