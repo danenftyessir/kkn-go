@@ -60,6 +60,12 @@ return [
             'use_path_style_endpoint' => true,
             'throw' => false,
             'report' => false,
+            // perbaikan untuk SSL certificate error di local development
+            'http' => [
+                'verify' => env('SUPABASE_SSL_VERIFY', !app()->environment('local')),
+                'connect_timeout' => 30,
+                'timeout' => 60,
+            ],
         ],
 
     ],

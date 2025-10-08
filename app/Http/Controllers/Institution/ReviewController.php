@@ -10,6 +10,7 @@ use App\Services\ReviewService;
 
 /**
  * controller untuk manajemen review mahasiswa oleh instansi
+ * FIXED: ganti reviewer_type menjadi type
  */
 class ReviewController extends Controller
 {
@@ -28,11 +29,10 @@ class ReviewController extends Controller
         $institution = auth()->user()->institution;
 
         $query = Review::with([
-            'student.user',
-            'student.university',
+            'reviewee', // FIXED: gunakan reviewee, bukan student.user
             'project.problem'
         ])
-        ->where('reviewer_type', 'institution')
+        ->where('type', 'institution_to_student') // FIXED: gunakan 'type'
         ->whereHas('project', function($q) use ($institution) {
             $q->where('institution_id', $institution->id);
         });
@@ -45,7 +45,7 @@ class ReviewController extends Controller
         // search berdasarkan nama mahasiswa
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->whereHas('student.user', function($q) use ($search) {
+            $query->whereHas('reviewee', function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%");
             });
         }
@@ -70,19 +70,19 @@ class ReviewController extends Controller
 
         // statistik review
         $stats = [
-            'total' => Review::where('reviewer_type', 'institution')
+            'total' => Review::where('type', 'institution_to_student') // FIXED
                 ->whereHas('project', function($q) use ($institution) {
                     $q->where('institution_id', $institution->id);
                 })->count(),
-            'average_rating' => Review::where('reviewer_type', 'institution')
+            'average_rating' => Review::where('type', 'institution_to_student') // FIXED
                 ->whereHas('project', function($q) use ($institution) {
                     $q->where('institution_id', $institution->id);
                 })->avg('rating') ?? 0,
-            'five_star' => Review::where('reviewer_type', 'institution')
+            'five_star' => Review::where('type', 'institution_to_student') // FIXED
                 ->whereHas('project', function($q) use ($institution) {
                     $q->where('institution_id', $institution->id);
                 })->where('rating', 5)->count(),
-            'four_star' => Review::where('reviewer_type', 'institution')
+            'four_star' => Review::where('type', 'institution_to_student') // FIXED
                 ->whereHas('project', function($q) use ($institution) {
                     $q->where('institution_id', $institution->id);
                 })->where('rating', 4)->count(),
@@ -175,11 +175,10 @@ class ReviewController extends Controller
         $institution = auth()->user()->institution;
 
         $review = Review::with([
-            'student.user',
-            'student.university',
+            'reviewee', // FIXED
             'project.problem'
         ])
-        ->where('reviewer_type', 'institution')
+        ->where('type', 'institution_to_student') // FIXED
         ->whereHas('project', function($q) use ($institution) {
             $q->where('institution_id', $institution->id);
         })
@@ -196,11 +195,10 @@ class ReviewController extends Controller
         $institution = auth()->user()->institution;
 
         $review = Review::with([
-            'student.user',
-            'student.university',
+            'reviewee',
             'project.problem'
         ])
-        ->where('reviewer_type', 'institution')
+        ->where('type', 'institution_to_student') // FIXED
         ->whereHas('project', function($q) use ($institution) {
             $q->where('institution_id', $institution->id);
         })
@@ -222,7 +220,7 @@ class ReviewController extends Controller
     {
         $institution = auth()->user()->institution;
 
-        $review = Review::where('reviewer_type', 'institution')
+        $review = Review::where('type', 'institution_to_student') // FIXED
             ->whereHas('project', function($q) use ($institution) {
                 $q->where('institution_id', $institution->id);
             })
@@ -238,22 +236,24 @@ class ReviewController extends Controller
             'review' => 'required|string|max:1000',
             'strengths' => 'nullable|string|max:500',
             'improvements' => 'nullable|string|max:500',
-            'would_collaborate_again' => 'boolean',
         ]);
 
         try {
-            // gunakan service untuk handle logic
-            $this->reviewService->updateReview(
-                $review,
-                $validated['rating'],
-                $validated['review'],
-                $validated['strengths'] ?? null,
-                $validated['improvements'] ?? null,
-                $validated['would_collaborate_again'] ?? false
-            );
+            $review->update([
+                'rating' => $validated['rating'],
+                'review_text' => $validated['review'],
+                'strengths' => $validated['strengths'] ?? null,
+                'improvements' => $validated['improvements'] ?? null,
+            ]);
+
+            // update project rating juga
+            $review->project->update([
+                'rating' => $validated['rating'],
+                'institution_review' => $validated['review'],
+            ]);
 
             return redirect()->route('institution.reviews.show', $review->id)
-                           ->with('success', 'Review berhasil diperbarui!');
+                           ->with('success', 'Review berhasil diupdate!');
 
         } catch (\Exception $e) {
             return back()->withInput()
@@ -268,7 +268,7 @@ class ReviewController extends Controller
     {
         $institution = auth()->user()->institution;
 
-        $review = Review::where('reviewer_type', 'institution')
+        $review = Review::where('type', 'institution_to_student') // FIXED
             ->whereHas('project', function($q) use ($institution) {
                 $q->where('institution_id', $institution->id);
             })
@@ -280,7 +280,14 @@ class ReviewController extends Controller
         }
 
         try {
-            $this->reviewService->deleteReview($review);
+            // reset project rating
+            $review->project->update([
+                'rating' => null,
+                'institution_review' => null,
+                'reviewed_at' => null,
+            ]);
+
+            $review->delete();
 
             return redirect()->route('institution.reviews.index')
                            ->with('success', 'Review berhasil dihapus!');

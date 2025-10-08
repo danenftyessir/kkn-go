@@ -13,6 +13,7 @@ use Illuminate\Support\Str;
 /**
  * controller untuk knowledge repository
  * mahasiswa bisa browse dan download dokumen hasil KKN
+ * FIXED: tambah variable $stats di index
  */
 class KnowledgeRepositoryController extends Controller
 {
@@ -94,12 +95,31 @@ class KnowledgeRepositoryController extends Controller
                                     ->limit(3)
                                     ->get();
 
+        // FIXED: tambah statistik untuk view
+        $stats = [
+            'total_documents' => Document::where('is_public', true)
+                                        ->where('status', 'approved')
+                                        ->count(),
+            'total_downloads' => Document::where('is_public', true)
+                                        ->where('status', 'approved')
+                                        ->sum('download_count'),
+            'total_institutions' => Document::where('is_public', true)
+                                            ->where('status', 'approved')
+                                            ->distinct('institution_name')
+                                            ->count('institution_name'),
+            'total_universities' => Document::where('is_public', true)
+                                            ->where('status', 'approved')
+                                            ->distinct('university_name')
+                                            ->count('university_name'),
+        ];
+
         return view('student.repository.index', compact(
             'documents',
             'provinces',
             'universities',
             'years',
-            'featuredDocuments'
+            'featuredDocuments',
+            'stats' // FIXED: tambahkan variable stats
         ));
     }
 
