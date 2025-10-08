@@ -246,3 +246,21 @@ Route::get('/portfolio/{username}', [PortfolioController::class, 'show'])->name(
 
 // public institution profile (bisa diakses tanpa login)
 Route::get('/institution/{id}', [InstitutionProfileController::class, 'showPublic'])->name('institution.public');
+
+/*
+|--------------------------------------------------------------------------
+| Public Portfolio & Institution Profile Routes
+|--------------------------------------------------------------------------
+*/
+
+// ✅ TAMBAHAN BARU: public student profile (dari profile page, bukan portfolio page)
+Route::get('/student/profile/{username}', [StudentProfileController::class, 'publicProfile'])
+    ->name('student.profile.public');
+
+// public student portfolio (bisa diakses tanpa login)
+Route::get('/portfolio/{username}', [PortfolioController::class, 'show'])
+    ->name('portfolio.public');
+
+// public institution profile (bisa diakses tanpa login)
+Route::get('/institution/{id}', [InstitutionProfileController::class, 'showPublic'])
+    ->name('institution.public');
