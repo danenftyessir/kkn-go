@@ -218,9 +218,11 @@ Route::middleware(['auth', 'check.user.type:institution'])->prefix('institution'
         Route::get('/edit', [InstitutionProfileController::class, 'edit'])->name('edit');
         Route::put('/', [InstitutionProfileController::class, 'update'])->name('update');
         Route::put('/password', [InstitutionProfileController::class, 'updatePassword'])->name('password.update');
+        // alias untuk password update (sesuai dengan nama di form)
+        Route::put('/password/update', [StudentProfileController::class, 'updatePassword'])->name('password.update');
     });
-    
 });
+    
 
 /*
 |--------------------------------------------------------------------------

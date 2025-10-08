@@ -3,32 +3,34 @@
 namespace App\Http\Controllers\Institution;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Project;
 use App\Models\ProjectMilestone;
-use App\Models\ProjectReport;
-use App\Models\Review;
+use App\Services\ProjectService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 /**
- * controller untuk manajemen proyek oleh instansi
+ * controller untuk mengelola proyek yang sedang berjalan
+ * instansi dapat monitor progress, manage milestones, dan berikan feedback
  */
 class ProjectManagementController extends Controller
 {
+    protected $projectService;
+
+    public function __construct(ProjectService $projectService)
+    {
+        $this->projectService = $projectService;
+    }
+
     /**
-     * tampilkan daftar proyek yang sedang berjalan
+     * tampilkan daftar semua proyek
      */
     public function index(Request $request)
     {
         $institution = auth()->user()->institution;
 
-        $query = Project::with([
-            'student.user',
-            'student.university',
-            'problem',
-            'milestones'
-        ])
-        ->where('institution_id', $institution->id);
+        $query = Project::with(['student.user', 'student.university', 'problem'])
+                       ->where('institution_id', $institution->id);
 
         // filter berdasarkan status
         if ($request->filled('status')) {
@@ -44,34 +46,20 @@ class ProjectManagementController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                  ->orWhereHas('student.user', function($subq) use ($search) {
-                      $subq->where('name', 'like', "%{$search}%");
+                $q->where('title', 'LIKE', "%{$search}%")
+                  ->orWhereHas('student.user', function($q) use ($search) {
+                      $q->where('name', 'LIKE', "%{$search}%");
                   });
             });
         }
 
-        // sorting
-        $sort = $request->input('sort', 'latest');
-        switch ($sort) {
-            case 'progress':
-                $query->orderBy('progress_percentage', 'desc');
-                break;
-            case 'deadline':
-                $query->orderBy('end_date', 'asc');
-                break;
-            default:
-                $query->latest();
-        }
+        $projects = $query->orderBy('created_at', 'desc')->paginate(15);
 
-        $projects = $query->paginate(15)->withQueryString();
-
-        // statistik proyek
+        // statistik untuk summary cards
         $stats = [
             'total' => Project::where('institution_id', $institution->id)->count(),
-            'planning' => Project::where('institution_id', $institution->id)->where('status', 'planning')->count(),
             'active' => Project::where('institution_id', $institution->id)->where('status', 'active')->count(),
-            'review' => Project::where('institution_id', $institution->id)->where('status', 'review')->count(),
+            'on_hold' => Project::where('institution_id', $institution->id)->where('status', 'on_hold')->count(),
             'completed' => Project::where('institution_id', $institution->id)->where('status', 'completed')->count(),
         ];
 
@@ -138,15 +126,17 @@ class ProjectManagementController extends Controller
         $project = Project::where('institution_id', $institution->id)->findOrFail($id);
 
         $validated = $request->validate([
-            'status' => 'required|in:planning,active,review,completed,cancelled',
+            'status' => 'required|in:active,on_hold,completed,cancelled',
             'notes' => 'nullable|string|max:500',
         ]);
 
-        $project->update([
-            'status' => $validated['status'],
-        ]);
+        // jika status berubah menjadi completed, set completed_at
+        $data = ['status' => $validated['status']];
+        if ($validated['status'] === 'completed' && $project->status !== 'completed') {
+            $data['completed_at'] = now();
+        }
 
-        // TODO: kirim notifikasi ke mahasiswa
+        $project->update($data);
 
         return response()->json([
             'success' => true,
@@ -167,7 +157,7 @@ class ProjectManagementController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'due_date' => 'required|date|after:today',
+            'target_date' => 'required|date|after:today',
             'deliverables' => 'nullable|array',
             'deliverables.*' => 'string',
         ]);
@@ -176,12 +166,10 @@ class ProjectManagementController extends Controller
             'project_id' => $project->id,
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
-            'due_date' => $validated['due_date'],
+            'target_date' => $validated['target_date'],
             'deliverables' => isset($validated['deliverables']) ? json_encode($validated['deliverables']) : null,
             'status' => 'pending',
         ]);
-
-        // TODO: kirim notifikasi ke mahasiswa
 
         return back()->with('success', 'Milestone berhasil ditambahkan!');
     }
@@ -199,19 +187,26 @@ class ProjectManagementController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'due_date' => 'required|date',
-            'status' => 'required|in:pending,in_progress,completed',
+            'target_date' => 'required|date',
+            'status' => 'required|in:pending,in_progress,completed,delayed',
             'deliverables' => 'nullable|array',
             'deliverables.*' => 'string',
         ]);
 
-        $milestone->update([
+        $data = [
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
-            'due_date' => $validated['due_date'],
+            'target_date' => $validated['target_date'],
             'status' => $validated['status'],
             'deliverables' => isset($validated['deliverables']) ? json_encode($validated['deliverables']) : null,
-        ]);
+        ];
+
+        // jika status berubah menjadi completed, set completed_at
+        if ($validated['status'] === 'completed' && $milestone->status !== 'completed') {
+            $data['completed_at'] = now();
+        }
+
+        $milestone->update($data);
 
         // update progress percentage proyek
         $this->updateProjectProgress($project);
@@ -238,122 +233,22 @@ class ProjectManagementController extends Controller
     }
 
     /**
-     * approve report mahasiswa
+     * update progress percentage proyek berdasarkan milestone
+     * 
+     * @param Project $project
      */
-    public function approveReport(Request $request, $id, $reportId)
-    {
-        $institution = auth()->user()->institution;
-
-        $project = Project::where('institution_id', $institution->id)->findOrFail($id);
-        $report = ProjectReport::where('project_id', $project->id)->findOrFail($reportId);
-
-        $validated = $request->validate([
-            'feedback' => 'nullable|string|max:1000',
-        ]);
-
-        $report->update([
-            'status' => 'approved',
-            'institution_feedback' => $validated['feedback'] ?? null,
-            'reviewed_at' => now(),
-        ]);
-
-        // TODO: kirim notifikasi ke mahasiswa
-
-        return back()->with('success', 'Report berhasil disetujui!');
-    }
-
-    /**
-     * reject report mahasiswa dengan feedback
-     */
-    public function rejectReport(Request $request, $id, $reportId)
-    {
-        $institution = auth()->user()->institution;
-
-        $project = Project::where('institution_id', $institution->id)->findOrFail($id);
-        $report = ProjectReport::where('project_id', $project->id)->findOrFail($reportId);
-
-        $validated = $request->validate([
-            'feedback' => 'required|string|max:1000',
-        ]);
-
-        $report->update([
-            'status' => 'revision_required',
-            'institution_feedback' => $validated['feedback'],
-            'reviewed_at' => now(),
-        ]);
-
-        // TODO: kirim notifikasi ke mahasiswa
-
-        return back()->with('success', 'Report dikembalikan untuk revisi.');
-    }
-
-    /**
-     * submit review untuk mahasiswa setelah proyek selesai
-     */
-    public function submitReview(Request $request, $id)
-    {
-        $institution = auth()->user()->institution;
-
-        $project = Project::where('institution_id', $institution->id)->findOrFail($id);
-
-        // hanya bisa review jika proyek sudah selesai
-        if ($project->status !== 'completed') {
-            return back()->with('error', 'Hanya dapat memberikan review untuk proyek yang sudah selesai.');
-        }
-
-        // cek apakah sudah pernah review
-        if ($project->rating) {
-            return back()->with('error', 'Anda sudah memberikan review untuk proyek ini.');
-        }
-
-        $validated = $request->validate([
-            'rating' => 'required|integer|min:1|max:5',
-            'review' => 'required|string|max:1000',
-        ]);
-
-        try {
-            DB::beginTransaction();
-
-            // update rating di project
-            $project->update([
-                'rating' => $validated['rating'],
-                'institution_review' => $validated['review'],
-                'reviewed_at' => now(),
-            ]);
-
-            // buat review record
-            Review::create([
-                'project_id' => $project->id,
-                'reviewer_id' => auth()->id(),
-                'reviewer_type' => 'institution',
-                'student_id' => $project->student_id,
-                'rating' => $validated['rating'],
-                'review' => $validated['review'],
-            ]);
-
-            // TODO: kirim notifikasi ke mahasiswa
-
-            DB::commit();
-
-            return back()->with('success', 'Review berhasil diberikan!');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            
-            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * private helper untuk update progress percentage proyek
-     */
-    private function updateProjectProgress($project)
+    protected function updateProjectProgress(Project $project)
     {
         $totalMilestones = $project->milestones()->count();
-        $completedMilestones = $project->milestones()->where('status', 'completed')->count();
         
-        $percentage = $totalMilestones > 0 ? ($completedMilestones / $totalMilestones) * 100 : 0;
+        if ($totalMilestones === 0) {
+            $project->update(['progress_percentage' => 0]);
+            return;
+        }
 
-        $project->update(['progress_percentage' => round($percentage, 2)]);
+        $completedMilestones = $project->milestones()->where('status', 'completed')->count();
+        $progressPercentage = ($completedMilestones / $totalMilestones) * 100;
+
+        $project->update(['progress_percentage' => round($progressPercentage)]);
     }
 }

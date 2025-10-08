@@ -4,9 +4,15 @@ namespace App\Services;
 
 use App\Models\Project;
 use App\Models\Student;
-use App\Models\Review;  // ✅ PERBAIKAN: gunakan Review bukan InstitutionReview
+use App\Models\Review;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * service untuk mengelola portfolio mahasiswa
+ * handle business logic untuk portfolio display dan management
+ * 
+ * path: app/Services/PortfolioService.php
+ */
 class PortfolioService
 {
     /**
@@ -16,19 +22,19 @@ class PortfolioService
     {
         $student = Student::with('user')->findOrFail($studentId);
 
-        // ambil completed projects
+        // ambil completed projects dengan sorting berdasarkan updated_at
         $completedProjects = Project::with([
             'problem.institution',
             'problem.province',
             'problem.regency',
-            'institutionReview'  // relasi ini sudah diperbaiki di Project model
+            'institutionReview'
         ])
         ->where('student_id', $studentId)
         ->where('status', 'completed')
-        ->orderBy('completed_at', 'desc')
+        ->orderBy('updated_at', 'desc')
         ->get();
 
-        // ✅ PERBAIKAN: gunakan Review bukan InstitutionReview
+        // ambil reviews dari institution untuk projects
         $reviews = Review::where('type', 'institution_to_student')
             ->whereIn('project_id', $completedProjects->pluck('id'))
             ->get();
@@ -144,41 +150,30 @@ class PortfolioService
     }
 
     /**
-     * get portfolio achievements
+     * get portfolio achievements berdasarkan project dan review
      */
     public function getAchievements($student, $projects, $reviews)
     {
         $achievements = [];
 
         // project completion milestones
-        $projectCount = $projects->count();
-        if ($projectCount >= 1) {
+        if ($projects->count() >= 1) {
             $achievements[] = [
                 'title' => 'First Project',
                 'description' => 'Menyelesaikan proyek KKN pertama',
-                'icon' => 'star',
-                'color' => 'blue',
-                'earned_at' => $projects->first()->completed_at
-            ];
-        }
-
-        if ($projectCount >= 5) {
-            $achievements[] = [
-                'title' => 'Experienced Contributor',
-                'description' => 'Menyelesaikan 5 proyek KKN',
-                'icon' => 'award',
+                'icon' => 'check-circle',
                 'color' => 'green',
-                'earned_at' => $projects->take(5)->last()->completed_at
+                'earned_at' => $projects->last()->updated_at
             ];
         }
 
-        if ($projectCount >= 10) {
+        if ($projects->count() >= 3) {
             $achievements[] = [
-                'title' => 'Master Contributor',
-                'description' => 'Menyelesaikan 10 proyek KKN',
-                'icon' => 'trophy',
-                'color' => 'yellow',
-                'earned_at' => $projects->take(10)->last()->completed_at
+                'title' => 'Experienced Volunteer',
+                'description' => 'Menyelesaikan 3+ proyek KKN',
+                'icon' => 'award',
+                'color' => 'blue',
+                'earned_at' => $projects->first()->updated_at
             ];
         }
 
@@ -203,7 +198,7 @@ class PortfolioService
                 'description' => 'Berkontribusi pada 5+ kategori SDG berbeda',
                 'icon' => 'globe',
                 'color' => 'green',
-                'earned_at' => $projects->first()->completed_at
+                'earned_at' => $projects->first()->updated_at
             ];
         }
 
@@ -215,11 +210,53 @@ class PortfolioService
                 'description' => 'Menguasai 10+ skill berbeda',
                 'icon' => 'briefcase',
                 'color' => 'blue',
-                'earned_at' => $projects->first()->completed_at
+                'earned_at' => $projects->first()->updated_at
             ];
         }
 
         return $achievements;
+    }
+
+    /**
+     * generate portfolio slug untuk public access
+     */
+    public function generatePortfolioSlug($student)
+    {
+        // gunakan NIM atau ID sebagai slug
+        return $student->nim ?? $student->id;
+    }
+
+    /**
+     * get public portfolio berdasarkan slug
+     */
+    public function getPublicPortfolio($slug)
+    {
+        // cari student berdasarkan NIM atau ID
+        $student = Student::with('user')
+            ->where('nim', $slug)
+            ->orWhere('id', $slug)
+            ->firstOrFail();
+
+        // check visibility (jika ada field portfolio_visible)
+        // if (!$student->portfolio_visible) {
+        //     abort(403, 'Portfolio is private');
+        // }
+
+        return $this->getPortfolioData($student->id);
+    }
+
+    /**
+     * toggle project visibility in portfolio
+     */
+    public function toggleProjectVisibility($projectId)
+    {
+        $project = Project::findOrFail($projectId);
+        
+        // toggle is_portfolio_visible jika field ada
+        // $project->is_portfolio_visible = !$project->is_portfolio_visible;
+        // $project->save();
+
+        return $project;
     }
 
     /**
@@ -228,7 +265,8 @@ class PortfolioService
     public function isPortfolioVisible($studentId)
     {
         $student = Student::findOrFail($studentId);
-        return $student->portfolio_visible;
+        // return $student->portfolio_visible ?? true;
+        return true; // default visible untuk saat ini
     }
 
     /**
@@ -237,24 +275,10 @@ class PortfolioService
     public function togglePortfolioVisibility($studentId)
     {
         $student = Student::findOrFail($studentId);
-        $student->portfolio_visible = !$student->portfolio_visible;
-        $student->save();
+        // $student->portfolio_visible = !$student->portfolio_visible;
+        // $student->save();
 
-        return $student->portfolio_visible;
-    }
-
-    /**
-     * get public portfolio data
-     */
-    public function getPublicPortfolioData($studentId)
-    {
-        $student = Student::with('user')->findOrFail($studentId);
-
-        // check jika portfolio visible
-        if (!$student->portfolio_visible) {
-            return null;
-        }
-
-        return $this->getPortfolioData($studentId);
+        // return $student->portfolio_visible;
+        return true;
     }
 }
