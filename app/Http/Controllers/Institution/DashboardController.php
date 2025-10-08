@@ -33,7 +33,7 @@ class DashboardController extends Controller
         $institution = auth()->user()->institution;
 
         // statistik dashboard menggunakan analytics service
-        $stats = $this->analyticsService->getDashboardStats($institution->id);
+        $stats = $this->analyticsService->getInstitutionAnalytics($institution->id);
 
         // recent problems
         $recentProblems = Problem::where('institution_id', $institution->id)
