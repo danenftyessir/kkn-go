@@ -4,14 +4,18 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\Document;
+use App\Models\Province;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
+/**
+ * controller untuk knowledge repository
+ * mahasiswa bisa browse dan download dokumen hasil proyek
+ */
 class KnowledgeRepositoryController extends Controller
 {
     /**
-     * tampilkan halaman repository
+     * tampilkan halaman repository dengan filter dan statistik
      */
     public function index(Request $request)
     {
@@ -74,13 +78,44 @@ class KnowledgeRepositoryController extends Controller
         $documents = $query->paginate(12);
 
         // featured documents
-        $featuredDocuments = Document::featured()
-            ->where('is_public', true)
+        $featuredDocuments = Document::where('is_public', true)
             ->where('status', 'approved')
+            ->where('is_featured', true)
+            ->orderBy('created_at', 'desc')
             ->limit(3)
             ->get();
 
-        return view('student.repository.index', compact('documents', 'featuredDocuments'));
+        // statistik untuk cards
+        $stats = [
+            'total_documents' => Document::where('is_public', true)
+                                        ->where('status', 'approved')
+                                        ->count(),
+            'total_downloads' => Document::where('is_public', true)
+                                        ->where('status', 'approved')
+                                        ->sum('download_count'),
+            'total_views' => Document::where('is_public', true)
+                                    ->where('status', 'approved')
+                                    ->sum('view_count'),
+        ];
+
+        // data untuk filters
+        $provinces = Province::orderBy('name')->get();
+        $years = Document::where('is_public', true)
+                        ->where('status', 'approved')
+                        ->whereNotNull('year')
+                        ->distinct()
+                        ->pluck('year')
+                        ->sort()
+                        ->reverse()
+                        ->values();
+
+        return view('student.repository.index', compact(
+            'documents',
+            'featuredDocuments',
+            'stats',
+            'provinces',
+            'years'
+        ));
     }
 
     /**
@@ -148,64 +183,19 @@ class KnowledgeRepositoryController extends Controller
     }
 
     /**
-     * sanitize filename untuk download yang aman
-     */
-    protected function sanitizeFilename($title)
-    {
-        // hapus karakter spesial dan ganti dengan dash
-        $filename = preg_replace('/[^A-Za-z0-9\-_]/', '-', $title);
-
-        // hapus multiple dash
-        $filename = preg_replace('/-+/', '-', $filename);
-
-        // trim dash di awal dan akhir
-        $filename = trim($filename, '-');
-
-        // batasi panjang
-        $filename = Str::limit($filename, 100, '');
-
-        // fallback jika kosong
-        if (empty($filename)) {
-            $filename = 'document-' . time();
-        }
-
-        return $filename;
-    }
-
-    /**
-     * dapatkan content type berdasarkan extension
-     */
-    protected function getContentType($extension)
-    {
-        $mimeTypes = [
-            'pdf' => 'application/pdf',
-            'doc' => 'application/msword',
-            'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'xls' => 'application/vnd.ms-excel',
-            'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'ppt' => 'application/vnd.ms-powerpoint',
-            'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-            'txt' => 'text/plain',
-            'csv' => 'text/csv',
-        ];
-
-        return $mimeTypes[$extension] ?? 'application/octet-stream';
-    }
-
-    /**
-     * generate citation (APA, MLA, IEEE)
+     * generate citation untuk dokumen
      */
     public function generateCitation(Request $request, $id)
     {
-        $document = Document::with(['uploader.student'])->findOrFail($id);
+        $document = Document::findOrFail($id);
         $style = $request->get('style', 'apa');
 
-        $citation = '';
-        $authorName = $document->author_name ?? $document->uploader->name;
-        $year = $document->year ?? date('Y');
+        $authorName = $document->author_name ?? 'Unknown Author';
         $title = $document->title;
+        $year = $document->year ?? date('Y');
         $institution = $document->institution_name ?? 'Unknown Institution';
 
+        // generate citation berdasarkan style
         switch ($style) {
             case 'mla':
                 // format MLA: Author. "Title." Year.

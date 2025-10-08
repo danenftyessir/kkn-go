@@ -1,12 +1,12 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\EmailVerificationController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Student\DashboardController as StudentDashboardController;
 use App\Http\Controllers\Student\BrowseProblemsController;
 use App\Http\Controllers\Student\ApplicationController;
@@ -19,111 +19,100 @@ use App\Http\Controllers\Institution\DashboardController as InstitutionDashboard
 use App\Http\Controllers\Institution\ProblemController;
 use App\Http\Controllers\Institution\ApplicationReviewController;
 use App\Http\Controllers\Institution\ProjectManagementController;
-use App\Http\Controllers\Institution\ReviewController;
 use App\Http\Controllers\Institution\ProfileController as InstitutionProfileController;
+use App\Http\Controllers\Institution\ReviewController;
 use App\Http\Controllers\NotificationController;
 
 /*
 |--------------------------------------------------------------------------
-| web routes
+| Web Routes - KKN-GO Platform
+|--------------------------------------------------------------------------
+|
+| file ini berisi semua web routes untuk aplikasi KKN-GO
+| routes dikelompokkan berdasarkan user type dan authentication requirement
+|
+*/
+
+/*
+|--------------------------------------------------------------------------
+| Public Routes (Tidak Perlu Login)
 |--------------------------------------------------------------------------
 */
 
-// halaman home
+// halaman utama
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
 /*
 |--------------------------------------------------------------------------
-| development routes (hanya untuk development)
-|--------------------------------------------------------------------------
-*/
-if (app()->environment('local')) {
-    Route::get('/dev/login/{userId}', function($userId) {
-        Auth::loginUsingId($userId);
-        $user = Auth::user();
-        
-        if ($user->user_type === 'student') {
-            return redirect()->route('student.dashboard');
-        } else {
-            return redirect()->route('institution.dashboard');
-        }
-    })->name('dev.login');
-}
-
-/*
-|--------------------------------------------------------------------------
-| authentication routes
+| Guest Routes (Hanya untuk yang Belum Login)
 |--------------------------------------------------------------------------
 */
 
-// guest routes
 Route::middleware('guest')->group(function () {
+    
     // login
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [LoginController::class, 'login']);
     
-    // register
+    // register - halaman pilihan
     Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
+    
+    // register student
     Route::get('/register/student', [RegisterController::class, 'showStudentForm'])->name('register.student');
     Route::post('/register/student', [RegisterController::class, 'registerStudent'])->name('register.student.submit');
+    
+    // register institution
     Route::get('/register/institution', [RegisterController::class, 'showInstitutionForm'])->name('register.institution');
     Route::post('/register/institution', [RegisterController::class, 'registerInstitution'])->name('register.institution.submit');
     
-    // password reset
+    // forgot password
     Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
     Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
+    
+    // reset password
     Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
     Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
-});
-
-// authenticated routes
-Route::middleware('auth')->group(function () {
-    // logout
-    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
     
-    // email verification
-    Route::get('/email/verify', [EmailVerificationController::class, 'notice'])->name('verification.notice');
-    Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])->name('verification.verify');
-    Route::post('/email/resend', [EmailVerificationController::class, 'resend'])->name('verification.resend');
-    
-    // notifikasi (untuk semua user)
-    Route::prefix('notifications')->name('notifications.')->group(function () {
-        Route::get('/', [NotificationController::class, 'index'])->name('index');
-        Route::post('/{id}/read', [NotificationController::class, 'markAsRead'])->name('read');
-        Route::post('/read-all', [NotificationController::class, 'markAllAsRead'])->name('read-all');
-        Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('destroy');
-    });
 });
 
 /*
 |--------------------------------------------------------------------------
-| student routes (memerlukan auth + verified email)
+| Authenticated Routes (Perlu Login)
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth', 'user.type:student', 'verified'])->prefix('student')->name('student.')->group(function () {
+// logout (harus authenticated)
+Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth')->name('logout');
+
+// email verification
+Route::middleware(['auth'])->group(function () {
+    Route::get('/email/verify', [EmailVerificationController::class, 'notice'])->name('verification.notice');
+    Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])->name('verification.verify');
+    Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend'])->name('verification.resend');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Student Routes
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth', 'check.user.type:student'])->prefix('student')->name('student.')->group(function () {
     
     // dashboard
     Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
     
-    // browse problems - DIPERBAIKI: tambahkan route tanpa suffix
-    Route::get('/problems', [BrowseProblemsController::class, 'index'])->name('problems.index');
-    Route::get('/problems/{id}', [BrowseProblemsController::class, 'show'])->name('problems.show');
+    // browse problems - set 1 (shorter URL)
+    Route::prefix('problems')->name('problems.')->group(function () {
+        Route::get('/', [BrowseProblemsController::class, 'index'])->name('index');
+        Route::get('/{id}', [BrowseProblemsController::class, 'show'])->name('show');
+    });
     
-    // alias untuk konsistensi nama route
-    Route::get('/browse-problems', [BrowseProblemsController::class, 'index'])->name('browse-problems.index');
-    Route::get('/browse-problems/{id}', [BrowseProblemsController::class, 'show'])->name('browse-problems.show');
-    
-    // TAMBAHAN: route alias tanpa suffix untuk backward compatibility
-    Route::get('/browse-problems-redirect', function() {
-        return redirect()->route('student.browse-problems.index');
-    })->name('browse-problems');
-
-    // wishlist
-    Route::prefix('wishlist')->name('wishlist.')->group(function () {
-        Route::get('/', [WishlistController::class, 'index'])->name('index');
-        Route::post('/toggle/{problemId}', [WishlistController::class, 'toggle'])->name('toggle');
-        Route::delete('/{id}', [WishlistController::class, 'destroy'])->name('destroy');
+    // browse problems - set 2 (descriptive URL)
+    // PENTING: route ini yang digunakan di problem-card.blade.php
+    Route::prefix('browse-problems')->name('browse-problems.')->group(function () {
+        Route::get('/', [BrowseProblemsController::class, 'index'])->name('index');
+        Route::get('/{id}', [BrowseProblemsController::class, 'show'])->name('detail');
     });
     
     // applications
@@ -132,24 +121,22 @@ Route::middleware(['auth', 'user.type:student', 'verified'])->prefix('student')-
         Route::get('/create/{problemId}', [ApplicationController::class, 'create'])->name('create');
         Route::post('/', [ApplicationController::class, 'store'])->name('store');
         Route::get('/{id}', [ApplicationController::class, 'show'])->name('show');
-        Route::delete('/{id}/withdraw', [ApplicationController::class, 'withdraw'])->name('withdraw');
         Route::delete('/{id}', [ApplicationController::class, 'destroy'])->name('destroy');
     });
     
-    // my projects
+    // projects
     Route::prefix('projects')->name('projects.')->group(function () {
         Route::get('/', [MyProjectsController::class, 'index'])->name('index');
         Route::get('/{id}', [MyProjectsController::class, 'show'])->name('show');
-        Route::get('/{projectId}/reports/create', [MyProjectsController::class, 'createReport'])->name('reports.create');
-        Route::post('/{projectId}/reports', [MyProjectsController::class, 'storeReport'])->name('reports.store');
-        Route::get('/{projectId}/final-report/create', [MyProjectsController::class, 'createFinalReport'])->name('final-report.create');
-        Route::post('/{projectId}/final-report', [MyProjectsController::class, 'storeFinalReport'])->name('final-report.store');
+        Route::get('/{id}/report/create', [MyProjectsController::class, 'createReport'])->name('create-report');
+        Route::post('/{id}/report', [MyProjectsController::class, 'storeReport'])->name('store-report');
+        Route::get('/{id}/final-report/create', [MyProjectsController::class, 'createFinalReport'])->name('create-final-report');
+        Route::post('/{id}/final-report', [MyProjectsController::class, 'storeFinalReport'])->name('store-final-report');
     });
     
     // portfolio
     Route::prefix('portfolio')->name('portfolio.')->group(function () {
         Route::get('/', [PortfolioController::class, 'index'])->name('index');
-        Route::get('/public/{username}', [PortfolioController::class, 'public'])->name('public');
     });
     
     // profile
@@ -157,10 +144,13 @@ Route::middleware(['auth', 'user.type:student', 'verified'])->prefix('student')-
         Route::get('/', [StudentProfileController::class, 'index'])->name('index');
         Route::get('/edit', [StudentProfileController::class, 'edit'])->name('edit');
         Route::put('/', [StudentProfileController::class, 'update'])->name('update');
-        Route::patch('/', [StudentProfileController::class, 'update'])->name('update.patch'); // alias untuk PATCH
-        Route::put('/password', [StudentProfileController::class, 'updatePassword'])->name('password.update');
-        Route::patch('/password', [StudentProfileController::class, 'updatePassword'])->name('password.update.patch'); // alias untuk PATCH
-        Route::get('/public/{username}', [StudentProfileController::class, 'public'])->name('public');
+        Route::put('/password', [StudentProfileController::class, 'updatePassword'])->name('update-password');
+    });
+    
+    // wishlist
+    Route::prefix('wishlist')->name('wishlist.')->group(function () {
+        Route::get('/', [WishlistController::class, 'index'])->name('index');
+        Route::post('/{problemId}', [WishlistController::class, 'toggle'])->name('toggle');
     });
     
     // knowledge repository
@@ -168,22 +158,22 @@ Route::middleware(['auth', 'user.type:student', 'verified'])->prefix('student')-
         Route::get('/', [KnowledgeRepositoryController::class, 'index'])->name('index');
         Route::get('/{id}', [KnowledgeRepositoryController::class, 'show'])->name('show');
         Route::get('/{id}/download', [KnowledgeRepositoryController::class, 'download'])->name('download');
-        Route::post('/{id}/bookmark', [KnowledgeRepositoryController::class, 'toggleBookmark'])->name('bookmark');
     });
+    
 });
 
 /*
 |--------------------------------------------------------------------------
-| institution routes (memerlukan auth + verified email)
+| Institution Routes
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth', 'user.type:institution', 'verified'])->prefix('institution')->name('institution.')->group(function () {
+Route::middleware(['auth', 'check.user.type:institution'])->prefix('institution')->name('institution.')->group(function () {
     
     // dashboard
     Route::get('/dashboard', [InstitutionDashboardController::class, 'index'])->name('dashboard');
     
-    // problem management
+    // problems management
     Route::prefix('problems')->name('problems.')->group(function () {
         Route::get('/', [ProblemController::class, 'index'])->name('index');
         Route::get('/create', [ProblemController::class, 'create'])->name('create');
@@ -192,11 +182,9 @@ Route::middleware(['auth', 'user.type:institution', 'verified'])->prefix('instit
         Route::get('/{id}/edit', [ProblemController::class, 'edit'])->name('edit');
         Route::put('/{id}', [ProblemController::class, 'update'])->name('update');
         Route::delete('/{id}', [ProblemController::class, 'destroy'])->name('destroy');
-        Route::post('/{id}/publish', [ProblemController::class, 'publish'])->name('publish');
-        Route::post('/{id}/close', [ProblemController::class, 'close'])->name('close');
     });
     
-    // application review
+    // applications review
     Route::prefix('applications')->name('applications.')->group(function () {
         Route::get('/', [ApplicationReviewController::class, 'index'])->name('index');
         Route::get('/{id}', [ApplicationReviewController::class, 'show'])->name('show');
@@ -205,12 +193,13 @@ Route::middleware(['auth', 'user.type:institution', 'verified'])->prefix('instit
         Route::post('/{id}/reject', [ApplicationReviewController::class, 'reject'])->name('reject');
     });
     
-    // project management
+    // projects management
     Route::prefix('projects')->name('projects.')->group(function () {
         Route::get('/', [ProjectManagementController::class, 'index'])->name('index');
         Route::get('/{id}', [ProjectManagementController::class, 'show'])->name('show');
         Route::get('/{id}/manage', [ProjectManagementController::class, 'manage'])->name('manage');
-        Route::post('/{id}/complete', [ProjectManagementController::class, 'complete'])->name('complete');
+        Route::post('/{id}/milestone', [ProjectManagementController::class, 'addMilestone'])->name('add-milestone');
+        Route::put('/{id}/milestone/{milestoneId}', [ProjectManagementController::class, 'updateMilestone'])->name('update-milestone');
     });
     
     // reviews
@@ -221,7 +210,6 @@ Route::middleware(['auth', 'user.type:institution', 'verified'])->prefix('instit
         Route::get('/{id}', [ReviewController::class, 'show'])->name('show');
         Route::get('/{id}/edit', [ReviewController::class, 'edit'])->name('edit');
         Route::put('/{id}', [ReviewController::class, 'update'])->name('update');
-        Route::delete('/{id}', [ReviewController::class, 'destroy'])->name('destroy');
     });
     
     // profile
@@ -229,186 +217,32 @@ Route::middleware(['auth', 'user.type:institution', 'verified'])->prefix('instit
         Route::get('/', [InstitutionProfileController::class, 'index'])->name('index');
         Route::get('/edit', [InstitutionProfileController::class, 'edit'])->name('edit');
         Route::put('/', [InstitutionProfileController::class, 'update'])->name('update');
-        Route::put('/password', [InstitutionProfileController::class, 'updatePassword'])->name('password.update');
-        Route::get('/public/{slug}', [InstitutionProfileController::class, 'public'])->name('public');
+        Route::put('/password', [InstitutionProfileController::class, 'updatePassword'])->name('update-password');
     });
+    
 });
 
 /*
 |--------------------------------------------------------------------------
-| api routes untuk ajax requests
+| Notifications Routes (Student & Institution)
 |--------------------------------------------------------------------------
 */
 
-Route::prefix('api')->name('api.')->group(function () {
-    // public api (tidak perlu auth)
-    Route::get('/provinces', function() {
-        return response()->json(\App\Models\Province::orderBy('name')->get());
-    })->name('provinces');
-    
-    Route::get('/regencies/{provinceId}', function($provinceId) {
-        return response()->json(\App\Models\Regency::where('province_id', $provinceId)->orderBy('name')->get());
-    })->name('regencies');
-    
-    Route::get('/universities', function() {
-        return response()->json(\App\Models\University::orderBy('name')->get());
-    })->name('universities');
-    
-    // authenticated api
-    Route::middleware('auth')->group(function () {
-        Route::post('/problems/{id}/view', function($id) {
-            $problem = \App\Models\Problem::findOrFail($id);
-            $problem->increment('views_count');
-            return response()->json(['success' => true]);
-        })->name('problems.view');
-    });
+Route::middleware(['auth'])->prefix('notifications')->name('notifications.')->group(function () {
+    Route::get('/', [NotificationController::class, 'index'])->name('index');
+    Route::post('/{id}/read', [NotificationController::class, 'markAsRead'])->name('read');
+    Route::post('/read-all', [NotificationController::class, 'markAllAsRead'])->name('read-all');
+    Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('destroy');
 });
 
-if (app()->environment('local')) {
-    // route untuk test password hash
-    Route::get('/test-password', function() {
-        $testPassword = 'password123';
-        $hashed = Hash::make($testPassword);
-        
-        return response()->json([
-            'original_password' => $testPassword,
-            'hashed' => $hashed,
-            'check_result' => Hash::check($testPassword, $hashed),
-            'bcrypt_rounds' => config('hashing.bcrypt.rounds', 10),
-        ]);
-    });
+/*
+|--------------------------------------------------------------------------
+| Public Portfolio & Institution Profile Routes
+|--------------------------------------------------------------------------
+*/
 
-    // route untuk test user pertama
-    Route::get('/test-user', function() {
-        $student = \App\Models\Student::with('user')->first();
-        
-        if (!$student) {
-            return response()->json(['error' => 'Tidak ada student. Jalankan seeder dulu!']);
-        }
+// public student portfolio (bisa diakses tanpa login)
+Route::get('/portfolio/{username}', [PortfolioController::class, 'show'])->name('portfolio.public');
 
-        $user = $student->user;
-        $testPassword = 'password123';
-        
-        return response()->json([
-            'user_info' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'username' => $user->username,
-                'user_type' => $user->user_type,
-                'is_active' => $user->is_active,
-                'email_verified_at' => $user->email_verified_at,
-            ],
-            'password_hash' => $user->password,
-            'password_check_result' => Hash::check($testPassword, $user->password),
-            'test_credentials' => [
-                'email' => $user->email,
-                'username' => $user->username,
-                'password' => $testPassword,
-            ],
-        ]);
-    });
-
-    // route untuk test auth attempt langsung
-    Route::get('/test-auth/{username}', function($username) {
-        $user = \App\Models\User::where('username', $username)->first();
-        
-        if (!$user) {
-            return response()->json(['error' => 'User tidak ditemukan']);
-        }
-
-        $testPassword = 'password123';
-        
-        // test dengan email
-        $emailAttempt = Auth::attempt([
-            'email' => $user->email,
-            'password' => $testPassword,
-        ]);
-
-        // test dengan username
-        $usernameAttempt = Auth::attempt([
-            'username' => $user->username,
-            'password' => $testPassword,
-        ]);
-
-        return response()->json([
-            'user' => [
-                'email' => $user->email,
-                'username' => $user->username,
-                'is_active' => $user->is_active,
-                'email_verified' => $user->email_verified_at ? 'yes' : 'no',
-            ],
-            'password_check' => Hash::check($testPassword, $user->password),
-            'auth_attempt_email' => $emailAttempt,
-            'auth_attempt_username' => $usernameAttempt,
-            'currently_authed' => Auth::check(),
-            'authed_user_id' => Auth::id(),
-        ]);
-    });
-
-    // route untuk list semua user
-    Route::get('/list-users', function() {
-        $students = \App\Models\User::where('user_type', 'student')->limit(5)->get();
-        $institutions = \App\Models\User::where('user_type', 'institution')->limit(5)->get();
-        
-        return response()->json([
-            'students' => $students->map(fn($u) => [
-                'email' => $u->email,
-                'username' => $u->username,
-                'is_active' => $u->is_active,
-                'verified' => $u->email_verified_at ? 'yes' : 'no',
-            ]),
-            'institutions' => $institutions->map(fn($u) => [
-                'email' => $u->email,
-                'username' => $u->username,
-                'is_active' => $u->is_active,
-                'verified' => $u->email_verified_at ? 'yes' : 'no',
-            ]),
-            'total_users' => \App\Models\User::count(),
-        ]);
-    });
-}
-
-use Illuminate\Support\Facades\DB;
-
-Route::get('/test-db-connection', function () {
-    try {
-        DB::connection()->getPdo();
-        // Coba query sederhana untuk memastikan tabel 'users' ada
-        $user = DB::table('users')->first();
-        if ($user) {
-            return 'Koneksi ke database BERHASIL dan tabel users ditemukan.';
-        } else {
-            return 'Koneksi ke database BERHASIL, tetapi tidak ada data di tabel users. Jalankan seeder.';
-        }
-    } catch (\Exception $e) {
-        // Jika gagal, tampilkan pesan error yang sebenarnya
-        die("Gagal terhubung ke database. Error: " . $e->getMessage());
-    }
-});
-
-use App\Models\User;
-
-Route::get('/final-db-check', function () {
-    try {
-        // Ambil semua detail koneksi yang sedang digunakan oleh aplikasi
-        $connectionDetails = DB::connection()->getConfig();
-        
-        // Hitung jumlah user di database yang terhubung
-        $userCount = User::count();
-        
-        // Tampilkan semua informasinya
-        dd([
-            'status' => 'KONEKSI DATABASE AKTIF',
-            'host' => $connectionDetails['host'],
-            'port' => $connectionDetails['port'],
-            'database' => $connectionDetails['database'],
-            'username' => $connectionDetails['username'],
-            'total_users_ditemukan' => $userCount,
-        ]);
-
-    } catch (\Exception $e) {
-        // Jika gagal, tampilkan pesan error
-        die("Gagal terhubung ke database. Error: " . $e->getMessage());
-    }
-});
+// public institution profile (bisa diakses tanpa login)
+Route::get('/institution/{id}', [InstitutionProfileController::class, 'showPublic'])->name('institution.public');

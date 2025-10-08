@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use App\Models\Application;
 use App\Models\Student;
 use App\Models\Problem;
@@ -10,9 +11,8 @@ use Carbon\Carbon;
 
 /**
  * seeder untuk data dummy applications
- * UPDATED: meningkatkan jumlah accepted applications untuk menghasilkan 25+ projects
+ * fixed: prepared statement error dengan optimasi query
  * 
- * path: database/seeders/ApplicationsSeeder.php
  * jalankan: php artisan db:seed --class=ApplicationsSeeder
  */
 class ApplicationsSeeder extends Seeder
@@ -22,6 +22,9 @@ class ApplicationsSeeder extends Seeder
      */
     public function run(): void
     {
+        // disable query log untuk performa lebih baik
+        DB::connection()->disableQueryLog();
+        
         // ambil semua students dan problems yang tersedia
         $students = Student::all();
         $problems = Problem::where('status', 'open')->get();
@@ -36,70 +39,53 @@ class ApplicationsSeeder extends Seeder
 
         // data motivasi untuk variasi
         $motivations = [
-            'Saya sangat tertarik dengan proyek ini karena sesuai dengan bidang studi saya dan ingin berkontribusi untuk masyarakat. Saya memiliki pengalaman dalam riset dan analisis data yang dapat membantu proyek ini.',
-            'Proyek ini sangat menarik dan sesuai dengan passion saya di bidang pemberdayaan masyarakat. Saya berkomitmen untuk memberikan yang terbaik selama program berlangsung.',
-            'Saya tertarik untuk mengaplikasikan ilmu yang telah saya pelajari di kampus untuk membantu menyelesaikan masalah nyata di masyarakat. Saya siap belajar dan berkontribusi maksimal.',
-            'Sebagai mahasiswa yang peduli dengan sustainable development, saya ingin berkontribusi dalam proyek ini untuk membawa dampak positif bagi masyarakat setempat.',
-            'Saya memiliki keterampilan yang relevan dan pengalaman organisasi yang dapat membantu kesuksesan proyek ini. Saya sangat antusias untuk bergabung dalam tim.',
-            'Program KKN ini merupakan kesempatan emas untuk mengimplementasikan teori yang saya pelajari. Saya yakin dapat memberikan kontribusi signifikan.',
-            'Dengan latar belakang pendidikan saya di bidang ini, saya optimis dapat membantu menyelesaikan permasalahan yang ada dengan pendekatan inovatif.',
-            'Saya memiliki komitmen tinggi untuk terlibat aktif dalam program ini dan memberikan dampak positif bagi masyarakat.',
+            'Saya sangat tertarik dengan proyek ini karena sesuai dengan bidang studi saya dan ingin berkontribusi untuk masyarakat.',
+            'Proyek ini sangat menarik dan sesuai dengan passion saya di bidang pemberdayaan masyarakat.',
+            'Saya tertarik untuk mengaplikasikan ilmu yang telah saya pelajari di kampus untuk membantu menyelesaikan masalah nyata.',
+            'Sebagai mahasiswa yang peduli dengan sustainable development, saya ingin berkontribusi dalam proyek ini.',
+            'Saya memiliki keterampilan yang relevan dan pengalaman organisasi yang dapat membantu kesuksesan proyek ini.',
+            'Program KKN ini merupakan kesempatan emas untuk mengimplementasikan teori yang saya pelajari.',
+            'Dengan latar belakang pendidikan saya, saya optimis dapat membantu menyelesaikan permasalahan yang ada.',
+            'Saya memiliki komitmen tinggi untuk terlibat aktif dalam program ini.',
         ];
 
         $coverLetters = [
-            'Dengan hormat, saya mengajukan diri untuk bergabung dalam proyek ini. Saya yakin dengan latar belakang pendidikan dan pengalaman saya, saya dapat berkontribusi positif dalam mencapai tujuan proyek.',
-            'Kepada Yth. Tim Seleksi, saya tertarik untuk berpartisipasi dalam proyek ini karena visi dan misi yang sejalan dengan nilai-nilai yang saya anut. Saya berharap dapat diberikan kesempatan untuk berkontribusi.',
-            'Saya mengajukan aplikasi ini dengan penuh antusias. Proyek ini memberikan kesempatan luar biasa untuk mengembangkan kompetensi sekaligus memberikan manfaat nyata bagi masyarakat.',
-            'Melalui surat ini, saya ingin menyampaikan ketertarikan saya untuk terlibat dalam proyek yang Anda tawarkan. Saya percaya bahwa pengalaman ini akan sangat berharga bagi pengembangan diri saya.',
-            'Sebagai mahasiswa yang berdedikasi, saya sangat tertarik untuk berkontribusi dalam program KKN ini. Saya yakin pengalaman dan skill saya akan sangat bermanfaat.',
+            'Dengan hormat, saya mengajukan diri untuk bergabung dalam proyek ini.',
+            'Kepada Yth. Tim Seleksi, saya tertarik untuk berpartisipasi dalam proyek ini.',
+            'Salam hormat, melalui surat ini saya bermaksud mengajukan aplikasi untuk program KKN.',
+            'Yth. Panitia Seleksi, saya sangat tertarik untuk menjadi bagian dari proyek ini.',
         ];
 
-        $acceptedFeedbacks = [
-            'Aplikasi Anda menunjukkan motivasi yang kuat dan kesesuaian skill dengan kebutuhan proyek. Kami sangat senang menerima Anda dalam tim kami.',
-            'Selamat! Aplikasi Anda diterima. Kami terkesan dengan pengalaman dan antusiasme Anda. Silakan tunggu informasi lebih lanjut mengenai briefing proyek.',
-            'Profil dan motivasi Anda sangat sesuai dengan kebutuhan proyek. Selamat bergabung dalam tim kami!',
-            'Kami sangat senang menerima Anda dalam program ini. Pengalaman dan dedikasi Anda akan sangat berharga bagi kesuksesan proyek.',
-        ];
+        // hapus applications lama
+        Application::truncate();
 
-        $rejectedFeedbacks = [
-            'Terima kasih atas aplikasi Anda. Setelah melalui proses review, kami memutuskan untuk memilih kandidat lain yang lebih sesuai dengan kebutuhan proyek saat ini.',
-            'Profil Anda sangat menarik, namun sayangnya kuota untuk proyek ini sudah terpenuhi. Kami mengapresiasi ketertarikan Anda dan berharap dapat bekerja sama di kesempatan lain.',
-            'Kami menghargai ketertarikan Anda, namun untuk saat ini kami memilih kandidat dengan skill yang lebih spesifik sesuai kebutuhan proyek.',
-        ];
-
-        // counter untuk tracking
-        $totalCreated = 0;
+        $this->command->info('📝 Phase 1: Creating accepted applications...');
+        
+        // phase 1: buat accepted applications dulu (untuk projects)
         $acceptedCount = 0;
-        $targetAccepted = 30; // target minimal 30 accepted applications
-
-        // strategi: prioritaskan membuat accepted applications terlebih dahulu
-        $this->command->info("\n📝 Phase 1: Creating accepted applications...");
+        $targetAccepted = max(30, ceil($students->count() * 0.5)); // minimal 30 atau 50% dari students
+        $acceptedData = [];
         
-        // buat accepted applications dulu (untuk memastikan minimal 30)
-        $studentsForAccepted = $students->shuffle();
-        $problemsForAccepted = $problems->shuffle();
+        // shuffle students untuk distribusi acak
+        $shuffledStudents = $students->shuffle();
+        $studentIndex = 0;
         
-        $acceptedApplicationsToCreate = min($targetAccepted, $studentsForAccepted->count(), $problemsForAccepted->count());
-        
-        for ($i = 0; $i < $acceptedApplicationsToCreate; $i++) {
-            $student = $studentsForAccepted[$i];
-            $problem = $problemsForAccepted[$i % $problemsForAccepted->count()];
+        foreach ($problems as $problem) {
+            $studentsNeeded = $problem->required_students;
             
-            // cek apakah kombinasi student-problem sudah ada
-            $exists = Application::where('student_id', $student->id)
-                                ->where('problem_id', $problem->id)
-                                ->exists();
-            
-            if ($exists) {
-                continue;
-            }
-            
-            $appliedAt = Carbon::now()->subDays(rand(10, 30));
-            $reviewedAt = $appliedAt->copy()->addDays(rand(2, 5));
-            $acceptedAt = $reviewedAt->copy()->addDays(rand(1, 3));
-            
-            try {
-                Application::create([
+            for ($i = 0; $i < $studentsNeeded && $acceptedCount < $targetAccepted; $i++) {
+                if ($studentIndex >= $shuffledStudents->count()) {
+                    break; // habis students
+                }
+                
+                $student = $shuffledStudents[$studentIndex];
+                $studentIndex++;
+                
+                $appliedAt = Carbon::now()->subDays(rand(30, 60));
+                $reviewedAt = $appliedAt->copy()->addDays(rand(2, 7));
+                $acceptedAt = $reviewedAt->copy()->addDays(rand(1, 3));
+                
+                $acceptedData[] = [
                     'student_id' => $student->id,
                     'problem_id' => $problem->id,
                     'status' => 'accepted',
@@ -109,100 +95,122 @@ class ApplicationsSeeder extends Seeder
                     'reviewed_at' => $reviewedAt,
                     'accepted_at' => $acceptedAt,
                     'rejected_at' => null,
-                    'feedback' => $acceptedFeedbacks[array_rand($acceptedFeedbacks)],
-                ]);
-
-                $totalCreated++;
-                $acceptedCount++;
-
-                // update problem counters
-                $problem->increment('applications_count');
-                $problem->increment('accepted_students');
+                    'feedback' => 'Selamat! Aplikasi Anda diterima. Kami terkesan dengan motivasi dan kualifikasi Anda.',
+                    'created_at' => $appliedAt,
+                    'updated_at' => $acceptedAt,
+                ];
                 
-            } catch (\Exception $e) {
-                $this->command->warn("Skipped: " . $e->getMessage());
+                $acceptedCount++;
+                
+                // batch insert setiap 50 records untuk performa
+                if (count($acceptedData) >= 50) {
+                    DB::table('applications')->insert($acceptedData);
+                    $acceptedData = [];
+                    
+                    // clear prepared statements cache
+                    DB::connection()->getPdo()->exec('DEALLOCATE ALL');
+                }
             }
         }
-
+        
+        // insert sisa accepted data
+        if (!empty($acceptedData)) {
+            DB::table('applications')->insert($acceptedData);
+            DB::connection()->getPdo()->exec('DEALLOCATE ALL');
+        }
+        
         $this->command->info("✅ Created {$acceptedCount} accepted applications");
 
-        // phase 2: buat aplikasi lainnya dengan status bervariasi
-        $this->command->info("\n📝 Phase 2: Creating other applications...");
+        $this->command->info('📝 Phase 2: Creating other applications...');
         
-        // buat aplikasi tambahan untuk variasi
-        $remainingStudents = $students->shuffle();
+        // phase 2: buat aplikasi dengan status lain (pending, reviewed, rejected)
+        $otherApplicationsData = [];
+        $otherCount = 0;
+        $targetOther = min(100, $students->count() * 2); // maksimal 100 atau 2x jumlah students
         
-        foreach ($remainingStudents as $student) {
-            // setiap student buat 2-4 aplikasi dengan berbagai status
-            $numApplications = rand(2, 4);
+        $availableStudents = $students->whereNotIn('id', collect($shuffledStudents)->slice(0, $studentIndex)->pluck('id'));
+        
+        foreach ($availableStudents as $student) {
+            if ($otherCount >= $targetOther) break;
             
-            // ambil random problems untuk student ini
-            $selectedProblems = $problems->random(min($numApplications, $problems->count()));
+            // setiap student bisa apply ke 1-3 problems
+            $numApplications = rand(1, min(3, $problems->count()));
+            $selectedProblems = $problems->random($numApplications);
             
             foreach ($selectedProblems as $problem) {
-                // cek apakah sudah ada aplikasi
-                $exists = Application::where('student_id', $student->id)
-                                    ->where('problem_id', $problem->id)
-                                    ->exists();
+                $status = $this->randomStatus();
                 
-                if ($exists) {
-                    continue;
-                }
+                $appliedAt = Carbon::now()->subDays(rand(5, 45));
+                $reviewedAt = in_array($status, ['reviewed', 'rejected']) 
+                    ? $appliedAt->copy()->addDays(rand(1, 5)) 
+                    : null;
+                $rejectedAt = $status === 'rejected' 
+                    ? $reviewedAt->copy()->addDays(rand(1, 2)) 
+                    : null;
                 
-                // random status dengan distribusi:
-                // 20% pending, 15% reviewed, 35% rejected
-                // (accepted sudah dibuat di phase 1)
-                $rand = rand(1, 100);
-                if ($rand <= 20) {
-                    $status = 'pending';
-                } elseif ($rand <= 35) {
-                    $status = 'reviewed';
-                } else {
-                    $status = 'rejected';
-                }
-
-                // tentukan timestamps berdasarkan status
-                $appliedAt = Carbon::now()->subDays(rand(1, 30));
-                $reviewedAt = null;
-                $acceptedAt = null;
-                $rejectedAt = null;
-                $feedback = null;
-
-                if ($status === 'reviewed') {
-                    $reviewedAt = $appliedAt->copy()->addDays(rand(1, 5));
-                } elseif ($status === 'rejected') {
-                    $reviewedAt = $appliedAt->copy()->addDays(rand(1, 5));
-                    $rejectedAt = $reviewedAt->copy()->addDays(rand(1, 3));
-                    $feedback = $rejectedFeedbacks[array_rand($rejectedFeedbacks)];
-                }
-
-                try {
-                    Application::create([
-                        'student_id' => $student->id,
-                        'problem_id' => $problem->id,
-                        'status' => $status,
-                        'cover_letter' => $coverLetters[array_rand($coverLetters)],
-                        'motivation' => $motivations[array_rand($motivations)],
-                        'applied_at' => $appliedAt,
-                        'reviewed_at' => $reviewedAt,
-                        'accepted_at' => $acceptedAt,
-                        'rejected_at' => $rejectedAt,
-                        'feedback' => $feedback,
-                    ]);
-
-                    $totalCreated++;
-
-                    // update applications_count di problem
-                    $problem->increment('applications_count');
-                    
-                } catch (\Exception $e) {
-                    // skip jika duplicate
-                    continue;
+                $feedback = match($status) {
+                    'reviewed' => 'Aplikasi Anda sedang dalam proses review lebih lanjut.',
+                    'rejected' => 'Terima kasih atas minat Anda. Saat ini kami memilih kandidat yang lebih sesuai dengan kebutuhan proyek.',
+                    default => null,
+                };
+                
+                $otherApplicationsData[] = [
+                    'student_id' => $student->id,
+                    'problem_id' => $problem->id,
+                    'status' => $status,
+                    'cover_letter' => $coverLetters[array_rand($coverLetters)],
+                    'motivation' => $motivations[array_rand($motivations)],
+                    'applied_at' => $appliedAt,
+                    'reviewed_at' => $reviewedAt,
+                    'accepted_at' => null,
+                    'rejected_at' => $rejectedAt,
+                    'feedback' => $feedback,
+                    'created_at' => $appliedAt,
+                    'updated_at' => $rejectedAt ?? $reviewedAt ?? $appliedAt,
+                ];
+                
+                $otherCount++;
+                
+                // batch insert setiap 50 records
+                if (count($otherApplicationsData) >= 50) {
+                    try {
+                        DB::table('applications')->insert($otherApplicationsData);
+                        $otherApplicationsData = [];
+                        
+                        // clear prepared statements cache
+                        DB::connection()->getPdo()->exec('DEALLOCATE ALL');
+                    } catch (\Exception $e) {
+                        // skip jika duplicate
+                        $otherApplicationsData = [];
+                    }
                 }
             }
         }
+        
+        // insert sisa data
+        if (!empty($otherApplicationsData)) {
+            try {
+                DB::table('applications')->insert($otherApplicationsData);
+                DB::connection()->getPdo()->exec('DEALLOCATE ALL');
+            } catch (\Exception $e) {
+                // skip jika duplicate
+            }
+        }
+        
+        $this->command->info("✅ Created {$otherCount} other applications");
+
+        // update applications_count di problems
+        $this->command->info('📊 Updating problem statistics...');
+        foreach ($problems as $problem) {
+            $count = Application::where('problem_id', $problem->id)->count();
+            $problem->update(['applications_count' => $count]);
+        }
+
+        // enable query log kembali
+        DB::connection()->enableQueryLog();
 
         // tampilkan statistik final
+        $totalCreated = $acceptedCount + $otherCount;
         $this->command->newLine();
         $this->command->info("✅ {$totalCreated} applications berhasil dibuat!");
         $this->command->newLine();
@@ -210,10 +218,10 @@ class ApplicationsSeeder extends Seeder
         $this->command->table(
             ['Status', 'Count', 'Percentage'],
             [
-                ['Pending', Application::where('status', 'pending')->count(), round(Application::where('status', 'pending')->count() / $totalCreated * 100, 1) . '%'],
-                ['Reviewed', Application::where('status', 'reviewed')->count(), round(Application::where('status', 'reviewed')->count() / $totalCreated * 100, 1) . '%'],
-                ['Accepted', Application::where('status', 'accepted')->count(), round(Application::where('status', 'accepted')->count() / $totalCreated * 100, 1) . '%'],
-                ['Rejected', Application::where('status', 'rejected')->count(), round(Application::where('status', 'rejected')->count() / $totalCreated * 100, 1) . '%'],
+                ['Pending', Application::where('status', 'pending')->count(), round(Application::where('status', 'pending')->count() / max($totalCreated, 1) * 100, 1) . '%'],
+                ['Reviewed', Application::where('status', 'reviewed')->count(), round(Application::where('status', 'reviewed')->count() / max($totalCreated, 1) * 100, 1) . '%'],
+                ['Accepted', Application::where('status', 'accepted')->count(), round(Application::where('status', 'accepted')->count() / max($totalCreated, 1) * 100, 1) . '%'],
+                ['Rejected', Application::where('status', 'rejected')->count(), round(Application::where('status', 'rejected')->count() / max($totalCreated, 1) * 100, 1) . '%'],
             ]
         );
         
@@ -223,5 +231,26 @@ class ApplicationsSeeder extends Seeder
         } else {
             $this->command->warn("\n⚠️ Warning: Only {$finalAcceptedCount} accepted applications (target: 25+)");
         }
+    }
+
+    /**
+     * generate random status (untuk other applications)
+     */
+    private function randomStatus(): string
+    {
+        $statuses = ['pending', 'reviewed', 'rejected'];
+        $weights = [40, 30, 30]; // persentase
+        
+        $rand = rand(1, 100);
+        $cumulative = 0;
+        
+        foreach ($weights as $index => $weight) {
+            $cumulative += $weight;
+            if ($rand <= $cumulative) {
+                return $statuses[$index];
+            }
+        }
+        
+        return 'pending';
     }
 }
