@@ -9,103 +9,74 @@ use App\Models\Project;
 use App\Models\Province;
 use App\Models\Regency;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
 
 class DocumentsSeeder extends Seeder
 {
     /**
      * jalankan database seeds
-     * membuat dokumen dummy untuk knowledge repository
+     * membuat dokumen dari file PDF real di storage
      * 
      * jalankan: php artisan db:seed --class=DocumentsSeeder
      */
     public function run(): void
     {
-        echo "🔄 Membuat direktori dan file dummy...\n";
+        echo "📄 Membuat dokumen dari file PDF real...\n";
         
-        // pastikan direktori documents ada
-        if (!Storage::exists('public/documents')) {
-            Storage::makeDirectory('public/documents');
-            echo "✅ Direktori documents dibuat\n";
-        }
-
-        // buat dummy PDF file untuk testing
-        $pdfPath = $this->createDummyPDFFile();
-        echo "✅ File PDF dummy dibuat: {$pdfPath}\n";
-
         // ambil user untuk uploader (ambil beberapa user random)
-        $uploaders = User::where('user_type', 'student')->limit(5)->get();
+        $uploaders = User::where('user_type', 'student')->limit(10)->get();
         
         if ($uploaders->isEmpty()) {
-            echo "⚠️  Warning: Tidak ada user student. Jalankan seeder user terlebih dahulu.\n";
-            // buat minimal 1 user student untuk testing
-            $user = User::create([
-                'name' => 'Test Student',
-                'email' => 'student@test.com',
-                'username' => 'teststudent',
-                'password' => bcrypt('password'),
-                'user_type' => 'student',
-                'email_verified_at' => now(),
-            ]);
-            
-            $student = \App\Models\Student::create([
-                'user_id' => $user->id,
-                'university_id' => 1,
-                'first_name' => 'Test',
-                'last_name' => 'Student',
-                'nim' => '1234567890',
-                'major' => 'Teknik Informatika',
-                'semester' => 6,
-                'whatsapp_number' => '081234567890',
-            ]);
-            
-            $uploaders = collect([$user]);
-            echo "✅ User student dummy dibuat\n";
+            echo "⚠️  Warning: Tidak ada user student. Jalankan DummyDataSeeder terlebih dahulu.\n";
+            return;
         }
 
         // ambil provinces dan regencies
         $provinces = Province::all();
         if ($provinces->isEmpty()) {
-            echo "⚠️  Warning: Tidak ada data provinsi. Jalankan seeder provinsi terlebih dahulu.\n";
+            echo "⚠️  Warning: Tidak ada data provinsi. Jalankan ProvincesRegenciesSeeder terlebih dahulu.\n";
             return;
         }
 
         $projects = Project::all();
 
-        // data dokumen dummy
-        $documents = [
+        // cek apakah ada file PDF di supabase storage
+        $pdfFiles = Storage::disk('supabase')->files('documents/reports');
+        
+        if (empty($pdfFiles)) {
+            echo "⚠️  Warning: Tidak ada file PDF di Supabase storage!\n";
+            echo "📝 Jalankan command: php artisan upload:supabase --type=documents\n";
+            echo "💡 Atau pastikan folder storage/app/public/documents/reports berisi file PDF\n";
+            return;
+        }
+
+        echo "📁 Ditemukan " . count($pdfFiles) . " file PDF di Supabase\n";
+
+        // data dokumen untuk seeding
+        $documentData = [
             [
                 'title' => 'Laporan KKN Pengembangan UMKM di Desa Sukamaju',
                 'description' => 'Dokumentasi lengkap program KKN dalam pengembangan usaha mikro kecil menengah di Desa Sukamaju, Kabupaten Bandung.',
-                'categories' => ['decent_work', 'reduced_inequality'],
-                'tags' => ['UMKM', 'Ekonomi', 'Desa'],
-                'author_name' => 'Tim KKN Universitas Indonesia',
-                'institution_name' => 'Desa Sukamaju',
-                'university_name' => 'Universitas Indonesia',
-                'year' => 2024,
-            ],
-            [
-                'title' => 'Program Literasi Digital untuk Guru SD',
-                'description' => 'Pelatihan literasi digital dan pemanfaatan teknologi dalam pembelajaran untuk guru sekolah dasar.',
-                'categories' => ['quality_education', 'industry_innovation'],
-                'tags' => ['Pendidikan', 'Digital', 'Guru'],
-                'author_name' => 'Mahasiswa KKN ITB',
-                'institution_name' => 'Dinas Pendidikan Kabupaten Bandung',
+                'categories' => ['decent_work', 'reduced_inequalities'],
+                'tags' => ['UMKM', 'Ekonomi', 'Pemberdayaan'],
+                'author_name' => 'Tim KKN ITB',
+                'institution_name' => 'Dinas Koperasi dan UMKM',
                 'university_name' => 'Institut Teknologi Bandung',
                 'year' => 2024,
             ],
             [
-                'title' => 'Pengelolaan Sampah Berbasis Masyarakat',
-                'description' => 'Implementasi sistem pengelolaan sampah terpadu dengan melibatkan partisipasi aktif masyarakat desa.',
-                'categories' => ['sustainable_cities', 'responsible_consumption'],
-                'tags' => ['Lingkungan', 'Sampah', 'Bank Sampah'],
-                'author_name' => 'KKN Universitas Padjadjaran',
-                'institution_name' => 'Desa Cibeunying',
-                'university_name' => 'Universitas Padjadjaran',
+                'title' => 'Program Edukasi Sanitasi dan Air Bersih Desa Mekar',
+                'description' => 'Laporan hasil sosialisasi pentingnya sanitasi dan akses air bersih untuk kesehatan masyarakat desa.',
+                'categories' => ['clean_water', 'good_health'],
+                'tags' => ['Sanitasi', 'Kesehatan', 'Air Bersih'],
+                'author_name' => 'Mahasiswa KKN UI',
+                'institution_name' => 'Pemerintah Desa Mekar',
+                'university_name' => 'Universitas Indonesia',
                 'year' => 2023,
             ],
             [
-                'title' => 'Pemberdayaan Perempuan melalui Pelatihan Kerajinan Tangan',
-                'description' => 'Program pelatihan kerajinan tangan untuk meningkatkan pendapatan ibu rumah tangga di pedesaan.',
+                'title' => 'Pemberdayaan Perempuan melalui Pelatihan Kerajinan',
+                'description' => 'Kegiatan pelatihan pembuatan kerajinan tangan untuk meningkatkan ekonomi keluarga melalui pemberdayaan ibu rumah tangga.',
                 'categories' => ['gender_equality', 'decent_work'],
                 'tags' => ['Pemberdayaan', 'Perempuan', 'Kerajinan'],
                 'author_name' => 'Tim KKN UGM',
@@ -123,12 +94,46 @@ class DocumentsSeeder extends Seeder
                 'university_name' => 'Universitas Airlangga',
                 'year' => 2024,
             ],
+            [
+                'title' => 'Pemanfaatan Energi Terbarukan di Desa Terpencil',
+                'description' => 'Implementasi panel surya dan biogas sebagai sumber energi alternatif di desa yang belum terjangkau listrik PLN.',
+                'categories' => ['affordable_energy', 'climate_action'],
+                'tags' => ['Energi', 'Terbarukan', 'Ramah Lingkungan'],
+                'author_name' => 'Tim KKN ITS',
+                'institution_name' => 'Pemerintah Desa Nusantara',
+                'university_name' => 'Institut Teknologi Sepuluh Nopember',
+                'year' => 2024,
+            ],
+            [
+                'title' => 'Literasi Digital untuk Anak-anak Desa',
+                'description' => 'Program pengenalan teknologi dan internet sehat untuk anak-anak usia sekolah di daerah pedesaan.',
+                'categories' => ['quality_education', 'reduced_inequalities'],
+                'tags' => ['Pendidikan', 'Digital', 'Teknologi'],
+                'author_name' => 'Mahasiswa KKN UB',
+                'institution_name' => 'SD Negeri Pedesaan 01',
+                'university_name' => 'Universitas Brawijaya',
+                'year' => 2023,
+            ],
         ];
 
-        echo "🔄 Membuat dokumen di database...\n";
+        echo "\n📝 Membuat dokumen di database...\n";
         
-        // buat dokumen
-        foreach ($documents as $index => $docData) {
+        $fileIndex = 0;
+        $totalFiles = count($pdfFiles);
+        
+        // buat dokumen menggunakan file PDF yang tersedia
+        foreach ($documentData as $index => $docData) {
+            // pilih file PDF (cycle through available files)
+            if ($fileIndex >= $totalFiles) {
+                $fileIndex = 0;
+            }
+            
+            $pdfPath = $pdfFiles[$fileIndex];
+            $fileIndex++;
+            
+            // dapatkan file size dari supabase
+            $fileSize = Storage::disk('supabase')->size($pdfPath);
+            
             // pilih uploader random
             $uploader = $uploaders->random();
             
@@ -144,9 +149,9 @@ class DocumentsSeeder extends Seeder
                 'uploaded_by' => $uploader->id,
                 'title' => $docData['title'],
                 'description' => $docData['description'],
-                'file_path' => $pdfPath, // gunakan path yang sama untuk semua
+                'file_path' => $pdfPath, // path di supabase
                 'file_type' => 'pdf',
-                'file_size' => Storage::size('public/' . $pdfPath), // ukuran file sebenarnya
+                'file_size' => $fileSize,
                 'categories' => json_encode($docData['categories']),
                 'tags' => json_encode($docData['tags']),
                 'author_name' => $docData['author_name'],
@@ -163,102 +168,14 @@ class DocumentsSeeder extends Seeder
                 'status' => 'approved',
                 'approved_at' => now(),
             ]);
+            
+            echo "  ✓ {$docData['title']}\n";
         }
 
         echo "\n";
-        echo "✅ Berhasil membuat " . count($documents) . " dokumen dummy\n";
-        echo "✅ File PDF tersimpan di: storage/app/public/{$pdfPath}\n";
-        echo "✅ Akses via browser: http://127.0.0.1:8000/storage/{$pdfPath}\n";
+        echo "✅ Berhasil membuat " . count($documentData) . " dokumen\n";
+        echo "📊 File PDF dari Supabase: {$totalFiles} file\n";
         echo "\n";
         echo "🎉 Seeder selesai! Silakan test download di: http://127.0.0.1:8000/student/repository\n";
-    }
-
-    /**
-     * buat dummy PDF file untuk testing download
-     * return path relatif dari storage/app/public
-     */
-    protected function createDummyPDFFile()
-    {
-        // path relatif dari storage/app/public
-        $relativePath = 'documents/dummy-kkn-report.pdf';
-        
-        // konten PDF minimal yang valid
-        $pdfContent = "%PDF-1.4
-1 0 obj
-<<
-/Type /Catalog
-/Pages 2 0 R
->>
-endobj
-2 0 obj
-<<
-/Type /Pages
-/Kids [3 0 R]
-/Count 1
->>
-endobj
-3 0 obj
-<<
-/Type /Page
-/Parent 2 0 R
-/Resources <<
-/Font <<
-/F1 4 0 R
->>
->>
-/MediaBox [0 0 612 792]
-/Contents 5 0 R
->>
-endobj
-4 0 obj
-<<
-/Type /Font
-/Subtype /Type1
-/BaseFont /Helvetica
->>
-endobj
-5 0 obj
-<<
-/Length 200
->>
-stream
-BT
-/F1 24 Tf
-50 700 Td
-(LAPORAN KKN - DOKUMEN DUMMY) Tj
-0 -30 Td
-/F1 14 Tf
-(Universitas XYZ) Tj
-0 -25 Td
-(Tahun 2024) Tj
-0 -40 Td
-/F1 12 Tf
-(Ini adalah dokumen PDF dummy untuk testing) Tj
-0 -20 Td
-(sistem download di platform KKN-GO.) Tj
-ET
-endstream
-endobj
-xref
-0 6
-0000000000 65535 f
-0000000009 00000 n
-0000000058 00000 n
-0000000115 00000 n
-0000000274 00000 n
-0000000361 00000 n
-trailer
-<<
-/Size 6
-/Root 1 0 R
->>
-startxref
-612
-%%EOF";
-
-        // simpan file
-        Storage::put('public/' . $relativePath, $pdfContent);
-        
-        return $relativePath;
     }
 }

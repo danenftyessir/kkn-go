@@ -6,11 +6,10 @@ use Illuminate\Database\Seeder;
 use App\Models\Problem;
 use App\Models\ProblemImage;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\File;
 
 /**
  * seeder untuk problem images
- * menggunakan gambar yang sudah disiapkan di storage/app/public/problems/
+ * menggunakan gambar yang sudah ada di Supabase storage
  * 
  * path: database/seeders/ProblemImagesSeeder.php
  * jalankan: php artisan db:seed --class=ProblemImagesSeeder
@@ -22,7 +21,7 @@ class ProblemImagesSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->command->info('Seeding problem images...');
+        $this->command->info('📸 Seeding problem images dari Supabase...');
 
         // cek apakah ada problems
         $problems = Problem::all();
@@ -32,33 +31,31 @@ class ProblemImagesSeeder extends Seeder
             return;
         }
 
-        // path ke folder gambar
-        $imagesPath = storage_path('app/public/problems');
+        // ambil semua gambar dari supabase storage
+        $imageFiles = Storage::disk('supabase')->files('problems');
         
-        // cek apakah folder ada
-        if (!File::exists($imagesPath)) {
-            $this->command->error("❌ Folder {$imagesPath} tidak ditemukan!");
-            $this->command->info('Buat folder dan masukkan gambar terlebih dahulu.');
+        if (empty($imageFiles)) {
+            $this->command->error('❌ Tidak ada file gambar di Supabase storage folder "problems"!');
+            $this->command->info('📝 Pastikan gambar sudah diupload ke Supabase dengan path: problems/masalah-desa-X.jpg');
+            $this->command->info('💡 Atau jalankan: php artisan upload:supabase --type=problems');
             return;
         }
 
-        // ambil semua file gambar (jpg, jpeg, png)
-        $imageFiles = File::files($imagesPath);
+        // filter hanya file gambar
         $validImages = array_filter($imageFiles, function($file) {
-            $extension = strtolower($file->getExtension());
-            return in_array($extension, ['jpg', 'jpeg', 'png']);
+            $extension = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+            return in_array($extension, ['jpg', 'jpeg', 'png', 'webp']);
         });
 
         if (empty($validImages)) {
-            $this->command->error('❌ Tidak ada file gambar (JPG/PNG) di folder problems!');
-            $this->command->info('Masukkan minimal 30 gambar ke ' . $imagesPath);
+            $this->command->error('❌ Tidak ada file gambar valid (JPG/PNG) di folder problems!');
             return;
         }
 
         $validImages = array_values($validImages);
         $totalImages = count($validImages);
         
-        $this->command->info("📸 Ditemukan {$totalImages} gambar");
+        $this->command->info("🖼️  Ditemukan {$totalImages} gambar di Supabase");
 
         // hapus problem images lama jika ada
         ProblemImage::truncate();
@@ -72,31 +69,49 @@ class ProblemImagesSeeder extends Seeder
             $imagesPerProblem = rand(2, 4);
             
             for ($i = 0; $i < $imagesPerProblem; $i++) {
-                // jika sudah habis, mulai dari awal lagi
+                // jika sudah habis, mulai dari awal lagi (cycle)
                 if ($imageIndex >= $totalImages) {
                     $imageIndex = 0;
                 }
 
-                $imageFile = $validImages[$imageIndex];
-                $fileName = $imageFile->getFilename();
+                $imagePath = $validImages[$imageIndex];
+                $imageIndex++;
                 
-                // path relatif untuk disimpan di database
-                $relativePath = 'problems/' . $fileName;
-
-                // simpan ke database
+                // tentukan apakah gambar ini jadi cover (gambar pertama = cover)
+                $isCover = ($i === 0);
+                
                 ProblemImage::create([
                     'problem_id' => $problem->id,
-                    'image_path' => $relativePath,
-                    'caption' => "Dokumentasi untuk {$problem->title}",
-                    'order' => $i + 1,
+                    'image_path' => $imagePath, // path di supabase: problems/masalah-desa-1.jpg
+                    'caption' => $this->generateCaption($problem, $i),
+                    'is_cover' => $isCover,
+                    'order' => $i,
                 ]);
-
-                $imageIndex++;
+                
                 $totalSeeded++;
             }
         }
 
-        $this->command->info("✅ {$totalSeeded} problem images berhasil di-seed!");
-        $this->command->info("📊 Distribusi: {$problems->count()} problems dengan rata-rata " . round($totalSeeded / $problems->count(), 1) . " gambar per problem");
+        $this->command->newLine();
+        $this->command->info("✅ Berhasil seed {$totalSeeded} problem images");
+        $this->command->info("📊 Total problems: " . $problems->count());
+        $this->command->info("🖼️  Total gambar tersedia: {$totalImages}");
+    }
+
+    /**
+     * generate caption untuk gambar
+     */
+    protected function generateCaption(Problem $problem, int $index): string
+    {
+        $captions = [
+            "Kondisi lapangan di {$problem->location}",
+            "Dokumentasi situasi terkini",
+            "Area yang memerlukan perhatian",
+            "Kondisi eksisting lokasi",
+            "Dokumentasi survei awal",
+            "Gambaran umum masalah",
+        ];
+
+        return $captions[$index] ?? $captions[0];
     }
 }

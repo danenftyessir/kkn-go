@@ -5,25 +5,25 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\Document;
 use App\Models\Province;
-use App\Models\Bookmark;
+use App\Models\University;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 /**
  * controller untuk knowledge repository
- * mengelola dokumen hasil proyek yang dapat diakses semua user
+ * mahasiswa bisa browse dan download dokumen hasil KKN
  */
 class KnowledgeRepositoryController extends Controller
 {
     /**
-     * tampilkan halaman knowledge repository
+     * tampilkan halaman repository dengan list dokumen
      */
     public function index(Request $request)
     {
-        $query = Document::where('is_public', true)
-                        ->where('status', 'approved')
-                        ->with(['uploader', 'province', 'regency', 'project']);
+        $query = Document::with(['uploader.student.university', 'province', 'regency'])
+                         ->where('is_public', true)
+                         ->where('status', 'approved');
 
         // search
         if ($request->filled('search')) {
@@ -31,28 +31,29 @@ class KnowledgeRepositoryController extends Controller
             $query->where(function($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
                   ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhere('author_name', 'like', "%{$search}%");
+                  ->orWhere('author_name', 'like', "%{$search}%")
+                  ->orWhere('institution_name', 'like', "%{$search}%");
             });
         }
 
-        // filter by category (SDG)
+        // filter kategori
         if ($request->filled('category')) {
             $query->whereJsonContains('categories', $request->category);
         }
 
-        // filter by year
-        if ($request->filled('year')) {
-            $query->where('year', $request->year);
-        }
-
-        // filter by province
+        // filter lokasi
         if ($request->filled('province_id')) {
             $query->where('province_id', $request->province_id);
         }
 
-        // filter by university
+        // filter universitas
         if ($request->filled('university')) {
-            $query->where('university_name', 'like', '%' . $request->university . '%');
+            $query->where('university_name', 'like', "%{$request->university}%");
+        }
+
+        // filter tahun
+        if ($request->filled('year')) {
+            $query->where('year', $request->year);
         }
 
         // sorting
@@ -61,53 +62,44 @@ class KnowledgeRepositoryController extends Controller
             case 'popular':
                 $query->orderBy('download_count', 'desc');
                 break;
-            case 'most_viewed':
-                $query->orderBy('view_count', 'desc');
-                break;
             case 'most_cited':
                 $query->orderBy('citation_count', 'desc');
                 break;
-            default:
-                $query->latest();
+            case 'oldest':
+                $query->orderBy('created_at', 'asc');
+                break;
+            default: // latest
+                $query->orderBy('created_at', 'desc');
+                break;
         }
 
         $documents = $query->paginate(12);
-
+        
         // data untuk filter
         $provinces = Province::orderBy('name')->get();
-        
+        $universities = University::orderBy('name')->get();
         $years = Document::where('is_public', true)
                         ->where('status', 'approved')
-                        ->selectRaw('DISTINCT year')
-                        ->whereNotNull('year')
-                        ->orderBy('year', 'desc')
-                        ->pluck('year');
+                        ->distinct()
+                        ->pluck('year')
+                        ->filter()
+                        ->sort()
+                        ->values();
 
-        // featured documents
+        // dokumen featured
         $featuredDocuments = Document::where('is_public', true)
                                     ->where('status', 'approved')
                                     ->where('is_featured', true)
+                                    ->orderBy('download_count', 'desc')
                                     ->limit(3)
                                     ->get();
-
-        // statistics - DIPERBAIKI: tambahkan total_institutions
-        $stats = [
-            'total_documents' => Document::where('is_public', true)->where('status', 'approved')->count(),
-            'total_downloads' => Document::where('is_public', true)->where('status', 'approved')->sum('download_count'),
-            'total_views' => Document::where('is_public', true)->where('status', 'approved')->sum('view_count'),
-            'total_institutions' => Document::where('is_public', true)
-                                          ->where('status', 'approved')
-                                          ->whereNotNull('institution_name')
-                                          ->distinct('institution_name')
-                                          ->count('institution_name'),
-        ];
 
         return view('student.repository.index', compact(
             'documents',
             'provinces',
+            'universities',
             'years',
-            'featuredDocuments',
-            'stats'
+            'featuredDocuments'
         ));
     }
 
@@ -116,28 +108,26 @@ class KnowledgeRepositoryController extends Controller
      */
     public function show($id)
     {
-        $document = Document::where('is_public', true)
+        $document = Document::with(['uploader.student.university', 'province', 'regency', 'project'])
+                           ->where('is_public', true)
                            ->where('status', 'approved')
-                           ->with(['uploader', 'province', 'regency', 'project.student.user'])
                            ->findOrFail($id);
 
         // increment view count
         $document->increment('view_count');
 
-        // related documents berdasarkan kategori
+        // dokumen terkait
         $relatedDocuments = Document::where('is_public', true)
                                    ->where('status', 'approved')
                                    ->where('id', '!=', $document->id)
                                    ->where(function($query) use ($document) {
-                                       // cari dokumen dengan kategori yang sama
-                                       if ($document->categories) {
-                                           $categories = is_array($document->categories) 
-                                               ? $document->categories 
-                                               : json_decode($document->categories, true) ?? [];
-                                           
-                                           foreach ($categories as $category) {
-                                               $query->orWhereJsonContains('categories', $category);
-                                           }
+                                       // cari berdasarkan kategori yang sama
+                                       $categories = is_array($document->categories) 
+                                           ? $document->categories 
+                                           : json_decode($document->categories, true) ?? [];
+                                       
+                                       foreach ($categories as $category) {
+                                           $query->orWhereJsonContains('categories', $category);
                                        }
                                    })
                                    ->limit(4)
@@ -147,7 +137,7 @@ class KnowledgeRepositoryController extends Controller
     }
 
     /**
-     * download dokumen
+     * download dokumen dari supabase
      */
     public function download($id)
     {
@@ -162,20 +152,24 @@ class KnowledgeRepositoryController extends Controller
             // increment download count
             $document->increment('download_count');
 
-            // dapatkan path file
-            $filePath = storage_path('app/public/' . $document->file_path);
+            // dapatkan file dari supabase
+            $disk = config('filesystems.default');
+            $filePath = $document->file_path;
 
-            // cek apakah file ada
-            if (!file_exists($filePath)) {
-                // coba path alternatif tanpa 'public/'
-                $altPath = storage_path('app/' . $document->file_path);
-                if (file_exists($altPath)) {
-                    $filePath = $altPath;
-                } else {
-                    abort(404, 'File tidak ditemukan. Path: ' . $document->file_path);
-                }
+            // cek apakah file ada di storage
+            if (!Storage::disk($disk)->exists($filePath)) {
+                \Log::error('File tidak ditemukan di storage', [
+                    'document_id' => $document->id,
+                    'file_path' => $filePath,
+                    'disk' => $disk
+                ]);
+                
+                abort(404, 'File tidak ditemukan. Path: ' . $filePath);
             }
 
+            // dapatkan file content dari storage
+            $fileContent = Storage::disk($disk)->get($filePath);
+            
             // sanitize filename untuk download
             $safeFilename = $this->sanitizeFilename($document->title);
             
@@ -192,9 +186,10 @@ class KnowledgeRepositoryController extends Controller
             $downloadFilename = $safeFilename . '.' . $extension;
 
             // return file untuk di-download dengan header yang benar
-            return response()->download($filePath, $downloadFilename, [
+            return response($fileContent, 200, [
                 'Content-Type' => $this->getContentType($extension),
                 'Content-Disposition' => 'attachment; filename="' . $downloadFilename . '"',
+                'Content-Length' => strlen($fileContent),
                 'Cache-Control' => 'no-cache, no-store, must-revalidate',
                 'Pragma' => 'no-cache',
                 'Expires' => '0',
@@ -204,91 +199,35 @@ class KnowledgeRepositoryController extends Controller
             // log error untuk debugging
             \Log::error('Document download error: ' . $e->getMessage(), [
                 'document_id' => $id,
-                'file_path' => $document->file_path ?? 'unknown',
                 'trace' => $e->getTraceAsString()
             ]);
-            
-            // redirect kembali dengan error message
-            return redirect()->back()->with('error', 'Terjadi kesalahan saat mengunduh file: ' . $e->getMessage());
+
+            return back()->with('error', 'Terjadi kesalahan saat mengunduh file: ' . $e->getMessage());
         }
     }
 
     /**
-     * get citation text untuk dokumen
+     * sanitize filename untuk download yang aman
      */
-    public function getCitation(Request $request, $id)
+    protected function sanitizeFilename($title)
     {
-        $document = Document::where('is_public', true)
-                           ->where('status', 'approved')
-                           ->findOrFail($id);
-        $style = $request->get('style', 'apa'); // apa, mla, ieee
-
-        $citation = $this->generateCitation($document, $style);
-
-        return response()->json([
-            'success' => true,
-            'citation' => $citation,
-            'style' => $style,
-        ]);
-    }
-
-    /**
-     * generate citation berdasarkan style
-     */
-    protected function generateCitation($document, $style)
-    {
-        $author = $document->author_name ?? 'Unknown Author';
-        $year = $document->year ?? now()->year;
-        $title = $document->title;
-        $publisher = $document->institution_name ?? 'KKN-GO Platform';
-
-        switch ($style) {
-            case 'mla':
-                // format MLA: Author. "Title." Publisher, Year.
-                return "{$author}. \"{$title}.\" {$publisher}, {$year}.";
-                
-            case 'ieee':
-                // format IEEE: Author, "Title," Publisher, Year.
-                return "{$author}, \"{$title},\" {$publisher}, {$year}.";
-                
-            case 'apa':
-            default:
-                // format APA: Author. (Year). Title. Publisher.
-                return "{$author}. ({$year}). {$title}. {$publisher}.";
-        }
-    }
-
-    /**
-     * sanitize filename untuk download
-     * hapus karakter yang tidak diperbolehkan di filename
-     */
-    protected function sanitizeFilename($filename)
-    {
-        // hapus karakter yang tidak diperbolehkan: / \ : * ? " < > |
-        $filename = str_replace(['/', '\\', ':', '*', '?', '"', '<', '>', '|'], '-', $filename);
+        // hapus karakter spesial
+        $filename = preg_replace('/[^A-Za-z0-9\-_]/', '-', $title);
         
-        // hapus multiple spaces dan trim
-        $filename = preg_replace('/\s+/', ' ', $filename);
-        $filename = trim($filename);
+        // hapus multiple dash
+        $filename = preg_replace('/-+/', '-', $filename);
         
-        // hapus karakter non-ASCII yang bisa bermasalah
-        $filename = preg_replace('/[^\x20-\x7E]/', '', $filename);
+        // trim dash di awal dan akhir
+        $filename = trim($filename, '-');
         
-        // batasi panjang filename (max 200 karakter)
-        if (strlen($filename) > 200) {
-            $filename = substr($filename, 0, 200);
-        }
-        
-        // jika filename kosong setelah sanitasi, gunakan default
-        if (empty($filename)) {
-            $filename = 'document-' . time();
-        }
+        // batasi panjang
+        $filename = Str::limit($filename, 100, '');
         
         return $filename;
     }
 
     /**
-     * get content type berdasarkan extension
+     * dapatkan content type berdasarkan extension
      */
     protected function getContentType($extension)
     {
@@ -300,11 +239,52 @@ class KnowledgeRepositoryController extends Controller
             'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'ppt' => 'application/vnd.ms-powerpoint',
             'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-            'txt' => 'text/plain',
-            'zip' => 'application/zip',
-            'rar' => 'application/x-rar-compressed',
         ];
 
-        return $mimeTypes[strtolower($extension)] ?? 'application/octet-stream';
+        return $mimeTypes[$extension] ?? 'application/octet-stream';
+    }
+
+    /**
+     * generate citation (APA, MLA, IEEE)
+     */
+    public function generateCitation(Request $request, $id)
+    {
+        $document = Document::with(['uploader.student'])->findOrFail($id);
+        $style = $request->get('style', 'apa');
+
+        $citation = '';
+        $authorName = $document->author_name ?? $document->uploader->name;
+        $year = $document->year ?? date('Y');
+        $title = $document->title;
+
+        switch ($style) {
+            case 'mla':
+                $citation = "{$authorName}. \"{$title}.\" {$year}.";
+                break;
+            case 'ieee':
+                $citation = "{$authorName}, \"{$title},\" {$year}.";
+                break;
+            default: // apa
+                $citation = "{$authorName} ({$year}). {$title}.";
+                break;
+        }
+
+        return response()->json([
+            'success' => true,
+            'citation' => $citation,
+            'style' => $style,
+        ]);
+    }
+
+    /**
+     * bookmark dokumen
+     */
+    public function bookmark($id)
+    {
+        // TODO: implementasi bookmark functionality
+        return response()->json([
+            'success' => true,
+            'message' => 'Fitur bookmark sedang dalam pengembangan',
+        ]);
     }
 }
