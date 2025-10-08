@@ -19,9 +19,9 @@
         </div>
 
         {{-- form edit profile --}}
-        <form method="POST" action="{{ route('institution.profile.update') }}" enctype="multipart/form-data" class="space-y-6">
+        <form method="POST" action="{{ route('institution.profile.update') }}">
             @csrf
-            @method('PATCH')
+            @method('PUT')
 
             {{-- logo --}}
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -252,9 +252,9 @@
         </form>
 
         {{-- form ubah password --}}
-        <form method="POST" action="{{ route('institution.profile.password.update') }}" class="mt-6">
+        <form method="POST" action="{{ route('institution.profile.update') }}">
             @csrf
-            @method('PATCH')
+            @method('PUT')
 
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <h2 class="text-xl font-bold text-gray-900 mb-6">Ubah Password</h2>

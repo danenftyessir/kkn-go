@@ -84,8 +84,8 @@ class DashboardController extends Controller
             'pending_reviews' => $pendingReviews->count(),
             'overdue_milestones' => Project::where('institution_id', $institution->id)
                 ->whereHas('milestones', function($q) {
-                    $q->where('due_date', '<', now())
-                      ->where('status', '!=', 'completed');
+                    $q->where('target_date', '<', now())
+                    ->where('status', '!=', 'completed');
                 })->count(),
         ];
 

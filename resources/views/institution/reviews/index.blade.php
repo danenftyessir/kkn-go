@@ -133,7 +133,9 @@
                                 {{-- student avatar --}}
                                 @if($review->reviewee)
                                     @php
-                                        $reviewedStudent = \App\Models\Student::where('user_id', $review->reviewee_id)->first();
+                                        $reviewedStudent = \App\Models\Student::where('user_id', $review->reviewee_id)
+                                            ->with(['user', 'university'])
+                                            ->first();
                                     @endphp
                                     
                                     @if($reviewedStudent && $reviewedStudent->user)
