@@ -111,22 +111,17 @@ Route::middleware(['auth', 'check.user.type:student'])->prefix('student')->name(
     // dashboard
     Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
     
-    // browse problems - set 1 (shorter URL)
+    // browse problems dengan dua cara akses
+    // cara 1: /student/problems/* (URL pendek)
     Route::prefix('problems')->name('problems.')->group(function () {
         Route::get('/', [BrowseProblemsController::class, 'index'])->name('index');
         Route::get('/{id}', [BrowseProblemsController::class, 'show'])->name('show');
     });
     
-    // browse problems - set 2 (descriptive URL) - FIXED: tambah route tanpa suffix
-    Route::prefix('browse-problems')->name('browse-problems')->group(function () {
-        // route utama tanpa suffix untuk form action
-        Route::get('/', [BrowseProblemsController::class, 'index']);
-        
-        // route dengan suffix untuk navigasi
-        Route::name('.')->group(function () {
-            Route::get('/', [BrowseProblemsController::class, 'index'])->name('index');
-            Route::get('/{id}', [BrowseProblemsController::class, 'show'])->name('detail');
-        });
+    // cara 2: /student/browse-problems/* (URL deskriptif)
+    Route::prefix('browse-problems')->name('browse-problems.')->group(function () {
+        Route::get('/', [BrowseProblemsController::class, 'index'])->name('index');
+        Route::get('/{id}', [BrowseProblemsController::class, 'show'])->name('detail');
     });
     
     // applications

@@ -22,14 +22,7 @@ class DashboardController extends Controller
      */
     public function index()
     {
-        // ambil student dari user yang login
         $student = Auth::user()->student;
-        
-        // CRITICAL: cek apakah student profile ada
-        if (!$student) {
-            return redirect()->route('home')
-                ->with('error', 'profil mahasiswa tidak ditemukan. silakan hubungi administrator.');
-        }
 
         // statistik utama
         $stats = [
@@ -53,22 +46,28 @@ class DashboardController extends Controller
                                 ->take(3)
                                 ->get();
 
-        // recent applications (5 terbaru)
+        // recent applications
         $recentApplications = Application::where('student_id', $student->id)
                                         ->with(['problem.institution', 'problem.province', 'problem.regency'])
-                                        ->orderBy('applied_at', 'desc')
+                                        ->latest()
                                         ->take(5)
                                         ->get();
 
-        // recommended problems berdasarkan major dan skills
+        // recommended problems berdasarkan jurusan dan skills
         $recommendedProblems = Problem::where('status', 'open')
-                                     ->where('application_deadline', '>=', Carbon::now())
-                                     ->with(['institution', 'province', 'regency'])
-                                     ->inRandomOrder()
+                                     ->where('deadline', '>=', Carbon::now())
+                                     ->with(['institution', 'province', 'regency', 'images'])
+                                     ->when($student->major, function($query) use ($student) {
+                                         // filter berdasarkan jurusan jika ada
+                                         $query->whereJsonContains('required_majors', $student->major)
+                                               ->orWhereNull('required_majors');
+                                     })
+                                     ->withCount('applications')
+                                     ->latest()
                                      ->take(4)
                                      ->get();
 
-        // unread notifications (5 terbaru)
+        // unread notifications
         $unreadNotifications = Notification::where('user_id', Auth::id())
                                           ->whereNull('read_at')
                                           ->latest()
@@ -92,7 +91,6 @@ class DashboardController extends Controller
         $profileCompletion = $this->calculateProfileCompletion($student);
 
         return view('student.dashboard.index', compact(
-            'student',
             'stats',
             'activeProjects',
             'recentApplications',
@@ -112,7 +110,7 @@ class DashboardController extends Controller
             'profile_photo' => $student->profile_photo_path ? 1 : 0,
             'bio' => $student->bio ? 1 : 0,
             'skills' => $student->skills ? 1 : 0,
-            'phone' => $student->phone ? 1 : 0,
+            'whatsapp' => $student->whatsapp_number ? 1 : 0,
             'semester' => $student->semester ? 1 : 0,
         ];
 
@@ -124,7 +122,6 @@ class DashboardController extends Controller
             'percentage' => round($percentage),
             'fields' => $fields,
             'is_complete' => $percentage == 100,
-            'missing_fields' => array_keys(array_filter($fields, fn($v) => $v == 0)),
         ];
     }
 }
