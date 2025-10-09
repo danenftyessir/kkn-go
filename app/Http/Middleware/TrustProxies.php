@@ -8,14 +8,14 @@ use Illuminate\Http\Request;
 class TrustProxies extends Middleware
 {
     /**
-     * The trusted proxies for this application.
+     * trusted proxies untuk aplikasi
      *
      * @var array<int, string>|string|null
      */
-    protected $proxies = '*';
+    protected $proxies = '*'; // trust semua proxies (Railway, Cloudflare, dll)
 
     /**
-     * The headers that should be used to detect proxies.
+     * headers yang digunakan untuk detect proxies
      *
      * @var int
      */
