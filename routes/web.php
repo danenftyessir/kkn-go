@@ -115,6 +115,9 @@ Route::middleware(['auth', 'check.user.type:student'])->prefix('student')->name(
         Route::get('/{id}', [BrowseProblemsController::class, 'show'])->name('detail');
     });
     
+    // alias untuk backward compatibility - FIX ERROR #1
+    Route::get('/browse-problems', [BrowseProblemsController::class, 'index'])->name('browse-problems');
+    
     // applications
     Route::prefix('applications')->name('applications.')->group(function () {
         Route::get('/', [ApplicationController::class, 'index'])->name('index');
@@ -145,6 +148,8 @@ Route::middleware(['auth', 'check.user.type:student'])->prefix('student')->name(
         Route::get('/edit', [StudentProfileController::class, 'edit'])->name('edit');
         Route::put('/', [StudentProfileController::class, 'update'])->name('update');
         Route::put('/password', [StudentProfileController::class, 'updatePassword'])->name('password.update');
+        // FIX ERROR #3 - tambah route untuk public profile
+        Route::get('/{username}', [StudentProfileController::class, 'publicProfile'])->name('public');
     });
     
     // wishlist
@@ -241,7 +246,7 @@ Route::middleware(['auth'])->prefix('notifications')->name('notifications.')->gr
 */
 
 // public student portfolio (bisa diakses tanpa login)
-Route::get('/portfolio/{username}', [PortfolioController::class, 'show'])->name('portfolio.public');
+Route::get('/portfolio/{username}', [PortfolioController::class, 'publicView'])->name('portfolio.public');
 
 // public institution profile (bisa diakses tanpa login)
 Route::get('/institution/{id}', [InstitutionProfileController::class, 'showPublic'])->name('institution.public');

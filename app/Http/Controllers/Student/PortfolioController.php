@@ -28,12 +28,11 @@ class PortfolioController extends Controller
     {
         $student = Auth::user()->student;
         
+        // FIX ERROR #2: getPortfolioData sudah return achievements di dalamnya
         $portfolioData = $this->portfolioService->getPortfolioData($student->id);
-        $achievements = $this->portfolioService->getAchievements($student->id);
         $portfolioSlug = $this->portfolioService->generatePortfolioSlug($student);
 
         return view('student.portfolio.index', array_merge($portfolioData, [
-            'achievements' => $achievements,
             'portfolio_slug' => $portfolioSlug,
         ]));
     }
@@ -44,12 +43,10 @@ class PortfolioController extends Controller
     public function publicView($slug)
     {
         try {
+            // FIX ERROR #2: getPublicPortfolio sudah return achievements via getPortfolioData
             $portfolioData = $this->portfolioService->getPublicPortfolio($slug);
-            $achievements = $this->portfolioService->getAchievements($portfolioData['student']->id);
 
-            return view('student.portfolio.public', array_merge($portfolioData, [
-                'achievements' => $achievements,
-            ]));
+            return view('student.portfolio.public', $portfolioData);
         } catch (\Exception $e) {
             abort(404, 'Portfolio tidak ditemukan');
         }
