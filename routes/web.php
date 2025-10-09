@@ -22,6 +22,8 @@ use App\Http\Controllers\Institution\ProjectManagementController;
 use App\Http\Controllers\Institution\ProfileController as InstitutionProfileController;
 use App\Http\Controllers\Institution\ReviewController;
 use App\Http\Controllers\NotificationController;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 /*
 |--------------------------------------------------------------------------
@@ -32,6 +34,64 @@ use App\Http\Controllers\NotificationController;
 | routes dikelompokkan berdasarkan user type dan authentication requirement
 |
 */
+
+/*
+|--------------------------------------------------------------------------
+| DEBUG ROUTES - HAPUS SETELAH MASALAH TERATASI
+|--------------------------------------------------------------------------
+*/
+
+// route untuk debug session (HANYA UNTUK DEVELOPMENT)
+if (config('app.debug')) {
+    Route::get('/debug/session', function() {
+        $sessionId = session()->getId();
+        $authCheck = Auth::check();
+        $userId = Auth::id();
+        $user = Auth::user();
+        
+        $sessionData = [];
+        if (config('session.driver') === 'database') {
+            $sessionData = DB::table('sessions')
+                ->where('id', $sessionId)
+                ->first();
+        }
+        
+        return response()->json([
+            'session_id' => $sessionId,
+            'auth_check' => $authCheck,
+            'user_id' => $userId,
+            'user' => $user ? [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'user_type' => $user->user_type,
+            ] : null,
+            'session_data' => $sessionData,
+            'session_config' => [
+                'driver' => config('session.driver'),
+                'lifetime' => config('session.lifetime'),
+                'cookie' => config('session.cookie'),
+                'domain' => config('session.domain'),
+                'secure' => config('session.secure'),
+                'same_site' => config('session.same_site'),
+                'http_only' => config('session.http_only'),
+            ],
+            'all_sessions_count' => config('session.driver') === 'database' 
+                ? DB::table('sessions')->count() 
+                : 'N/A',
+        ]);
+    });
+    
+    // route untuk test auth
+    Route::get('/debug/auth', function() {
+        return response()->json([
+            'auth_check' => Auth::check(),
+            'user_id' => Auth::id(),
+            'guard' => config('auth.defaults.guard'),
+            'session_driver' => config('session.driver'),
+        ]);
+    });
+}
 
 /*
 |--------------------------------------------------------------------------
@@ -127,46 +187,53 @@ Route::middleware(['auth', 'check.user.type:student'])->prefix('student')->name(
     // applications
     Route::prefix('applications')->name('applications.')->group(function () {
         Route::get('/', [ApplicationController::class, 'index'])->name('index');
-        Route::get('/create/{problemId}', [ApplicationController::class, 'create'])->name('create');
-        Route::post('/', [ApplicationController::class, 'store'])->name('store');
         Route::get('/{id}', [ApplicationController::class, 'show'])->name('show');
-        Route::delete('/{id}', [ApplicationController::class, 'destroy'])->name('destroy');
+        Route::post('/', [ApplicationController::class, 'store'])->name('store');
+        Route::patch('/{id}/withdraw', [ApplicationController::class, 'withdraw'])->name('withdraw');
     });
     
-    // projects
-    Route::prefix('projects')->name('projects.')->group(function () {
+    // my projects
+    Route::prefix('my-projects')->name('my-projects.')->group(function () {
         Route::get('/', [MyProjectsController::class, 'index'])->name('index');
         Route::get('/{id}', [MyProjectsController::class, 'show'])->name('show');
-        Route::get('/{id}/report/create', [MyProjectsController::class, 'createReport'])->name('create-report');
-        Route::post('/{id}/report', [MyProjectsController::class, 'storeReport'])->name('store-report');
-        Route::get('/{id}/final-report/create', [MyProjectsController::class, 'createFinalReport'])->name('create-final-report');
-        Route::post('/{id}/final-report', [MyProjectsController::class, 'storeFinalReport'])->name('store-final-report');
+        Route::post('/{id}/upload-report', [MyProjectsController::class, 'uploadReport'])->name('upload-report');
+        Route::post('/{id}/submit-final', [MyProjectsController::class, 'submitFinal'])->name('submit-final');
     });
     
     // portfolio
     Route::prefix('portfolio')->name('portfolio.')->group(function () {
         Route::get('/', [PortfolioController::class, 'index'])->name('index');
+        Route::get('/edit', [PortfolioController::class, 'edit'])->name('edit');
+        Route::patch('/', [PortfolioController::class, 'update'])->name('update');
     });
     
     // profile
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [StudentProfileController::class, 'index'])->name('index');
         Route::get('/edit', [StudentProfileController::class, 'edit'])->name('edit');
-        Route::put('/', [StudentProfileController::class, 'update'])->name('update');
-        Route::put('/password', [StudentProfileController::class, 'updatePassword'])->name('password.update');
+        Route::patch('/', [StudentProfileController::class, 'update'])->name('update');
+        Route::patch('/password', [StudentProfileController::class, 'updatePassword'])->name('update-password');
     });
     
     // wishlist
     Route::prefix('wishlist')->name('wishlist.')->group(function () {
         Route::get('/', [WishlistController::class, 'index'])->name('index');
-        Route::post('/{problemId}', [WishlistController::class, 'toggle'])->name('toggle');
+        Route::post('/{problem}', [WishlistController::class, 'toggle'])->name('toggle');
     });
     
     // knowledge repository
     Route::prefix('repository')->name('repository.')->group(function () {
         Route::get('/', [KnowledgeRepositoryController::class, 'index'])->name('index');
         Route::get('/{id}', [KnowledgeRepositoryController::class, 'show'])->name('show');
-        Route::get('/{id}/download', [KnowledgeRepositoryController::class, 'download'])->name('download');
+        Route::post('/{id}/download', [KnowledgeRepositoryController::class, 'download'])->name('download');
+        Route::post('/{id}/bookmark', [KnowledgeRepositoryController::class, 'bookmark'])->name('bookmark');
+    });
+    
+    // notifications
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/', [NotificationController::class, 'index'])->name('index');
+        Route::patch('/{id}/read', [NotificationController::class, 'markAsRead'])->name('mark-read');
+        Route::patch('/read-all', [NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
     });
     
 });
@@ -189,56 +256,45 @@ Route::middleware(['auth', 'check.user.type:institution'])->prefix('institution'
         Route::post('/', [ProblemController::class, 'store'])->name('store');
         Route::get('/{id}', [ProblemController::class, 'show'])->name('show');
         Route::get('/{id}/edit', [ProblemController::class, 'edit'])->name('edit');
-        Route::put('/{id}', [ProblemController::class, 'update'])->name('update');
+        Route::patch('/{id}', [ProblemController::class, 'update'])->name('update');
         Route::delete('/{id}', [ProblemController::class, 'destroy'])->name('destroy');
+        Route::patch('/{id}/status', [ProblemController::class, 'updateStatus'])->name('update-status');
     });
     
     // applications review
     Route::prefix('applications')->name('applications.')->group(function () {
         Route::get('/', [ApplicationReviewController::class, 'index'])->name('index');
         Route::get('/{id}', [ApplicationReviewController::class, 'show'])->name('show');
-        Route::get('/{id}/review', [ApplicationReviewController::class, 'review'])->name('review');
-        Route::post('/{id}/accept', [ApplicationReviewController::class, 'accept'])->name('accept');
-        Route::post('/{id}/reject', [ApplicationReviewController::class, 'reject'])->name('reject');
+        Route::patch('/{id}/review', [ApplicationReviewController::class, 'review'])->name('review');
     });
     
-    // projects management
+    // project management
     Route::prefix('projects')->name('projects.')->group(function () {
         Route::get('/', [ProjectManagementController::class, 'index'])->name('index');
         Route::get('/{id}', [ProjectManagementController::class, 'show'])->name('show');
-        Route::get('/{id}/manage', [ProjectManagementController::class, 'manage'])->name('manage');
-        Route::post('/{id}/milestone', [ProjectManagementController::class, 'addMilestone'])->name('add-milestone');
-        Route::put('/{id}/milestone/{milestoneId}', [ProjectManagementController::class, 'updateMilestone'])->name('update-milestone');
-    });
-    
-    // reviews
-    Route::prefix('reviews')->name('reviews.')->group(function () {
-        Route::get('/', [ReviewController::class, 'index'])->name('index');
-        Route::get('/create/{projectId}', [ReviewController::class, 'create'])->name('create');
-        Route::post('/', [ReviewController::class, 'store'])->name('store');
-        Route::get('/{id}', [ReviewController::class, 'show'])->name('show');
-        Route::get('/{id}/edit', [ReviewController::class, 'edit'])->name('edit');
-        Route::put('/{id}', [ReviewController::class, 'update'])->name('update');
+        Route::post('/{id}/feedback', [ProjectManagementController::class, 'giveFeedback'])->name('feedback');
+        Route::patch('/{id}/status', [ProjectManagementController::class, 'updateStatus'])->name('update-status');
     });
     
     // profile
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [InstitutionProfileController::class, 'index'])->name('index');
         Route::get('/edit', [InstitutionProfileController::class, 'edit'])->name('edit');
-        Route::put('/', [InstitutionProfileController::class, 'update'])->name('update');
-        Route::put('/password', [InstitutionProfileController::class, 'updatePassword'])->name('password.update');
+        Route::patch('/', [InstitutionProfileController::class, 'update'])->name('update');
+        Route::patch('/password', [InstitutionProfileController::class, 'updatePassword'])->name('update-password');
     });
-});
-
-/*
-|--------------------------------------------------------------------------
-| Notifications Routes (Student & Institution)
-|--------------------------------------------------------------------------
-*/
-
-Route::middleware(['auth'])->prefix('notifications')->name('notifications.')->group(function () {
-    Route::get('/', [NotificationController::class, 'index'])->name('index');
-    Route::post('/{id}/read', [NotificationController::class, 'markAsRead'])->name('read');
-    Route::post('/read-all', [NotificationController::class, 'markAllAsRead'])->name('read-all');
-    Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('destroy');
+    
+    // reviews untuk mahasiswa
+    Route::prefix('reviews')->name('reviews.')->group(function () {
+        Route::post('/{project}', [ReviewController::class, 'store'])->name('store');
+        Route::patch('/{review}', [ReviewController::class, 'update'])->name('update');
+    });
+    
+    // notifications
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/', [NotificationController::class, 'index'])->name('index');
+        Route::patch('/{id}/read', [NotificationController::class, 'markAsRead'])->name('mark-read');
+        Route::patch('/read-all', [NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
+    });
+    
 });
