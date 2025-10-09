@@ -17,10 +17,11 @@ class PortfolioService
 {
     /**
      * get portfolio data untuk mahasiswa
+     * FIX ERROR #2: method ini return achievements di dalamnya
      */
     public function getPortfolioData($studentId)
     {
-        $student = Student::with('user')->findOrFail($studentId);
+        $student = Student::with(['user', 'university'])->findOrFail($studentId);
 
         // ambil completed projects dengan sorting berdasarkan updated_at
         $completedProjects = Project::with([
@@ -46,7 +47,7 @@ class PortfolioService
         $skills = $this->extractSkills($completedProjects);
         $sdgCategories = $this->extractSDGCategories($completedProjects);
 
-        // get achievements
+        // get achievements - FIX: gunakan 3 parameter yang benar
         $achievements = $this->getAchievements($student, $completedProjects, $reviews);
 
         return [
@@ -151,6 +152,7 @@ class PortfolioService
 
     /**
      * get portfolio achievements berdasarkan project dan review
+     * FIX ERROR #2: method ini sudah menerima 3 parameter yang benar
      */
     public function getAchievements($student, $projects, $reviews)
     {
@@ -177,6 +179,16 @@ class PortfolioService
             ];
         }
 
+        if ($projects->count() >= 5) {
+            $achievements[] = [
+                'title' => 'Veteran Volunteer',
+                'description' => 'Menyelesaikan 5+ proyek KKN',
+                'icon' => 'trophy',
+                'color' => 'yellow',
+                'earned_at' => $projects->first()->updated_at
+            ];
+        }
+
         // rating achievements
         $averageRating = $reviews->isEmpty() ? 0 : $reviews->avg('rating');
         
@@ -186,6 +198,16 @@ class PortfolioService
                 'description' => 'Mendapat rating rata-rata 4.5+ dari 3+ review',
                 'icon' => 'star',
                 'color' => 'purple',
+                'earned_at' => $reviews->first()->created_at
+            ];
+        }
+
+        if ($averageRating >= 4.8 && $reviews->count() >= 5) {
+            $achievements[] = [
+                'title' => 'Outstanding Performance',
+                'description' => 'Mendapat rating rata-rata 4.8+ dari 5+ review',
+                'icon' => 'zap',
+                'color' => 'yellow',
                 'earned_at' => $reviews->first()->created_at
             ];
         }
@@ -202,6 +224,16 @@ class PortfolioService
             ];
         }
 
+        if (count($uniqueSDGs) >= 10) {
+            $achievements[] = [
+                'title' => 'SDG Master',
+                'description' => 'Berkontribusi pada 10+ kategori SDG berbeda',
+                'icon' => 'target',
+                'color' => 'blue',
+                'earned_at' => $projects->first()->updated_at
+            ];
+        }
+
         // skill diversity
         $uniqueSkills = $this->extractSkills($projects);
         if (count($uniqueSkills) >= 10) {
@@ -209,6 +241,48 @@ class PortfolioService
                 'title' => 'Multi-Talented',
                 'description' => 'Menguasai 10+ skill berbeda',
                 'icon' => 'briefcase',
+                'color' => 'blue',
+                'earned_at' => $projects->first()->updated_at
+            ];
+        }
+
+        if (count($uniqueSkills) >= 15) {
+            $achievements[] = [
+                'title' => 'Jack of All Trades',
+                'description' => 'Menguasai 15+ skill berbeda',
+                'icon' => 'layers',
+                'color' => 'purple',
+                'earned_at' => $projects->first()->updated_at
+            ];
+        }
+
+        // impact achievements
+        $totalBeneficiaries = 0;
+        foreach ($projects as $project) {
+            if ($project->impact_metrics) {
+                $metrics = is_array($project->impact_metrics) 
+                    ? $project->impact_metrics 
+                    : json_decode($project->impact_metrics, true) ?? [];
+                
+                $totalBeneficiaries += $metrics['beneficiaries'] ?? 0;
+            }
+        }
+
+        if ($totalBeneficiaries >= 100) {
+            $achievements[] = [
+                'title' => 'Community Hero',
+                'description' => 'Membantu 100+ penerima manfaat',
+                'icon' => 'users',
+                'color' => 'green',
+                'earned_at' => $projects->first()->updated_at
+            ];
+        }
+
+        if ($totalBeneficiaries >= 500) {
+            $achievements[] = [
+                'title' => 'Impact Maker',
+                'description' => 'Membantu 500+ penerima manfaat',
+                'icon' => 'trending-up',
                 'color' => 'blue',
                 'earned_at' => $projects->first()->updated_at
             ];
