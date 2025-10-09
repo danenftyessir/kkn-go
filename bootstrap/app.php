@@ -12,18 +12,23 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // trust proxies untuk Railway/Cloudflare
-        $middleware->trustProxies(at: '*');
-        
-        // register middleware aliases
+        // register middleware aliases untuk Laravel 11
         $middleware->alias([
+            // alias untuk check user type (digunakan di web routes)
             'check.user.type' => \App\Http\Middleware\CheckUserType::class,
+            
+            // alias untuk verified email
             'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
+            
+            // alias untuk ensure student role
             'ensure.student' => \App\Http\Middleware\EnsureStudentRole::class,
+            
+            // alias untuk ensure institution role
             'ensure.institution' => \App\Http\Middleware\EnsureInstitutionRole::class,
-            'ensure.verified' => \App\Http\Middleware\EnsureVerified::class,
-            'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
         ]);
+        
+        // register middleware global (opsional)
+        // $middleware->append(\App\Http\Middleware\SmoothPageTransition::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
