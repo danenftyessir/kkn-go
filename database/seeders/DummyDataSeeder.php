@@ -14,7 +14,6 @@ use App\Models\Regency;
 
 /**
  * seeder untuk data dummy users, students, institutions, universities
- * FIXED: hapus is_verified dari User (kolom ada di Institution)
  * 
  * path: database/seeders/DummyDataSeeder.php
  * jalankan: php artisan db:seed --class=DummyDataSeeder
