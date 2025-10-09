@@ -1,10 +1,10 @@
-// resources/js/pages/browse-problems.js
-// ajax filtering real-time untuk browse problems page
-
-import { throttle, debounce } from 'lodash';
+/**
+ * browse problems page - filter, search, dan pagination
+ * smooth scrolling dan loading states
+ */
 
 // state management untuk filters
-const filterState = {
+let filterState = {
     search: '',
     province_id: '',
     regency_id: '',
@@ -15,362 +15,278 @@ const filterState = {
     page: 1
 };
 
-// dom elements
-let filterForm;
-let problemsContainer;
-let paginationContainer;
-let loadingIndicator;
+// debounce helper untuk search
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
 
-// inisialisasi saat dom ready
+// throttle helper untuk scroll
+function throttle(func, limit) {
+    let inThrottle;
+    return function() {
+        const args = arguments;
+        const context = this;
+        if (!inThrottle) {
+            func.apply(context, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    };
+}
+
+// dom elements
+const searchInput = document.getElementById('search');
+const provinceSelect = document.getElementById('province_id');
+const regencySelect = document.getElementById('regency_id');
+const sdgSelect = document.getElementById('sdg');
+const difficultySelect = document.getElementById('difficulty');
+const durationSelect = document.getElementById('duration');
+const sortSelect = document.getElementById('sort');
+const problemsContainer = document.getElementById('problems-container');
+const loadingIndicator = document.getElementById('loading-indicator');
+const resetButton = document.getElementById('reset-filters');
+
+// initialize event listeners
 document.addEventListener('DOMContentLoaded', function() {
-    initializeElements();
-    attachEventListeners();
-    initializeFromUrl();
+    initializeFilters();
+    initializeSearch();
+    initializeProvinceChange();
+    initializeResetButton();
+    initializeLazyLoading();
 });
 
-// inisialisasi element references
-function initializeElements() {
-    filterForm = document.getElementById('filter-form');
-    problemsContainer = document.getElementById('problems-container');
-    paginationContainer = document.getElementById('pagination-container');
-    
-    // buat loading indicator
-    createLoadingIndicator();
-}
-
-// buat loading indicator element
-function createLoadingIndicator() {
-    loadingIndicator = document.createElement('div');
-    loadingIndicator.id = 'loading-indicator';
-    loadingIndicator.className = 'hidden';
-    loadingIndicator.innerHTML = `
-        <div class="flex items-center justify-center py-12">
-            <div class="relative">
-                <div class="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-                <div class="absolute inset-0 flex items-center justify-center">
-                    <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
-                </div>
-            </div>
-        </div>
-        <p class="text-center text-gray-600 mt-4">Memuat data...</p>
-    `;
-}
-
-// attach event listeners
-function attachEventListeners() {
-    // search input dengan debounce
-    const searchInput = document.getElementById('search-input');
-    if (searchInput) {
-        searchInput.addEventListener('input', debounce(function(e) {
-            filterState.search = e.target.value;
-            filterState.page = 1;
-            applyFilters();
-        }, 500));
-    }
-    
-    // province change - load regencies
-    const provinceSelect = document.getElementById('province-select');
+// initialize filter dropdowns
+function initializeFilters() {
     if (provinceSelect) {
-        provinceSelect.addEventListener('change', function(e) {
-            filterState.province_id = e.target.value;
-            filterState.regency_id = '';
-            filterState.page = 1;
-            
-            // load regencies untuk province yang dipilih
-            if (e.target.value) {
-                loadRegencies(e.target.value);
-            } else {
-                clearRegencies();
-            }
-            
-            applyFilters();
-        });
+        provinceSelect.addEventListener('change', handleProvinceChange);
     }
     
-    // regency change
-    const regencySelect = document.getElementById('regency-select');
     if (regencySelect) {
-        regencySelect.addEventListener('change', function(e) {
-            filterState.regency_id = e.target.value;
-            filterState.page = 1;
+        regencySelect.addEventListener('change', () => {
+            filterState.regency_id = regencySelect.value;
             applyFilters();
         });
     }
     
-    // sdg filter
-    const sdgSelect = document.getElementById('sdg-select');
     if (sdgSelect) {
-        sdgSelect.addEventListener('change', function(e) {
-            filterState.sdg = e.target.value;
-            filterState.page = 1;
+        sdgSelect.addEventListener('change', () => {
+            filterState.sdg = sdgSelect.value;
             applyFilters();
         });
     }
     
-    // difficulty filter
-    const difficultySelect = document.getElementById('difficulty-select');
     if (difficultySelect) {
-        difficultySelect.addEventListener('change', function(e) {
-            filterState.difficulty = e.target.value;
-            filterState.page = 1;
+        difficultySelect.addEventListener('change', () => {
+            filterState.difficulty = difficultySelect.value;
             applyFilters();
         });
     }
     
-    // duration filter
-    const durationSelect = document.getElementById('duration-select');
     if (durationSelect) {
-        durationSelect.addEventListener('change', function(e) {
-            filterState.duration = e.target.value;
-            filterState.page = 1;
+        durationSelect.addEventListener('change', () => {
+            filterState.duration = durationSelect.value;
             applyFilters();
         });
     }
     
-    // sort change
-    const sortSelect = document.getElementById('sort-select');
     if (sortSelect) {
-        sortSelect.addEventListener('change', function(e) {
-            filterState.sort = e.target.value;
-            filterState.page = 1;
+        sortSelect.addEventListener('change', () => {
+            filterState.sort = sortSelect.value;
             applyFilters();
         });
     }
-    
-    // reset filters button
-    const resetButton = document.getElementById('reset-filters');
-    if (resetButton) {
-        resetButton.addEventListener('click', function(e) {
-            e.preventDefault();
-            resetFilters();
-        });
+}
+
+// initialize search dengan debounce
+function initializeSearch() {
+    if (searchInput) {
+        const debouncedSearch = debounce(() => {
+            filterState.search = searchInput.value;
+            filterState.page = 1;
+            applyFilters();
+        }, 500);
+        
+        searchInput.addEventListener('input', debouncedSearch);
     }
 }
 
-// inisialisasi state dari url parameters
-function initializeFromUrl() {
-    const urlParams = new URLSearchParams(window.location.search);
-    
-    filterState.search = urlParams.get('search') || '';
-    filterState.province_id = urlParams.get('province_id') || '';
-    filterState.regency_id = urlParams.get('regency_id') || '';
-    filterState.sdg = urlParams.get('sdg') || '';
-    filterState.difficulty = urlParams.get('difficulty') || '';
-    filterState.duration = urlParams.get('duration') || '';
-    filterState.sort = urlParams.get('sort') || 'latest';
-    filterState.page = parseInt(urlParams.get('page')) || 1;
-    
-    // set form values
-    setFormValues();
-    
-    // load regencies jika province sudah dipilih
-    if (filterState.province_id) {
-        loadRegencies(filterState.province_id, filterState.regency_id);
+// handle province change - load regencies
+function initializeProvinceChange() {
+    if (provinceSelect) {
+        provinceSelect.addEventListener('change', handleProvinceChange);
     }
 }
 
-// set form values dari state
-function setFormValues() {
-    const searchInput = document.getElementById('search-input');
-    const provinceSelect = document.getElementById('province-select');
-    const sdgSelect = document.getElementById('sdg-select');
-    const difficultySelect = document.getElementById('difficulty-select');
-    const durationSelect = document.getElementById('duration-select');
-    const sortSelect = document.getElementById('sort-select');
+// handle province change
+function handleProvinceChange() {
+    const provinceId = provinceSelect.value;
+    filterState.province_id = provinceId;
+    filterState.regency_id = '';
     
-    if (searchInput) searchInput.value = filterState.search;
-    if (provinceSelect) provinceSelect.value = filterState.province_id;
-    if (sdgSelect) sdgSelect.value = filterState.sdg;
-    if (difficultySelect) difficultySelect.value = filterState.difficulty;
-    if (durationSelect) durationSelect.value = filterState.duration;
-    if (sortSelect) sortSelect.value = filterState.sort;
+    if (provinceId) {
+        loadRegencies(provinceId);
+    } else {
+        clearRegencies();
+    }
+    
+    applyFilters();
 }
 
 // load regencies berdasarkan province
-async function loadRegencies(provinceId, selectedRegencyId = null) {
-    const regencySelect = document.getElementById('regency-select');
+async function loadRegencies(provinceId) {
     if (!regencySelect) return;
     
-    // tampilkan loading state
-    regencySelect.disabled = true;
-    regencySelect.innerHTML = '<option value="">Memuat...</option>';
-    
     try {
-        const response = await fetch(`/api/regencies/${provinceId}`);
+        // show loading state
+        regencySelect.disabled = true;
+        regencySelect.innerHTML = '<option value="">Loading...</option>';
+        
+        const response = await fetch(`/api/public/regencies/${provinceId}`);
         const regencies = await response.json();
         
-        // populate regency options
+        // populate regencies
         regencySelect.innerHTML = '<option value="">Semua Kabupaten/Kota</option>';
         regencies.forEach(regency => {
             const option = document.createElement('option');
             option.value = regency.id;
             option.textContent = regency.name;
-            if (selectedRegencyId && regency.id == selectedRegencyId) {
-                option.selected = true;
-            }
             regencySelect.appendChild(option);
         });
         
         regencySelect.disabled = false;
     } catch (error) {
         console.error('Error loading regencies:', error);
-        regencySelect.innerHTML = '<option value="">Gagal memuat kabupaten</option>';
+        regencySelect.innerHTML = '<option value="">Error loading data</option>';
         regencySelect.disabled = false;
     }
 }
 
 // clear regencies dropdown
 function clearRegencies() {
-    const regencySelect = document.getElementById('regency-select');
     if (!regencySelect) return;
-    
-    regencySelect.innerHTML = '<option value="">Pilih Provinsi Dulu</option>';
+    regencySelect.innerHTML = '<option value="">Pilih Provinsi terlebih dahulu</option>';
     regencySelect.disabled = true;
 }
 
-// apply filters dengan ajax
+// apply filters dan fetch results
 async function applyFilters() {
     showLoading();
     
-    // build query params
-    const queryParams = new URLSearchParams();
-    
-    Object.keys(filterState).forEach(key => {
-        if (filterState[key]) {
-            queryParams.append(key, filterState[key]);
-        }
-    });
-    
-    // update url tanpa reload
-    const newUrl = `${window.location.pathname}?${queryParams.toString()}`;
-    window.history.pushState({}, '', newUrl);
-    
     try {
-        const response = await fetch(`/student/browse-problems?${queryParams.toString()}`, {
+        // build query string
+        const params = new URLSearchParams();
+        Object.keys(filterState).forEach(key => {
+            if (filterState[key]) {
+                params.append(key, filterState[key]);
+            }
+        });
+        
+        // fetch filtered results
+        const response = await fetch(`/student/problems?${params.toString()}`, {
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
                 'Accept': 'application/json'
             }
         });
         
-        if (!response.ok) throw new Error('Network response was not ok');
-        
         const data = await response.json();
         
-        // update dom dengan smooth transition
-        await updateProblemsContainer(data.html);
-        updatePagination(data.pagination);
-        updateStats(data.stats);
+        // update DOM with new results
+        if (data.html) {
+            problemsContainer.innerHTML = data.html;
+        }
         
-        // scroll ke top dengan smooth behavior
-        smoothScrollToTop();
+        // update pagination if exists
+        if (data.pagination) {
+            updatePagination(data.pagination);
+        }
+        
+        // update URL tanpa reload
+        window.history.pushState({}, '', `?${params.toString()}`);
+        
+        // smooth scroll to results
+        if (window.scrollY > 200) {
+            smoothScrollTo(problemsContainer.offsetTop - 100);
+        }
+        
+        // reinitialize lazy loading untuk images baru
+        initializeLazyLoading();
         
     } catch (error) {
         console.error('Error applying filters:', error);
-        showError('Terjadi kesalahan saat memuat data. Silakan coba lagi.');
+        showError('Gagal memuat data. Silakan coba lagi.');
     } finally {
         hideLoading();
     }
 }
 
-// update problems container dengan fade animation
-async function updateProblemsContainer(html) {
-    if (!problemsContainer) return;
-    
-    // fade out
-    problemsContainer.style.transition = 'opacity 0.3s ease';
-    problemsContainer.style.opacity = '0';
-    
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    // update content
-    problemsContainer.innerHTML = html;
-    
-    // fade in
-    problemsContainer.style.opacity = '1';
-    
-    // trigger entrance animations
-    const cards = problemsContainer.querySelectorAll('.problem-card');
-    cards.forEach((card, index) => {
-        card.style.animation = 'none';
-        card.offsetHeight; // trigger reflow
-        card.style.animation = `fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.05}s forwards`;
-    });
+// update pagination links
+function updatePagination(paginationHtml) {
+    const paginationContainer = document.getElementById('pagination-container');
+    if (paginationContainer) {
+        paginationContainer.innerHTML = paginationHtml;
+        initializePaginationLinks();
+    }
 }
 
-// update pagination
-function updatePagination(paginationHtml) {
-    if (!paginationContainer) return;
-    
-    paginationContainer.innerHTML = paginationHtml;
-    
-    // attach click handlers untuk pagination links
-    const paginationLinks = paginationContainer.querySelectorAll('a[data-page]');
+// initialize pagination links
+function initializePaginationLinks() {
+    const paginationLinks = document.querySelectorAll('.pagination a');
     paginationLinks.forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
-            filterState.page = parseInt(this.dataset.page);
+            const url = new URL(this.href);
+            filterState.page = url.searchParams.get('page') || 1;
             applyFilters();
         });
     });
 }
 
-// update stats
-function updateStats(stats) {
-    if (!stats) return;
-    
-    const totalProblemsEl = document.getElementById('total-problems-stat');
-    const totalSlotsEl = document.getElementById('total-slots-stat');
-    const urgentCountEl = document.getElementById('urgent-count-stat');
-    
-    if (totalProblemsEl) {
-        animateNumber(totalProblemsEl, stats.total_problems);
-    }
-    if (totalSlotsEl) {
-        animateNumber(totalSlotsEl, stats.total_slots);
-    }
-    if (urgentCountEl) {
-        animateNumber(urgentCountEl, stats.urgent_count);
+// initialize reset button
+function initializeResetButton() {
+    if (resetButton) {
+        resetButton.addEventListener('click', resetFilters);
     }
 }
 
-// animate number counting
-function animateNumber(element, targetNumber) {
-    const currentNumber = parseInt(element.textContent) || 0;
-    const duration = 500; // ms
-    const steps = 30;
-    const increment = (targetNumber - currentNumber) / steps;
-    let current = currentNumber;
-    let step = 0;
+// reset semua filters
+function resetFilters() {
+    filterState = {
+        search: '',
+        province_id: '',
+        regency_id: '',
+        sdg: '',
+        difficulty: '',
+        duration: '',
+        sort: 'latest',
+        page: 1
+    };
     
-    const timer = setInterval(() => {
-        step++;
-        current += increment;
-        element.textContent = Math.round(current);
-        
-        if (step >= steps) {
-            element.textContent = targetNumber;
-            clearInterval(timer);
-        }
-    }, duration / steps);
-}
-
-// smooth scroll ke top
-function smoothScrollToTop() {
-    const targetPosition = problemsContainer.offsetTop - 100;
-    window.scrollTo({
-        top: targetPosition,
-        behavior: 'smooth'
-    });
+    // reset form values
+    if (searchInput) searchInput.value = '';
+    if (provinceSelect) provinceSelect.value = '';
+    if (regencySelect) regencySelect.value = '';
+    if (sdgSelect) sdgSelect.value = '';
+    if (difficultySelect) difficultySelect.value = '';
+    if (durationSelect) durationSelect.value = '';
+    if (sortSelect) sortSelect.value = 'latest';
+    
+    clearRegencies();
+    applyFilters();
 }
 
 // show loading indicator
 function showLoading() {
     if (!problemsContainer || !loadingIndicator) return;
     
-    // insert loading indicator
     problemsContainer.style.opacity = '0.5';
     problemsContainer.style.pointerEvents = 'none';
     
@@ -392,38 +308,100 @@ function hideLoading() {
 
 // show error message
 function showError(message) {
-    // TODO: implementasi toast notification yang lebih baik
-    alert(message);
+    // implementasi toast notification
+    const toast = document.createElement('div');
+    toast.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-slide-in';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.classList.add('animate-slide-out');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
 }
 
-// reset semua filters
-function resetFilters() {
-    filterState.search = '';
-    filterState.province_id = '';
-    filterState.regency_id = '';
-    filterState.sdg = '';
-    filterState.difficulty = '';
-    filterState.duration = '';
-    filterState.sort = 'latest';
-    filterState.page = 1;
+// smooth scroll dengan easing
+function smoothScrollTo(target, duration = 800) {
+    const start = window.pageYOffset;
+    const distance = target - start;
+    const startTime = performance.now();
     
-    setFormValues();
-    clearRegencies();
-    applyFilters();
+    function easeInOutCubic(t) {
+        return t < 0.5 
+            ? 4 * t * t * t 
+            : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+    
+    function animation(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const ease = easeInOutCubic(progress);
+        
+        window.scrollTo(0, start + distance * ease);
+        
+        if (progress < 1) {
+            requestAnimationFrame(animation);
+        }
+    }
+    
+    requestAnimationFrame(animation);
+}
+
+// lazy loading untuk images
+function initializeLazyLoading() {
+    const images = document.querySelectorAll('img[data-src]');
+    
+    if ('IntersectionObserver' in window) {
+        const imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    img.src = img.dataset.src;
+                    img.removeAttribute('data-src');
+                    img.classList.add('fade-in');
+                    observer.unobserve(img);
+                }
+            });
+        }, {
+            rootMargin: '50px'
+        });
+        
+        images.forEach(img => imageObserver.observe(img));
+    } else {
+        // fallback untuk browser tanpa intersection observer
+        images.forEach(img => {
+            img.src = img.dataset.src;
+            img.removeAttribute('data-src');
+        });
+    }
 }
 
 // throttle scroll event untuk performance
 const handleScroll = throttle(function() {
-    // TODO: implementasi infinite scroll jika diperlukan
-    // atau lazy loading untuk images
+    // tambahkan shadow ke header saat scroll
+    const header = document.querySelector('.filter-header');
+    if (header) {
+        if (window.scrollY > 50) {
+            header.classList.add('shadow-md');
+        } else {
+            header.classList.remove('shadow-md');
+        }
+    }
 }, 200);
 
 window.addEventListener('scroll', handleScroll);
 
+// handle browser back/forward
+window.addEventListener('popstate', function() {
+    location.reload(); // simple approach: reload page
+});
+
 // export untuk digunakan di tempat lain jika diperlukan
-export {
-    filterState,
-    applyFilters,
-    loadRegencies,
-    resetFilters
-};
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        filterState,
+        applyFilters,
+        loadRegencies,
+        resetFilters
+    };
+}

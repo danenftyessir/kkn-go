@@ -5,18 +5,18 @@ namespace App\Services;
 use App\Models\Problem;
 use App\Models\Application;
 use App\Models\Project;
-use App\Models\Review;
+use App\Models\Student;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 /**
  * service untuk analytics dan statistik
- * digunakan di dashboard institution dan student
+ * menyediakan data untuk dashboard dan reporting
  */
 class AnalyticsService
 {
     /**
-     * get comprehensive analytics untuk institution dashboard
+     * dapatkan analytics untuk institution dashboard
      */
     public function getInstitutionAnalytics($institutionId)
     {
@@ -24,8 +24,7 @@ class AnalyticsService
             'problems' => $this->getProblemStats($institutionId),
             'applications' => $this->getApplicationStats($institutionId),
             'projects' => $this->getProjectStats($institutionId),
-            'reviews' => $this->getReviewStats($institutionId),
-            'impact' => $this->getImpactStats($institutionId),
+            'engagement' => $this->getEngagementStats($institutionId),
         ];
     }
 
@@ -35,25 +34,26 @@ class AnalyticsService
     private function getProblemStats($institutionId)
     {
         $total = Problem::where('institution_id', $institutionId)->count();
-        $thisMonth = Problem::where('institution_id', $institutionId)
-                           ->whereMonth('created_at', now()->month)
-                           ->count();
-        $lastMonth = Problem::where('institution_id', $institutionId)
-                           ->whereMonth('created_at', now()->subMonth()->month)
-                           ->count();
+        $open = Problem::where('institution_id', $institutionId)->where('status', 'open')->count();
+        $closed = Problem::where('institution_id', $institutionId)->where('status', 'closed')->count();
+        $completed = Problem::where('institution_id', $institutionId)->where('status', 'completed')->count();
+
+        // rata-rata aplikasi per problem
+        $avgApplications = Problem::where('institution_id', $institutionId)
+                                  ->withCount('applications')
+                                  ->avg('applications_count') ?? 0;
+
+        // total views
+        $totalViews = Problem::where('institution_id', $institutionId)
+                            ->sum('view_count');
 
         return [
             'total' => $total,
-            'draft' => Problem::where('institution_id', $institutionId)->where('status', 'draft')->count(),
-            'open' => Problem::where('institution_id', $institutionId)->where('status', 'open')->count(),
-            'in_progress' => Problem::where('institution_id', $institutionId)->where('status', 'in_progress')->count(),
-            'completed' => Problem::where('institution_id', $institutionId)->where('status', 'completed')->count(),
-            'closed' => Problem::where('institution_id', $institutionId)->where('status', 'closed')->count(),
-            'this_month' => $thisMonth,
-            'last_month' => $lastMonth,
-            'growth' => $lastMonth > 0 ? (($thisMonth - $lastMonth) / $lastMonth) * 100 : 0,
-            'total_views' => Problem::where('institution_id', $institutionId)->sum('views_count'),
-            'avg_views_per_problem' => $total > 0 ? Problem::where('institution_id', $institutionId)->avg('views_count') : 0,
+            'open' => $open,
+            'closed' => $closed,
+            'completed' => $completed,
+            'average_applications' => round($avgApplications, 1),
+            'total_views' => $totalViews,
         ];
     }
 
@@ -62,25 +62,37 @@ class AnalyticsService
      */
     private function getApplicationStats($institutionId)
     {
-        $query = Application::whereHas('problem', function($q) use ($institutionId) {
+        $applications = Application::whereHas('problem', function($q) use ($institutionId) {
             $q->where('institution_id', $institutionId);
         });
 
-        $total = $query->count();
-        $thisMonth = (clone $query)->whereMonth('created_at', now()->month)->count();
-        $lastMonth = (clone $query)->whereMonth('created_at', now()->subMonth()->month)->count();
+        $total = $applications->count();
+        $pending = (clone $applications)->where('status', 'pending')->count();
+        $underReview = (clone $applications)->where('status', 'under_review')->count();
+        $accepted = (clone $applications)->where('status', 'accepted')->count();
+        $rejected = (clone $applications)->where('status', 'rejected')->count();
+
+        // acceptance rate
+        $acceptanceRate = $total > 0 ? ($accepted / $total) * 100 : 0;
+
+        // average response time (hari)
+        $avgResponseTime = Application::whereHas('problem', function($q) use ($institutionId) {
+                                      $q->where('institution_id', $institutionId);
+                                  })
+                                  ->whereNotNull('reviewed_at')
+                                  ->get()
+                                  ->avg(function($app) {
+                                      return $app->created_at->diffInDays($app->reviewed_at);
+                                  }) ?? 0;
 
         return [
             'total' => $total,
-            'pending' => (clone $query)->where('status', 'pending')->count(),
-            'under_review' => (clone $query)->where('status', 'under_review')->count(),
-            'accepted' => (clone $query)->where('status', 'accepted')->count(),
-            'rejected' => (clone $query)->where('status', 'rejected')->count(),
-            'this_month' => $thisMonth,
-            'last_month' => $lastMonth,
-            'growth' => $lastMonth > 0 ? (($thisMonth - $lastMonth) / $lastMonth) * 100 : 0,
-            'acceptance_rate' => $total > 0 ? ((clone $query)->where('status', 'accepted')->count() / $total) * 100 : 0,
-            'avg_review_time' => $this->getAverageReviewTime($institutionId),
+            'pending' => $pending,
+            'under_review' => $underReview,
+            'accepted' => $accepted,
+            'rejected' => $rejected,
+            'acceptance_rate' => round($acceptanceRate, 1),
+            'average_response_time' => round($avgResponseTime, 1),
         ];
     }
 
@@ -90,190 +102,181 @@ class AnalyticsService
     private function getProjectStats($institutionId)
     {
         $total = Project::where('institution_id', $institutionId)->count();
+        $active = Project::where('institution_id', $institutionId)->where('status', 'active')->count();
         $completed = Project::where('institution_id', $institutionId)->where('status', 'completed')->count();
+        $onHold = Project::where('institution_id', $institutionId)->where('status', 'on_hold')->count();
+
+        // rata-rata rating
+        $avgRating = Project::where('institution_id', $institutionId)
+                           ->whereNotNull('rating')
+                           ->avg('rating') ?? 0;
+
+        // completion rate
+        $completionRate = $total > 0 ? ($completed / $total) * 100 : 0;
+
+        // projects dengan rating tinggi (>= 4)
+        $highRatedProjects = Project::where('institution_id', $institutionId)
+                                   ->where('rating', '>=', 4)
+                                   ->count();
 
         return [
             'total' => $total,
-            'planning' => Project::where('institution_id', $institutionId)->where('status', 'planning')->count(),
-            'active' => Project::where('institution_id', $institutionId)->where('status', 'active')->count(),
-            'review' => Project::where('institution_id', $institutionId)->where('status', 'review')->count(),
+            'active' => $active,
             'completed' => $completed,
-            'cancelled' => Project::where('institution_id', $institutionId)->where('status', 'cancelled')->count(),
-            'completion_rate' => $total > 0 ? ($completed / $total) * 100 : 0,
-            'avg_progress' => Project::where('institution_id', $institutionId)->avg('progress_percentage') ?? 0,
+            'on_hold' => $onHold,
+            'average_rating' => round($avgRating, 2),
+            'completion_rate' => round($completionRate, 1),
+            'high_rated' => $highRatedProjects,
         ];
     }
 
     /**
-     * statistik reviews
-     * ✅ PERBAIKAN: ganti reviewer_type dengan type
+     * statistik engagement
      */
-    private function getReviewStats($institutionId)
+    private function getEngagementStats($institutionId)
     {
-        // ✅ PERBAIKAN: ganti where('reviewer_type', 'institution') dengan where('type', 'institution_to_student')
-        $query = Review::where('type', 'institution_to_student')
-            ->whereHas('project', function($q) use ($institutionId) {
-                $q->where('institution_id', $institutionId);
-            });
+        // unique students yang apply
+        $uniqueStudents = Application::whereHas('problem', function($q) use ($institutionId) {
+                                     $q->where('institution_id', $institutionId);
+                                 })
+                                 ->distinct('student_id')
+                                 ->count('student_id');
 
-        $total = $query->count();
+        // unique universities
+        $uniqueUniversities = Student::whereHas('applications.problem', function($q) use ($institutionId) {
+                                     $q->where('institution_id', $institutionId);
+                                 })
+                                 ->distinct('university_id')
+                                 ->count('university_id');
+
+        // total likes/wishlist
+        $totalWishlists = DB::table('wishlists')
+                           ->whereIn('problem_id', function($query) use ($institutionId) {
+                               $query->select('id')
+                                     ->from('problems')
+                                     ->where('institution_id', $institutionId);
+                           })
+                           ->count();
 
         return [
-            'total' => $total,
-            'average_rating' => $query->avg('rating') ?? 0,
-            'five_star' => (clone $query)->where('rating', 5)->count(),
-            'four_star' => (clone $query)->where('rating', 4)->count(),
-            'three_star' => (clone $query)->where('rating', 3)->count(),
-            'two_star' => (clone $query)->where('rating', 2)->count(),
-            'one_star' => (clone $query)->where('rating', 1)->count(),
-            'pending_reviews' => Project::where('institution_id', $institutionId)
-                ->where('status', 'completed')
-                ->whereNull('rating')
-                ->count(),
+            'unique_students' => $uniqueStudents,
+            'unique_universities' => $uniqueUniversities,
+            'total_wishlists' => $totalWishlists,
         ];
     }
 
     /**
-     * statistik impact
-     */
-    private function getImpactStats($institutionId)
-    {
-        $projects = Project::where('institution_id', $institutionId)
-                          ->where('status', 'completed')
-                          ->get();
-
-        $totalBeneficiaries = 0;
-        $totalActivities = 0;
-
-        foreach ($projects as $project) {
-            if ($project->impact_metrics) {
-                $metrics = is_array($project->impact_metrics) 
-                    ? $project->impact_metrics 
-                    : json_decode($project->impact_metrics, true) ?? [];
-                
-                $totalBeneficiaries += $metrics['beneficiaries'] ?? 0;
-                $totalActivities += $metrics['activities'] ?? 0;
-            }
-        }
-
-        return [
-            'total_beneficiaries' => $totalBeneficiaries,
-            'total_activities' => $totalActivities,
-            'sdgs_addressed' => $this->getUniqueSDGsAddressed($institutionId),
-            'students_collaborated' => Project::where('institution_id', $institutionId)
-                                            ->distinct('student_id')
-                                            ->count('student_id'),
-        ];
-    }
-
-    /**
-     * get average review time untuk applications
-     */
-    private function getAverageReviewTime($institutionId)
-    {
-        $applications = Application::whereHas('problem', function($q) use ($institutionId) {
-            $q->where('institution_id', $institutionId);
-        })
-        ->whereNotNull('reviewed_at')
-        ->get();
-
-        if ($applications->isEmpty()) {
-            return 0;
-        }
-
-        $totalHours = 0;
-        foreach ($applications as $app) {
-            $totalHours += $app->applied_at->diffInHours($app->reviewed_at);
-        }
-
-        return round($totalHours / $applications->count(), 1);
-    }
-
-    /**
-     * get unique SDGs addressed
-     */
-    private function getUniqueSDGsAddressed($institutionId)
-    {
-        $problems = Problem::where('institution_id', $institutionId)
-                          ->where('status', 'completed')
-                          ->get();
-
-        $allSDGs = [];
-        foreach ($problems as $problem) {
-            if ($problem->sdg_categories) {
-                $categories = is_array($problem->sdg_categories) 
-                    ? $problem->sdg_categories 
-                    : json_decode($problem->sdg_categories, true) ?? [];
-                
-                $allSDGs = array_merge($allSDGs, $categories);
-            }
-        }
-
-        return count(array_unique($allSDGs));
-    }
-
-    /**
-     * get time series data untuk chart (applications per day)
-     */
-    public function getTimeSeriesData($institutionId, $days = 30)
-    {
-        $startDate = now()->subDays($days);
-        
-        $data = Application::whereHas('problem', function($q) use ($institutionId) {
-            $q->where('institution_id', $institutionId);
-        })
-        ->where('created_at', '>=', $startDate)
-        ->select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as count'))
-        ->groupBy('date')
-        ->orderBy('date')
-        ->get()
-        ->pluck('count', 'date')
-        ->toArray();
-
-        // fill missing dates dengan 0
-        $result = [];
-        for ($i = 0; $i < $days; $i++) {
-            $date = now()->subDays($days - $i - 1)->format('Y-m-d');
-            $result[$date] = $data[$date] ?? 0;
-        }
-
-        return $result;
-    }
-
-    /**
-     * get top problems berdasarkan applications
+     * dapatkan top problems berdasarkan jumlah aplikasi
      */
     public function getTopProblems($institutionId, $limit = 5)
     {
         return Problem::where('institution_id', $institutionId)
-            ->orderBy('applications_count', 'desc')
-            ->limit($limit)
-            ->get();
+                     ->withCount('applications')
+                     ->orderBy('applications_count', 'desc')
+                     ->take($limit)
+                     ->get();
     }
 
     /**
-     * get application funnel untuk conversion metrics
+     * dapatkan time series data untuk chart
+     */
+    public function getTimeSeriesData($institutionId, $days = 30)
+    {
+        $startDate = Carbon::now()->subDays($days);
+
+        // applications per hari
+        $applications = Application::whereHas('problem', function($q) use ($institutionId) {
+                                    $q->where('institution_id', $institutionId);
+                                })
+                                ->where('created_at', '>=', $startDate)
+                                ->selectRaw('DATE(created_at) as date, COUNT(*) as count')
+                                ->groupBy('date')
+                                ->orderBy('date')
+                                ->get()
+                                ->keyBy('date')
+                                ->map(fn($item) => $item->count);
+
+        // views per hari
+        $views = Problem::where('institution_id', $institutionId)
+                       ->where('updated_at', '>=', $startDate)
+                       ->selectRaw('DATE(updated_at) as date, SUM(view_count) as count')
+                       ->groupBy('date')
+                       ->orderBy('date')
+                       ->get()
+                       ->keyBy('date')
+                       ->map(fn($item) => $item->count);
+
+        // buat array untuk semua tanggal dengan default 0
+        $dates = [];
+        for ($i = 0; $i < $days; $i++) {
+            $date = Carbon::now()->subDays($days - $i - 1)->format('Y-m-d');
+            $dates[] = [
+                'date' => $date,
+                'applications' => $applications[$date] ?? 0,
+                'views' => $views[$date] ?? 0,
+            ];
+        }
+
+        return $dates;
+    }
+
+    /**
+     * dapatkan application funnel untuk conversion metrics
      */
     public function getApplicationFunnel($institutionId)
     {
-        $total = Application::whereHas('problem', function($q) use ($institutionId) {
-            $q->where('institution_id', $institutionId);
-        })->count();
+        $problemViews = Problem::where('institution_id', $institutionId)
+                              ->sum('view_count');
 
-        $reviewed = Application::whereHas('problem', function($q) use ($institutionId) {
-            $q->where('institution_id', $institutionId);
-        })->whereNotNull('reviewed_at')->count();
+        $applications = Application::whereHas('problem', function($q) use ($institutionId) {
+                                    $q->where('institution_id', $institutionId);
+                                })->count();
 
         $accepted = Application::whereHas('problem', function($q) use ($institutionId) {
-            $q->where('institution_id', $institutionId);
-        })->where('status', 'accepted')->count();
+                                $q->where('institution_id', $institutionId);
+                            })
+                            ->where('status', 'accepted')
+                            ->count();
+
+        $completed = Project::where('institution_id', $institutionId)
+                           ->where('status', 'completed')
+                           ->count();
 
         return [
-            'total' => $total,
-            'reviewed' => $reviewed,
+            'views' => $problemViews,
+            'applications' => $applications,
             'accepted' => $accepted,
-            'review_rate' => $total > 0 ? ($reviewed / $total) * 100 : 0,
-            'acceptance_rate' => $reviewed > 0 ? ($accepted / $reviewed) * 100 : 0,
+            'completed' => $completed,
+            'view_to_apply_rate' => $problemViews > 0 ? round(($applications / $problemViews) * 100, 1) : 0,
+            'apply_to_accept_rate' => $applications > 0 ? round(($accepted / $applications) * 100, 1) : 0,
+            'accept_to_complete_rate' => $accepted > 0 ? round(($completed / $accepted) * 100, 1) : 0,
+        ];
+    }
+
+    /**
+     * dapatkan analytics untuk student
+     */
+    public function getStudentAnalytics($studentId)
+    {
+        $totalApplications = Application::where('student_id', $studentId)->count();
+        $acceptedApplications = Application::where('student_id', $studentId)
+                                          ->where('status', 'accepted')
+                                          ->count();
+        $completedProjects = Project::where('student_id', $studentId)
+                                   ->where('status', 'completed')
+                                   ->count();
+        $avgRating = Project::where('student_id', $studentId)
+                           ->whereNotNull('rating')
+                           ->avg('rating') ?? 0;
+
+        return [
+            'total_applications' => $totalApplications,
+            'accepted_applications' => $acceptedApplications,
+            'completed_projects' => $completedProjects,
+            'average_rating' => round($avgRating, 2),
+            'acceptance_rate' => $totalApplications > 0 
+                ? round(($acceptedApplications / $totalApplications) * 100, 1) 
+                : 0,
         ];
     }
 }

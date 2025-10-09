@@ -109,7 +109,7 @@ Route::middleware(['auth', 'check.user.type:student'])->prefix('student')->name(
     });
     
     // browse problems - set 2 (descriptive URL)
-    // PENTING: route ini yang digunakan di problem-card.blade.php
+    // penting: route ini yang digunakan di problem-card.blade.php
     Route::prefix('browse-problems')->name('browse-problems.')->group(function () {
         Route::get('/', [BrowseProblemsController::class, 'index'])->name('index');
         Route::get('/{id}', [BrowseProblemsController::class, 'show'])->name('detail');
@@ -144,7 +144,7 @@ Route::middleware(['auth', 'check.user.type:student'])->prefix('student')->name(
         Route::get('/', [StudentProfileController::class, 'index'])->name('index');
         Route::get('/edit', [StudentProfileController::class, 'edit'])->name('edit');
         Route::put('/', [StudentProfileController::class, 'update'])->name('update');
-        Route::put('/password', [StudentProfileController::class, 'updatePassword'])->name('update-password');
+        Route::put('/password', [StudentProfileController::class, 'updatePassword'])->name('password.update');
     });
     
     // wishlist
@@ -218,11 +218,8 @@ Route::middleware(['auth', 'check.user.type:institution'])->prefix('institution'
         Route::get('/edit', [InstitutionProfileController::class, 'edit'])->name('edit');
         Route::put('/', [InstitutionProfileController::class, 'update'])->name('update');
         Route::put('/password', [InstitutionProfileController::class, 'updatePassword'])->name('password.update');
-        // alias untuk password update (sesuai dengan nama di form)
-        Route::put('/password/update', [StudentProfileController::class, 'updatePassword'])->name('password.update');
     });
 });
-    
 
 /*
 |--------------------------------------------------------------------------
@@ -248,20 +245,3 @@ Route::get('/portfolio/{username}', [PortfolioController::class, 'show'])->name(
 
 // public institution profile (bisa diakses tanpa login)
 Route::get('/institution/{id}', [InstitutionProfileController::class, 'showPublic'])->name('institution.public');
-
-/*
-|--------------------------------------------------------------------------
-| Public Portfolio & Institution Profile Routes
-|--------------------------------------------------------------------------
-*/
-
-Route::get('/student/profile/{username}', [StudentProfileController::class, 'publicProfile'])
-    ->name('student.profile.public');
-
-// public student portfolio (bisa diakses tanpa login)
-Route::get('/portfolio/{username}', [PortfolioController::class, 'show'])
-    ->name('portfolio.public');
-
-// public institution profile (bisa diakses tanpa login)
-Route::get('/institution/{id}', [InstitutionProfileController::class, 'showPublic'])
-    ->name('institution.public');

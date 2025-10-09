@@ -7,49 +7,59 @@ use App\Models\Project;
 use Illuminate\Support\Facades\DB;
 
 /**
- * service untuk handle review logic
- * FIXED: ganti reviewer_type menjadi type
+ * service untuk mengelola reviews
+ * handle business logic untuk rating dan review system
  */
 class ReviewService
 {
     /**
-     * buat review dari institution ke student
+     * dapatkan proyek yang perlu direview oleh institution
      */
-    public function createInstitutionReview(
-        Project $project,
-        int $rating,
-        string $reviewText,
-        ?string $strengths = null,
-        ?string $improvements = null,
-        bool $wouldCollaborateAgain = false
-    ) {
+    public function getPendingReviews($institutionId, $limit = 10)
+    {
+        return Project::where('institution_id', $institutionId)
+                     ->where('status', 'completed')
+                     ->whereNull('rating')
+                     ->whereNull('institution_review')
+                     ->with(['student.user', 'student.university', 'problem'])
+                     ->latest('actual_end_date')
+                     ->limit($limit)
+                     ->get();
+    }
+
+    /**
+     * buat review untuk proyek
+     */
+    public function createReview($projectId, $institutionId, $data)
+    {
         DB::beginTransaction();
         
         try {
-            // buat review
-            $review = Review::create([
-                'project_id' => $project->id,
-                'reviewer_id' => $project->institution->user_id,
-                'reviewee_id' => $project->student->user_id,
-                'type' => 'institution_to_student', // FIXED: gunakan 'type'
-                'rating' => $rating,
-                'review_text' => $reviewText,
-                'strengths' => $strengths,
-                'improvements' => $improvements,
-                'is_public' => true,
+            // cek apakah proyek milik institution ini
+            $project = Project::where('id', $projectId)
+                             ->where('institution_id', $institutionId)
+                             ->firstOrFail();
+
+            // update project dengan rating dan review
+            $project->update([
+                'rating' => $data['rating'],
+                'institution_review' => $data['review'],
+                'reviewed_at' => now(),
             ]);
 
-            // update project dengan rating
-            $project->update([
-                'rating' => $rating,
-                'institution_review' => $reviewText,
-                'reviewed_at' => now(),
+            // buat entry di tabel reviews (jika ada)
+            $review = Review::create([
+                'project_id' => $project->id,
+                'institution_id' => $institutionId,
+                'student_id' => $project->student_id,
+                'rating' => $data['rating'],
+                'review_text' => $data['review'],
+                'recommendation' => $data['recommendation'] ?? null,
             ]);
 
             DB::commit();
             
             return $review;
-            
         } catch (\Exception $e) {
             DB::rollBack();
             throw $e;
@@ -57,161 +67,118 @@ class ReviewService
     }
 
     /**
-     * get average rating untuk student
+     * update review yang sudah ada
      */
-    public function getStudentAverageRating($studentUserId)
+    public function updateReview($reviewId, $institutionId, $data)
     {
-        return Review::where('reviewee_id', $studentUserId)
-            ->where('type', 'institution_to_student') // FIXED: gunakan 'type'
-            ->avg('rating') ?? 0;
-    }
-
-    /**
-     * get total reviews untuk student
-     */
-    public function getStudentTotalReviews($studentUserId)
-    {
-        return Review::where('reviewee_id', $studentUserId)
-            ->where('type', 'institution_to_student') // FIXED: gunakan 'type'
-            ->count();
-    }
-
-    /**
-     * get rating distribution untuk student
-     */
-    public function getStudentRatingDistribution($studentUserId)
-    {
-        $distribution = [];
+        DB::beginTransaction();
         
-        for ($i = 1; $i <= 5; $i++) {
-            $distribution[$i] = Review::where('reviewee_id', $studentUserId)
-                ->where('type', 'institution_to_student') // FIXED: gunakan 'type'
-                ->where('rating', $i)
-                ->count();
-        }
+        try {
+            $review = Review::where('id', $reviewId)
+                           ->where('institution_id', $institutionId)
+                           ->firstOrFail();
 
-        return $distribution;
+            $review->update([
+                'rating' => $data['rating'],
+                'review_text' => $data['review'],
+                'recommendation' => $data['recommendation'] ?? $review->recommendation,
+            ]);
+
+            // update juga di project
+            $review->project->update([
+                'rating' => $data['rating'],
+                'institution_review' => $data['review'],
+                'reviewed_at' => now(),
+            ]);
+
+            DB::commit();
+            
+            return $review;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
 
     /**
-     * get review statistics untuk institution
+     * dapatkan review terbaru yang diberikan institution
+     */
+    public function getRecentInstitutionReviews($institutionId, $limit = 5)
+    {
+        return Review::where('institution_id', $institutionId)
+                    ->with(['project.problem', 'student.user', 'student.university'])
+                    ->latest()
+                    ->limit($limit)
+                    ->get();
+    }
+
+    /**
+     * dapatkan statistik review untuk institution
      */
     public function getInstitutionReviewStats($institutionId)
     {
-        $reviews = Review::where('type', 'institution_to_student') // FIXED: gunakan 'type'
-            ->whereHas('project', function($q) use ($institutionId) {
-                $q->where('institution_id', $institutionId);
-            });
+        $reviews = Review::where('institution_id', $institutionId);
+
+        $totalReviews = $reviews->count();
+        $avgRating = $reviews->avg('rating') ?? 0;
+
+        // distribusi rating
+        $ratingDistribution = [
+            5 => (clone $reviews)->where('rating', 5)->count(),
+            4 => (clone $reviews)->where('rating', 4)->count(),
+            3 => (clone $reviews)->where('rating', 3)->count(),
+            2 => (clone $reviews)->where('rating', 2)->count(),
+            1 => (clone $reviews)->where('rating', 1)->count(),
+        ];
 
         return [
-            'total' => $reviews->count(),
-            'average_rating' => $reviews->avg('rating') ?? 0,
-            'five_star' => $reviews->where('rating', 5)->count(),
-            'four_star' => $reviews->where('rating', 4)->count(),
-            'three_star' => $reviews->where('rating', 3)->count(),
-            'two_star' => $reviews->where('rating', 2)->count(),
-            'one_star' => $reviews->where('rating', 1)->count(),
+            'total_reviews' => $totalReviews,
+            'average_rating' => round($avgRating, 2),
+            'rating_distribution' => $ratingDistribution,
         ];
     }
 
     /**
-     * get recent reviews untuk institution dashboard
+     * dapatkan reviews untuk student (untuk portfolio)
      */
-    public function getRecentInstitutionReviews($institutionId, $limit = 5)
+    public function getStudentReviews($studentId)
     {
-        return Review::with(['reviewee', 'project.problem'])
-            ->where('type', 'institution_to_student') // FIXED: gunakan 'type'
-            ->whereHas('project', function($q) use ($institutionId) {
-                $q->where('institution_id', $institutionId);
-            })
-            ->latest()
-            ->limit($limit)
-            ->get();
+        return Review::where('student_id', $studentId)
+                    ->where('rating', '>=', 4) // hanya tampilkan review positif
+                    ->with(['project.problem', 'institution'])
+                    ->latest()
+                    ->get();
     }
 
     /**
-     * check apakah institution sudah review project ini
+     * cek apakah proyek sudah direview
      */
-    public function hasReviewed(Project $project)
+    public function isProjectReviewed($projectId)
     {
-        return Review::where('project_id', $project->id)
-            ->where('type', 'institution_to_student') // FIXED: gunakan 'type'
-            ->exists();
+        $project = Project::find($projectId);
+        return $project && $project->rating !== null;
     }
 
     /**
-     * get projects yang belum di-review oleh institution
+     * dapatkan average rating untuk student
      */
-    public function getPendingReviews($institutionId, $limit = 10)
+    public function getStudentAverageRating($studentId)
     {
-        return Project::with(['student.user', 'student.university', 'problem'])
-            ->where('institution_id', $institutionId)
-            ->where('status', 'completed')
-            ->whereNull('rating')
-            ->whereNull('reviewed_at')
-            ->latest('end_date')
-            ->limit($limit)
-            ->get();
+        return Review::where('student_id', $studentId)
+                    ->avg('rating') ?? 0;
     }
 
     /**
-     * calculate student performance score berdasarkan reviews
+     * dapatkan top rated students
      */
-    public function calculateStudentPerformanceScore($studentUserId)
+    public function getTopRatedStudents($limit = 10)
     {
-        $reviews = Review::where('reviewee_id', $studentUserId)
-            ->where('type', 'institution_to_student') // FIXED: gunakan 'type'
-            ->get();
-
-        if ($reviews->isEmpty()) {
-            return 0;
-        }
-
-        $totalRating = $reviews->sum('rating');
-        $maxRating = $reviews->count() * 5;
-
-        return ($totalRating / $maxRating) * 100;
-    }
-
-    /**
-     * get top rated students dari institution
-     */
-    public function getTopRatedStudents($institutionId, $limit = 10)
-    {
-        return Review::select('reviewee_id', DB::raw('AVG(rating) as avg_rating'), DB::raw('COUNT(*) as review_count'))
-            ->with(['reviewee'])
-            ->where('type', 'institution_to_student') // FIXED: gunakan 'type'
-            ->whereHas('project', function($q) use ($institutionId) {
-                $q->where('institution_id', $institutionId);
-            })
-            ->groupBy('reviewee_id')
-            ->having('review_count', '>=', 1)
-            ->orderBy('avg_rating', 'desc')
-            ->orderBy('review_count', 'desc')
-            ->limit($limit)
-            ->get();
-    }
-
-    /**
-     * export review data untuk reporting
-     */
-    public function exportReviewData($institutionId)
-    {
-        return Review::with(['reviewee', 'project.problem'])
-            ->where('type', 'institution_to_student') // FIXED: gunakan 'type'
-            ->whereHas('project', function($q) use ($institutionId) {
-                $q->where('institution_id', $institutionId);
-            })
-            ->get()
-            ->map(function($review) {
-                return [
-                    'id' => $review->id,
-                    'student_name' => $review->reviewee->name,
-                    'project_title' => $review->project->problem->title,
-                    'rating' => $review->rating,
-                    'review' => $review->review_text,
-                    'date' => $review->created_at->format('Y-m-d'),
-                ];
-            });
+        return DB::table('reviews')
+                ->select('student_id', DB::raw('AVG(rating) as avg_rating'), DB::raw('COUNT(*) as review_count'))
+                ->groupBy('student_id')
+                ->having('review_count', '>=', 3) // minimal 3 review
+                ->orderBy('avg_rating', 'desc')
+                ->limit($limit)
+                ->get();
     }
 }
