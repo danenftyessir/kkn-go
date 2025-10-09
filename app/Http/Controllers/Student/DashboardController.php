@@ -14,6 +14,8 @@ use Carbon\Carbon;
 /**
  * controller untuk dashboard mahasiswa
  * menampilkan ringkasan aktivitas, recommendations, dan quick access
+ * 
+ * path: app/Http/Controllers/Student/DashboardController.php
  */
 class DashboardController extends Controller
 {
@@ -54,13 +56,16 @@ class DashboardController extends Controller
                                         ->get();
 
         // recommended problems berdasarkan jurusan dan skills
+        // FIX: ganti 'deadline' menjadi 'application_deadline'
         $recommendedProblems = Problem::where('status', 'open')
-                                     ->where('deadline', '>=', Carbon::now())
+                                     ->where('application_deadline', '>=', Carbon::now())
                                      ->with(['institution', 'province', 'regency', 'images'])
                                      ->when($student->major, function($query) use ($student) {
                                          // filter berdasarkan jurusan jika ada
-                                         $query->whereJsonContains('required_majors', $student->major)
+                                         $query->where(function($q) use ($student) {
+                                             $q->whereJsonContains('required_majors', $student->major)
                                                ->orWhereNull('required_majors');
+                                         });
                                      })
                                      ->withCount('applications')
                                      ->latest()
@@ -90,7 +95,7 @@ class DashboardController extends Controller
         // profile completion check
         $profileCompletion = $this->calculateProfileCompletion($student);
 
-        return view('student.dashboard', compact(
+        return view('student.dashboard.index', compact(
             'stats',
             'activeProjects',
             'recentApplications',
