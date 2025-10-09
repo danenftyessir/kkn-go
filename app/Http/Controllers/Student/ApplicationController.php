@@ -10,21 +10,32 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
+/**
+ * controller untuk mengelola aplikasi mahasiswa ke problems
+ * mahasiswa dapat apply, view status, dan withdraw aplikasi
+ * 
+ * path: app/Http/Controllers/Student/ApplicationController.php
+ */
 class ApplicationController extends Controller
 {
     /**
-     * tampilkan daftar aplikasi mahasiswa
+     * tampilkan daftar semua aplikasi mahasiswa
      */
-    public function index()
+    public function index(Request $request)
     {
         $student = Auth::user()->student;
         
-        $applications = Application::with(['problem.institution', 'problem.province', 'problem.regency'])
-                                  ->where('student_id', $student->id)
-                                  ->orderBy('applied_at', 'desc')
-                                  ->paginate(10);
+        $query = Application::with(['problem.institution', 'problem.province', 'problem.regency'])
+                            ->where('student_id', $student->id);
         
-        // hitung statistik
+        // filter berdasarkan status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        
+        $applications = $query->orderBy('applied_at', 'desc')->paginate(10);
+        
+        // statistik untuk summary
         $stats = [
             'total' => Application::where('student_id', $student->id)->count(),
             'pending' => Application::where('student_id', $student->id)->where('status', 'pending')->count(),
@@ -34,20 +45,6 @@ class ApplicationController extends Controller
         ];
         
         return view('student.applications.index', compact('applications', 'stats'));
-    }
-    
-    /**
-     * tampilkan detail aplikasi
-     */
-    public function show($id)
-    {
-        $student = Auth::user()->student;
-        
-        $application = Application::with(['problem.institution', 'problem.province', 'problem.regency'])
-                                 ->where('student_id', $student->id)
-                                 ->findOrFail($id);
-        
-        return view('student.applications.show', compact('application'));
     }
     
     /**
@@ -65,7 +62,7 @@ class ApplicationController extends Controller
                 ->with('error', 'Maaf, proyek ini sudah tidak menerima aplikasi');
         }
         
-        // validasi deadline belum lewat
+        // FIX: validasi deadline belum lewat - gunakan application_deadline
         if ($problem->application_deadline < now()) {
             return redirect()
                 ->route('student.browse-problems.show', $problem->id)
@@ -108,7 +105,7 @@ class ApplicationController extends Controller
         
         $problem = Problem::findOrFail($validated['problem_id']);
         
-        // validasi ulang
+        // FIX: validasi ulang - gunakan application_deadline
         if ($problem->status !== 'open' || $problem->application_deadline < now()) {
             return back()->with('error', 'Proyek sudah tidak menerima aplikasi');
         }
@@ -133,7 +130,7 @@ class ApplicationController extends Controller
                 'student_id' => $student->id,
                 'problem_id' => $problem->id,
                 'motivation' => $validated['motivation'],
-                'relevant_experience' => $validated['relevant_experience'],
+                'relevant_experience' => $validated['relevant_experience'] ?? null,
                 'proposal_path' => $proposalPath,
                 'status' => 'pending',
                 'applied_at' => now(),
@@ -165,55 +162,66 @@ class ApplicationController extends Controller
     }
     
     /**
-     * withdraw/batalkan aplikasi
+     * tampilkan detail aplikasi
      */
-    public function withdraw($id)
+    public function show($id)
     {
         $student = Auth::user()->student;
         
-        $application = Application::where('student_id', $student->id)
-                                 ->where('id', $id)
+        $application = Application::with([
+            'problem.institution',
+            'problem.province',
+            'problem.regency',
+            'problem.images'
+        ])
+        ->where('id', $id)
+        ->where('student_id', $student->id)
+        ->firstOrFail();
+        
+        return view('student.applications.show', compact('application'));
+    }
+    
+    /**
+     * withdraw/batalkan aplikasi
+     * hanya bisa untuk aplikasi dengan status pending
+     */
+    public function destroy($id)
+    {
+        $student = Auth::user()->student;
+        
+        $application = Application::where('id', $id)
+                                 ->where('student_id', $student->id)
                                  ->firstOrFail();
         
-        // hanya bisa withdraw jika status masih pending atau reviewed
-        if (!in_array($application->status, ['pending', 'reviewed'])) {
-            return back()->with('error', 'Aplikasi tidak dapat dibatalkan');
+        // hanya bisa withdraw jika status masih pending
+        if ($application->status !== 'pending') {
+            return back()->with('error', 'Aplikasi tidak dapat dibatalkan karena sudah diproses.');
         }
         
         try {
             DB::beginTransaction();
             
-            // hapus proposal file jika ada
+            // hapus file proposal jika ada
             if ($application->proposal_path) {
                 Storage::disk('public')->delete($application->proposal_path);
             }
             
-            // hapus aplikasi
-            $application->delete();
-            
             // decrement counter di problem
             $application->problem->decrement('applications_count');
             
-            // TODO: kirim notifikasi ke instansi
+            // hapus aplikasi
+            $application->delete();
             
             DB::commit();
             
             return redirect()
                 ->route('student.applications.index')
-                ->with('success', 'Aplikasi berhasil dibatalkan');
+                ->with('success', 'Aplikasi berhasil dibatalkan.');
             
         } catch (\Exception $e) {
             DB::rollBack();
             
-            return back()->with('error', 'Terjadi kesalahan saat membatalkan aplikasi');
+            return back()->with('error', 'Terjadi kesalahan saat membatalkan aplikasi.');
         }
-    }
-
-    /**
-     * hapus aplikasi (alias untuk withdraw untuk backward compatibility)
-     */
-    public function destroy($id)
-    {
-        return $this->withdraw($id);
     }
 }
