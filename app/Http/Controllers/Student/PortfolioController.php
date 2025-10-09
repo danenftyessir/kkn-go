@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\PortfolioService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Student;
 
 /**
  * controller untuk mengelola portfolio mahasiswa
@@ -29,11 +30,9 @@ class PortfolioController extends Controller
         $student = Auth::user()->student;
         
         $portfolioData = $this->portfolioService->getPortfolioData($student->id);
-        $achievements = $this->portfolioService->getAchievements($student->id);
         $portfolioSlug = $this->portfolioService->generatePortfolioSlug($student);
 
         return view('student.portfolio.index', array_merge($portfolioData, [
-            'achievements' => $achievements,
             'portfolio_slug' => $portfolioSlug,
         ]));
     }
@@ -41,15 +40,18 @@ class PortfolioController extends Controller
     /**
      * tampilkan public portfolio (dapat diakses siapa saja)
      */
-    public function publicView($slug)
+    public function publicView($username)
     {
         try {
-            $portfolioData = $this->portfolioService->getPublicPortfolio($slug);
-            $achievements = $this->portfolioService->getAchievements($portfolioData['student']->id);
+            // cari student berdasarkan username
+            $student = Student::whereHas('user', function($query) use ($username) {
+                $query->where('username', $username);
+            })->with('user')->firstOrFail();
 
-            return view('student.portfolio.public', array_merge($portfolioData, [
-                'achievements' => $achievements,
-            ]));
+            $portfolioData = $this->portfolioService->getPortfolioData($student->id);
+
+            return view('student.portfolio.public', $portfolioData);
+            
         } catch (\Exception $e) {
             abort(404, 'Portfolio tidak ditemukan');
         }

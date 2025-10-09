@@ -20,7 +20,7 @@ class PortfolioService
      */
     public function getPortfolioData($studentId)
     {
-        $student = Student::with('user')->findOrFail($studentId);
+        $student = Student::with('user', 'university')->findOrFail($studentId);
 
         // ambil completed projects dengan sorting berdasarkan updated_at
         $completedProjects = Project::with([
@@ -46,7 +46,7 @@ class PortfolioService
         $skills = $this->extractSkills($completedProjects);
         $sdgCategories = $this->extractSDGCategories($completedProjects);
 
-        // get achievements
+        // FIXED: get achievements dengan 3 parameter
         $achievements = $this->getAchievements($student, $completedProjects, $reviews);
 
         return [
@@ -88,11 +88,12 @@ class PortfolioService
             'total_reviews' => $reviews->count(),
             'total_beneficiaries' => $totalBeneficiaries,
             'total_activities' => $totalActivities,
+            'sdgs_addressed' => $this->extractSDGCategories($projects)->count(),
         ];
     }
 
     /**
-     * extract skills dari completed projects
+     * extract unique skills dari completed projects
      */
     protected function extractSkills($projects)
     {
@@ -100,28 +101,19 @@ class PortfolioService
 
         foreach ($projects as $project) {
             if ($project->problem && $project->problem->required_skills) {
-                $skills = $project->problem->required_skills;
-                
-                // pastikan skills adalah array
-                if (is_string($skills)) {
-                    $skills = json_decode($skills, true);
-                }
-                
-                // jika masih bukan array atau decode gagal, skip
-                if (!is_array($skills)) {
-                    continue;
-                }
+                $skills = is_array($project->problem->required_skills) 
+                    ? $project->problem->required_skills 
+                    : json_decode($project->problem->required_skills, true) ?? [];
                 
                 $allSkills = array_merge($allSkills, $skills);
             }
         }
 
-        // remove duplicates dan return unique skills
-        return array_values(array_unique($allSkills));
+        return collect(array_unique($allSkills))->take(15);
     }
 
     /**
-     * extract SDG categories dari completed projects
+     * extract unique SDG categories dari projects
      */
     protected function extractSDGCategories($projects)
     {
@@ -129,24 +121,15 @@ class PortfolioService
 
         foreach ($projects as $project) {
             if ($project->problem && $project->problem->sdg_categories) {
-                $categories = $project->problem->sdg_categories;
+                $sdgs = is_array($project->problem->sdg_categories) 
+                    ? $project->problem->sdg_categories 
+                    : json_decode($project->problem->sdg_categories, true) ?? [];
                 
-                // pastikan categories adalah array
-                if (is_string($categories)) {
-                    $categories = json_decode($categories, true);
-                }
-                
-                // jika masih bukan array atau decode gagal, skip
-                if (!is_array($categories)) {
-                    continue;
-                }
-                
-                $allSDGs = array_merge($allSDGs, $categories);
+                $allSDGs = array_merge($allSDGs, $sdgs);
             }
         }
 
-        // remove duplicates dan return unique SDGs
-        return array_values(array_unique($allSDGs));
+        return collect(array_unique($allSDGs));
     }
 
     /**
@@ -177,9 +160,29 @@ class PortfolioService
             ];
         }
 
+        if ($projects->count() >= 5) {
+            $achievements[] = [
+                'title' => 'Dedicated Contributor',
+                'description' => 'Menyelesaikan 5+ proyek KKN',
+                'icon' => 'trophy',
+                'color' => 'gold',
+                'earned_at' => $projects->first()->updated_at
+            ];
+        }
+
         // rating achievements
         $averageRating = $reviews->isEmpty() ? 0 : $reviews->avg('rating');
         
+        if ($averageRating >= 4.0 && $reviews->count() >= 2) {
+            $achievements[] = [
+                'title' => 'Quality Work',
+                'description' => 'Mendapat rating rata-rata 4.0+ dari 2+ review',
+                'icon' => 'star',
+                'color' => 'yellow',
+                'earned_at' => $reviews->first()->created_at
+            ];
+        }
+
         if ($averageRating >= 4.5 && $reviews->count() >= 3) {
             $achievements[] = [
                 'title' => 'Excellence Award',
@@ -190,9 +193,29 @@ class PortfolioService
             ];
         }
 
+        if ($averageRating >= 4.8 && $reviews->count() >= 5) {
+            $achievements[] = [
+                'title' => 'Outstanding Performance',
+                'description' => 'Mendapat rating rata-rata 4.8+ dari 5+ review',
+                'icon' => 'award',
+                'color' => 'purple',
+                'earned_at' => $reviews->first()->created_at
+            ];
+        }
+
         // SDG diversity
         $uniqueSDGs = $this->extractSDGCategories($projects);
-        if (count($uniqueSDGs) >= 5) {
+        if ($uniqueSDGs->count() >= 3) {
+            $achievements[] = [
+                'title' => 'SDG Contributor',
+                'description' => 'Berkontribusi pada 3+ kategori SDG berbeda',
+                'icon' => 'globe',
+                'color' => 'green',
+                'earned_at' => $projects->first()->updated_at
+            ];
+        }
+
+        if ($uniqueSDGs->count() >= 5) {
             $achievements[] = [
                 'title' => 'SDG Champion',
                 'description' => 'Berkontribusi pada 5+ kategori SDG berbeda',
@@ -204,7 +227,17 @@ class PortfolioService
 
         // skill diversity
         $uniqueSkills = $this->extractSkills($projects);
-        if (count($uniqueSkills) >= 10) {
+        if ($uniqueSkills->count() >= 7) {
+            $achievements[] = [
+                'title' => 'Versatile Volunteer',
+                'description' => 'Menguasai 7+ skill berbeda',
+                'icon' => 'briefcase',
+                'color' => 'blue',
+                'earned_at' => $projects->first()->updated_at
+            ];
+        }
+
+        if ($uniqueSkills->count() >= 10) {
             $achievements[] = [
                 'title' => 'Multi-Talented',
                 'description' => 'Menguasai 10+ skill berbeda',
@@ -222,25 +255,18 @@ class PortfolioService
      */
     public function generatePortfolioSlug($student)
     {
-        // gunakan NIM atau ID sebagai slug
-        return $student->nim ?? $student->id;
+        // gunakan username dari user
+        return $student->user->username;
     }
 
     /**
-     * get public portfolio berdasarkan slug
+     * get public portfolio berdasarkan slug (username)
      */
     public function getPublicPortfolio($slug)
     {
-        // cari student berdasarkan NIM atau ID
-        $student = Student::with('user')
-            ->where('nim', $slug)
-            ->orWhere('id', $slug)
-            ->firstOrFail();
-
-        // check visibility (jika ada field portfolio_visible)
-        // if (!$student->portfolio_visible) {
-        //     abort(403, 'Portfolio is private');
-        // }
+        $student = Student::whereHas('user', function($query) use ($slug) {
+            $query->where('username', $slug);
+        })->with('user')->firstOrFail();
 
         return $this->getPortfolioData($student->id);
     }
@@ -252,33 +278,10 @@ class PortfolioService
     {
         $project = Project::findOrFail($projectId);
         
-        // toggle is_portfolio_visible jika field ada
-        // $project->is_portfolio_visible = !$project->is_portfolio_visible;
-        // $project->save();
+        $project->update([
+            'is_portfolio_visible' => !$project->is_portfolio_visible
+        ]);
 
         return $project;
-    }
-
-    /**
-     * check jika portfolio visible untuk public
-     */
-    public function isPortfolioVisible($studentId)
-    {
-        $student = Student::findOrFail($studentId);
-        // return $student->portfolio_visible ?? true;
-        return true; // default visible untuk saat ini
-    }
-
-    /**
-     * toggle portfolio visibility
-     */
-    public function togglePortfolioVisibility($studentId)
-    {
-        $student = Student::findOrFail($studentId);
-        // $student->portfolio_visible = !$student->portfolio_visible;
-        // $student->save();
-
-        // return $student->portfolio_visible;
-        return true;
     }
 }
