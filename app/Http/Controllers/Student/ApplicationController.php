@@ -105,7 +105,6 @@ class ApplicationController extends Controller
         
         $problem = Problem::findOrFail($validated['problem_id']);
         
-        // FIX: validasi ulang - gunakan application_deadline
         if ($problem->status !== 'open' || $problem->application_deadline < now()) {
             return back()->with('error', 'Proyek sudah tidak menerima aplikasi');
         }
