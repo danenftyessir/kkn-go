@@ -23,18 +23,132 @@ use App\Http\Controllers\Institution\ProfileController as InstitutionProfileCont
 use App\Http\Controllers\Institution\ReviewController;
 use App\Http\Controllers\NotificationController;
 
-// ====================================
-// PUBLIC ROUTES
-// ====================================
+/*
+|--------------------------------------------------------------------------
+| DEBUG ROUTES - TEMPORARY (HAPUS SETELAH FIX!)
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/debug-clear-cache', function () {
+    try {
+        // hapus file cache manual
+        $cacheFiles = [
+            base_path('bootstrap/cache/routes-v7.php'),
+            base_path('bootstrap/cache/routes.php'),
+            base_path('bootstrap/cache/config.php'),
+        ];
+        
+        $deleted = [];
+        foreach ($cacheFiles as $file) {
+            if (file_exists($file)) {
+                unlink($file);
+                $deleted[] = basename($file);
+            }
+        }
+        
+        // clear via artisan
+        \Artisan::call('route:clear');
+        \Artisan::call('cache:clear');
+        \Artisan::call('config:clear');
+        \Artisan::call('view:clear');
+        
+        return response()->json([
+            'status' => 'SUCCESS',
+            'message' => 'Cache cleared successfully!',
+            'deleted_files' => $deleted,
+            'routes_cached' => app()->routesAreCached() ? 'YES' : 'NO',
+            'config_cached' => app()->configurationIsCached() ? 'YES' : 'NO',
+            'timestamp' => now()->toDateTimeString(),
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'ERROR',
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+        ], 500);
+    }
+});
+
+Route::get('/debug-info', function () {
+    $user = auth()->user();
+    return response()->json([
+        'app_env' => config('app.env'),
+        'app_debug' => config('app.debug'),
+        'php_version' => phpversion(),
+        'laravel_version' => app()->version(),
+        'routes_cached' => app()->routesAreCached() ? 'YES' : 'NO',
+        'config_cached' => app()->configurationIsCached() ? 'YES' : 'NO',
+        'user_authenticated' => auth()->check() ? 'YES' : 'NO',
+        'user_id' => $user?->id,
+        'user_type' => $user?->user_type,
+        'user_email' => $user?->email,
+        'has_student_record' => $user && $user->user_type === 'student' ? ($user->student ? 'YES' : 'NO') : 'N/A',
+        'has_institution_record' => $user && $user->user_type === 'institution' ? ($user->institution ? 'YES' : 'NO') : 'N/A',
+        'cache_files' => [
+            'routes' => file_exists(base_path('bootstrap/cache/routes.php')) ? 'EXISTS' : 'NOT FOUND',
+            'routes-v7' => file_exists(base_path('bootstrap/cache/routes-v7.php')) ? 'EXISTS' : 'NOT FOUND',
+            'config' => file_exists(base_path('bootstrap/cache/config.php')) ? 'EXISTS' : 'NOT FOUND',
+        ],
+        'session_driver' => config('session.driver'),
+        'database_connection' => config('database.default'),
+    ]);
+});
+
+Route::get('/debug-routes', function () {
+    $routes = collect(\Route::getRoutes())->map(function ($route) {
+        return [
+            'method' => implode('|', $route->methods()),
+            'uri' => $route->uri(),
+            'name' => $route->getName(),
+            'action' => $route->getActionName(),
+        ];
+    })->toArray();
+    
+    return response()->json([
+        'total_routes' => count($routes),
+        'routes' => $routes,
+    ]);
+});
+
+Route::get('/debug-db', function () {
+    try {
+        \DB::connection()->getPdo();
+        
+        return response()->json([
+            'status' => 'SUCCESS',
+            'message' => 'Database connected',
+            'connection' => config('database.default'),
+            'users_count' => \DB::table('users')->count(),
+            'students_count' => \DB::table('students')->count(),
+            'institutions_count' => \DB::table('institutions')->count(),
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'ERROR',
+            'message' => 'Database connection failed',
+            'error' => $e->getMessage(),
+        ], 500);
+    }
+});
+
+/*
+|--------------------------------------------------------------------------
+| PUBLIC ROUTES
+|--------------------------------------------------------------------------
+*/
+
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::get('/portfolio/{username}', [PortfolioController::class, 'publicView'])->name('portfolio.public');
 Route::get('/student/{username}', [StudentProfileController::class, 'publicProfile'])->name('student.profile.public');
 Route::get('/institution/{id}', [InstitutionProfileController::class, 'showPublic'])->name('institution.public');
 
-// ====================================
-// GUEST ROUTES (belum login)
-// ====================================
+/*
+|--------------------------------------------------------------------------
+| GUEST ROUTES (belum login)
+|--------------------------------------------------------------------------
+*/
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [LoginController::class, 'login']);
@@ -51,9 +165,12 @@ Route::middleware('guest')->group(function () {
     Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
 });
 
-// ====================================
-// AUTHENTICATED ROUTES
-// ====================================
+/*
+|--------------------------------------------------------------------------
+| AUTHENTICATED ROUTES
+|--------------------------------------------------------------------------
+*/
+
 Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth')->name('logout');
 
 Route::middleware(['auth'])->group(function () {
@@ -62,9 +179,12 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend'])->name('verification.resend');
 });
 
-// ====================================
-// STUDENT ROUTES
-// ====================================
+/*
+|--------------------------------------------------------------------------
+| STUDENT ROUTES
+|--------------------------------------------------------------------------
+*/
+
 Route::middleware(['auth', 'check.user.type:student'])
     ->prefix('student')
     ->name('student.')
@@ -112,9 +232,12 @@ Route::middleware(['auth', 'check.user.type:student'])
         Route::get('/repository/{id}/download', [KnowledgeRepositoryController::class, 'download'])->name('repository.download');
     });
 
-// ====================================
-// INSTITUTION ROUTES
-// ====================================
+/*
+|--------------------------------------------------------------------------
+| INSTITUTION ROUTES
+|--------------------------------------------------------------------------
+*/
+
 Route::middleware(['auth', 'check.user.type:institution'])
     ->prefix('institution')
     ->name('institution.')
@@ -159,9 +282,12 @@ Route::middleware(['auth', 'check.user.type:institution'])
         Route::put('/profile/password', [InstitutionProfileController::class, 'updatePassword'])->name('profile.password.update');
     });
 
-// ====================================
-// NOTIFICATION ROUTES (shared)
-// ====================================
+/*
+|--------------------------------------------------------------------------
+| NOTIFICATION ROUTES (shared)
+|--------------------------------------------------------------------------
+*/
+
 Route::middleware(['auth'])
     ->prefix('notifications')
     ->name('notifications.')
