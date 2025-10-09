@@ -42,6 +42,15 @@ use App\Http\Controllers\NotificationController;
 // halaman utama
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
+// public student portfolio (bisa diakses tanpa login)
+Route::get('/portfolio/{username}', [PortfolioController::class, 'publicView'])->name('portfolio.public');
+
+// public student profile (bisa diakses tanpa login)
+Route::get('/student/{username}', [StudentProfileController::class, 'publicProfile'])->name('student.profile.public');
+
+// public institution profile (bisa diakses tanpa login)
+Route::get('/institution/{id}', [InstitutionProfileController::class, 'showPublic'])->name('institution.public');
+
 /*
 |--------------------------------------------------------------------------
 | Guest Routes (Hanya untuk yang Belum Login)
@@ -108,11 +117,16 @@ Route::middleware(['auth', 'check.user.type:student'])->prefix('student')->name(
         Route::get('/{id}', [BrowseProblemsController::class, 'show'])->name('show');
     });
     
-    // browse problems - set 2 (descriptive URL)
-    // penting: route ini yang digunakan di problem-card.blade.php
-    Route::prefix('browse-problems')->name('browse-problems.')->group(function () {
-        Route::get('/', [BrowseProblemsController::class, 'index'])->name('index');
-        Route::get('/{id}', [BrowseProblemsController::class, 'show'])->name('detail');
+    // browse problems - set 2 (descriptive URL) - FIXED: tambah route tanpa suffix
+    Route::prefix('browse-problems')->name('browse-problems')->group(function () {
+        // route utama tanpa suffix untuk form action
+        Route::get('/', [BrowseProblemsController::class, 'index']);
+        
+        // route dengan suffix untuk navigasi
+        Route::name('.')->group(function () {
+            Route::get('/', [BrowseProblemsController::class, 'index'])->name('index');
+            Route::get('/{id}', [BrowseProblemsController::class, 'show'])->name('detail');
+        });
     });
     
     // applications
@@ -233,15 +247,3 @@ Route::middleware(['auth'])->prefix('notifications')->name('notifications.')->gr
     Route::post('/read-all', [NotificationController::class, 'markAllAsRead'])->name('read-all');
     Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('destroy');
 });
-
-/*
-|--------------------------------------------------------------------------
-| Public Portfolio & Institution Profile Routes
-|--------------------------------------------------------------------------
-*/
-
-// public student portfolio (bisa diakses tanpa login)
-Route::get('/portfolio/{username}', [PortfolioController::class, 'show'])->name('portfolio.public');
-
-// public institution profile (bisa diakses tanpa login)
-Route::get('/institution/{id}', [InstitutionProfileController::class, 'showPublic'])->name('institution.public');

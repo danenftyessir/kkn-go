@@ -55,12 +55,21 @@ class ProjectManagementController extends Controller
 
         $projects = $query->orderBy('created_at', 'desc')->paginate(15);
 
-        // statistik untuk summary cards
+        // FIXED: statistik untuk summary cards dengan key yang lengkap
         $stats = [
             'total' => Project::where('institution_id', $institution->id)->count(),
-            'active' => Project::where('institution_id', $institution->id)->where('status', 'active')->count(),
-            'on_hold' => Project::where('institution_id', $institution->id)->where('status', 'on_hold')->count(),
-            'completed' => Project::where('institution_id', $institution->id)->where('status', 'completed')->count(),
+            'planning' => Project::where('institution_id', $institution->id)
+                                ->where('status', 'planning')
+                                ->count(),
+            'active' => Project::where('institution_id', $institution->id)
+                              ->where('status', 'active')
+                              ->count(),
+            'on_hold' => Project::where('institution_id', $institution->id)
+                               ->where('status', 'on_hold')
+                               ->count(),
+            'completed' => Project::where('institution_id', $institution->id)
+                                 ->where('status', 'completed')
+                                 ->count(),
         ];
 
         // daftar problems untuk filter dropdown
@@ -117,6 +126,89 @@ class ProjectManagementController extends Controller
     }
 
     /**
+     * tambah milestone baru ke proyek
+     */
+    public function addMilestone(Request $request, $id)
+    {
+        $institution = auth()->user()->institution;
+
+        $project = Project::where('institution_id', $institution->id)->findOrFail($id);
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'target_date' => 'required|date|after:today',
+            'weight' => 'nullable|numeric|min:0|max:100',
+        ]);
+
+        try {
+            $milestone = $project->milestones()->create([
+                'title' => $validated['title'],
+                'description' => $validated['description'] ?? null,
+                'target_date' => $validated['target_date'],
+                'weight' => $validated['weight'] ?? 10,
+                'status' => 'pending',
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Milestone berhasil ditambahkan!',
+                'milestone' => $milestone,
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menambahkan milestone: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * update milestone status
+     */
+    public function updateMilestone(Request $request, $id, $milestoneId)
+    {
+        $institution = auth()->user()->institution;
+
+        $project = Project::where('institution_id', $institution->id)->findOrFail($id);
+        $milestone = $project->milestones()->findOrFail($milestoneId);
+
+        $validated = $request->validate([
+            'status' => 'required|in:pending,in_progress,completed,cancelled',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        try {
+            $data = ['status' => $validated['status']];
+            
+            // jika status berubah menjadi completed, set completed_at
+            if ($validated['status'] === 'completed' && $milestone->status !== 'completed') {
+                $data['completed_at'] = now();
+            }
+
+            $milestone->update($data);
+
+            // update project progress
+            $totalMilestones = $project->milestones()->count();
+            $completedMilestones = $project->milestones()->where('status', 'completed')->count();
+            $progressPercentage = $totalMilestones > 0 ? ($completedMilestones / $totalMilestones) * 100 : 0;
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Status milestone berhasil diubah!',
+                'progress' => $progressPercentage,
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengubah status: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * update status proyek
      */
     public function updateStatus(Request $request, $id)
@@ -126,7 +218,7 @@ class ProjectManagementController extends Controller
         $project = Project::where('institution_id', $institution->id)->findOrFail($id);
 
         $validated = $request->validate([
-            'status' => 'required|in:active,on_hold,completed,cancelled',
+            'status' => 'required|in:planning,active,on_hold,completed,cancelled',
             'notes' => 'nullable|string|max:500',
         ]);
 
@@ -141,114 +233,6 @@ class ProjectManagementController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Status proyek berhasil diubah!',
-            'status' => $project->status
         ]);
-    }
-
-    /**
-     * tambah milestone untuk proyek
-     */
-    public function addMilestone(Request $request, $id)
-    {
-        $institution = auth()->user()->institution;
-
-        $project = Project::where('institution_id', $institution->id)->findOrFail($id);
-
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'target_date' => 'required|date|after:today',
-            'deliverables' => 'nullable|array',
-            'deliverables.*' => 'string',
-        ]);
-
-        $milestone = ProjectMilestone::create([
-            'project_id' => $project->id,
-            'title' => $validated['title'],
-            'description' => $validated['description'] ?? null,
-            'target_date' => $validated['target_date'],
-            'deliverables' => isset($validated['deliverables']) ? json_encode($validated['deliverables']) : null,
-            'status' => 'pending',
-        ]);
-
-        return back()->with('success', 'Milestone berhasil ditambahkan!');
-    }
-
-    /**
-     * update milestone
-     */
-    public function updateMilestone(Request $request, $id, $milestoneId)
-    {
-        $institution = auth()->user()->institution;
-
-        $project = Project::where('institution_id', $institution->id)->findOrFail($id);
-        $milestone = ProjectMilestone::where('project_id', $project->id)->findOrFail($milestoneId);
-
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'target_date' => 'required|date',
-            'status' => 'required|in:pending,in_progress,completed,delayed',
-            'deliverables' => 'nullable|array',
-            'deliverables.*' => 'string',
-        ]);
-
-        $data = [
-            'title' => $validated['title'],
-            'description' => $validated['description'] ?? null,
-            'target_date' => $validated['target_date'],
-            'status' => $validated['status'],
-            'deliverables' => isset($validated['deliverables']) ? json_encode($validated['deliverables']) : null,
-        ];
-
-        // jika status berubah menjadi completed, set completed_at
-        if ($validated['status'] === 'completed' && $milestone->status !== 'completed') {
-            $data['completed_at'] = now();
-        }
-
-        $milestone->update($data);
-
-        // update progress percentage proyek
-        $this->updateProjectProgress($project);
-
-        return back()->with('success', 'Milestone berhasil diperbarui!');
-    }
-
-    /**
-     * hapus milestone
-     */
-    public function deleteMilestone($id, $milestoneId)
-    {
-        $institution = auth()->user()->institution;
-
-        $project = Project::where('institution_id', $institution->id)->findOrFail($id);
-        $milestone = ProjectMilestone::where('project_id', $project->id)->findOrFail($milestoneId);
-
-        $milestone->delete();
-
-        // update progress percentage proyek
-        $this->updateProjectProgress($project);
-
-        return back()->with('success', 'Milestone berhasil dihapus!');
-    }
-
-    /**
-     * update progress percentage proyek berdasarkan milestone
-     * 
-     * @param Project $project
-     */
-    protected function updateProjectProgress(Project $project)
-    {
-        $totalMilestones = $project->milestones()->count();
-        
-        if ($totalMilestones === 0) {
-            $project->update(['progress_percentage' => 0]);
-            return;
-        }
-
-        $completedMilestones = $project->milestones()->where('status', 'completed')->count();
-        $progressPercentage = ($completedMilestones / $totalMilestones) * 100;
-
-        $project->update(['progress_percentage' => round($progressPercentage)]);
     }
 }
