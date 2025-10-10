@@ -82,7 +82,6 @@
                     <span class="px-4 py-2 bg-blue-100 text-blue-800 rounded-lg font-semibold">
                         {{ $wishlists->total() }} Proyek Tersimpan
                     </span>
-                    {{-- ✅ PERBAIKAN: ganti route('student.browse-problems') menjadi route('student.browse-problems.index') --}}
                     <a href="{{ route('student.browse-problems.index') }}" 
                        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 hover:shadow-lg">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -104,7 +103,6 @@
                 </div>
                 <h3 class="text-xl font-bold text-gray-900 mb-2">Wishlist Masih Kosong</h3>
                 <p class="text-gray-600 mb-6">Mulai eksplorasi dan simpan proyek yang Anda minati!</p>
-                {{-- ✅ PERBAIKAN --}}
                 <a href="{{ route('student.browse-problems.index') }}" 
                    class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 hover:shadow-lg">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -133,9 +131,10 @@
                     <!-- thumbnail -->
                     @if($wishlist->problem->images->isNotEmpty())
                         <div class="relative h-48 overflow-hidden bg-gradient-to-br from-blue-500 to-green-500">
-                            <img src="{{ $wishlist->problem->images->first()->image_url }}" 
+                            <img src="{{ supabase_url($wishlist->problem->images->first()->image_path) }}" 
                                  alt="{{ $wishlist->problem->title }}"
-                                 class="w-full h-full object-cover hover:scale-110 transition-transform duration-500">
+                                 class="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
+                                 loading="lazy">
                         </div>
                     @else
                         <div class="h-48 bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center">
@@ -150,9 +149,10 @@
                         <!-- institution -->
                         <div class="flex items-center mb-3">
                             @if($wishlist->problem->institution->logo_path)
-                            <img src="{{ storage_url($wishlist->problem->institution->logo_path) }}" 
+                            <img src="{{ supabase_url($wishlist->problem->institution->logo_path) }}" 
                                  alt="{{ $wishlist->problem->institution->name }}"
-                                 class="w-8 h-8 rounded-full object-cover mr-2">
+                                 class="w-8 h-8 rounded-full object-cover mr-2"
+                                 loading="lazy">
                             @else
                             <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center mr-2">
                                 <span class="text-white text-xs font-bold">
@@ -186,7 +186,7 @@
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                 </svg>
-                                Deadline: {{ $wishlist->problem->application_deadline->format('d M Y') }}
+                                Deadline: {{ \Carbon\Carbon::parse($wishlist->problem->application_deadline)->format('d M Y') }}
                             </div>
                         </div>
 
@@ -216,9 +216,9 @@
                 @endforeach
             </div>
 
-            <!-- pagination -->
+            {{-- ✅ FIX: gunakan pagination laravel default, BUKAN custom pagination --}}
             <div class="mt-8">
-                {{ $wishlists->links('partials.pagination') }}
+                {{ $wishlists->links() }}
             </div>
         @endif
     </div>
@@ -247,7 +247,8 @@ async function removeFromWishlist(wishlistId) {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
             }
         });
 

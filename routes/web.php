@@ -152,6 +152,7 @@ Route::middleware(['auth', 'check.user.type:student'])->prefix('student')->name(
     Route::prefix('wishlist')->name('wishlist.')->group(function () {
         Route::get('/', [WishlistController::class, 'index'])->name('index');
         Route::post('/{problemId}', [WishlistController::class, 'toggle'])->name('toggle');
+        Route::delete('/{wishlistId}/remove', [WishlistController::class, 'remove'])->name('remove');
     });
     
     // knowledge repository
