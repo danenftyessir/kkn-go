@@ -10,53 +10,70 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 /**
- * controller untuk mengelola review aplikasi mahasiswa
- * instansi dapat melihat, menerima, atau menolak aplikasi yang masuk
+ * controller untuk review aplikasi mahasiswa oleh instansi
  */
 class ApplicationReviewController extends Controller
 {
     /**
-     * tampilkan daftar aplikasi yang masuk
+     * tampilkan daftar semua aplikasi untuk instansi
      */
     public function index(Request $request)
     {
         $institution = auth()->user()->institution;
 
-        $query = Application::with(['student.user', 'student.university', 'problem'])
-                            ->whereHas('problem', function($q) use ($institution) {
-                                $q->where('institution_id', $institution->id);
-                            });
+        $query = Application::with([
+                'student.user', 
+                'student.university',
+                'problem'
+            ])
+            ->whereHas('problem', function($q) use ($institution) {
+                $q->where('institution_id', $institution->id);
+            });
 
-        // filter berdasarkan status
+        // search
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('student.user', function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%");
+            });
+        }
+
+        // filter by status
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        // filter berdasarkan problem
+        // filter by problem
         if ($request->filled('problem_id')) {
             $query->where('problem_id', $request->problem_id);
         }
 
-        // search berdasarkan nama mahasiswa
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->whereHas('student.user', function($q) use ($search) {
-                $q->where('name', 'LIKE', "%{$search}%");
-            });
+        // sorting
+        $sort = $request->input('sort', 'latest');
+        switch ($sort) {
+            case 'oldest':
+                $query->oldest('applied_at');
+                break;
+            case 'problem':
+                $query->join('problems', 'applications.problem_id', '=', 'problems.id')
+                      ->orderBy('problems.title')
+                      ->select('applications.*');
+                break;
+            default:
+                $query->latest('applied_at');
         }
 
-        $applications = $query->orderBy('applied_at', 'desc')->paginate(15);
+        $applications = $query->paginate(10)->withQueryString();
 
-        // hitung jumlah aplikasi berdasarkan status untuk summary cards
+        // statistik
         $baseQuery = Application::whereHas('problem', function($q) use ($institution) {
             $q->where('institution_id', $institution->id);
         });
 
-        // statistik untuk summary cards
         $stats = [
             'total' => (clone $baseQuery)->count(),
             'pending' => (clone $baseQuery)->where('status', 'pending')->count(),
-            'under_review' => (clone $baseQuery)->where('status', 'reviewed')->count(), // fix: gunakan 'under_review' sebagai key
+            'under_review' => (clone $baseQuery)->where('status', 'reviewed')->count(),
             'accepted' => (clone $baseQuery)->where('status', 'accepted')->count(),
             'rejected' => (clone $baseQuery)->where('status', 'rejected')->count(),
         ];
@@ -133,16 +150,15 @@ class ApplicationReviewController extends Controller
             })
             ->findOrFail($id);
 
-        // validasi
+        // validasi status
         if (!in_array($application->status, ['pending', 'reviewed'])) {
             return back()->with('error', 'aplikasi ini sudah diproses');
         }
 
-        // cek apakah masih ada slot tersedia
+        // PERBAIKAN: gunakan field accepted_students untuk validasi slot
         $problem = $application->problem;
-        $acceptedCount = $problem->applications()->where('status', 'accepted')->count();
         
-        if ($acceptedCount >= $problem->required_students) {
+        if ($problem->accepted_students >= $problem->required_students) {
             return back()->with('error', 'slot mahasiswa untuk masalah ini sudah penuh');
         }
 
@@ -176,7 +192,7 @@ class ApplicationReviewController extends Controller
                 'role_in_team' => 'anggota tim',
             ]);
 
-            // update counter problem
+            // PERBAIKAN: update counter problem dengan benar
             $problem->increment('accepted_students');
 
             DB::commit();
@@ -270,6 +286,8 @@ class ApplicationReviewController extends Controller
         try {
             DB::beginTransaction();
 
+            $wasAccepted = $application->status === 'accepted';
+
             // kembalikan ke pending
             $application->update([
                 'status' => 'pending',
@@ -285,8 +303,8 @@ class ApplicationReviewController extends Controller
                   ->where('status', 'planning')
                   ->delete();
 
-            // update counter problem jika sebelumnya accepted
-            if ($application->status === 'accepted') {
+            // PERBAIKAN: update counter problem jika sebelumnya accepted
+            if ($wasAccepted) {
                 $application->problem->decrement('accepted_students');
             }
 
@@ -325,18 +343,19 @@ class ApplicationReviewController extends Controller
 
             foreach ($validated['application_ids'] as $applicationId) {
                 try {
-                    $application = Application::whereHas('problem', function($q) use ($institution) {
-                        $q->where('institution_id', $institution->id);
-                    })->findOrFail($applicationId);
+                    $application = Application::with('problem')
+                        ->whereHas('problem', function($q) use ($institution) {
+                            $q->where('institution_id', $institution->id);
+                        })->findOrFail($applicationId);
 
                     switch ($validated['action']) {
                         case 'accept':
                             // cek apakah bisa diterima
                             if (in_array($application->status, ['pending', 'reviewed'])) {
                                 $problem = $application->problem;
-                                $acceptedCount = $problem->applications()->where('status', 'accepted')->count();
                                 
-                                if ($acceptedCount < $problem->required_students) {
+                                // PERBAIKAN: gunakan field accepted_students
+                                if ($problem->accepted_students < $problem->required_students) {
                                     $application->update([
                                         'status' => 'accepted',
                                         'reviewed_at' => now(),
@@ -368,13 +387,17 @@ class ApplicationReviewController extends Controller
                             break;
 
                         case 'reject':
-                            $application->update([
-                                'status' => 'rejected',
-                                'reviewed_at' => now(),
-                                'feedback' => $validated['feedback'],
-                                'rejection_reason' => $validated['rejection_reason'],
-                            ]);
-                            $successCount++;
+                            if (in_array($application->status, ['pending', 'reviewed'])) {
+                                $application->update([
+                                    'status' => 'rejected',
+                                    'reviewed_at' => now(),
+                                    'feedback' => $validated['feedback'] ?? 'aplikasi ditolak',
+                                    'rejection_reason' => $validated['rejection_reason'] ?? 'tidak sesuai kriteria',
+                                ]);
+                                $successCount++;
+                            } else {
+                                $errorCount++;
+                            }
                             break;
 
                         case 'delete':
