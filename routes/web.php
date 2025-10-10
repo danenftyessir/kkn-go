@@ -99,20 +99,20 @@ Route::middleware(['auth'])->group(function () {
 
 Route::middleware(['auth', 'check.user.type:student'])->prefix('student')->name('student.')->group(function () {
     
-    // dashboard
+    // dashboard - JANGAN DIUBAH (SUDAH FIX)
     Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
     
-    // browse problems - set 1 (shorter URL)
-    Route::prefix('problems')->name('problems.')->group(function () {
-        Route::get('/', [BrowseProblemsController::class, 'index'])->name('index');
-        Route::get('/{id}', [BrowseProblemsController::class, 'show'])->name('show');
-    });
-    
-    // browse problems - set 2 (descriptive URL)
-    // route ini mendefinisikan student.browse-problems.index dan student.browse-problems.detail
+    // ✅ FIX BROWSE-PROBLEMS - HAPUS DUPLICATE, BUAT CLEAN
+    // browse problems dengan URL /student/browse-problems
     Route::prefix('browse-problems')->name('browse-problems.')->group(function () {
         Route::get('/', [BrowseProblemsController::class, 'index'])->name('index');
         Route::get('/{id}', [BrowseProblemsController::class, 'show'])->name('detail');
+    });
+    
+    // browse problems alternatif dengan URL /student/problems (untuk backward compatibility)
+    Route::prefix('problems')->name('problems.')->group(function () {
+        Route::get('/', [BrowseProblemsController::class, 'index'])->name('index');
+        Route::get('/{id}', [BrowseProblemsController::class, 'show'])->name('show');
     });
     
     // applications
