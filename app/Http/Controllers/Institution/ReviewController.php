@@ -10,7 +10,6 @@ use App\Services\ReviewService;
 
 /**
  * controller untuk manajemen review mahasiswa oleh instansi
- * FIXED: tambah eager loading lengkap untuk reviewee.student dan reviewee.student.university
  */
 class ReviewController extends Controller
 {
