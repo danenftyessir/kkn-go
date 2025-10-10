@@ -114,6 +114,9 @@ Route::middleware(['auth', 'check.user.type:student'])->prefix('student')->name(
         Route::get('/{id}', [BrowseProblemsController::class, 'show'])->name('detail');
     });
     
+    // alias untuk backward compatibility dengan form action
+    Route::get('/browse-problems', [BrowseProblemsController::class, 'index'])->name('browse-problems');
+    
     // applications
     Route::prefix('applications')->name('applications.')->group(function () {
         Route::get('/', [ApplicationController::class, 'index'])->name('index');
