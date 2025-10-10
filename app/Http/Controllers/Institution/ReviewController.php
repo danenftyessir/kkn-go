@@ -10,7 +10,7 @@ use App\Services\ReviewService;
 
 /**
  * controller untuk manajemen review mahasiswa oleh instansi
- * FIXED: ganti reviewer_type menjadi type
+ * FIXED: tambah eager loading lengkap untuk reviewee.student dan reviewee.student.university
  */
 class ReviewController extends Controller
 {
@@ -28,11 +28,12 @@ class ReviewController extends Controller
     {
         $institution = auth()->user()->institution;
 
+        // FIXED: tambah eager loading untuk reviewee.student dan reviewee.student.university
         $query = Review::with([
-            'reviewee', // FIXED: gunakan reviewee, bukan student.user
+            'reviewee.student.university', // eager load user -> student -> university
             'project.problem'
         ])
-        ->where('type', 'institution_to_student') // FIXED: gunakan 'type'
+        ->where('type', 'institution_to_student')
         ->whereHas('project', function($q) use ($institution) {
             $q->where('institution_id', $institution->id);
         });
@@ -70,19 +71,19 @@ class ReviewController extends Controller
 
         // statistik review
         $stats = [
-            'total' => Review::where('type', 'institution_to_student') // FIXED
+            'total' => Review::where('type', 'institution_to_student')
                 ->whereHas('project', function($q) use ($institution) {
                     $q->where('institution_id', $institution->id);
                 })->count(),
-            'average_rating' => Review::where('type', 'institution_to_student') // FIXED
+            'average_rating' => Review::where('type', 'institution_to_student')
                 ->whereHas('project', function($q) use ($institution) {
                     $q->where('institution_id', $institution->id);
                 })->avg('rating') ?? 0,
-            'five_star' => Review::where('type', 'institution_to_student') // FIXED
+            'five_star' => Review::where('type', 'institution_to_student')
                 ->whereHas('project', function($q) use ($institution) {
                     $q->where('institution_id', $institution->id);
                 })->where('rating', 5)->count(),
-            'four_star' => Review::where('type', 'institution_to_student') // FIXED
+            'four_star' => Review::where('type', 'institution_to_student')
                 ->whereHas('project', function($q) use ($institution) {
                     $q->where('institution_id', $institution->id);
                 })->where('rating', 4)->count(),
@@ -113,7 +114,11 @@ class ReviewController extends Controller
         }
 
         // cek apakah sudah pernah review
-        if ($project->rating) {
+        $existingReview = Review::where('project_id', $project->id)
+            ->where('type', 'institution_to_student')
+            ->first();
+
+        if ($existingReview) {
             return redirect()->route('institution.projects.show', $project->id)
                            ->with('error', 'Anda sudah memberikan review untuk proyek ini.');
         }
@@ -124,9 +129,10 @@ class ReviewController extends Controller
     /**
      * simpan review baru
      */
-    public function store(Request $request, $projectId)
+    public function store(Request $request)
     {
         $institution = auth()->user()->institution;
+        $projectId = $request->input('project_id');
 
         $project = Project::where('institution_id', $institution->id)->findOrFail($projectId);
 
@@ -135,7 +141,12 @@ class ReviewController extends Controller
             return back()->with('error', 'Hanya dapat memberikan review untuk proyek yang sudah selesai.');
         }
 
-        if ($project->rating) {
+        // cek apakah sudah review
+        $existingReview = Review::where('project_id', $project->id)
+            ->where('type', 'institution_to_student')
+            ->first();
+
+        if ($existingReview) {
             return back()->with('error', 'Anda sudah memberikan review untuk proyek ini.');
         }
 
@@ -174,11 +185,12 @@ class ReviewController extends Controller
     {
         $institution = auth()->user()->institution;
 
+        // FIXED: tambah eager loading lengkap
         $review = Review::with([
-            'reviewee', // FIXED
+            'reviewee.student.university',
             'project.problem'
         ])
-        ->where('type', 'institution_to_student') // FIXED
+        ->where('type', 'institution_to_student')
         ->whereHas('project', function($q) use ($institution) {
             $q->where('institution_id', $institution->id);
         })
@@ -194,11 +206,12 @@ class ReviewController extends Controller
     {
         $institution = auth()->user()->institution;
 
+        // FIXED: tambah eager loading lengkap
         $review = Review::with([
-            'reviewee',
+            'reviewee.student.university',
             'project.problem'
         ])
-        ->where('type', 'institution_to_student') // FIXED
+        ->where('type', 'institution_to_student')
         ->whereHas('project', function($q) use ($institution) {
             $q->where('institution_id', $institution->id);
         })
@@ -220,7 +233,7 @@ class ReviewController extends Controller
     {
         $institution = auth()->user()->institution;
 
-        $review = Review::where('type', 'institution_to_student') // FIXED
+        $review = Review::where('type', 'institution_to_student')
             ->whereHas('project', function($q) use ($institution) {
                 $q->where('institution_id', $institution->id);
             })
@@ -246,54 +259,12 @@ class ReviewController extends Controller
                 'improvements' => $validated['improvements'] ?? null,
             ]);
 
-            // update project rating juga
-            $review->project->update([
-                'rating' => $validated['rating'],
-                'institution_review' => $validated['review'],
-            ]);
-
             return redirect()->route('institution.reviews.show', $review->id)
-                           ->with('success', 'Review berhasil diupdate!');
+                           ->with('success', 'Review berhasil diperbarui!');
 
         } catch (\Exception $e) {
             return back()->withInput()
                        ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * hapus review
-     */
-    public function destroy($id)
-    {
-        $institution = auth()->user()->institution;
-
-        $review = Review::where('type', 'institution_to_student') // FIXED
-            ->whereHas('project', function($q) use ($institution) {
-                $q->where('institution_id', $institution->id);
-            })
-            ->findOrFail($id);
-
-        // hanya bisa hapus dalam 7 hari
-        if ($review->created_at->addDays(7)->isPast()) {
-            return back()->with('error', 'Review tidak dapat dihapus setelah 7 hari.');
-        }
-
-        try {
-            // reset project rating
-            $review->project->update([
-                'rating' => null,
-                'institution_review' => null,
-                'reviewed_at' => null,
-            ]);
-
-            $review->delete();
-
-            return redirect()->route('institution.reviews.index')
-                           ->with('success', 'Review berhasil dihapus!');
-
-        } catch (\Exception $e) {
-            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
 }
