@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Str;
-use PDO;
 
 return [
 
@@ -60,7 +59,7 @@ return [
             'strict' => true,
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
-                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+                \PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],
 
@@ -80,7 +79,7 @@ return [
             'strict' => true,
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
-                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+                \PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],
 
@@ -103,24 +102,24 @@ return [
             'options' => extension_loaded('pdo_pgsql') ? [
                 // disable emulated prepares untuk PostgreSQL
                 // ini mencegah error prepared statement di connection pooling
-                PDO::ATTR_EMULATE_PREPARES => false,
+                \PDO::ATTR_EMULATE_PREPARES => false,
                 
                 // gunakan persistent connections hanya jika environment mengizinkan
                 // untuk Railway/production, lebih baik false karena menggunakan connection pooling
-                PDO::ATTR_PERSISTENT => env('DB_PERSISTENT', false),
+                \PDO::ATTR_PERSISTENT => env('DB_PERSISTENT', false),
                 
                 // timeout untuk mencegah hanging connections
-                PDO::ATTR_TIMEOUT => env('DB_TIMEOUT', 5),
+                \PDO::ATTR_TIMEOUT => env('DB_TIMEOUT', 5),
                 
                 // error mode harus exception
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                \PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 
                 // default fetch mode
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_OBJ,
+                \PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_OBJ,
                 
                 // stringify fetches - konversi semua ke string dulu
                 // ini membantu menghindari type casting issues
-                PDO::ATTR_STRINGIFY_FETCHES => false,
+                \PDO::ATTR_STRINGIFY_FETCHES => false,
             ] : [],
         ],
 

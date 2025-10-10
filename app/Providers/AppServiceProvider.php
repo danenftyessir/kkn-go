@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
 use PDOException;
-use PDO;
 
 class AppServiceProvider extends ServiceProvider
 {
