@@ -46,6 +46,9 @@ class AnalyticsService
         $totalViews = Problem::where('institution_id', $institutionId)
                             ->sum('views_count');
 
+        // rata-rata views per problem
+        $avgViewsPerProblem = $total > 0 ? $totalViews / $total : 0;
+
         // hitung growth dari bulan lalu
         $lastMonthTotal = Problem::where('institution_id', $institutionId)
                                 ->where('created_at', '<', Carbon::now()->startOfMonth())
@@ -62,6 +65,7 @@ class AnalyticsService
             'completed' => $completed,
             'average_applications' => round($avgApplications, 1),
             'total_views' => $totalViews,
+            'avg_views_per_problem' => round($avgViewsPerProblem, 1),
             'growth' => round($growth, 1),
         ];
     }
