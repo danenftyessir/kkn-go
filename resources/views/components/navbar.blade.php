@@ -1,79 +1,91 @@
-{{-- resources/views/components/navbar.blade.php (UPDATED) --}}
-<nav class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm" x-data="{ mobileMenuOpen: false }">
+{{-- components/navbar.blade.php --}}
+<nav class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between h-16">
-            
-            {{-- logo --}}
+        <div class="flex justify-between h-16">
+            {{-- logo dan nama aplikasi --}}
             <div class="flex items-center">
-                <a href="{{ route('home') }}" class="flex items-center">
-                    <img src="{{ asset('kkn-go-logo.png') }}" alt="KKN-GO" class="h-8">
+                <a href="{{ Auth::check() ? (Auth::user()->isStudent() ? route('student.dashboard') : route('institution.dashboard')) : route('login') }}" 
+                   class="flex items-center">
+                    <img src="{{ asset('images/logo.png') }}" alt="KKN-GO" class="h-10 w-auto">
+                    <span class="ml-2 text-xl font-bold text-gray-900">KKN-GO</span>
                 </a>
             </div>
 
-            {{-- desktop navigation --}}
-            <div class="hidden md:flex items-center space-x-1">
+            {{-- navigasi menu --}}
+            <div class="hidden md:flex md:items-center md:space-x-8">
                 @auth
-                    @if(Auth::user()->user_type === 'student')
-                        {{-- student menu --}}
+                    @if(Auth::user()->isStudent())
+                        {{-- menu untuk student --}}
                         <a href="{{ route('student.dashboard') }}" 
-                           class="px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors {{ request()->routeIs('student.dashboard') ? 'bg-gray-100 font-semibold' : '' }}">
+                           class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('student.dashboard') ? 'text-blue-600' : '' }}">
                             Dashboard
                         </a>
                         <a href="{{ route('student.browse-problems.index') }}" 
-                           class="px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors {{ request()->routeIs('student.browse-problems.*') ? 'bg-gray-100 font-semibold' : '' }}">
+                           class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('student.browse-problems.*') ? 'text-blue-600' : '' }}">
                             Browse
                         </a>
                         <a href="{{ route('student.applications.index') }}" 
-                           class="px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors {{ request()->routeIs('student.applications.*') ? 'bg-gray-100 font-semibold' : '' }}">
+                           class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('student.applications.*') ? 'text-blue-600' : '' }}">
                             Applications
                         </a>
                         <a href="{{ route('student.projects.index') }}" 
-                           class="px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors {{ request()->routeIs('student.projects.*') ? 'bg-gray-100 font-semibold' : '' }}">
+                           class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('student.projects.*') ? 'text-blue-600' : '' }}">
                             Projects
                         </a>
                         <a href="{{ route('student.repository.index') }}" 
-                           class="px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors {{ request()->routeIs('student.repository.*') ? 'bg-gray-100 font-semibold' : '' }}">
+                           class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('student.repository.*') ? 'text-blue-600' : '' }}">
                             Repository
                         </a>
-                    @elseif(Auth::user()->user_type === 'institution')
-                        {{-- institution menu --}}
+                    @elseif(Auth::user()->isInstitution())
+                        {{-- menu untuk institution --}}
                         <a href="{{ route('institution.dashboard') }}" 
-                           class="px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors {{ request()->routeIs('institution.dashboard') ? 'bg-gray-100 font-semibold' : '' }}">
+                           class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('institution.dashboard') ? 'text-blue-600' : '' }}">
                             Dashboard
                         </a>
                         <a href="{{ route('institution.problems.index') }}" 
-                           class="px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors {{ request()->routeIs('institution.problems.*') ? 'bg-gray-100 font-semibold' : '' }}">
+                           class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('institution.problems.*') ? 'text-blue-600' : '' }}">
                             Problems
                         </a>
                         <a href="{{ route('institution.applications.index') }}" 
-                           class="px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors {{ request()->routeIs('institution.applications.*') ? 'bg-gray-100 font-semibold' : '' }}">
+                           class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('institution.applications.*') ? 'text-blue-600' : '' }}">
                             Applications
                         </a>
                         <a href="{{ route('institution.projects.index') }}" 
-                           class="px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors {{ request()->routeIs('institution.projects.*') ? 'bg-gray-100 font-semibold' : '' }}">
+                           class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('institution.projects.*') ? 'text-blue-600' : '' }}">
                             Projects
                         </a>
-                        <a href="{{ route('institution.reviews.index') }}" 
-                           class="px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors {{ request()->routeIs('institution.reviews.*') ? 'bg-gray-100 font-semibold' : '' }}">
-                            Reviews
-                        </a>
                     @endif
-                @endguest
+                @endauth
             </div>
 
-            {{-- user menu / auth buttons --}}
-            <div class="hidden md:flex items-center space-x-4">
+            {{-- user menu --}}
+            <div class="flex items-center">
                 @auth
+                    {{-- notifikasi --}}
+                    <div class="relative mr-4">
+                        <button class="p-2 text-gray-600 hover:text-blue-600 rounded-full hover:bg-gray-100 transition-colors relative">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                            </svg>
+                            @if(Auth::user()->unread_notifications_count > 0)
+                                <span class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">
+                                    {{ Auth::user()->unread_notifications_count }}
+                                </span>
+                            @endif
+                        </button>
+                    </div>
+
                     {{-- user dropdown --}}
                     <div class="relative" x-data="{ open: false }">
                         <button @click="open = !open" 
-                                class="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors">
-                            @if(Auth::user()->user_type === 'student' && Auth::user()->student && Auth::user()->student->profile_photo_path)
-                                <img src="{{ asset('storage/' . Auth::user()->student->profile_photo_path) }}" 
+                                class="flex items-center space-x-2 text-gray-700 hover:text-blue-600 focus:outline-none transition-colors">
+                            {{-- PERBAIKAN: gunakan accessor profile_photo_url --}}
+                            @if(Auth::user()->isStudent() && Auth::user()->student)
+                                <img src="{{ Auth::user()->student->profile_photo_url }}" 
                                      alt="{{ Auth::user()->name }}"
                                      class="w-8 h-8 rounded-full object-cover">
-                            @elseif(Auth::user()->user_type === 'institution' && Auth::user()->institution && Auth::user()->institution->logo_path)
-                                <img src="{{ asset('storage/' . Auth::user()->institution->logo_path) }}" 
+                            @elseif(Auth::user()->isInstitution() && Auth::user()->institution)
+                                <img src="{{ Auth::user()->institution->logo_url }}" 
                                      alt="{{ Auth::user()->name }}"
                                      class="w-8 h-8 rounded-full object-cover">
                             @else
@@ -96,146 +108,96 @@
                              x-transition:leave="transition ease-in duration-75"
                              x-transition:leave-start="transform opacity-100 scale-100"
                              x-transition:leave-end="transform opacity-0 scale-95"
-                             class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-1 z-[9999]">
+                             class="absolute right-0 mt-2 w-56 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 z-50"
+                             style="display: none;">
                             
-                            @if(Auth::user()->user_type === 'student')
-                                <a href="{{ route('student.profile.index') }}" 
-                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                                    Profil Saya
+                            {{-- user info --}}
+                            <div class="px-4 py-3">
+                                <p class="text-sm text-gray-900 font-medium">{{ Auth::user()->name }}</p>
+                                <p class="text-xs text-gray-500 truncate">{{ Auth::user()->email }}</p>
+                            </div>
+
+                            {{-- menu items --}}
+                            <div class="py-1">
+                                @if(Auth::user()->isStudent())
+                                    <a href="{{ route('student.profile.index') }}" 
+                                       class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                                        <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                        </svg>
+                                        Profil Saya
+                                    </a>
+                                    <a href="{{ route('student.portfolio.index') }}" 
+                                       class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                                        <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                        </svg>
+                                        Portfolio
+                                    </a>
+                                    <a href="{{ route('student.wishlist.index') }}" 
+                                       class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                                        <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                        </svg>
+                                        Wishlist
+                                    </a>
+                                @elseif(Auth::user()->isInstitution())
+                                    <a href="{{ route('institution.profile.index') }}" 
+                                       class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                                        <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                        </svg>
+                                        Profil Instansi
+                                    </a>
+                                @endif
+                                
+                                <a href="{{ route('notifications.index') }}" 
+                                   class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                                    <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                                    </svg>
+                                    Notifikasi
                                 </a>
-                                <a href="{{ route('student.portfolio.index') }}" 
-                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                                    Portfolio
-                                </a>
-                                <a href="{{ route('student.wishlist.index') }}" 
-                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                                    Wishlist
-                                </a>
-                            @elseif(Auth::user()->user_type === 'institution')
-                                <a href="{{ route('institution.profile.index') }}" 
-                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                                    Profil Instansi
-                                </a>
-                            @endif
-                            
-                            <hr class="my-1">
-                            
-                            <form method="POST" action="{{ route('logout') }}">
-                                @csrf
-                                <button type="submit" 
-                                        class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                                    Logout
-                                </button>
-                            </form>
+                            </div>
+
+                            {{-- logout --}}
+                            <div class="py-1">
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit" 
+                                            class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                        <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                        </svg>
+                                        Keluar
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 @else
-                    <a href="{{ route('login') }}" 
-                       class="px-4 py-2 text-gray-700 hover:text-gray-900 font-medium transition-colors">
-                        Login
-                    </a>
-                    <a href="{{ route('register') }}" 
-                       class="px-4 py-2 bg-gradient-to-r from-blue-600 to-green-600 text-white rounded-lg hover:from-blue-700 hover:to-green-700 transition-all font-medium">
-                        Daftar
-                    </a>
-                @endguest
+                    {{-- untuk guest --}}
+                    <div class="flex items-center space-x-4">
+                        <a href="{{ route('login') }}" 
+                           class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">
+                            Masuk
+                        </a>
+                        <a href="{{ route('register') }}" 
+                           class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+                            Daftar
+                        </a>
+                    </div>
+                @endauth
             </div>
-
-            {{-- mobile menu button --}}
-            <div class="md:hidden">
-                <button @click="mobileMenuOpen = !mobileMenuOpen" 
-                        class="p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                              :d="mobileMenuOpen ? 'M6 18L18 6M6 6l12 12' : 'M4 6h16M4 12h16M4 18h16'"></path>
-                    </svg>
-                </button>
-            </div>
-        </div>
-
-        {{-- mobile menu --}}
-        <div x-show="mobileMenuOpen" 
-             @click.away="mobileMenuOpen = false"
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0 -translate-y-1"
-             x-transition:enter-end="opacity-100 translate-y-0"
-             x-transition:leave="transition ease-in duration-150"
-             x-transition:leave-start="opacity-100 translate-y-0"
-             x-transition:leave-end="opacity-0 -translate-y-1"
-             class="md:hidden py-4 border-t border-gray-200">
-            @auth
-                @if(Auth::user()->user_type === 'student')
-                    <a href="{{ route('student.dashboard') }}" 
-                       class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors {{ request()->routeIs('student.dashboard') ? 'bg-gray-100 font-semibold' : '' }}">
-                        Dashboard
-                    </a>
-                    <a href="{{ route('student.browse-problems.index') }}" 
-                       class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors {{ request()->routeIs('student.browse-problems.*') ? 'bg-gray-100 font-semibold' : '' }}">
-                        Browse
-                    </a>
-                    <a href="{{ route('student.applications.index') }}" 
-                       class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
-                        Applications
-                    </a>
-                    <a href="{{ route('student.projects.index') }}" 
-                       class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
-                        Projects
-                    </a>
-                    <a href="{{ route('student.repository.index') }}" 
-                       class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
-                        Repository
-                    </a>
-                    <hr class="my-2">
-                    <a href="{{ route('student.profile.index') }}" 
-                       class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
-                        Profil Saya
-                    </a>
-                @elseif(Auth::user()->user_type === 'institution')
-                    <a href="{{ route('institution.dashboard') }}" 
-                       class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors {{ request()->routeIs('institution.dashboard') ? 'bg-gray-100 font-semibold' : '' }}">
-                        Dashboard
-                    </a>
-                    <a href="{{ route('institution.problems.index') }}" 
-                       class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
-                        Problems
-                    </a>
-                    <a href="{{ route('institution.applications.index') }}" 
-                       class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
-                        Applications
-                    </a>
-                    <a href="{{ route('institution.projects.index') }}" 
-                       class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
-                        Projects
-                    </a>
-                    <a href="{{ route('institution.reviews.index') }}" 
-                       class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
-                        Reviews
-                    </a>
-                    <hr class="my-2">
-                    <a href="{{ route('institution.profile.index') }}" 
-                       class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
-                        Profil Instansi
-                    </a>
-                @endif
-                
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" 
-                            class="block w-full text-left px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors">
-                        Logout
-                    </button>
-                </form>
-            @else
-                <hr class="my-2">
-                <a href="{{ route('login') }}" 
-                   class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
-                    Login
-                </a>
-                <a href="{{ route('register') }}" 
-                   class="block px-3 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-green-600 text-white text-center font-medium">
-                    Daftar Sekarang
-                </a>
-            @endguest
         </div>
     </div>
 </nav>
+
+{{-- mobile menu toggle (optional) --}}
+@push('scripts')
+<script>
+document.addEventListener('alpine:init', () => {
+    // alpine.js sudah di-load di app.blade.php
+});
+</script>
+@endpush
