@@ -41,6 +41,7 @@ class DashboardController extends Controller
         ];
 
         // active projects dengan progress
+        // FIX: lengkapi query yang terputus
         $activeProjects = Project::where('student_id', $student->id)
                                 ->where('status', 'active')
                                 ->with(['problem', 'institution', 'milestones'])
@@ -56,7 +57,6 @@ class DashboardController extends Controller
                                         ->get();
 
         // recommended problems berdasarkan jurusan dan skills
-        // FIX: ganti 'deadline' menjadi 'application_deadline'
         $recommendedProblems = Problem::where('status', 'open')
                                      ->where('application_deadline', '>=', Carbon::now())
                                      ->with(['institution', 'province', 'regency', 'images'])
