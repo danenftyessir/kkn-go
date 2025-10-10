@@ -19,6 +19,7 @@ class BrowseProblemsController extends Controller
     /**
      * tampilkan halaman browse problems
      * ULTRA OPTIMIZED untuk performa maksimal
+     * FIX: PostgreSQL compatible queries
      */
     public function index(Request $request)
     {
@@ -82,23 +83,30 @@ class BrowseProblemsController extends Controller
             'regency:id,name'
         ]);
 
-        // load 1 cover image saja per problem (lazy load)
+        // load 1 cover image per problem (PostgreSQL compatible)
         $problemIds = $problems->pluck('id')->toArray();
-        $coverImages = DB::table('problem_images')
-            ->whereIn('problem_id', $problemIds)
-            ->where(function($q) {
-                $q->where('is_cover', true)
-                  ->orWhere('order', 1);
-            })
-            ->groupBy('problem_id')
-            ->get()
-            ->keyBy('problem_id');
+        
+        if (!empty($problemIds)) {
+            // query yang compatible dengan PostgreSQL - tanpa GROUP BY
+            $coverImages = DB::table('problem_images')
+                ->select('id', 'problem_id', 'image_path', 'is_cover', 'order')
+                ->whereIn('problem_id', $problemIds)
+                ->where(function($q) {
+                    $q->where('is_cover', true)
+                      ->orWhere('order', 1);
+                })
+                ->orderBy('is_cover', 'desc')
+                ->orderBy('order', 'asc')
+                ->get()
+                ->unique('problem_id') // ambil yang pertama per problem_id
+                ->keyBy('problem_id');
 
-        // attach images to problems
-        $problems->getCollection()->transform(function($problem) use ($coverImages) {
-            $problem->cover_image = $coverImages->get($problem->id);
-            return $problem;
-        });
+            // attach images to problems
+            $problems->getCollection()->transform(function($problem) use ($coverImages) {
+                $problem->cover_image = $coverImages->get($problem->id);
+                return $problem;
+            });
+        }
 
         // cek wishlist (hanya untuk user login)
         if (Auth::check() && Auth::user()->user_type === 'student') {
