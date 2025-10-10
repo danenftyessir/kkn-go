@@ -47,23 +47,18 @@ class ApplicationReviewController extends Controller
 
         $applications = $query->orderBy('applied_at', 'desc')->paginate(15);
 
+        // hitung jumlah aplikasi berdasarkan status untuk summary cards
+        $baseQuery = Application::whereHas('problem', function($q) use ($institution) {
+            $q->where('institution_id', $institution->id);
+        });
+
         // statistik untuk summary cards
         $stats = [
-            'total' => Application::whereHas('problem', function($q) use ($institution) {
-                $q->where('institution_id', $institution->id);
-            })->count(),
-            'pending' => Application::whereHas('problem', function($q) use ($institution) {
-                $q->where('institution_id', $institution->id);
-            })->where('status', 'pending')->count(),
-            'reviewed' => Application::whereHas('problem', function($q) use ($institution) {
-                $q->where('institution_id', $institution->id);
-            })->where('status', 'reviewed')->count(),
-            'accepted' => Application::whereHas('problem', function($q) use ($institution) {
-                $q->where('institution_id', $institution->id);
-            })->where('status', 'accepted')->count(),
-            'rejected' => Application::whereHas('problem', function($q) use ($institution) {
-                $q->where('institution_id', $institution->id);
-            })->where('status', 'rejected')->count(),
+            'total' => (clone $baseQuery)->count(),
+            'pending' => (clone $baseQuery)->where('status', 'pending')->count(),
+            'under_review' => (clone $baseQuery)->where('status', 'reviewed')->count(), // fix: gunakan 'under_review' sebagai key
+            'accepted' => (clone $baseQuery)->where('status', 'accepted')->count(),
+            'rejected' => (clone $baseQuery)->where('status', 'rejected')->count(),
         ];
 
         // daftar problems untuk filter dropdown
@@ -119,7 +114,7 @@ class ApplicationReviewController extends Controller
         // hanya bisa review jika status pending atau reviewed
         if (!in_array($application->status, ['pending', 'reviewed'])) {
             return redirect()->route('institution.applications.show', $application->id)
-                           ->with('error', 'Aplikasi ini sudah diproses.');
+                           ->with('error', 'aplikasi ini sudah diproses');
         }
 
         return view('institution.applications.review', compact('application'));
@@ -140,7 +135,7 @@ class ApplicationReviewController extends Controller
 
         // validasi
         if (!in_array($application->status, ['pending', 'reviewed'])) {
-            return back()->with('error', 'Aplikasi ini sudah diproses.');
+            return back()->with('error', 'aplikasi ini sudah diproses');
         }
 
         // cek apakah masih ada slot tersedia
@@ -148,7 +143,7 @@ class ApplicationReviewController extends Controller
         $acceptedCount = $problem->applications()->where('status', 'accepted')->count();
         
         if ($acceptedCount >= $problem->required_students) {
-            return back()->with('error', 'Slot mahasiswa untuk masalah ini sudah penuh.');
+            return back()->with('error', 'slot mahasiswa untuk masalah ini sudah penuh');
         }
 
         $validated = $request->validate([
@@ -178,7 +173,7 @@ class ApplicationReviewController extends Controller
                 'start_date' => $problem->start_date,
                 'end_date' => $problem->end_date,
                 'status' => 'active',
-                'role_in_team' => 'Anggota Tim',
+                'role_in_team' => 'anggota tim',
             ]);
 
             // update counter problem
@@ -187,12 +182,12 @@ class ApplicationReviewController extends Controller
             DB::commit();
 
             return redirect()->route('institution.applications.show', $application->id)
-                           ->with('success', 'Aplikasi berhasil diterima dan proyek telah dibuat!');
+                           ->with('success', 'aplikasi berhasil diterima dan proyek telah dibuat');
 
         } catch (\Exception $e) {
             DB::rollBack();
             
-            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            return back()->with('error', 'terjadi kesalahan: ' . $e->getMessage());
         }
     }
 
@@ -211,7 +206,7 @@ class ApplicationReviewController extends Controller
 
         // validasi
         if (!in_array($application->status, ['pending', 'reviewed'])) {
-            return back()->with('error', 'Aplikasi ini sudah diproses.');
+            return back()->with('error', 'aplikasi ini sudah diproses');
         }
 
         $validated = $request->validate([
@@ -233,12 +228,12 @@ class ApplicationReviewController extends Controller
             DB::commit();
 
             return redirect()->route('institution.applications.show', $application->id)
-                           ->with('success', 'Aplikasi telah ditolak.');
+                           ->with('success', 'aplikasi telah ditolak');
 
         } catch (\Exception $e) {
             DB::rollBack();
             
-            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            return back()->with('error', 'terjadi kesalahan: ' . $e->getMessage());
         }
     }
 
@@ -257,7 +252,7 @@ class ApplicationReviewController extends Controller
 
         // hanya bisa cancel jika rejected atau accepted (dan belum ada project yang aktif)
         if (!in_array($application->status, ['rejected', 'accepted'])) {
-            return back()->with('error', 'Tidak dapat membatalkan review untuk aplikasi ini.');
+            return back()->with('error', 'tidak dapat membatalkan review untuk aplikasi ini');
         }
 
         // jika accepted, cek apakah sudah ada project
@@ -268,7 +263,7 @@ class ApplicationReviewController extends Controller
                              ->first();
             
             if ($project) {
-                return back()->with('error', 'Tidak dapat membatalkan karena proyek sudah berjalan.');
+                return back()->with('error', 'tidak dapat membatalkan karena proyek sudah berjalan');
             }
         }
 
@@ -298,12 +293,12 @@ class ApplicationReviewController extends Controller
             DB::commit();
 
             return redirect()->route('institution.applications.show', $application->id)
-                           ->with('success', 'Review berhasil dibatalkan.');
+                           ->with('success', 'review berhasil dibatalkan');
 
         } catch (\Exception $e) {
             DB::rollBack();
             
-            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            return back()->with('error', 'terjadi kesalahan: ' . $e->getMessage());
         }
     }
 
@@ -317,57 +312,59 @@ class ApplicationReviewController extends Controller
         $validated = $request->validate([
             'action' => 'required|in:accept,reject,delete',
             'application_ids' => 'required|array|min:1',
-            'application_ids.*' => 'required|exists:applications,id',
-            'feedback' => 'required_if:action,reject|string|max:1000',
-            'rejection_reason' => 'required_if:action,reject|string|max:500',
+            'application_ids.*' => 'exists:applications,id',
+            'feedback' => 'nullable|string|max:1000',
+            'rejection_reason' => 'nullable|string|max:500',
         ]);
 
         try {
             DB::beginTransaction();
 
-            $applications = Application::whereIn('id', $validated['application_ids'])
-                ->whereHas('problem', function($q) use ($institution) {
-                    $q->where('institution_id', $institution->id);
-                })
-                ->get();
-
             $successCount = 0;
             $errorCount = 0;
 
-            foreach ($applications as $application) {
+            foreach ($validated['application_ids'] as $applicationId) {
                 try {
+                    $application = Application::whereHas('problem', function($q) use ($institution) {
+                        $q->where('institution_id', $institution->id);
+                    })->findOrFail($applicationId);
+
                     switch ($validated['action']) {
                         case 'accept':
-                            // cek slot
-                            $acceptedCount = $application->problem->applications()
-                                ->where('status', 'accepted')->count();
-                            
-                            if ($acceptedCount >= $application->problem->required_students) {
+                            // cek apakah bisa diterima
+                            if (in_array($application->status, ['pending', 'reviewed'])) {
+                                $problem = $application->problem;
+                                $acceptedCount = $problem->applications()->where('status', 'accepted')->count();
+                                
+                                if ($acceptedCount < $problem->required_students) {
+                                    $application->update([
+                                        'status' => 'accepted',
+                                        'reviewed_at' => now(),
+                                        'feedback' => $validated['feedback'] ?? null,
+                                    ]);
+
+                                    // buat project
+                                    Project::create([
+                                        'application_id' => $application->id,
+                                        'student_id' => $application->student_id,
+                                        'problem_id' => $application->problem_id,
+                                        'institution_id' => $institution->id,
+                                        'title' => $problem->title,
+                                        'description' => $problem->description,
+                                        'start_date' => $problem->start_date,
+                                        'end_date' => $problem->end_date,
+                                        'status' => 'active',
+                                        'role_in_team' => 'anggota tim',
+                                    ]);
+
+                                    $problem->increment('accepted_students');
+                                    $successCount++;
+                                } else {
+                                    $errorCount++;
+                                }
+                            } else {
                                 $errorCount++;
-                                continue 2;
                             }
-
-                            $application->update([
-                                'status' => 'accepted',
-                                'reviewed_at' => now(),
-                            ]);
-
-                            // buat project
-                            Project::create([
-                                'application_id' => $application->id,
-                                'student_id' => $application->student_id,
-                                'problem_id' => $application->problem_id,
-                                'institution_id' => $institution->id,
-                                'title' => $application->problem->title,
-                                'description' => $application->problem->description,
-                                'start_date' => $application->problem->start_date,
-                                'end_date' => $application->problem->end_date,
-                                'status' => 'active',
-                                'role_in_team' => 'Anggota Tim',
-                            ]);
-
-                            $application->problem->increment('accepted_students');
-                            $successCount++;
                             break;
 
                         case 'reject':
@@ -398,9 +395,9 @@ class ApplicationReviewController extends Controller
 
             DB::commit();
 
-            $message = "{$successCount} aplikasi berhasil diproses.";
+            $message = "{$successCount} aplikasi berhasil diproses";
             if ($errorCount > 0) {
-                $message .= " {$errorCount} aplikasi gagal diproses.";
+                $message .= ", {$errorCount} aplikasi gagal diproses";
             }
 
             return redirect()->route('institution.applications.index')
@@ -409,7 +406,7 @@ class ApplicationReviewController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             
-            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            return back()->with('error', 'terjadi kesalahan: ' . $e->getMessage());
         }
     }
 }
