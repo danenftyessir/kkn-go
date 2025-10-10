@@ -58,12 +58,6 @@
                             Reviews
                         </a>
                     @endif
-                @else
-                    {{-- guest menu --}}
-                    <a href="{{ route('home') }}" 
-                       class="px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors {{ request()->routeIs('home') ? 'bg-gray-100 font-semibold' : '' }}">
-                        Beranda
-                    </a>
                 @endguest
             </div>
 
@@ -232,10 +226,6 @@
                     </button>
                 </form>
             @else
-                <a href="{{ route('home') }}" 
-                   class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
-                    Beranda
-                </a>
                 <hr class="my-2">
                 <a href="{{ route('login') }}" 
                    class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
