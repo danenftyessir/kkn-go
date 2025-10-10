@@ -43,9 +43,9 @@ class AnalyticsService
                                   ->withCount('applications')
                                   ->avg('applications_count') ?? 0;
 
-        // total views
+        // total views - perbaikan: ganti view_count menjadi views_count
         $totalViews = Problem::where('institution_id', $institutionId)
-                            ->sum('view_count');
+                            ->sum('views_count');
 
         return [
             'total' => $total,
@@ -75,16 +75,6 @@ class AnalyticsService
         // acceptance rate
         $acceptanceRate = $total > 0 ? ($accepted / $total) * 100 : 0;
 
-        // average response time (hari)
-        $avgResponseTime = Application::whereHas('problem', function($q) use ($institutionId) {
-                                      $q->where('institution_id', $institutionId);
-                                  })
-                                  ->whereNotNull('reviewed_at')
-                                  ->get()
-                                  ->avg(function($app) {
-                                      return $app->created_at->diffInDays($app->reviewed_at);
-                                  }) ?? 0;
-
         return [
             'total' => $total,
             'pending' => $pending,
@@ -92,7 +82,6 @@ class AnalyticsService
             'accepted' => $accepted,
             'rejected' => $rejected,
             'acceptance_rate' => round($acceptanceRate, 1),
-            'average_response_time' => round($avgResponseTime, 1),
         ];
     }
 
@@ -196,10 +185,10 @@ class AnalyticsService
                                 ->keyBy('date')
                                 ->map(fn($item) => $item->count);
 
-        // views per hari
+        // views per hari - perbaikan: ganti view_count menjadi views_count
         $views = Problem::where('institution_id', $institutionId)
                        ->where('updated_at', '>=', $startDate)
-                       ->selectRaw('DATE(updated_at) as date, SUM(view_count) as count')
+                       ->selectRaw('DATE(updated_at) as date, SUM(views_count) as count')
                        ->groupBy('date')
                        ->orderBy('date')
                        ->get()
@@ -225,8 +214,9 @@ class AnalyticsService
      */
     public function getApplicationFunnel($institutionId)
     {
+        // perbaikan: ganti view_count menjadi views_count
         $problemViews = Problem::where('institution_id', $institutionId)
-                              ->sum('view_count');
+                              ->sum('views_count');
 
         $applications = Application::whereHas('problem', function($q) use ($institutionId) {
                                     $q->where('institution_id', $institutionId);
@@ -278,5 +268,46 @@ class AnalyticsService
                 ? round(($acceptedApplications / $totalApplications) * 100, 1) 
                 : 0,
         ];
+    }
+
+    /**
+     * dapatkan problems berdasarkan kategori sdg
+     */
+    public function getProblemsBySdgCategory($institutionId)
+    {
+        return Problem::where('institution_id', $institutionId)
+                     ->selectRaw('sdg_category, COUNT(*) as count')
+                     ->groupBy('sdg_category')
+                     ->get()
+                     ->map(function($item) {
+                         return [
+                             'category' => $item->sdg_category,
+                             'count' => $item->count,
+                         ];
+                     });
+    }
+
+    /**
+     * export full report untuk institution
+     */
+    public function exportFullReport($institutionId, $format = 'json')
+    {
+        $analytics = $this->getInstitutionAnalytics($institutionId);
+        $topProblems = $this->getTopProblems($institutionId, 10);
+        $timeSeriesData = $this->getTimeSeriesData($institutionId, 90);
+        $applicationFunnel = $this->getApplicationFunnel($institutionId);
+        $sdgDistribution = $this->getProblemsBySdgCategory($institutionId);
+
+        $report = [
+            'generated_at' => Carbon::now()->toIso8601String(),
+            'institution_id' => $institutionId,
+            'analytics' => $analytics,
+            'top_problems' => $topProblems,
+            'time_series_data' => $timeSeriesData,
+            'application_funnel' => $applicationFunnel,
+            'sdg_distribution' => $sdgDistribution,
+        ];
+
+        return $report;
     }
 }
