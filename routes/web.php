@@ -109,14 +109,10 @@ Route::middleware(['auth', 'check.user.type:student'])->prefix('student')->name(
     });
     
     // browse problems - set 2 (descriptive URL)
-    // penting: route ini yang digunakan di problem-card.blade.php
     Route::prefix('browse-problems')->name('browse-problems.')->group(function () {
         Route::get('/', [BrowseProblemsController::class, 'index'])->name('index');
         Route::get('/{id}', [BrowseProblemsController::class, 'show'])->name('detail');
     });
-    
-    // alias untuk backward compatibility - FIX ERROR #1
-    Route::get('/browse-problems', [BrowseProblemsController::class, 'index'])->name('browse-problems');
     
     // applications
     Route::prefix('applications')->name('applications.')->group(function () {
@@ -148,7 +144,6 @@ Route::middleware(['auth', 'check.user.type:student'])->prefix('student')->name(
         Route::get('/edit', [StudentProfileController::class, 'edit'])->name('edit');
         Route::put('/', [StudentProfileController::class, 'update'])->name('update');
         Route::put('/password', [StudentProfileController::class, 'updatePassword'])->name('password.update');
-        // FIX ERROR #3 - tambah route untuk public profile
         Route::get('/{username}', [StudentProfileController::class, 'publicProfile'])->name('public');
     });
     
