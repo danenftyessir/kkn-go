@@ -1,4 +1,4 @@
-@extends('layouts.institution')
+@extends('layouts.app')
 
 @section('title', 'Daftar Review Mahasiswa')
 
