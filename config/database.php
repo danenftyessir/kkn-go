@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Str;
+use PDO;
 
 return [
 
@@ -96,6 +97,31 @@ return [
             'prefix_indexes' => true,
             'search_path' => 'public',
             'sslmode' => 'require',
+            
+            // FIX: tambahkan options untuk mengatasi prepared statement error di production
+            // error: "prepared statement does not exist" sering terjadi di connection pooling
+            'options' => extension_loaded('pdo_pgsql') ? [
+                // disable emulated prepares untuk PostgreSQL
+                // ini mencegah error prepared statement di connection pooling
+                PDO::ATTR_EMULATE_PREPARES => false,
+                
+                // gunakan persistent connections hanya jika environment mengizinkan
+                // untuk Railway/production, lebih baik false karena menggunakan connection pooling
+                PDO::ATTR_PERSISTENT => env('DB_PERSISTENT', false),
+                
+                // timeout untuk mencegah hanging connections
+                PDO::ATTR_TIMEOUT => env('DB_TIMEOUT', 5),
+                
+                // error mode harus exception
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                
+                // default fetch mode
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_OBJ,
+                
+                // stringify fetches - konversi semua ke string dulu
+                // ini membantu menghindari type casting issues
+                PDO::ATTR_STRINGIFY_FETCHES => false,
+            ] : [],
         ],
 
         'sqlsrv' => [
