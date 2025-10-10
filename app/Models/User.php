@@ -120,13 +120,16 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * get profile photo URL
+     * PERBAIKAN BUG: sekarang menggunakan Supabase URL yang benar
      */
     public function getProfilePhotoUrlAttribute()
     {
         if ($this->isStudent() && $this->student?->profile_photo_path) {
-            return asset('storage/' . $this->student->profile_photo_path);
+            // gunakan accessor dari Student model yang sudah di-fix
+            return $this->student->profile_photo_url;
         } elseif ($this->isInstitution() && $this->institution?->logo_path) {
-            return asset('storage/' . $this->institution->logo_path);
+            // gunakan accessor dari Institution model
+            return $this->institution->logo_url;
         }
         
         // default avatar
