@@ -102,7 +102,6 @@ Route::middleware(['auth', 'check.user.type:student'])->prefix('student')->name(
     // dashboard - JANGAN DIUBAH (SUDAH FIX)
     Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
     
-    // ✅ FIX BROWSE-PROBLEMS - HAPUS DUPLICATE, BUAT CLEAN
     // browse problems dengan URL /student/browse-problems
     Route::prefix('browse-problems')->name('browse-problems.')->group(function () {
         Route::get('/', [BrowseProblemsController::class, 'index'])->name('index');
@@ -121,7 +120,8 @@ Route::middleware(['auth', 'check.user.type:student'])->prefix('student')->name(
         Route::get('/create/{problemId}', [ApplicationController::class, 'create'])->name('create');
         Route::post('/', [ApplicationController::class, 'store'])->name('store');
         Route::get('/{id}', [ApplicationController::class, 'show'])->name('show');
-        Route::delete('/{id}', [ApplicationController::class, 'destroy'])->name('destroy');
+        // perbaikan: ganti nama route dari destroy ke withdraw agar sesuai dengan view
+        Route::delete('/{id}', [ApplicationController::class, 'destroy'])->name('withdraw');
     });
     
     // projects
