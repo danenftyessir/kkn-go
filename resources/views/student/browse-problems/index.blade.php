@@ -158,23 +158,23 @@
 
 @push('scripts')
 <script>
-// ✅ TAMBAHAN: fungsi toggleFilter
 function toggleFilter() {
     const filters = document.getElementById('advancedFilters');
     filters.classList.toggle('hidden');
 }
 
-// ✅ TAMBAHAN: fungsi setView
 function setView(view) {
     const url = new URL(window.location.href);
     url.searchParams.set('view', view);
     window.location.href = url.toString();
 }
 
-// ✅ FIX: tambahkan fungsi toggleWishlist di sini
 async function toggleWishlist(problemId, button) {
     // disable button sementara
     button.disabled = true;
+    
+    // simpan state awal
+    const wasWishlisted = button.getAttribute('data-wishlisted') === 'true';
     
     // add loading state
     const originalHTML = button.innerHTML;
@@ -202,27 +202,28 @@ async function toggleWishlist(problemId, button) {
         const data = await response.json();
         
         if (data.success) {
-            // update button state dengan animation
+            // update button state
             button.setAttribute('data-wishlisted', data.saved ? 'true' : 'false');
             
-            // update icon
-            const svg = button.querySelector('svg');
             if (data.saved) {
-                svg.classList.add('fill-current', 'text-red-500');
-                svg.classList.remove('text-gray-400', 'text-gray-600');
-                svg.setAttribute('fill', 'currentColor');
+                // wishlisted - red filled heart
+                button.innerHTML = `
+                    <svg class="w-5 h-5 fill-red-500 text-red-500" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                    </svg>
+                `;
                 button.classList.add('text-red-500');
-                button.classList.remove('text-gray-400');
+                button.classList.remove('text-gray-400', 'hover:text-red-500');
             } else {
-                svg.classList.remove('fill-current', 'text-red-500');
-                svg.classList.add('text-gray-400');
-                svg.setAttribute('fill', 'none');
-                button.classList.add('text-gray-400');
+                // not wishlisted - gray outline heart
+                button.innerHTML = `
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                    </svg>
+                `;
+                button.classList.add('text-gray-400', 'hover:text-red-500');
                 button.classList.remove('text-red-500');
             }
-            
-            // restore original SVG path
-            svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>';
             
             // animation heartbeat
             button.style.transform = 'scale(1.2)';
