@@ -38,7 +38,7 @@ class DatabaseSeeder extends Seeder
             ProblemsSeeder::class,
         ]);
 
-        // 4. seed problem images (BARU - menggunakan gambar yang sudah disiapkan)
+        // 4. seed problem images (menggunakan gambar yang sudah disiapkan)
         $this->call([
             ProblemImagesSeeder::class,
         ]);
@@ -56,6 +56,11 @@ class DatabaseSeeder extends Seeder
         // 7. seed documents
         $this->call([
             DocumentsSeeder::class,
+        ]);
+
+        // 8. seed notifications (BARU)
+        $this->call([
+            NotificationsSeeder::class,
         ]);
 
         $this->command->newLine();
@@ -85,6 +90,7 @@ class DatabaseSeeder extends Seeder
             'Applications' => \App\Models\Application::count(),
             'Projects' => \App\Models\Project::count(),
             'Documents' => \App\Models\Document::count(),
+            'Notifications' => \App\Models\Notification::count(),
         ];
 
         $this->command->table(
