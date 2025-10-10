@@ -27,16 +27,6 @@ use App\Http\Controllers\NotificationController;
 |--------------------------------------------------------------------------
 | Web Routes - KKN-GO Platform
 |--------------------------------------------------------------------------
-|
-| file ini berisi semua web routes untuk aplikasi KKN-GO
-| routes dikelompokkan berdasarkan user type dan authentication requirement
-|
-*/
-
-/*
-|--------------------------------------------------------------------------
-| Public Routes (Tidak Perlu Login)
-|--------------------------------------------------------------------------
 */
 
 // halaman utama
@@ -44,7 +34,7 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 
 /*
 |--------------------------------------------------------------------------
-| Guest Routes (Hanya untuk yang Belum Login)
+| Guest Routes
 |--------------------------------------------------------------------------
 */
 
@@ -54,14 +44,10 @@ Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [LoginController::class, 'login']);
     
-    // register - halaman pilihan
+    // register
     Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
-    
-    // register student
     Route::get('/register/student', [RegisterController::class, 'showStudentForm'])->name('register.student');
     Route::post('/register/student', [RegisterController::class, 'registerStudent'])->name('register.student.submit');
-    
-    // register institution
     Route::get('/register/institution', [RegisterController::class, 'showInstitutionForm'])->name('register.institution');
     Route::post('/register/institution', [RegisterController::class, 'registerInstitution'])->name('register.institution.submit');
     
@@ -77,11 +63,11 @@ Route::middleware('guest')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Authenticated Routes (Perlu Login)
+| Authenticated Routes
 |--------------------------------------------------------------------------
 */
 
-// logout (harus authenticated)
+// logout
 Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth')->name('logout');
 
 // email verification
@@ -114,6 +100,7 @@ Route::middleware(['auth', 'check.user.type:student'])->prefix('student')->name(
         Route::get('/{id}', [BrowseProblemsController::class, 'show'])->name('detail');
     });
     
+    // ✅ TAMBAHAN INI UNTUK FIX BROWSE-PROBLEMS FORM ACTION
     // alias untuk backward compatibility dengan form action
     Route::get('/browse-problems', [BrowseProblemsController::class, 'index'])->name('browse-problems');
     
@@ -226,7 +213,7 @@ Route::middleware(['auth', 'check.user.type:institution'])->prefix('institution'
 
 /*
 |--------------------------------------------------------------------------
-| Notifications Routes (Student & Institution)
+| Notifications Routes
 |--------------------------------------------------------------------------
 */
 
@@ -239,12 +226,12 @@ Route::middleware(['auth'])->prefix('notifications')->name('notifications.')->gr
 
 /*
 |--------------------------------------------------------------------------
-| Public Portfolio & Institution Profile Routes
+| Public Routes
 |--------------------------------------------------------------------------
 */
 
-// public student portfolio (bisa diakses tanpa login)
+// public student portfolio
 Route::get('/portfolio/{username}', [PortfolioController::class, 'publicView'])->name('portfolio.public');
 
-// public institution profile (bisa diakses tanpa login)
+// public institution profile
 Route::get('/institution/{id}', [InstitutionProfileController::class, 'showPublic'])->name('institution.public');
