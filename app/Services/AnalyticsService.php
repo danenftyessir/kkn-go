@@ -159,9 +159,10 @@ class AnalyticsService
      */
     public function getTopProblems($institutionId, $limit = 5)
     {
+        // langsung gunakan kolom applications_count yang sudah ada di tabel
+        // tidak perlu withCount karena kolom sudah di-maintain oleh sistem
         return Problem::where('institution_id', $institutionId)
-                     ->withCount('applications')
-                     ->orderBy('applications_count', 'desc')
+                     ->orderBy('problems.applications_count', 'desc')
                      ->take($limit)
                      ->get();
     }
