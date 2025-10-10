@@ -120,7 +120,6 @@ Route::middleware(['auth', 'check.user.type:student'])->prefix('student')->name(
         Route::get('/create/{problemId}', [ApplicationController::class, 'create'])->name('create');
         Route::post('/', [ApplicationController::class, 'store'])->name('store');
         Route::get('/{id}', [ApplicationController::class, 'show'])->name('show');
-        // perbaikan: ganti nama route dari destroy ke withdraw agar sesuai dengan view
         Route::delete('/{id}', [ApplicationController::class, 'destroy'])->name('withdraw');
     });
     
@@ -136,7 +135,7 @@ Route::middleware(['auth', 'check.user.type:student'])->prefix('student')->name(
     
     // portfolio
     Route::prefix('portfolio')->name('portfolio.')->group(function () {
-        Route::get('/', [PortfolioController::class, 'index'])->name('index');
+        Route::get('/{username}', [PortfolioController::class, 'publicView'])->name('public');
     });
     
     // profile
@@ -145,7 +144,6 @@ Route::middleware(['auth', 'check.user.type:student'])->prefix('student')->name(
         Route::get('/edit', [StudentProfileController::class, 'edit'])->name('edit');
         Route::put('/', [StudentProfileController::class, 'update'])->name('update');
         Route::put('/password', [StudentProfileController::class, 'updatePassword'])->name('password.update');
-        Route::get('/{username}', [StudentProfileController::class, 'publicProfile'])->name('public');
     });
     
     // wishlist
