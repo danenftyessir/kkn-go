@@ -147,11 +147,25 @@ class Student extends Model
 
     /**
      * get profile photo URL
+     * PERBAIKAN BUG: sekarang menggunakan Supabase URL yang benar
      */
     public function getProfilePhotoUrlAttribute()
     {
         if ($this->profile_photo_path) {
-            return asset('storage/' . $this->profile_photo_path);
+            // cek apakah path sudah berupa URL lengkap atau masih path relatif
+            if (str_starts_with($this->profile_photo_path, 'http')) {
+                return $this->profile_photo_path;
+            }
+            
+            // cek apakah ini adalah path dari Supabase (tidak mengandung 'public/')
+            if (!str_starts_with($this->profile_photo_path, 'public/')) {
+                // ini adalah path Supabase, gunakan SupabaseStorageService untuk generate URL
+                $storageService = app(\App\Services\SupabaseStorageService::class);
+                return $storageService->getPublicUrl($this->profile_photo_path);
+            }
+            
+            // fallback ke local storage jika path mengandung 'public/'
+            return asset('storage/' . str_replace('public/', '', $this->profile_photo_path));
         }
         
         return asset('images/default-avatar.png');

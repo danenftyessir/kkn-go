@@ -9,6 +9,7 @@ use App\Services\SupabaseStorageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 /**
  * controller untuk mengelola profil mahasiswa
@@ -63,46 +64,66 @@ class ProfileController extends Controller
      */
     public function update(UpdateStudentProfileRequest $request)
     {
-        $user = Auth::user();
-        $student = $user->student;
-        
-        // update data user
-        $user->update([
-            'name' => $request->first_name . ' ' . $request->last_name,
-            'email' => $request->email,
-        ]);
-        
-        // handle profile photo upload
-        $profilePhotoPath = $student->profile_photo_path;
-        
-        if ($request->hasFile('profile_photo')) {
-            // hapus foto lama jika ada
-            if ($profilePhotoPath) {
-                $this->storageService->delete($profilePhotoPath);
+        try {
+            $user = Auth::user();
+            $student = $user->student;
+            
+            // update data user
+            $user->update([
+                'name' => $request->first_name . ' ' . $request->last_name,
+                'email' => $request->email,
+            ]);
+            
+            // handle profile photo upload
+            $profilePhotoPath = $student->profile_photo_path;
+            
+            if ($request->hasFile('profile_photo')) {
+                // hapus foto lama jika ada
+                if ($profilePhotoPath) {
+                    $this->storageService->delete($profilePhotoPath);
+                }
+                
+                // upload foto baru ke Supabase
+                $file = $request->file('profile_photo');
+                $uploadedPath = $this->storageService->uploadProfilePhoto($file, $student->id);
+                
+                if ($uploadedPath) {
+                    $profilePhotoPath = $uploadedPath;
+                    Log::info("Foto profil berhasil diupload untuk student ID {$student->id}: {$uploadedPath}");
+                } else {
+                    Log::error("Gagal upload foto profil untuk student ID {$student->id}");
+                    return back()->with('error', 'Gagal mengupload foto profil. Silakan coba lagi.');
+                }
             }
             
-            // upload foto baru
-            $file = $request->file('profile_photo');
-            $profilePhotoPath = $this->storageService->uploadProfilePhoto($file, $student->id);
+            // update data student
+            $student->update([
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'university_id' => $request->university_id,
+                'major' => $request->major,
+                'nim' => $request->nim,
+                'semester' => $request->semester,
+                'whatsapp_number' => $request->whatsapp_number,
+                'profile_photo_path' => $profilePhotoPath,
+                'bio' => $request->bio,
+                'skills' => $request->skills ? json_encode($request->skills) : null,
+                'interests' => $request->interests ? json_encode($request->interests) : null,
+            ]);
+            
+            Log::info("Profil student ID {$student->id} berhasil diupdate");
+            
+            return redirect()->route('student.profile.index')
+                ->with('success', 'Profil berhasil diperbarui!');
+                
+        } catch (\Exception $e) {
+            Log::error("Error saat update profil student: " . $e->getMessage());
+            Log::error("Stack trace: " . $e->getTraceAsString());
+            
+            return back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan saat memperbarui profil. Silakan coba lagi.');
         }
-        
-        // update data student
-        $student->update([
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'university_id' => $request->university_id,
-            'major' => $request->major,
-            'nim' => $request->nim,
-            'semester' => $request->semester,
-            'whatsapp_number' => $request->whatsapp_number,
-            'profile_photo_path' => $profilePhotoPath,
-            'bio' => $request->bio,
-            'skills' => $request->skills ? json_encode($request->skills) : null,
-            'interests' => $request->interests ? json_encode($request->interests) : null,
-        ]);
-        
-        return redirect()->route('student.profile.index')
-            ->with('success', 'Profil berhasil diperbarui!');
     }
 
     /**
@@ -110,20 +131,28 @@ class ProfileController extends Controller
      */
     public function updatePassword(UpdateStudentPasswordRequest $request)
     {
-        $user = Auth::user();
-        
-        // update password
-        $user->update([
-            'password' => Hash::make($request->new_password)
-        ]);
-        
-        return redirect()->route('student.profile.index')
-            ->with('success', 'Password berhasil diperbarui!');
+        try {
+            $user = Auth::user();
+            
+            // update password
+            $user->update([
+                'password' => Hash::make($request->new_password)
+            ]);
+            
+            Log::info("Password berhasil diupdate untuk user ID {$user->id}");
+            
+            return redirect()->route('student.profile.index')
+                ->with('success', 'Password berhasil diperbarui!');
+                
+        } catch (\Exception $e) {
+            Log::error("Error saat update password: " . $e->getMessage());
+            
+            return back()->with('error', 'Terjadi kesalahan saat memperbarui password. Silakan coba lagi.');
+        }
     }
 
     /**
      * tampilkan public profile student
-     * FIX ERROR #3: method ini sekarang sudah punya route student.profile.public
      */
     public function publicProfile($username)
     {
@@ -163,105 +192,85 @@ class ProfileController extends Controller
             'sdgs_addressed' => $this->countUniqueSDGs($completedProjects),
             'positive_reviews' => $reviews->where('rating', '>=', 4)->count(),
             'average_rating' => $reviews->isEmpty() ? 0 : round($reviews->avg('rating'), 1),
-            'impact_metrics' => $this->calculateTotalImpact($completedProjects),
+            'total_impact_hours' => $this->calculateTotalImpactHours($completedProjects),
         ];
         
-        return view('student.profile.public', compact('student', 'user', 'stats', 'completedProjects', 'achievements'));
+        return view('student.profile.public', compact('user', 'student', 'completedProjects', 'reviews', 'achievements', 'stats'));
     }
 
     /**
-     * helper: hitung achievements berdasarkan projects dan reviews
+     * helper: hitung achievements berdasarkan completed projects
      */
-    private function calculateAchievements($student, $projects, $reviews)
+    private function calculateAchievements($student, $completedProjects, $reviews)
     {
         $achievements = [];
-
-        // project completion milestones
-        if ($projects->count() >= 1) {
-            $achievements[] = [
-                'title' => 'First Project',
-                'description' => 'Menyelesaikan proyek KKN pertama',
-                'icon' => 'check-circle',
-                'color' => 'green',
-            ];
-        }
-
-        if ($projects->count() >= 3) {
-            $achievements[] = [
-                'title' => 'Experienced Volunteer',
-                'description' => 'Menyelesaikan 3+ proyek KKN',
-                'icon' => 'award',
-                'color' => 'blue',
-            ];
-        }
-
-        // rating achievements
-        $averageRating = $reviews->isEmpty() ? 0 : $reviews->avg('rating');
         
-        if ($averageRating >= 4.5 && $reviews->count() >= 3) {
+        // achievement: first project completed
+        if ($completedProjects->count() >= 1) {
             $achievements[] = [
-                'title' => 'Excellence Award',
-                'description' => 'Mendapat rating rata-rata 4.5+ dari 3+ review',
+                'title' => 'Proyek Pertama',
+                'description' => 'Menyelesaikan proyek KKN pertama',
+                'icon' => 'trophy',
+                'earned_at' => $completedProjects->last()->completed_at,
+            ];
+        }
+        
+        // achievement: multiple projects
+        if ($completedProjects->count() >= 3) {
+            $achievements[] = [
+                'title' => 'Kontributor Aktif',
+                'description' => 'Menyelesaikan 3 proyek KKN',
                 'icon' => 'star',
-                'color' => 'purple',
+                'earned_at' => $completedProjects->sortBy('completed_at')->skip(2)->first()->completed_at,
             ];
         }
-
-        // SDG diversity
-        $uniqueSDGs = $this->countUniqueSDGs($projects);
-        if ($uniqueSDGs >= 5) {
+        
+        // achievement: high rating
+        if ($reviews->where('rating', '>=', 4)->count() >= 3) {
             $achievements[] = [
-                'title' => 'SDG Champion',
-                'description' => 'Berkontribusi pada 5+ kategori SDG berbeda',
-                'icon' => 'globe',
-                'color' => 'green',
+                'title' => 'Mahasiswa Berprestasi',
+                'description' => 'Mendapat 3 ulasan positif dari instansi',
+                'icon' => 'award',
+                'earned_at' => now(),
             ];
         }
-
+        
         return $achievements;
     }
 
     /**
-     * helper: hitung unique SDG categories
+     * helper: hitung unique SDGs dari completed projects
      */
-    private function countUniqueSDGs($projects)
+    private function countUniqueSDGs($completedProjects)
     {
-        $allSDGs = [];
-
-        foreach ($projects as $project) {
+        $sdgs = [];
+        
+        foreach ($completedProjects as $project) {
             if ($project->problem && $project->problem->sdg_categories) {
-                $categories = $project->problem->sdg_categories;
-                
-                if (is_string($categories)) {
-                    $categories = json_decode($categories, true);
-                }
-                
-                if (is_array($categories)) {
-                    $allSDGs = array_merge($allSDGs, $categories);
-                }
+                $sdgs = array_merge($sdgs, $project->problem->sdg_categories);
             }
         }
-
-        return count(array_unique($allSDGs));
+        
+        return count(array_unique($sdgs));
     }
 
     /**
-     * helper: hitung total impact metrics
+     * helper: hitung total impact hours dari projects
      */
-    private function calculateTotalImpact($projects)
+    private function calculateTotalImpactHours($completedProjects)
     {
-        $totalBeneficiaries = 0;
-
-        foreach ($projects as $project) {
-            if ($project->impact_metrics) {
-                $metrics = is_array($project->impact_metrics) 
-                    ? $project->impact_metrics 
-                    : json_decode($project->impact_metrics, true) ?? [];
+        $totalHours = 0;
+        
+        foreach ($completedProjects as $project) {
+            if ($project->actual_start_date && $project->actual_end_date) {
+                $days = \Carbon\Carbon::parse($project->actual_start_date)
+                    ->diffInDays(\Carbon\Carbon::parse($project->actual_end_date));
                 
-                $totalBeneficiaries += $metrics['beneficiaries'] ?? 0;
+                // estimasi 8 jam per hari
+                $totalHours += $days * 8;
             }
         }
-
-        return $totalBeneficiaries;
+        
+        return $totalHours;
     }
 }

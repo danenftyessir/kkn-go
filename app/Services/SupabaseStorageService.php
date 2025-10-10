@@ -43,15 +43,12 @@ class SupabaseStorageService
             $fileContent = file_get_contents($file->getRealPath());
             $mimeType = $file->getMimeType();
 
-            // upload ke supabase
+            // upload ke supabase menggunakan PUT method untuk upsert
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $this->serviceKey,
                 'Content-Type' => $mimeType,
             ])->withBody($fileContent, $mimeType)
-              ->post("{$this->baseUrl}/object/{$this->bucketName}/{$path}", [
-                  'cacheControl' => '3600',
-                  'upsert' => 'true',
-              ]);
+              ->post("{$this->baseUrl}/object/{$this->bucketName}/{$path}");
 
             if ($response->successful()) {
                 Log::info("File berhasil diupload ke Supabase: {$path}");
@@ -63,6 +60,68 @@ class SupabaseStorageService
 
         } catch (\Exception $e) {
             Log::error("Error saat upload file ke Supabase: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * upload foto profil student ke supabase
+     * 
+     * @param UploadedFile $file file foto profil
+     * @param int $studentId ID student
+     * @return string|false path file yang berhasil diupload atau false jika gagal
+     */
+    public function uploadProfilePhoto(UploadedFile $file, int $studentId)
+    {
+        try {
+            // generate unique filename dengan student id dan timestamp
+            $extension = $file->getClientOriginalExtension();
+            $filename = 'student-' . $studentId . '-' . time() . '.' . $extension;
+            $path = 'profiles/students/' . $filename;
+
+            // upload menggunakan method uploadFile yang sudah ada
+            $uploadedPath = $this->uploadFile($file, $path);
+
+            if ($uploadedPath) {
+                Log::info("Foto profil berhasil diupload untuk student ID {$studentId}: {$uploadedPath}");
+                return $uploadedPath;
+            }
+
+            return false;
+
+        } catch (\Exception $e) {
+            Log::error("Error saat upload foto profil student ID {$studentId}: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * upload logo institution ke supabase
+     * 
+     * @param UploadedFile $file file logo
+     * @param int $institutionId ID institution
+     * @return string|false path file yang berhasil diupload atau false jika gagal
+     */
+    public function uploadInstitutionLogo(UploadedFile $file, int $institutionId)
+    {
+        try {
+            // generate unique filename dengan institution id dan timestamp
+            $extension = $file->getClientOriginalExtension();
+            $filename = 'institution-' . $institutionId . '-' . time() . '.' . $extension;
+            $path = 'profiles/institutions/' . $filename;
+
+            // upload menggunakan method uploadFile yang sudah ada
+            $uploadedPath = $this->uploadFile($file, $path);
+
+            if ($uploadedPath) {
+                Log::info("Logo institution berhasil diupload untuk institution ID {$institutionId}: {$uploadedPath}");
+                return $uploadedPath;
+            }
+
+            return false;
+
+        } catch (\Exception $e) {
+            Log::error("Error saat upload logo institution ID {$institutionId}: " . $e->getMessage());
             return false;
         }
     }
@@ -144,6 +203,17 @@ class SupabaseStorageService
             Log::error("Error saat hapus file dari Supabase: " . $e->getMessage());
             return false;
         }
+    }
+
+    /**
+     * alias untuk deleteFile - untuk backward compatibility
+     * 
+     * @param string $path path file yang akan dihapus
+     * @return bool true jika berhasil, false jika gagal
+     */
+    public function delete(string $path): bool
+    {
+        return $this->deleteFile($path);
     }
 
     /**

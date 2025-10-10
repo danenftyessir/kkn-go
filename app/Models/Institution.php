@@ -16,17 +16,16 @@ class Institution extends Model
 
     /**
      * attributes yang dapat diisi mass assignment
-     * PERBAIKAN: sesuaikan dengan nama kolom di migration
      */
     protected $fillable = [
         'user_id',
-        'name',              // bukan institution_name
-        'type',              // bukan institution_type
+        'name',
+        'type',
         'address',
         'province_id',
         'regency_id',
-        'email',             // bukan official_email
-        'phone',             // bukan phone_number
+        'email',
+        'phone',
         'logo_path',
         'pic_name',
         'pic_position',
@@ -93,15 +92,37 @@ class Institution extends Model
 
     /**
      * get logo URL
+     * PERBAIKAN BUG: sekarang support Supabase storage
      */
     public function getLogoUrl(): string
     {
         if ($this->logo_path) {
-            return asset('storage/' . $this->logo_path);
+            // cek apakah path sudah berupa URL lengkap
+            if (str_starts_with($this->logo_path, 'http')) {
+                return $this->logo_path;
+            }
+            
+            // cek apakah ini adalah path dari Supabase (tidak mengandung 'public/')
+            if (!str_starts_with($this->logo_path, 'public/')) {
+                // ini adalah path Supabase, gunakan SupabaseStorageService
+                $storageService = app(\App\Services\SupabaseStorageService::class);
+                return $storageService->getPublicUrl($this->logo_path);
+            }
+            
+            // fallback ke local storage
+            return asset('storage/' . str_replace('public/', '', $this->logo_path));
         }
         
         // default logo jika tidak ada
         return asset('images/default-institution-logo.png');
+    }
+
+    /**
+     * get logo URL sebagai accessor untuk compatibility
+     */
+    public function getLogoUrlAttribute(): string
+    {
+        return $this->getLogoUrl();
     }
 
     /**
