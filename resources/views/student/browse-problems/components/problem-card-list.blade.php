@@ -1,4 +1,6 @@
 {{-- 
+    resources/views/student/browse-problems/components/problem-card-list.blade.php
+    
     komponen list view untuk problem
     digunakan di halaman browse problems (list view)
     
@@ -15,7 +17,7 @@
             @endphp
             
             @if($coverImage)
-                <img src="{{ storage_url($coverImage->image_path) }}" 
+                <img src="{{ $coverImage->image_url }}" 
                      alt="{{ $problem->title }}"
                      class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                      loading="lazy">
@@ -53,120 +55,97 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
                 </svg>
             </button>
+
+            {{-- difficulty badge --}}
+            <span class="absolute bottom-3 left-3 px-3 py-1.5 text-xs font-semibold rounded-full shadow-lg
+                {{ $problem->difficulty_level === 'beginner' ? 'bg-green-500 text-white' : '' }}
+                {{ $problem->difficulty_level === 'intermediate' ? 'bg-yellow-500 text-white' : '' }}
+                {{ $problem->difficulty_level === 'advanced' ? 'bg-red-500 text-white' : '' }}">
+                {{ ucfirst($problem->difficulty_level) }}
+            </span>
         </div>
 
         {{-- content --}}
         <div class="flex-1 p-6">
-            
-            {{-- header --}}
-            <div class="flex items-start justify-between mb-4">
-                <div class="flex-1">
-                    {{-- instansi info --}}
-                    <div class="flex items-center gap-2 mb-3">
-                        @if($problem->institution->logo_path)
-                            <img src="{{ storage_url($problem->institution->logo_path) }}" 
-                                 alt="{{ $problem->institution->name }}"
-                                 class="w-10 h-10 rounded-full object-cover border-2 border-gray-100">
-                        @else
-                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                                <span class="text-blue-600 font-semibold">
-                                    {{ strtoupper(substr($problem->institution->name, 0, 1)) }}
-                                </span>
-                            </div>
-                        @endif
-                        <div>
-                            <p class="font-semibold text-gray-900">{{ $problem->institution->name }}</p>
-                            <p class="text-xs text-gray-500">{{ ucfirst($problem->institution->type) }}</p>
-                        </div>
+            {{-- institution info --}}
+            <div class="flex items-center gap-3 mb-3">
+                @if($problem->institution && $problem->institution->logo_path)
+                    <img src="{{ supabase_url($problem->institution->logo_path) }}" 
+                         alt="{{ $problem->institution->name }}"
+                         class="w-10 h-10 rounded-full object-cover"
+                         loading="lazy">
+                @else
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center">
+                        <span class="text-white text-sm font-bold">
+                            {{ substr($problem->institution->name ?? 'I', 0, 1) }}
+                        </span>
                     </div>
-
-                    {{-- title --}}
-                    <h3 class="font-bold text-gray-900 text-xl mb-2 group-hover:text-blue-600 transition-colors">
-                        <a href="{{ route('student.browse-problems.detail', $problem->id) }}">
-                            {{ $problem->title }}
-                        </a>
-                    </h3>
-
-                    {{-- description preview --}}
-                    <p class="text-gray-600 mb-4 line-clamp-2">
-                        {{ Str::limit($problem->description, 200) }}
-                    </p>
+                @endif
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-gray-900 truncate">{{ $problem->institution->name ?? 'Instansi' }}</p>
+                    <p class="text-xs text-gray-500">{{ ucfirst($problem->institution->type ?? '') }}</p>
                 </div>
             </div>
 
+            {{-- title --}}
+            <h3 class="font-bold text-gray-900 text-xl mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                <a href="{{ route('student.browse-problems.detail', $problem->id) }}">
+                    {{ $problem->title }}
+                </a>
+            </h3>
+
+            {{-- description --}}
+            <p class="text-gray-600 text-sm mb-4 line-clamp-3">
+                {{ Str::limit($problem->description, 200) }}
+            </p>
+
             {{-- meta info --}}
-            <div class="flex flex-wrap items-center gap-4 mb-4">
-                <div class="flex items-center gap-2 text-sm text-gray-600">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="flex flex-wrap gap-4 mb-4 text-sm text-gray-600">
+                <div class="flex items-center gap-1.5">
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                     </svg>
-                    <span>{{ $problem->location }}</span>
+                    <span>{{ $problem->province->name ?? '' }}, {{ $problem->regency->name ?? '' }}</span>
                 </div>
-                
-                <div class="flex items-center gap-2 text-sm text-gray-600">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                    </svg>
-                    <span>{{ $problem->students_needed }} mahasiswa</span>
-                </div>
-                
-                <div class="flex items-center gap-2 text-sm text-gray-600">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+                <div class="flex items-center gap-1.5">
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                     </svg>
                     <span>{{ $problem->duration_months }} bulan</span>
                 </div>
-                
-                <div class="flex items-center gap-2 text-sm text-gray-600">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+
+                <div class="flex items-center gap-1.5">
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
                     </svg>
-                    <span>{{ $problem->applications_count ?? 0 }} aplikasi</span>
+                    <span>{{ $problem->required_students }} mahasiswa</span>
                 </div>
             </div>
 
-            {{-- kategori SDG --}}
+            {{-- sdg badges --}}
+            @if($problem->sdg_goals)
             <div class="flex flex-wrap gap-2 mb-4">
-                @php
-                    $categories = is_array($problem->sdg_categories) 
-                        ? $problem->sdg_categories 
-                        : json_decode($problem->sdg_categories, true) ?? [];
-                @endphp
-                
-                @foreach(array_slice($categories, 0, 3) as $category)
-                    <span class="{{ sdg_color($category) }} text-white text-xs font-semibold px-3 py-1 rounded-md">
-                        {{ sdg_label($category) }}
+                @foreach(json_decode($problem->sdg_goals) as $sdg)
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
+                        SDG {{ $sdg }}
                     </span>
                 @endforeach
-                
-                @if(count($categories) > 3)
-                    <span class="bg-gray-200 text-gray-700 text-xs font-semibold px-3 py-1 rounded-md">
-                        +{{ count($categories) - 3 }}
-                    </span>
-                @endif
             </div>
+            @endif
 
             {{-- footer --}}
-            <div class="flex items-center justify-between pt-4 border-t border-gray-200">
-                {{-- tingkat kesulitan --}}
-                @php
-                    $difficultyConfig = [
-                        'beginner' => ['bg' => 'bg-green-100', 'text' => 'text-green-700', 'label' => 'Pemula'],
-                        'intermediate' => ['bg' => 'bg-yellow-100', 'text' => 'text-yellow-700', 'label' => 'Menengah'],
-                        'advanced' => ['bg' => 'bg-red-100', 'text' => 'text-red-700', 'label' => 'Lanjut'],
-                    ];
-                    $difficulty = $difficultyConfig[$problem->difficulty_level] ?? $difficultyConfig['beginner'];
-                @endphp
+            <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                <div class="text-sm text-gray-500">
+                    Deadline: <span class="font-semibold text-gray-900">{{ \Carbon\Carbon::parse($problem->application_deadline)->format('d M Y') }}</span>
+                </div>
                 
-                <span class="{{ $difficulty['bg'] }} {{ $difficulty['text'] }} text-sm font-semibold px-3 py-1.5 rounded-md">
-                    {{ $difficulty['label'] }}
-                </span>
-
-                {{-- action button --}}
                 <a href="{{ route('student.browse-problems.detail', $problem->id) }}" 
-                   class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg">
+                   class="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors">
                     Lihat Detail
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
                 </a>
             </div>
         </div>
