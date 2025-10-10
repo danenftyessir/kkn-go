@@ -99,7 +99,7 @@ Route::middleware(['auth'])->group(function () {
 
 Route::middleware(['auth', 'check.user.type:student'])->prefix('student')->name('student.')->group(function () {
     
-    // dashboard - JANGAN DIUBAH (SUDAH FIX)
+    // dashboard
     Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
     
     // browse problems dengan URL /student/browse-problems
@@ -133,8 +133,8 @@ Route::middleware(['auth', 'check.user.type:student'])->prefix('student')->name(
         Route::post('/{id}/final-report', [MyProjectsController::class, 'storeFinalReport'])->name('store-final-report');
     });
     
-    // portfolio
     Route::prefix('portfolio')->name('portfolio.')->group(function () {
+        Route::get('/', [PortfolioController::class, 'index'])->name('index');
         Route::get('/{username}', [PortfolioController::class, 'publicView'])->name('public');
     });
     
