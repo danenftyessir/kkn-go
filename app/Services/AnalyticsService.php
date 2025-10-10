@@ -38,14 +38,22 @@ class AnalyticsService
         $closed = Problem::where('institution_id', $institutionId)->where('status', 'closed')->count();
         $completed = Problem::where('institution_id', $institutionId)->where('status', 'completed')->count();
 
-        // rata-rata aplikasi per problem
+        // rata-rata aplikasi per problem - langsung gunakan kolom yang sudah ada
         $avgApplications = Problem::where('institution_id', $institutionId)
-                                  ->withCount('applications')
                                   ->avg('applications_count') ?? 0;
 
         // total views - perbaikan: ganti view_count menjadi views_count
         $totalViews = Problem::where('institution_id', $institutionId)
                             ->sum('views_count');
+
+        // hitung growth dari bulan lalu
+        $lastMonthTotal = Problem::where('institution_id', $institutionId)
+                                ->where('created_at', '<', Carbon::now()->startOfMonth())
+                                ->count();
+        
+        $growth = $lastMonthTotal > 0 
+            ? (($total - $lastMonthTotal) / $lastMonthTotal) * 100 
+            : 0;
 
         return [
             'total' => $total,
@@ -54,6 +62,7 @@ class AnalyticsService
             'completed' => $completed,
             'average_applications' => round($avgApplications, 1),
             'total_views' => $totalViews,
+            'growth' => round($growth, 1),
         ];
     }
 
@@ -75,6 +84,17 @@ class AnalyticsService
         // acceptance rate
         $acceptanceRate = $total > 0 ? ($accepted / $total) * 100 : 0;
 
+        // hitung growth dari bulan lalu
+        $lastMonthTotal = Application::whereHas('problem', function($q) use ($institutionId) {
+                                    $q->where('institution_id', $institutionId);
+                                })
+                                ->where('created_at', '<', Carbon::now()->startOfMonth())
+                                ->count();
+        
+        $growth = $lastMonthTotal > 0 
+            ? (($total - $lastMonthTotal) / $lastMonthTotal) * 100 
+            : 0;
+
         return [
             'total' => $total,
             'pending' => $pending,
@@ -82,6 +102,7 @@ class AnalyticsService
             'accepted' => $accepted,
             'rejected' => $rejected,
             'acceptance_rate' => round($acceptanceRate, 1),
+            'growth' => round($growth, 1),
         ];
     }
 
@@ -100,6 +121,11 @@ class AnalyticsService
                            ->whereNotNull('rating')
                            ->avg('rating') ?? 0;
 
+        // rata-rata progress dari active projects
+        $avgProgress = Project::where('institution_id', $institutionId)
+                             ->where('status', 'active')
+                             ->avg('progress_percentage') ?? 0;
+
         // completion rate
         $completionRate = $total > 0 ? ($completed / $total) * 100 : 0;
 
@@ -114,6 +140,7 @@ class AnalyticsService
             'completed' => $completed,
             'on_hold' => $onHold,
             'average_rating' => round($avgRating, 2),
+            'avg_progress' => round($avgProgress, 1),
             'completion_rate' => round($completionRate, 1),
             'high_rated' => $highRatedProjects,
         ];
