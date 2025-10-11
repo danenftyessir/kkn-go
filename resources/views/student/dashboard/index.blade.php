@@ -46,6 +46,13 @@
         box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
     }
     
+    .text-shadow-strong {
+        text-shadow: 
+            0 2px 4px rgba(0, 0, 0, 0.4),
+            0 4px 8px rgba(0, 0, 0, 0.3),
+            0 1px 2px rgba(0, 0, 0, 0.5);
+    }
+    
     .text-shadow-dashboard {
         text-shadow: 
             0 2px 4px rgba(0, 0, 0, 0.4),
@@ -84,20 +91,6 @@
         box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
     }
 
-    /* PERBAIKAN: styling untuk icon di card statistik */
-    .stats-card-dashboard svg {
-        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-    }
-
-    .stats-card-dashboard .backdrop-blur-sm {
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-    }
-    
-    .stats-card-dashboard .shadow-lg {
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
-    }
-
     /* accessibility - prefers reduced motion */
     @media (prefers-reduced-motion: reduce) {
         *,
@@ -117,22 +110,30 @@
     <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         
         {{-- header --}}
-        <div class="mb-16 fade-in-up">
-            <h1 class="text-4xl font-bold text-white text-shadow-dashboard">Dashboard</h1>
-            <p class="text-white text-lg mt-2 text-shadow-dashboard">Selamat Datang Kembali, {{ Auth::user()->name }}!</p>
+        <div class="mb-10 fade-in-up">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4 text-shadow-strong">
+                Dashboard
+            </h1>
+            <p class="text-xl md:text-2xl text-white text-shadow-strong max-w-3xl">
+                Selamat Datang Kembali, {{ Auth::user()->name }}!
+            </p>
         </div>
 
         {{-- statistics cards --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mt-10">
             {{-- total applications --}}
             <div class="stats-card-dashboard rounded-xl p-6 fade-in-up" style="animation-delay: 0.1s;">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-white opacity-90 mb-1">Total Aplikasi</p>
-                        <p class="text-4xl font-bold text-white text-shadow-dashboard">{{ $stats['total_applications'] }}</p>
+                        <div class="text-4xl md:text-5xl font-bold text-white text-shadow-strong">
+                            {{ $stats['total_applications'] }}
+                        </div>
+                        <div class="text-sm md:text-base text-white font-medium text-shadow-strong mt-2">
+                            Total Aplikasi
+                        </div>
                     </div>
-                    <div class="w-16 h-16 bg-white bg-opacity-30 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-lg">
-                        <svg class="w-9 h-9 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <div class="w-14 h-14 md:w-16 md:h-16 bg-white/25 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                        <svg class="w-7 h-7 md:w-8 md:h-8 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path d="M7 18h10v-2H7v2zM17 14H7v-2h10v2zM7 10h4V8H7v2zM21 4H3v16h18V4zm-2 14H5V6h14v12z"/>
                         </svg>
                     </div>
@@ -149,11 +150,15 @@
             <div class="stats-card-dashboard rounded-xl p-6 fade-in-up" style="animation-delay: 0.15s;">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-white opacity-90 mb-1">Aplikasi Pending</p>
-                        <p class="text-4xl font-bold text-white text-shadow-dashboard">{{ $stats['pending_applications'] }}</p>
+                        <div class="text-4xl md:text-5xl font-bold text-white text-shadow-strong">
+                            {{ $stats['pending_applications'] }}
+                        </div>
+                        <div class="text-sm md:text-base text-white font-medium text-shadow-strong mt-2">
+                            Aplikasi Pending
+                        </div>
                     </div>
-                    <div class="w-16 h-16 bg-white bg-opacity-30 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-lg">
-                        <svg class="w-9 h-9 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <div class="w-14 h-14 md:w-16 md:h-16 bg-white/25 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                        <svg class="w-7 h-7 md:w-8 md:h-8 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.2 3.2.8-1.3-4.5-2.7V7z"/>
                         </svg>
                     </div>
@@ -170,11 +175,15 @@
             <div class="stats-card-dashboard rounded-xl p-6 fade-in-up" style="animation-delay: 0.2s;">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-white opacity-90 mb-1">Proyek Aktif</p>
-                        <p class="text-4xl font-bold text-white text-shadow-dashboard">{{ $stats['active_projects'] }}</p>
+                        <div class="text-4xl md:text-5xl font-bold text-white text-shadow-strong">
+                            {{ $stats['active_projects'] }}
+                        </div>
+                        <div class="text-sm md:text-base text-white font-medium text-shadow-strong mt-2">
+                            Proyek Aktif
+                        </div>
                     </div>
-                    <div class="w-16 h-16 bg-white bg-opacity-30 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-lg">
-                        <svg class="w-9 h-9 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <div class="w-14 h-14 md:w-16 md:h-16 bg-white/25 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                        <svg class="w-7 h-7 md:w-8 md:h-8 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path d="M7 2v11h3v9l7-12h-4l3-8z"/>
                         </svg>
                     </div>
@@ -191,11 +200,15 @@
             <div class="stats-card-dashboard rounded-xl p-6 fade-in-up" style="animation-delay: 0.25s;">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-white opacity-90 mb-1">Proyek Selesai</p>
-                        <p class="text-4xl font-bold text-white text-shadow-dashboard">{{ $stats['completed_projects'] }}</p>
+                        <div class="text-4xl md:text-5xl font-bold text-white text-shadow-strong">
+                            {{ $stats['completed_projects'] }}
+                        </div>
+                        <div class="text-sm md:text-base text-white font-medium text-shadow-strong mt-2">
+                            Proyek Selesai
+                        </div>
                     </div>
-                    <div class="w-16 h-16 bg-white bg-opacity-30 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-lg">
-                        <svg class="w-9 h-9 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <div class="w-14 h-14 md:w-16 md:h-16 bg-white/25 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                        <svg class="w-7 h-7 md:w-8 md:h-8 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                         </svg>
                     </div>
