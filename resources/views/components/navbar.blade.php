@@ -4,7 +4,7 @@
         <div class="flex justify-between h-16">
             {{-- logo dan nama aplikasi --}}
             <div class="flex items-center">
-                <a href="{{ Auth::check() ? (Auth::user()->isStudent() ? route('student.dashboard') : route('institution.dashboard')) : route('login') }}" 
+                <a href="{{ Auth::check() ? (Auth::user()->isStudent() ? route('student.dashboard') : route('institution.dashboard')) : route('home') }}" 
                    class="flex items-center">
                     <img src="{{ asset('public/kkn-go-logo.png') }}" alt="KKN-GO" class="h-10 w-auto">
                     <span class="ml-2 text-xl font-bold text-gray-900">KKN-GO</span>
@@ -18,68 +18,79 @@
                         {{-- menu untuk student --}}
                         <a href="{{ route('student.dashboard') }}" 
                            class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('student.dashboard') ? 'text-blue-600' : '' }}">
-                            Dashboard
+                            dashboard
                         </a>
                         <a href="{{ route('student.browse-problems.index') }}" 
-                           class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('student.browse-problems.*') ? 'text-blue-600' : '' }}">
-                            Browse
+                           class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('student.browse-problems.*') || request()->routeIs('student.problems.*') ? 'text-blue-600' : '' }}">
+                            browse
                         </a>
                         <a href="{{ route('student.applications.index') }}" 
                            class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('student.applications.*') ? 'text-blue-600' : '' }}">
-                            Applications
+                            applications
                         </a>
                         <a href="{{ route('student.projects.index') }}" 
                            class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('student.projects.*') ? 'text-blue-600' : '' }}">
-                            Projects
+                            projects
                         </a>
                         <a href="{{ route('student.repository.index') }}" 
                            class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('student.repository.*') ? 'text-blue-600' : '' }}">
-                            Repository
+                            repository
                         </a>
                     @elseif(Auth::user()->isInstitution())
                         {{-- menu untuk institution --}}
                         <a href="{{ route('institution.dashboard') }}" 
                            class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('institution.dashboard') ? 'text-blue-600' : '' }}">
-                            Dashboard
+                            dashboard
                         </a>
                         <a href="{{ route('institution.problems.index') }}" 
                            class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('institution.problems.*') ? 'text-blue-600' : '' }}">
-                            Problems
+                            problems
                         </a>
                         <a href="{{ route('institution.applications.index') }}" 
                            class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('institution.applications.*') ? 'text-blue-600' : '' }}">
-                            Applications
+                            applications
                         </a>
                         <a href="{{ route('institution.projects.index') }}" 
                            class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('institution.projects.*') ? 'text-blue-600' : '' }}">
-                            Projects
+                            projects
+                        </a>
+                        <a href="{{ route('institution.reviews.index') }}" 
+                           class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('institution.reviews.*') ? 'text-blue-600' : '' }}">
+                            reviews
                         </a>
                     @endif
-                @endauth
-            </div>
 
-            {{-- user menu --}}
-            <div class="flex items-center">
-                @auth
                     {{-- notifikasi --}}
-                    <div class="relative mr-4">
-                        <button class="p-2 text-gray-600 hover:text-blue-600 rounded-full hover:bg-gray-100 transition-colors relative">
+                    <div class="relative" x-data="{ open: false }">
+                        <button @click="open = !open" 
+                                class="relative p-2 text-gray-600 hover:text-blue-600 transition-colors">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                             </svg>
-                            @if(Auth::user()->unread_notifications_count > 0)
-                                <span class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">
-                                    {{ Auth::user()->unread_notifications_count }}
-                                </span>
+                            @if(Auth::user()->unreadNotifications()->count() > 0)
+                                <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
                             @endif
                         </button>
+
+                        {{-- dropdown notifikasi --}}
+                        <div x-show="open" 
+                             @click.away="open = false"
+                             x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="transform opacity-0 scale-95"
+                             x-transition:enter-end="transform opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-75"
+                             x-transition:leave-start="transform opacity-100 scale-100"
+                             x-transition:leave-end="transform opacity-0 scale-95"
+                             class="absolute right-0 mt-2 w-80 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50"
+                             style="display: none;">
+                            @include('components.notification-dropdown')
+                        </div>
                     </div>
 
-                    {{-- user dropdown --}}
-                    <div class="relative" x-data="{ open: false }">
+                    {{-- user profile dropdown --}}
+                    <div class="relative ml-3" x-data="{ open: false }">
                         <button @click="open = !open" 
-                                class="flex items-center space-x-2 text-gray-700 hover:text-blue-600 focus:outline-none transition-colors">
-                            {{-- PERBAIKAN: gunakan accessor profile_photo_url --}}
+                                class="flex items-center space-x-2 p-1 rounded-lg hover:bg-gray-100 transition-colors">
                             @if(Auth::user()->isStudent() && Auth::user()->student)
                                 <img src="{{ Auth::user()->student->profile_photo_url }}" 
                                      alt="{{ Auth::user()->name }}"
@@ -125,21 +136,14 @@
                                         <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                                         </svg>
-                                        Profil Saya
-                                    </a>
-                                    <a href="{{ route('student.portfolio.index') }}" 
-                                       class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                                        <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                                        </svg>
-                                        Portfolio
+                                        profil & portfolio
                                     </a>
                                     <a href="{{ route('student.wishlist.index') }}" 
                                        class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
                                         <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
                                         </svg>
-                                        Wishlist
+                                        wishlist
                                     </a>
                                 @elseif(Auth::user()->isInstitution())
                                     <a href="{{ route('institution.profile.index') }}" 
@@ -147,17 +151,9 @@
                                         <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                                         </svg>
-                                        Profil Instansi
+                                        profil instansi
                                     </a>
                                 @endif
-                                
-                                <a href="{{ route('notifications.index') }}" 
-                                   class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                                    <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
-                                    </svg>
-                                    Notifikasi
-                                </a>
                             </div>
 
                             {{-- logout --}}
@@ -165,39 +161,127 @@
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
                                     <button type="submit" 
-                                            class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                            class="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
                                         <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
                                         </svg>
-                                        Keluar
+                                        logout
                                     </button>
                                 </form>
                             </div>
                         </div>
                     </div>
                 @else
-                    {{-- untuk guest --}}
-                    <div class="flex items-center space-x-4">
-                        <a href="{{ route('login') }}" 
-                           class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">
-                            Masuk
-                        </a>
-                        <a href="{{ route('register') }}" 
-                           class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
-                            Daftar
-                        </a>
-                    </div>
+                    {{-- menu untuk guest --}}
+                    <a href="{{ route('home') }}" 
+                       class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">
+                        home
+                    </a>
+                    <a href="{{ route('login') }}" 
+                       class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">
+                        login
+                    </a>
+                    <a href="{{ route('register') }}" 
+                       class="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                        register
+                    </a>
                 @endauth
+            </div>
+
+            {{-- mobile menu button --}}
+            <div class="md:hidden flex items-center">
+                <button @click="mobileMenuOpen = !mobileMenuOpen" 
+                        type="button" 
+                        class="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-gray-100 transition-colors"
+                        x-data="{ mobileMenuOpen: false }">
+                    <svg class="h-6 w-6" :class="{'hidden': mobileMenuOpen, 'block': !mobileMenuOpen}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                    <svg class="h-6 w-6" :class="{'block': mobileMenuOpen, 'hidden': !mobileMenuOpen}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
             </div>
         </div>
     </div>
-</nav>
 
-{{-- mobile menu toggle (optional) --}}
-@push('scripts')
-<script>
-document.addEventListener('alpine:init', () => {
-    // alpine.js sudah di-load di app.blade.php
-});
-</script>
-@endpush
+    {{-- mobile menu --}}
+    <div class="md:hidden" x-show="mobileMenuOpen" x-data="{ mobileMenuOpen: false }" style="display: none;">
+        <div class="px-2 pt-2 pb-3 space-y-1">
+            @auth
+                @if(Auth::user()->isStudent())
+                    <a href="{{ route('student.dashboard') }}" 
+                       class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+                        dashboard
+                    </a>
+                    <a href="{{ route('student.browse-problems.index') }}" 
+                       class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+                        browse
+                    </a>
+                    <a href="{{ route('student.applications.index') }}" 
+                       class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+                        applications
+                    </a>
+                    <a href="{{ route('student.projects.index') }}" 
+                       class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+                        projects
+                    </a>
+                    <a href="{{ route('student.profile.index') }}" 
+                       class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+                        profil & portfolio
+                    </a>
+                    <a href="{{ route('student.repository.index') }}" 
+                       class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+                        repository
+                    </a>
+                    <a href="{{ route('student.wishlist.index') }}" 
+                       class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+                        wishlist
+                    </a>
+                @elseif(Auth::user()->isInstitution())
+                    <a href="{{ route('institution.dashboard') }}" 
+                       class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+                        dashboard
+                    </a>
+                    <a href="{{ route('institution.problems.index') }}" 
+                       class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+                        problems
+                    </a>
+                    <a href="{{ route('institution.applications.index') }}" 
+                       class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+                        applications
+                    </a>
+                    <a href="{{ route('institution.projects.index') }}" 
+                       class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+                        projects
+                    </a>
+                    <a href="{{ route('institution.profile.index') }}" 
+                       class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+                        profil instansi
+                    </a>
+                @endif
+                
+                <form method="POST" action="{{ route('logout') }}" class="mt-4">
+                    @csrf
+                    <button type="submit" 
+                            class="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-red-50">
+                        logout
+                    </button>
+                </form>
+            @else
+                <a href="{{ route('home') }}" 
+                   class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+                    home
+                </a>
+                <a href="{{ route('login') }}" 
+                   class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+                    login
+                </a>
+                <a href="{{ route('register') }}" 
+                   class="block px-3 py-2 rounded-md text-base font-medium bg-blue-600 text-white hover:bg-blue-700">
+                    register
+                </a>
+            @endauth
+        </div>
+    </div>
+</nav>
