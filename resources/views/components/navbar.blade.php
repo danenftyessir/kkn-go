@@ -6,7 +6,7 @@
             <div class="flex items-center">
                 <a href="{{ Auth::check() ? (Auth::user()->isStudent() ? route('student.dashboard') : route('institution.dashboard')) : route('home') }}" 
                    class="flex items-center">
-                    <img src="{{ asset('public/kkn-go-logo.png') }}" alt="KKN-GO" class="h-10 w-auto">
+                    <img src="{{ asset('kkn-go-logo.png') }}" alt="KKN-GO" class="h-10 w-auto">
                     <span class="ml-2 text-xl font-bold text-gray-900">KKN-GO</span>
                 </a>
             </div>

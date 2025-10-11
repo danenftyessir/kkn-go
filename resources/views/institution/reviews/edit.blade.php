@@ -38,8 +38,8 @@
         <div class="bg-white rounded-xl shadow-sm p-6 mb-6 border border-gray-100">
             @if($review->reviewee && $review->reviewee->student)
                 <div class="flex items-start gap-4">
-                    {{-- FIXED: gunakan reviewee langsung, bukan student.user --}}
-                    <img src="{{ $review->reviewee->profile_picture ? asset('storage/' . $review->reviewee->profile_picture) : 'https://ui-avatars.com/api/?name=' . urlencode($review->reviewee->name) }}" 
+                    {{-- FIXED: gunakan profile_photo_url dari reviewee --}}
+                    <img src="{{ $review->reviewee->profile_photo_url }}" 
                          alt="{{ $review->reviewee->name }}"
                          class="w-20 h-20 rounded-full object-cover border-2 border-gray-200">
                     
@@ -71,7 +71,7 @@
         </div>
 
         {{-- form edit review --}}
-        <form action="{{ route('institution.reviews.update', $review->id) }}" method="POST" class="space-y-6">
+        <form action="{{ route('institution.reviews.update', $review->id) }}" method="POST" class="space-y-6" x-data="{ rating: {{ old('rating', $review->rating) }} }">
             @csrf
             @method('PUT')
 
@@ -79,16 +79,14 @@
             <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                 <label class="block text-lg font-semibold text-gray-900 mb-4">Rating Keseluruhan <span class="text-red-500">*</span></label>
                 
-                <div x-data="{ rating: {{ old('rating', $review->rating) }}, hover: 0 }" class="flex items-center gap-4">
+                <div class="flex items-center gap-4">
                     <div class="flex gap-2">
                         @for($i = 1; $i <= 5; $i++)
                             <button type="button" 
                                     @click="rating = {{ $i }}"
-                                    @mouseenter="hover = {{ $i }}"
-                                    @mouseleave="hover = 0"
                                     class="transition-transform duration-200 transform hover:scale-110">
                                 <svg class="w-12 h-12 transition-colors duration-200" 
-                                     :class="(hover >= {{ $i }} || rating >= {{ $i }}) ? 'text-yellow-400 fill-current' : 'text-gray-300 fill-current'"
+                                     :class="rating >= {{ $i }} ? 'text-yellow-400 fill-current' : 'text-gray-300 fill-current'"
                                      viewBox="0 0 24 24">
                                     <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
                                 </svg>
