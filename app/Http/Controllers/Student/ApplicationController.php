@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Application;
 use App\Models\Problem;
 use App\Services\NotificationService;
+use App\Services\SupabaseStorageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -24,7 +25,7 @@ class ApplicationController extends Controller
 
     public function __construct(
         NotificationService $notificationService,
-        \App\Services\SupabaseStorageService $storageService
+        SupabaseStorageService $storageService
     ) {
         $this->notificationService = $notificationService;
         $this->storageService = $storageService;
@@ -98,6 +99,7 @@ class ApplicationController extends Controller
     
     /**
      * simpan aplikasi baru
+     * SUPABASE ONLY - NO FALLBACK
      */
     public function store(Request $request)
     {
@@ -139,16 +141,44 @@ class ApplicationController extends Controller
             // upload proposal ke supabase jika ada
             if ($request->hasFile('proposal')) {
                 $file = $request->file('proposal');
-                $filename = 'proposal-' . $student->id . '-' . time() . '.' . $file->getClientOriginalExtension();
-                $path = 'proposals/' . $filename;
                 
-                $proposalPath = $this->storageService->uploadFile($file, $path);
+                // generate filename yang unique
+                $extension = $file->getClientOriginalExtension();
+                $filename = 'proposal-' . $student->id . '-' . time() . '-' . uniqid() . '.' . $extension;
+                $supabasePath = 'proposals/' . $filename;
+                
+                Log::info("🚀 START Upload Proposal", [
+                    'student_id' => $student->id,
+                    'filename' => $filename,
+                    'path' => $supabasePath,
+                    'size' => $file->getSize(),
+                    'mime' => $file->getMimeType(),
+                ]);
+                
+                // upload ke supabase - MUST SUCCEED
+                $proposalPath = $this->storageService->uploadFile($file, $supabasePath);
                 
                 if (!$proposalPath) {
-                    throw new \Exception('Gagal upload proposal ke storage');
+                    Log::error("❌ UPLOAD FAILED: Supabase uploadFile returned false");
+                    throw new \Exception('Gagal mengupload proposal ke Supabase Storage. Silakan coba lagi.');
                 }
                 
-                Log::info("Proposal berhasil diupload: {$proposalPath}");
+                Log::info("✅ SUCCESS Upload Proposal", [
+                    'uploaded_path' => $proposalPath,
+                    'public_url' => $this->storageService->getPublicUrl($proposalPath),
+                ]);
+                
+                // verify file exists di supabase
+                if (!$this->storageService->exists($proposalPath)) {
+                    Log::error("❌ VERIFICATION FAILED: File tidak ditemukan setelah upload", [
+                        'path' => $proposalPath,
+                    ]);
+                    throw new \Exception('File berhasil diupload namun tidak dapat diverifikasi. Silakan coba lagi.');
+                }
+                
+                Log::info("✅ VERIFIED: File exists di Supabase", [
+                    'path' => $proposalPath,
+                ]);
             }
             
             // simpan aplikasi
@@ -161,19 +191,30 @@ class ApplicationController extends Controller
                 'applied_at' => now(),
             ]);
             
+            Log::info("✅ Application created", [
+                'application_id' => $application->id,
+                'proposal_path' => $proposalPath,
+            ]);
+            
             // increment counter aplikasi di problem
             $problem->increment('applications_count');
             
             // kirim notifikasi ke instansi
             try {
                 $this->notificationService->applicationSubmitted($application);
-                Log::info("Notifikasi aplikasi berhasil dikirim ke instansi ID: {$problem->institution_id}");
+                Log::info("✅ Notifikasi berhasil dikirim", [
+                    'institution_id' => $problem->institution_id,
+                ]);
             } catch (\Exception $e) {
-                Log::error("Gagal mengirim notifikasi aplikasi: " . $e->getMessage());
-                // jangan batalkan transaksi hanya karena notifikasi gagal
+                Log::error("⚠️ Gagal kirim notifikasi (non-critical): " . $e->getMessage());
+                // tidak perlu rollback untuk error notifikasi
             }
             
             DB::commit();
+            
+            Log::info("✅ COMPLETE: Aplikasi berhasil disimpan", [
+                'application_id' => $application->id,
+            ]);
             
             return redirect()
                 ->route('student.applications.show', $application->id)
@@ -182,20 +223,35 @@ class ApplicationController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             
-            Log::error("Error saat menyimpan aplikasi: " . $e->getMessage());
+            Log::error("❌ ERROR: Gagal menyimpan aplikasi", [
+                'student_id' => $student->id,
+                'problem_id' => $problem->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             
-            // hapus file proposal dari supabase jika ada error
+            // cleanup file dari supabase jika ada
             if (isset($proposalPath) && $proposalPath) {
                 try {
                     $this->storageService->delete($proposalPath);
+                    Log::info("🗑️ Cleanup: File proposal berhasil dihapus setelah error");
                 } catch (\Exception $deleteError) {
-                    Log::error("Gagal menghapus proposal: " . $deleteError->getMessage());
+                    Log::error("⚠️ Cleanup failed: " . $deleteError->getMessage());
                 }
+            }
+            
+            // return error message yang jelas
+            $errorMessage = 'Terjadi kesalahan saat mengirim aplikasi. ';
+            
+            if (str_contains($e->getMessage(), 'Supabase')) {
+                $errorMessage .= 'Masalah koneksi dengan storage server. Silakan coba lagi dalam beberapa saat.';
+            } else {
+                $errorMessage .= $e->getMessage();
             }
             
             return back()
                 ->withInput()
-                ->with('error', 'Terjadi kesalahan saat mengirim aplikasi. Silakan coba lagi.');
+                ->with('error', $errorMessage);
         }
     }
     
@@ -242,10 +298,19 @@ class ApplicationController extends Controller
             // hapus file proposal dari supabase jika ada
             if ($application->proposal_path) {
                 try {
-                    $this->storageService->delete($application->proposal_path);
-                    Log::info("Proposal berhasil dihapus: {$application->proposal_path}");
+                    $deleted = $this->storageService->delete($application->proposal_path);
+                    
+                    if ($deleted) {
+                        Log::info("✅ Proposal berhasil dihapus dari Supabase", [
+                            'path' => $application->proposal_path,
+                        ]);
+                    } else {
+                        Log::warning("⚠️ File proposal mungkin sudah tidak ada", [
+                            'path' => $application->proposal_path,
+                        ]);
+                    }
                 } catch (\Exception $e) {
-                    Log::error("Gagal menghapus proposal: " . $e->getMessage());
+                    Log::error("❌ Gagal menghapus proposal: " . $e->getMessage());
                     // tidak perlu rollback jika gagal hapus file
                 }
             }
@@ -265,7 +330,7 @@ class ApplicationController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             
-            Log::error("Error saat membatalkan aplikasi: " . $e->getMessage());
+            Log::error("❌ Error saat membatalkan aplikasi: " . $e->getMessage());
             
             return back()->with('error', 'Terjadi kesalahan saat membatalkan aplikasi.');
         }

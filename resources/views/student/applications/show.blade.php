@@ -227,7 +227,7 @@
                                 </svg>
                             </div>
                             <div>
-                                <p class="text-sm font-semibold text-gray-900">proposal.pdf</p>
+                                <p class="text-sm font-semibold text-gray-900">{{ basename($application->proposal_path) }}</p>
                                 <p class="text-xs text-gray-500">Klik Untuk Melihat</p>
                             </div>
                         </div>
