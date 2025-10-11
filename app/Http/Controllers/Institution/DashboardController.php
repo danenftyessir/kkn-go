@@ -77,12 +77,13 @@ class DashboardController extends Controller
                                 ->get();
 
         // statistik aplikasi per bulan (3 bulan terakhir)
+        // kompatibel dengan PostgreSQL
         $applicationsByMonth = Application::whereHas('problem', function($q) use ($institution) {
                                              $q->where('institution_id', $institution->id);
                                          })
                                          ->where('created_at', '>=', Carbon::now()->subMonths(3))
                                          ->select(
-                                             DB::raw('DATE_FORMAT(created_at, "%Y-%m") as month'),
+                                             DB::raw("TO_CHAR(created_at, 'YYYY-MM') as month"),
                                              DB::raw('COUNT(*) as count')
                                          )
                                          ->groupBy('month')
