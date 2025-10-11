@@ -20,7 +20,17 @@ class ProfileController extends Controller
         $institution = auth()->user()->institution;
         $user = auth()->user();
         
-        return view('institution.profile.index', compact('institution', 'user'));
+        // hitung statistik untuk dashboard profil
+        $stats = [
+            'total_problems' => $institution->problems()->count(),
+            'active_problems' => $institution->problems()->where('status', 'open')->count(),
+            'completed_problems' => $institution->problems()->where('status', 'completed')->count(),
+            'total_projects' => $institution->projects()->count(),
+            'active_projects' => $institution->projects()->where('status', 'active')->count(),
+            'completed_projects' => $institution->projects()->where('status', 'completed')->count(),
+        ];
+        
+        return view('institution.profile.index', compact('institution', 'user', 'stats'));
     }
 
     /**
@@ -63,26 +73,25 @@ class ProfileController extends Controller
             'address' => 'required|string',
             'phone' => 'required|string|max:20',
             'email' => 'required|email|unique:users,email,' . $user->id,
+            'pic_name' => 'required|string|max:255',
+            'pic_position' => 'required|string|max:255',
+            'description' => 'nullable|string',
             'website' => 'nullable|url',
-            'description' => 'nullable|string|max:1000',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'pic_name' => 'required|string|max:100',
-            'pic_position' => 'required|string|max:100',
         ]);
 
-        // handle logo upload
+        // upload logo jika ada
         if ($request->hasFile('logo')) {
             // hapus logo lama jika ada
-            if ($institution->logo_path) {
+            if ($institution->logo_path && Storage::disk('public')->exists($institution->logo_path)) {
                 Storage::disk('public')->delete($institution->logo_path);
             }
             
-            // simpan logo baru
             $logoPath = $request->file('logo')->store('institutions/logos', 'public');
-            $validated['logo_path'] = $logoPath;
+            $institution->logo_path = $logoPath;
         }
 
-        // update institution
+        // update data institution
         $institution->update([
             'name' => $validated['name'],
             'type' => $validated['type'],
@@ -90,16 +99,18 @@ class ProfileController extends Controller
             'regency_id' => $validated['regency_id'],
             'address' => $validated['address'],
             'phone' => $validated['phone'],
-            'website' => $validated['website'] ?? null,
-            'description' => $validated['description'] ?? null,
             'pic_name' => $validated['pic_name'],
             'pic_position' => $validated['pic_position'],
-            'logo_path' => $validated['logo_path'] ?? $institution->logo_path,
+            'description' => $validated['description'] ?? null,
+            'website' => $validated['website'] ?? null,
         ]);
 
         // update user email jika berubah
         if ($user->email !== $validated['email']) {
-            $user->update(['email' => $validated['email']]);
+            $user->update([
+                'email' => $validated['email'],
+                'email_verified_at' => null, // reset verifikasi email
+            ]);
         }
 
         return redirect()->route('institution.profile.index')
@@ -125,7 +136,7 @@ class ProfileController extends Controller
 
         // update password
         $user->update([
-            'password' => Hash::make($validated['password'])
+            'password' => Hash::make($validated['password']),
         ]);
 
         return back()->with('success', 'password berhasil diperbarui!');
@@ -133,9 +144,6 @@ class ProfileController extends Controller
 
     /**
      * tampilkan profil publik institution
-     * 
-     * FIX: method ini sebelumnya bernama public() yang menyebabkan error
-     * karena di routes menggunakan showPublic()
      */
     public function showPublic($id)
     {
