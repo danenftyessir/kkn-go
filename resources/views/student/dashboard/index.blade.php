@@ -99,10 +99,10 @@
 @section('content')
 {{-- hero section dengan background --}}
 <div class="dashboard-hero-background">
-    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         
         {{-- header --}}
-        <div class="mb-8 fade-in-up">
+        <div class="mb-10 fade-in-up">
             <h1 class="text-4xl font-bold text-white text-shadow-dashboard">Dashboard</h1>
             <p class="text-white text-lg mt-2 text-shadow-dashboard">Selamat Datang Kembali, {{ Auth::user()->name }}!</p>
         </div>
@@ -116,9 +116,9 @@
                         <p class="text-sm text-white opacity-90 mb-1">Total Aplikasi</p>
                         <p class="text-4xl font-bold text-white text-shadow-dashboard">{{ $stats['total_applications'] }}</p>
                     </div>
-                    <div class="w-14 h-14 bg-white bg-opacity-30 rounded-xl flex items-center justify-center">
-                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    <div class="w-16 h-16 bg-white bg-opacity-30 rounded-xl flex items-center justify-center">
+                        <svg class="w-9 h-9 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M7 18h10v-2H7v2zM17 14H7v-2h10v2zM7 10h4V8H7v2zM21 4H3v16h18V4zm-2 14H5V6h14v12z"/>
                         </svg>
                     </div>
                 </div>
@@ -137,9 +137,9 @@
                         <p class="text-sm text-white opacity-90 mb-1">Aplikasi Pending</p>
                         <p class="text-4xl font-bold text-white text-shadow-dashboard">{{ $stats['pending_applications'] }}</p>
                     </div>
-                    <div class="w-14 h-14 bg-white bg-opacity-30 rounded-xl flex items-center justify-center">
-                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    <div class="w-16 h-16 bg-white bg-opacity-30 rounded-xl flex items-center justify-center">
+                        <svg class="w-9 h-9 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.2 3.2.8-1.3-4.5-2.7V7z"/>
                         </svg>
                     </div>
                 </div>
@@ -158,9 +158,9 @@
                         <p class="text-sm text-white opacity-90 mb-1">Proyek Aktif</p>
                         <p class="text-4xl font-bold text-white text-shadow-dashboard">{{ $stats['active_projects'] }}</p>
                     </div>
-                    <div class="w-14 h-14 bg-white bg-opacity-30 rounded-xl flex items-center justify-center">
-                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    <div class="w-16 h-16 bg-white bg-opacity-30 rounded-xl flex items-center justify-center">
+                        <svg class="w-9 h-9 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M7 2v11h3v9l7-12h-4l3-8z"/>
                         </svg>
                     </div>
                 </div>
@@ -179,9 +179,9 @@
                         <p class="text-sm text-white opacity-90 mb-1">Proyek Selesai</p>
                         <p class="text-4xl font-bold text-white text-shadow-dashboard">{{ $stats['completed_projects'] }}</p>
                     </div>
-                    <div class="w-14 h-14 bg-white bg-opacity-30 rounded-xl flex items-center justify-center">
-                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                    <div class="w-16 h-16 bg-white bg-opacity-30 rounded-xl flex items-center justify-center">
+                        <svg class="w-9 h-9 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                         </svg>
                     </div>
                 </div>
@@ -305,14 +305,14 @@
                 <div class="bg-blue-600 rounded-xl shadow-sm border border-blue-500 p-6 fade-in-up content-card" style="animation-delay: 0.35s;">
                     <div class="flex items-start mb-4">
                         <div class="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
                             </svg>
                         </div>
                         <div class="ml-4 flex-1">
                             <h3 class="text-lg font-bold text-white mb-2">Lengkapi Profil Anda</h3>
                             <p class="text-sm text-white opacity-90 leading-relaxed">
-                                Profil Anda {{ $profileCompletion['percentage'] }}% lengkap. Lengkapi profil untuk mendapat rekomendasi proyek yang lebih sesuai.
+                                Profil Anda {{ $profileCompletion['percentage'] }}% lengkap ({{ $profileCompletion['completed'] ?? 0 }}/{{ $profileCompletion['total'] ?? 9 }} field). Lengkapi profil untuk mendapat rekomendasi proyek yang lebih sesuai.
                             </p>
                         </div>
                     </div>
