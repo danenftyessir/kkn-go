@@ -98,24 +98,53 @@ class ApplicationController extends Controller
      */
     public function store(Request $request)
     {
+        Log::info("=== START Application Store ===", [
+            'user_id' => auth()->id(),
+            'request_data' => $request->except(['proposal']),
+        ]);
+        
         $student = Auth::user()->student;
         
+        if (!$student) {
+            Log::error("Student not found for user", ['user_id' => auth()->id()]);
+            return back()->with('error', 'Data mahasiswa tidak ditemukan');
+        }
+        
         // validasi input
-        $validated = $request->validate([
-            'problem_id' => 'required|exists:problems,id',
-            'motivation' => 'required|string|min:100',
-            'proposal' => 'nullable|file|mimes:pdf,doc,docx|max:5120', // max 5MB
-        ], [
-            'motivation.required' => 'Motivasi wajib diisi',
-            'motivation.min' => 'Motivasi minimal 100 karakter',
-            'proposal.mimes' => 'Proposal harus berformat PDF, DOC, atau DOCX',
-            'proposal.max' => 'Ukuran proposal maksimal 5MB',
-        ]);
+        try {
+            $validated = $request->validate([
+                'problem_id' => 'required|exists:problems,id',
+                'motivation' => 'required|string|min:100',
+                'proposal' => 'nullable|file|mimes:pdf,doc,docx|max:5120', // max 5MB
+            ], [
+                'motivation.required' => 'Motivasi wajib diisi',
+                'motivation.min' => 'Motivasi minimal 100 karakter',
+                'proposal.mimes' => 'Proposal harus berformat PDF, DOC, atau DOCX',
+                'proposal.max' => 'Ukuran proposal maksimal 5MB',
+            ]);
+            
+            Log::info("✅ Validation passed");
+            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error("❌ Validation failed", ['errors' => $e->errors()]);
+            throw $e;
+        }
         
         $problem = Problem::findOrFail($validated['problem_id']);
         
+        Log::info("Problem found", [
+            'problem_id' => $problem->id,
+            'title' => $problem->title,
+            'status' => $problem->status,
+        ]);
+        
         // validasi problem masih open dan deadline belum lewat
         if ($problem->status !== 'open' || $problem->application_deadline < now()) {
+            Log::warning("Problem not accepting applications", [
+                'problem_id' => $problem->id,
+                'status' => $problem->status,
+                'deadline' => $problem->application_deadline,
+            ]);
             return back()->with('error', 'Proyek sudah tidak menerima aplikasi');
         }
         
@@ -125,68 +154,112 @@ class ApplicationController extends Controller
                                 ->exists();
         
         if ($hasApplied) {
+            Log::warning("Student already applied", [
+                'student_id' => $student->id,
+                'problem_id' => $problem->id,
+            ]);
             return back()->with('error', 'Anda sudah mengajukan aplikasi untuk proyek ini');
         }
         
         try {
             DB::beginTransaction();
+            Log::info("Transaction started");
             
-            $proposalData = [];
+            // data dasar aplikasi
+            $applicationData = [
+                'student_id' => $student->id,
+                'problem_id' => $problem->id,
+                'motivation' => $validated['motivation'],
+                'status' => 'pending',
+                'applied_at' => now(),
+            ];
+            
+            Log::info("Base application data prepared", $applicationData);
             
             // simpan file proposal ke database jika ada
             if ($request->hasFile('proposal')) {
                 $file = $request->file('proposal');
                 
                 Log::info("📄 Processing proposal file", [
-                    'student_id' => $student->id,
                     'filename' => $file->getClientOriginalName(),
                     'size' => $file->getSize(),
                     'mime' => $file->getMimeType(),
                 ]);
                 
-                // baca file content sebagai base64
-                $fileContent = base64_encode(file_get_contents($file->getRealPath()));
-                
-                $proposalData = [
-                    'proposal_content' => $fileContent,
-                    'proposal_filename' => $file->getClientOriginalName(),
-                    'proposal_mime_type' => $file->getMimeType(),
-                    'proposal_size' => $file->getSize(),
-                ];
-                
-                Log::info("✅ File proposal berhasil diproses", [
-                    'filename' => $file->getClientOriginalName(),
-                    'size' => $file->getSize() . ' bytes',
-                ]);
+                try {
+                    // baca file content sebagai base64
+                    $fileContent = base64_encode(file_get_contents($file->getRealPath()));
+                    
+                    $applicationData['proposal_content'] = $fileContent;
+                    $applicationData['proposal_filename'] = $file->getClientOriginalName();
+                    $applicationData['proposal_mime_type'] = $file->getMimeType();
+                    $applicationData['proposal_size'] = $file->getSize();
+                    
+                    Log::info("✅ File encoded successfully", [
+                        'filename' => $file->getClientOriginalName(),
+                        'encoded_size' => strlen($fileContent),
+                    ]);
+                    
+                } catch (\Exception $e) {
+                    Log::error("❌ Failed to encode file", [
+                        'error' => $e->getMessage(),
+                    ]);
+                    throw new \Exception('Gagal memproses file proposal: ' . $e->getMessage());
+                }
+            } else {
+                Log::info("No proposal file uploaded");
             }
             
             // simpan aplikasi
-            $application = Application::create([
-                'student_id' => $student->id,
-                'problem_id' => $problem->id,
-                'motivation' => $validated['motivation'],
-                'status' => 'pending',
-                'applied_at' => now(),
-                ...$proposalData, // merge proposal data jika ada
-            ]);
-            
-            Log::info("✅ Application created", [
-                'application_id' => $application->id,
-                'has_proposal' => !empty($proposalData),
-            ]);
+            try {
+                Log::info("Creating application record...");
+                $application = Application::create($applicationData);
+                Log::info("✅ Application created successfully", [
+                    'application_id' => $application->id,
+                ]);
+                
+            } catch (\Exception $e) {
+                Log::error("❌ Failed to create application", [
+                    'error' => $e->getMessage(),
+                    'sql_error' => $e->getMessage(),
+                ]);
+                throw new \Exception('Gagal menyimpan aplikasi ke database: ' . $e->getMessage());
+            }
             
             // increment counter aplikasi di problem
-            $problem->increment('applications_count');
+            try {
+                $problem->increment('applications_count');
+                Log::info("✅ Problem counter incremented");
+            } catch (\Exception $e) {
+                Log::error("⚠️ Failed to increment counter (non-critical)", [
+                    'error' => $e->getMessage(),
+                ]);
+            }
             
             // kirim notifikasi ke instansi
             try {
+                Log::info("Sending notification to institution...", [
+                    'institution_id' => $problem->institution_id,
+                ]);
+                
+                // load relasi yang dibutuhkan
+                $application->load(['student.user', 'problem.institution']);
+                
                 $this->notificationService->applicationSubmitted($application);
-                Log::info("✅ Notifikasi berhasil dikirim");
+                
+                Log::info("✅ Notification sent successfully");
+                
             } catch (\Exception $e) {
-                Log::error("⚠️ Gagal kirim notifikasi: " . $e->getMessage());
+                Log::error("⚠️ Failed to send notification (non-critical)", [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+                // tidak perlu rollback untuk error notifikasi
             }
             
             DB::commit();
+            Log::info("✅ Transaction committed successfully");
+            Log::info("=== END Application Store (SUCCESS) ===");
             
             return redirect()
                 ->route('student.applications.show', $application->id)
@@ -195,14 +268,18 @@ class ApplicationController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             
-            Log::error("❌ Error saat menyimpan aplikasi", [
-                'student_id' => $student->id,
+            Log::error("❌ Transaction rolled back", [
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
+            Log::error("=== END Application Store (FAILED) ===");
+            
+            // return error message yang jelas
+            $errorMessage = 'Terjadi kesalahan saat mengirim aplikasi: ' . $e->getMessage();
             
             return back()
                 ->withInput()
-                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+                ->with('error', $errorMessage);
         }
     }
     
@@ -241,6 +318,11 @@ class ApplicationController extends Controller
         if (!$application->proposal_content) {
             abort(404, 'Proposal tidak ditemukan');
         }
+        
+        Log::info("Downloading proposal", [
+            'application_id' => $id,
+            'filename' => $application->proposal_filename,
+        ]);
         
         // decode base64 content
         $fileContent = base64_decode($application->proposal_content);
@@ -288,7 +370,10 @@ class ApplicationController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             
-            Log::error("❌ Error saat membatalkan aplikasi: " . $e->getMessage());
+            Log::error("❌ Error saat membatalkan aplikasi", [
+                'application_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
             
             return back()->with('error', 'Terjadi kesalahan saat membatalkan aplikasi.');
         }
