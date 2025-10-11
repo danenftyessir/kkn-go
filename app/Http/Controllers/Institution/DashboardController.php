@@ -1,145 +1,75 @@
 <?php
 
-namespace App\Http\Controllers\Institution;
+namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Problem;
-use App\Models\Application;
 use App\Models\Project;
+use App\Models\Application;
+use App\Models\Problem;
 use App\Models\Notification;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 /**
- * controller untuk dashboard institution
- * menampilkan ringkasan aktivitas, statistik problems, dan aplikasi
+ * controller untuk dashboard mahasiswa
+ * menampilkan ringkasan aktivitas, recommendations, dan quick access
  * 
- * path: app/Http/Controllers/Institution/DashboardController.php
+ * path: app/Http/Controllers/Student/DashboardController.php
  */
 class DashboardController extends Controller
 {
     /**
-     * tampilkan dashboard institution
+     * tampilkan dashboard mahasiswa
      */
     public function index()
     {
-        $institution = Auth::user()->institution;
+        $student = Auth::user()->student;
 
-        // urgent items yang perlu perhatian
-        $urgentItems = [
-            'pending_applications' => Application::whereHas('problem', function($q) use ($institution) {
-                                                     $q->where('institution_id', $institution->id);
-                                                 })
+        // statistik utama
+        $stats = [
+            'active_projects' => Project::where('student_id', $student->id)
+                                       ->where('status', 'active')
+                                       ->count(),
+            'total_applications' => Application::where('student_id', $student->id)->count(),
+            'pending_applications' => Application::where('student_id', $student->id)
                                                  ->where('status', 'pending')
                                                  ->count(),
-            'pending_reviews' => Project::where('institution_id', $institution->id)
-                                       ->where('status', 'completed')
-                                       ->whereDoesntHave('institutionReview')
-                                       ->count(),
-            'overdue_milestones' => DB::table('project_milestones')
-                                      ->join('projects', 'project_milestones.project_id', '=', 'projects.id')
-                                      ->where('projects.institution_id', $institution->id)
-                                      ->where('project_milestones.status', '!=', 'completed')
-                                      ->where('project_milestones.target_date', '<', Carbon::now())
-                                      ->count(),
+            'completed_projects' => Project::where('student_id', $student->id)
+                                          ->where('status', 'completed')
+                                          ->count(),
         ];
-
-        // statistik utama dengan growth calculation
-        $currentMonth = Carbon::now()->month;
-        $lastMonth = Carbon::now()->subMonth()->month;
-        
-        $stats = [
-            'problems' => [
-                'total' => Problem::where('institution_id', $institution->id)->count(),
-                'active' => Problem::where('institution_id', $institution->id)->where('status', 'open')->count(),
-                'growth' => $this->calculateGrowth(
-                    Problem::where('institution_id', $institution->id)->whereMonth('created_at', $currentMonth)->count(),
-                    Problem::where('institution_id', $institution->id)->whereMonth('created_at', $lastMonth)->count()
-                ),
-            ],
-            'applications' => [
-                'total' => Application::whereHas('problem', function($q) use ($institution) {
-                              $q->where('institution_id', $institution->id);
-                          })->count(),
-                'pending' => Application::whereHas('problem', function($q) use ($institution) {
-                                $q->where('institution_id', $institution->id);
-                            })->where('status', 'pending')->count(),
-                'growth' => $this->calculateGrowth(
-                    Application::whereHas('problem', function($q) use ($institution) {
-                        $q->where('institution_id', $institution->id);
-                    })->whereMonth('created_at', $currentMonth)->count(),
-                    Application::whereHas('problem', function($q) use ($institution) {
-                        $q->where('institution_id', $institution->id);
-                    })->whereMonth('created_at', $lastMonth)->count()
-                ),
-            ],
-            'projects' => [
-                'total' => Project::where('institution_id', $institution->id)->count(),
-                'active' => Project::where('institution_id', $institution->id)->where('status', 'active')->count(),
-                'completed' => Project::where('institution_id', $institution->id)->where('status', 'completed')->count(),
-                'avg_progress' => Project::where('institution_id', $institution->id)
-                                       ->where('status', 'active')
-                                       ->avg('progress_percentage') ?? 0,
-            ],
-        ];
-
-        // recent problems
-        $recentProblems = Problem::where('institution_id', $institution->id)
-                                ->with(['province', 'regency', 'images'])
-                                ->withCount('applications')
-                                ->latest()
-                                ->take(5)
-                                ->get();
-
-        // pending applications yang perlu direview
-        $pendingApplications = Application::whereHas('problem', function($q) use ($institution) {
-                                             $q->where('institution_id', $institution->id);
-                                         })
-                                         ->with(['student.user', 'student.university', 'problem'])
-                                         ->where('status', 'pending')
-                                         ->latest()
-                                         ->take(5)
-                                         ->get();
-
-        // recent applications (semua status)
-        $recentApplications = Application::whereHas('problem', function($q) use ($institution) {
-                                            $q->where('institution_id', $institution->id);
-                                        })
-                                        ->with(['student.user', 'student.university', 'problem'])
-                                        ->latest()
-                                        ->take(10)
-                                        ->get();
 
         // active projects dengan progress
-        $activeProjects = Project::where('institution_id', $institution->id)
+        $activeProjects = Project::where('student_id', $student->id)
                                 ->where('status', 'active')
-                                ->with(['student.user', 'problem', 'milestones'])
+                                ->with(['problem', 'institution', 'milestones'])
                                 ->latest()
-                                ->take(5)
+                                ->take(3)
                                 ->get();
 
-        // statistik aplikasi per bulan (3 bulan terakhir)
-        // kompatibel dengan PostgreSQL
-        $applicationsByMonth = Application::whereHas('problem', function($q) use ($institution) {
-                                             $q->where('institution_id', $institution->id);
-                                         })
-                                         ->where('created_at', '>=', Carbon::now()->subMonths(3))
-                                         ->select(
-                                             DB::raw("TO_CHAR(created_at, 'YYYY-MM') as month"),
-                                             DB::raw('COUNT(*) as count')
-                                         )
-                                         ->groupBy('month')
-                                         ->orderBy('month')
-                                         ->get();
+        // recent applications
+        $recentApplications = Application::where('student_id', $student->id)
+                                        ->with(['problem.institution', 'problem.province', 'problem.regency'])
+                                        ->latest()
+                                        ->take(5)
+                                        ->get();
 
-        // statistik problems by status
-        $problemsByStatus = Problem::where('institution_id', $institution->id)
-                                  ->select('status', DB::raw('COUNT(*) as count'))
-                                  ->groupBy('status')
-                                  ->get()
-                                  ->pluck('count', 'status');
+        // recommended problems berdasarkan jurusan dan skills
+        $recommendedProblems = Problem::where('status', 'open')
+                                     ->where('application_deadline', '>=', Carbon::now())
+                                     ->with(['institution', 'province', 'regency', 'images'])
+                                     ->when($student->major, function($query) use ($student) {
+                                         // filter berdasarkan jurusan jika ada
+                                         $query->where(function($q) use ($student) {
+                                             $q->whereJsonContains('required_majors', $student->major)
+                                               ->orWhereNull('required_majors');
+                                         });
+                                     })
+                                     ->withCount('applications')
+                                     ->latest()
+                                     ->take(4)
+                                     ->get();
 
         // notifications terbaru
         $notifications = Notification::where('user_id', Auth::id())
@@ -147,46 +77,12 @@ class DashboardController extends Controller
                                     ->take(5)
                                     ->get();
 
-        // quick stats untuk chart
-        $quickStats = [
-            'problems_this_month' => Problem::where('institution_id', $institution->id)
-                                           ->whereMonth('created_at', Carbon::now()->month)
-                                           ->count(),
-            'applications_this_month' => Application::whereHas('problem', function($q) use ($institution) {
-                                                       $q->where('institution_id', $institution->id);
-                                                   })
-                                                   ->whereMonth('created_at', Carbon::now()->month)
-                                                   ->count(),
-            'projects_completed_this_month' => Project::where('institution_id', $institution->id)
-                                                     ->where('status', 'completed')
-                                                     ->whereMonth('updated_at', Carbon::now()->month)
-                                                     ->count(),
-        ];
-
-        return view('institution.dashboard.index', compact(
-            'institution',
-            'urgentItems',
+        return view('student.dashboard.index', compact(
             'stats',
-            'recentProblems',
-            'pendingApplications',
-            'recentApplications',
             'activeProjects',
-            'applicationsByMonth',
-            'problemsByStatus',
-            'notifications',
-            'quickStats'
+            'recentApplications',
+            'recommendedProblems',
+            'notifications'
         ));
-    }
-
-    /**
-     * hitung persentase pertumbuhan
-     */
-    private function calculateGrowth($current, $previous)
-    {
-        if ($previous == 0) {
-            return $current > 0 ? 100 : 0;
-        }
-        
-        return (($current - $previous) / $previous) * 100;
     }
 }
