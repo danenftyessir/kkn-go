@@ -27,6 +27,25 @@ class DashboardController extends Controller
     {
         $institution = Auth::user()->institution;
 
+        // urgent items yang perlu perhatian
+        $urgentItems = [
+            'pending_applications' => Application::whereHas('problem', function($q) use ($institution) {
+                                                     $q->where('institution_id', $institution->id);
+                                                 })
+                                                 ->where('status', 'pending')
+                                                 ->count(),
+            'pending_reviews' => Project::where('institution_id', $institution->id)
+                                       ->where('status', 'completed')
+                                       ->whereDoesntHave('review')
+                                       ->count(),
+            'overdue_milestones' => DB::table('project_milestones')
+                                      ->join('projects', 'project_milestones.project_id', '=', 'projects.id')
+                                      ->where('projects.institution_id', $institution->id)
+                                      ->where('project_milestones.status', '!=', 'completed')
+                                      ->where('project_milestones.target_date', '<', Carbon::now())
+                                      ->count(),
+        ];
+
         // statistik utama
         $stats = [
             'total_problems' => Problem::where('institution_id', $institution->id)->count(),
@@ -67,6 +86,15 @@ class DashboardController extends Controller
                                          ->latest()
                                          ->take(5)
                                          ->get();
+
+        // recent applications (semua status)
+        $recentApplications = Application::whereHas('problem', function($q) use ($institution) {
+                                            $q->where('institution_id', $institution->id);
+                                        })
+                                        ->with(['student.user', 'student.university', 'problem'])
+                                        ->latest()
+                                        ->take(10)
+                                        ->get();
 
         // active projects dengan progress
         $activeProjects = Project::where('institution_id', $institution->id)
@@ -120,9 +148,12 @@ class DashboardController extends Controller
         ];
 
         return view('institution.dashboard.index', compact(
+            'institution',
+            'urgentItems',
             'stats',
             'recentProblems',
             'pendingApplications',
+            'recentApplications',
             'activeProjects',
             'applicationsByMonth',
             'problemsByStatus',
