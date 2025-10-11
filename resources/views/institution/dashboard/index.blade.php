@@ -286,7 +286,7 @@
                             <p class="text-xs text-gray-600 mb-2">{{ $project->student->user->name }}</p>
                             <a href="{{ route('institution.reviews.create', $project->id) }}" 
                                class="text-blue-600 hover:text-blue-700 text-xs font-semibold">
-                                Tulis Review →
+                                Tulis Review
                             </a>
                         </div>
                         @endforeach
