@@ -8,7 +8,7 @@
         
         {{-- header --}}
         <div class="mb-8 fade-in-up">
-            <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
+            <h1 class="text-3xl font-bold text-gray-600">Dashboard</h1>
             <p class="text-gray-600 mt-1">Selamat datang, {{ $institution->name }}</p>
         </div>
 
@@ -136,7 +136,7 @@
                 </div>
                 <div class="mt-4 pt-4 border-t border-gray-200">
                     <a href="{{ route('institution.applications.index') }}" class="text-blue-600 hover:text-blue-700 font-semibold text-sm">
-                        Lihat Semua Aplikasi →
+                        Lihat Semua Aplikasi
                     </a>
                 </div>
             </div>
@@ -164,7 +164,7 @@
                 </div>
                 <div class="mt-4 pt-4 border-t border-gray-200">
                     <a href="{{ route('institution.projects.index') }}" class="text-blue-600 hover:text-blue-700 font-semibold text-sm">
-                        Lihat Semua Proyek →
+                        Lihat Semua Proyek
                     </a>
                 </div>
             </div>
