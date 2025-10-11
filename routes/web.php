@@ -137,6 +137,7 @@ Route::middleware(['auth', 'check.user.type:student'])->prefix('student')->name(
         Route::post('/', [ApplicationController::class, 'store'])->name('store');
         Route::get('/{id}', [ApplicationController::class, 'show'])->name('show');
         Route::delete('/{id}', [ApplicationController::class, 'destroy'])->name('withdraw');
+        Route::get('/{id}/download-proposal', [ApplicationController::class, 'downloadProposal'])->name('download-proposal');
     });
     
     // projects
