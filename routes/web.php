@@ -247,6 +247,7 @@ Route::middleware(['auth', 'check.user.type:institution'])->prefix('institution'
 
 Route::middleware(['auth'])->prefix('notifications')->name('notifications.')->group(function () {
     Route::get('/', [NotificationController::class, 'index'])->name('index');
+    Route::get('/latest', [NotificationController::class, 'getLatest'])->name('latest');
     Route::post('/{id}/read', [NotificationController::class, 'markAsRead'])->name('read');
     Route::post('/read-all', [NotificationController::class, 'markAllAsRead'])->name('read-all');
     Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('destroy');
