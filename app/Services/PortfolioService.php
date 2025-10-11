@@ -1,120 +1,136 @@
 <?php
 
-namespace App\Http\Controllers\Student;
+namespace App\Services;
 
-use App\Http\Controllers\Controller;
-use App\Services\PortfolioService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Models\Student;
+use App\Models\Project;
+use App\Models\Review;
+use Illuminate\Support\Str;
 
 /**
- * controller untuk mengelola portfolio mahasiswa
+ * service untuk mengelola data portfolio mahasiswa
  * 
- * path: app/Http/Controllers/Student/PortfolioController.php
+ * path: app/Services/PortfolioService.php
  */
-class PortfolioController extends Controller
+class PortfolioService
 {
-    protected $portfolioService;
-
-    public function __construct(PortfolioService $portfolioService)
-    {
-        $this->portfolioService = $portfolioService;
-    }
-
     /**
-     * tampilkan portfolio page (private view)
+     * ambil data portfolio lengkap untuk student
      */
-    public function index()
+    public function getPortfolioData($studentId)
     {
-        $student = Auth::user()->student;
+        $student = Student::with(['user', 'university'])->findOrFail($studentId);
         
-        // getPortfolioData sudah return achievements di dalamnya
-        $portfolioData = $this->portfolioService->getPortfolioData($student->id);
-        $portfolioSlug = $this->portfolioService->generatePortfolioSlug($student);
+        // ambil completed projects yang visible di portfolio
+        $completedProjects = Project::with([
+            'problem.institution',
+            'problem.province',
+            'problem.regency',
+            'institutionReview'
+        ])
+        ->where('student_id', $studentId)
+        ->where('status', 'completed')
+        ->portfolioVisible()
+        ->orderBy('actual_end_date', 'desc')
+        ->get();
 
-        return view('student.portfolio.index', array_merge($portfolioData, [
-            'portfolio_slug' => $portfolioSlug,
-        ]));
-    }
-
-    /**
-     * tampilkan public portfolio (dapat diakses siapa saja)
-     * PERBAIKAN: sekarang langsung terima username, bukan slug
-     */
-    public function publicView($username)
-    {
-        try {
-            // cari student berdasarkan username
-            $student = \App\Models\Student::whereHas('user', function($query) use ($username) {
-                $query->where('username', $username);
-            })
-            ->with(['user', 'university'])
-            ->firstOrFail();
-
-            // ambil completed projects
-            $completedProjects = \App\Models\Project::with([
-                'problem.institution',
-                'problem.province',
-                'problem.regency',
-                'institutionReview'
-            ])
-            ->where('student_id', $student->id)
-            ->where('status', 'completed')
-            ->orderBy('actual_end_date', 'desc')
+        // ambil reviews
+        $reviews = Review::where('type', 'institution_to_student')
+            ->whereIn('project_id', $completedProjects->pluck('id'))
             ->get();
 
-            // ambil reviews
-            $reviews = \App\Models\Review::where('type', 'institution_to_student')
-                ->whereIn('project_id', $completedProjects->pluck('id'))
-                ->get();
+        // hitung statistik
+        $statistics = [
+            'completed_projects' => $completedProjects->count(),
+            'sdgs_addressed' => $this->countUniqueSDGs($completedProjects),
+            'positive_reviews' => $reviews->where('rating', '>=', 4)->count(),
+            'average_rating' => $reviews->isEmpty() ? 0 : round($reviews->avg('rating'), 1),
+        ];
 
-            // hitung statistik
-            $statistics = [
-                'completed_projects' => $completedProjects->count(),
-                'sdgs_addressed' => $this->countUniqueSDGs($completedProjects),
-                'positive_reviews' => $reviews->where('rating', '>=', 4)->count(),
-                'average_rating' => $reviews->isEmpty() ? 0 : round($reviews->avg('rating'), 1),
-            ];
+        // generate skills dari completed projects
+        $skills = $this->generateSkillsFromProjects($completedProjects);
 
-            return view('student.portfolio.public', compact('student', 'completed_projects', 'reviews', 'statistics'));
-
-        } catch (\Exception $e) {
-            abort(404, 'Portfolio tidak ditemukan');
-        }
+        return [
+            'student' => $student,
+            'completed_projects' => $completedProjects,
+            'reviews' => $reviews,
+            'statistics' => $statistics,
+            'skills' => $skills,
+        ];
     }
 
     /**
-     * toggle project visibility in portfolio
+     * ambil public portfolio berdasarkan username
      */
-    public function toggleProjectVisibility(Request $request, $projectId)
+    public function getPublicPortfolio($username)
     {
-        $student = Auth::user()->student;
-        
-        // pastikan project milik student ini
-        $project = \App\Models\Project::where('id', $projectId)
-                                      ->where('student_id', $student->id)
-                                      ->firstOrFail();
+        // cari student berdasarkan username
+        $student = Student::whereHas('user', function($query) use ($username) {
+            $query->where('username', $username);
+        })
+        ->with(['user', 'university'])
+        ->firstOrFail();
 
-        try {
-            $updatedProject = $this->portfolioService->toggleProjectVisibility($projectId);
+        // ambil completed projects yang visible
+        $completedProjects = Project::with([
+            'problem.institution',
+            'problem.province',
+            'problem.regency',
+            'institutionReview'
+        ])
+        ->where('student_id', $student->id)
+        ->where('status', 'completed')
+        ->portfolioVisible()
+        ->orderBy('actual_end_date', 'desc')
+        ->get();
 
-            return response()->json([
-                'success' => true,
-                'message' => $updatedProject->is_portfolio_visible 
-                    ? 'Proyek ditampilkan di portfolio' 
-                    : 'Proyek disembunyikan dari portfolio',
-                'is_visible' => $updatedProject->is_portfolio_visible,
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengubah visibility: ' . $e->getMessage(),
-            ], 500);
-        }
+        // ambil reviews
+        $reviews = Review::where('type', 'institution_to_student')
+            ->whereIn('project_id', $completedProjects->pluck('id'))
+            ->get();
+
+        // hitung statistik
+        $statistics = [
+            'completed_projects' => $completedProjects->count(),
+            'sdgs_addressed' => $this->countUniqueSDGs($completedProjects),
+            'positive_reviews' => $reviews->where('rating', '>=', 4)->count(),
+            'average_rating' => $reviews->isEmpty() ? 0 : round($reviews->avg('rating'), 1),
+        ];
+
+        // generate skills
+        $skills = $this->generateSkillsFromProjects($completedProjects);
+
+        return [
+            'student' => $student,
+            'completed_projects' => $completedProjects,
+            'reviews' => $reviews,
+            'statistics' => $statistics,
+            'skills' => $skills,
+        ];
     }
 
     /**
-     * helper: hitung unique SDGs dari completed projects
+     * generate portfolio slug untuk student
+     */
+    public function generatePortfolioSlug(Student $student)
+    {
+        return $student->user->username;
+    }
+
+    /**
+     * toggle visibility proyek di portfolio
+     */
+    public function toggleProjectVisibility($projectId)
+    {
+        $project = Project::findOrFail($projectId);
+        $project->is_portfolio_visible = !$project->is_portfolio_visible;
+        $project->save();
+
+        return $project;
+    }
+
+    /**
+     * hitung jumlah unique SDGs dari completed projects
      */
     private function countUniqueSDGs($completedProjects)
     {
@@ -127,5 +143,21 @@ class PortfolioController extends Controller
         }
         
         return count(array_unique($sdgs));
+    }
+
+    /**
+     * generate skills dari completed projects
+     */
+    private function generateSkillsFromProjects($completedProjects)
+    {
+        $skills = [];
+        
+        foreach ($completedProjects as $project) {
+            if ($project->problem && $project->problem->required_skills) {
+                $skills = array_merge($skills, $project->problem->required_skills);
+            }
+        }
+        
+        return array_unique($skills);
     }
 }

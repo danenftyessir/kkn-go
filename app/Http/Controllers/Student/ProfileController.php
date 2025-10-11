@@ -6,27 +6,33 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateStudentProfileRequest;
 use App\Http\Requests\UpdateStudentPasswordRequest;
 use App\Services\SupabaseStorageService;
+use App\Services\PortfolioService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 /**
- * controller untuk mengelola profil mahasiswa
+ * controller untuk mengelola profil mahasiswa (termasuk portfolio)
  * 
  * path: app/Http/Controllers/Student/ProfileController.php
  */
 class ProfileController extends Controller
 {
     protected $storageService;
+    protected $portfolioService;
 
-    public function __construct(SupabaseStorageService $storageService)
-    {
+    public function __construct(
+        SupabaseStorageService $storageService,
+        PortfolioService $portfolioService
+    ) {
         $this->storageService = $storageService;
+        $this->portfolioService = $portfolioService;
     }
 
     /**
      * tampilkan halaman profil mahasiswa (private view)
+     * menampilkan info pribadi + portfolio
      */
     public function index()
     {
@@ -42,7 +48,27 @@ class ProfileController extends Controller
             'pending_applications' => $student->applications()->where('status', 'pending')->count(),
         ];
 
-        return view('student.profile.index', compact('user', 'student', 'stats'));
+        // ambil data portfolio
+        $portfolioData = $this->portfolioService->getPortfolioData($student->id);
+
+        return view('student.profile.index', array_merge(
+            compact('user', 'student', 'stats'),
+            $portfolioData
+        ));
+    }
+
+    /**
+     * tampilkan public profile/portfolio (dapat diakses siapa saja)
+     */
+    public function publicView($username)
+    {
+        try {
+            $portfolioData = $this->portfolioService->getPublicPortfolio($username);
+            
+            return view('student.profile.public', $portfolioData);
+        } catch (\Exception $e) {
+            abort(404, 'Profil tidak ditemukan');
+        }
     }
 
     /**
@@ -71,47 +97,42 @@ class ProfileController extends Controller
             // update data user
             $user->update([
                 'name' => $request->first_name . ' ' . $request->last_name,
-                'email' => $request->email,
+                'username' => $request->username,
             ]);
             
-            // handle profile photo upload
+            // handle upload foto profil jika ada
             $profilePhotoPath = $student->profile_photo_path;
             
             if ($request->hasFile('profile_photo')) {
+                $file = $request->file('profile_photo');
+                
                 // hapus foto lama jika ada
                 if ($profilePhotoPath) {
                     $this->storageService->delete($profilePhotoPath);
                 }
                 
-                // upload foto baru ke Supabase
-                $file = $request->file('profile_photo');
-                $uploadedPath = $this->storageService->uploadProfilePhoto($file, $student->id);
-                
-                if ($uploadedPath) {
-                    $profilePhotoPath = $uploadedPath;
-                    Log::info("Foto profil berhasil diupload untuk student ID {$student->id}: {$uploadedPath}");
-                } else {
-                    Log::error("Gagal upload foto profil untuk student ID {$student->id}");
-                    return back()->with('error', 'Gagal mengupload foto profil. Silakan coba lagi.');
-                }
+                // upload foto baru
+                $profilePhotoPath = $this->storageService->upload(
+                    $file,
+                    'profile-photos',
+                    'profile_' . $student->id . '_' . time() . '.' . $file->extension()
+                );
             }
             
             // update data student
             $student->update([
                 'first_name' => $request->first_name,
                 'last_name' => $request->last_name,
+                'nim' => $request->nim,
                 'university_id' => $request->university_id,
                 'major' => $request->major,
-                'nim' => $request->nim,
                 'semester' => $request->semester,
-                'whatsapp_number' => $request->whatsapp_number,
+                'whatsapp' => $request->whatsapp,
                 'profile_photo_path' => $profilePhotoPath,
                 'bio' => $request->bio,
-                'skills' => $request->skills ? json_encode($request->skills) : null,
-                'interests' => $request->interests ? json_encode($request->interests) : null,
             ]);
             
-            Log::info("Profil student ID {$student->id} berhasil diupdate");
+            Log::info("Profil berhasil diupdate untuk student ID {$student->id}");
             
             return redirect()->route('student.profile.index')
                 ->with('success', 'Profil berhasil diperbarui!');
@@ -149,5 +170,52 @@ class ProfileController extends Controller
             
             return back()->with('error', 'Terjadi kesalahan saat memperbarui password. Silakan coba lagi.');
         }
+    }
+
+    /**
+     * toggle project visibility di portfolio
+     */
+    public function toggleProjectVisibility(Request $request, $projectId)
+    {
+        $student = Auth::user()->student;
+        
+        // pastikan project milik student ini
+        $project = \App\Models\Project::where('id', $projectId)
+                                      ->where('student_id', $student->id)
+                                      ->firstOrFail();
+
+        try {
+            $updatedProject = $this->portfolioService->toggleProjectVisibility($projectId);
+
+            return response()->json([
+                'success' => true,
+                'message' => $updatedProject->is_portfolio_visible 
+                    ? 'Proyek ditampilkan di portfolio' 
+                    : 'Proyek disembunyikan dari portfolio',
+                'is_visible' => $updatedProject->is_portfolio_visible,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengubah visibility: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * get share link untuk portfolio
+     */
+    public function getShareLink()
+    {
+        $student = Auth::user()->student;
+        $username = $this->portfolioService->generatePortfolioSlug($student);
+        
+        $shareUrl = route('student.profile.public', $username);
+
+        return response()->json([
+            'success' => true,
+            'url' => $shareUrl,
+            'username' => $username,
+        ]);
     }
 }
