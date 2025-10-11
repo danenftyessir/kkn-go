@@ -29,6 +29,11 @@ class SupabaseStorageService
         $this->bucketName = config('services.supabase.bucket', 'kkn-go-storage');
         $this->baseUrl = "https://{$this->projectId}.supabase.co/storage/v1";
         $this->storageUrl = "https://{$this->projectId}.supabase.co/storage/v1/object/public/{$this->bucketName}";
+        
+        // log config untuk debugging
+        if (!$this->projectId || !$this->serviceKey) {
+            Log::warning("Supabase config tidak lengkap! Project ID: " . ($this->projectId ? 'OK' : 'MISSING') . ", Service Key: " . ($this->serviceKey ? 'OK' : 'MISSING'));
+        }
     }
 
     /**
