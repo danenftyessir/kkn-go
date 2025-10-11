@@ -43,7 +43,7 @@ class DashboardController extends Controller
         // active projects dengan progress
         $activeProjects = Project::where('student_id', $student->id)
                                 ->where('status', 'active')
-                                ->with(['problem', 'institution', 'milestones'])
+                                ->with(['problem', 'problem.institution', 'milestones'])
                                 ->latest()
                                 ->take(3)
                                 ->get();
@@ -71,63 +71,25 @@ class DashboardController extends Controller
                                      ->take(4)
                                      ->get();
 
-        // unread notifications
-        $unreadNotifications = Notification::where('user_id', Auth::id())
-                                          ->whereNull('read_at')
-                                          ->latest()
-                                          ->take(5)
-                                          ->get();
+        // notifikasi terbaru
+        $notifications = Notification::where('user_id', Auth::id())
+                                    ->latest()
+                                    ->take(5)
+                                    ->get();
 
-        // upcoming milestones dari active projects
-        $upcomingMilestones = collect();
-        foreach ($activeProjects as $project) {
-            $milestones = $project->milestones()
-                                 ->where('status', '!=', 'completed')
-                                 ->where('target_date', '>=', Carbon::now())
-                                 ->orderBy('target_date')
-                                 ->take(3)
-                                 ->get();
-            $upcomingMilestones = $upcomingMilestones->merge($milestones);
-        }
-        $upcomingMilestones = $upcomingMilestones->sortBy('target_date')->take(5);
-
-        // profile completion check
-        $profileCompletion = $this->calculateProfileCompletion($student);
+        // unread notifications count
+        $unreadCount = Notification::where('user_id', Auth::id())
+                                  ->where('is_read', false)
+                                  ->count();
 
         return view('student.dashboard.index', compact(
             'stats',
             'activeProjects',
             'recentApplications',
             'recommendedProblems',
-            'unreadNotifications',
-            'upcomingMilestones',
-            'profileCompletion'
+            'notifications',
+            'unreadCount',
+            'student'
         ));
-    }
-
-    /**
-     * hitung persentase kelengkapan profil
-     */
-    private function calculateProfileCompletion($student)
-    {
-        $fields = [
-            'profile_photo' => !empty($student->profile_photo_path) ? 1 : 0,
-            'bio' => !empty($student->bio) ? 1 : 0,
-            'skills' => (!empty($student->skills) && is_array($student->skills) && count($student->skills) > 0) ? 1 : 0,
-            'whatsapp' => !empty($student->phone) ? 1 : 0,
-            'semester' => !empty($student->semester) ? 1 : 0,
-        ];
-
-        $completed = array_sum($fields);
-        $total = count($fields);
-        $percentage = ($completed / $total) * 100;
-
-        return [
-            'percentage' => round($percentage),
-            'completed' => $completed,
-            'total' => $total,
-            'fields' => $fields,
-            'is_complete' => $percentage == 100,
-        ];
     }
 }
