@@ -1,158 +1,138 @@
 <?php
 
-namespace App\Http\Controllers\Institution;
+namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Problem;
-use App\Models\Application;
 use App\Models\Project;
-use App\Models\Review;
-use App\Services\AnalyticsService;
-use App\Services\ReviewService;
+use App\Models\Application;
+use App\Models\Problem;
+use App\Models\Notification;
+use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 /**
- * controller untuk dashboard instansi
+ * controller untuk dashboard mahasiswa
+ * menampilkan ringkasan aktivitas, recommendations, dan quick access
+ * 
+ * path: app/Http/Controllers/Student/DashboardController.php
  */
 class DashboardController extends Controller
 {
-    protected $analyticsService;
-    protected $reviewService;
-
-    public function __construct(AnalyticsService $analyticsService, ReviewService $reviewService)
-    {
-        $this->analyticsService = $analyticsService;
-        $this->reviewService = $reviewService;
-    }
-
     /**
-     * tampilkan dashboard instansi
+     * tampilkan dashboard mahasiswa
      */
     public function index()
     {
-        $institution = auth()->user()->institution;
+        $student = Auth::user()->student;
 
-        // statistik dashboard menggunakan analytics service
-        $stats = $this->analyticsService->getInstitutionAnalytics($institution->id);
-
-        // recent problems
-        $recentProblems = Problem::where('institution_id', $institution->id)
-                                ->with(['province', 'regency'])
-                                ->latest()
-                                ->limit(5)
-                                ->get();
-
-        // recent applications dengan prioritas pending
-        $recentApplications = Application::with(['student.user', 'student.university', 'problem'])
-                                        ->whereHas('problem', function($q) use ($institution) {
-                                            $q->where('institution_id', $institution->id);
-                                        })
-                                        ->where(function($query) {
-                                            $query->where('status', 'pending')
-                                                  ->orWhere('status', 'under_review');
-                                        })
-                                        ->latest()
-                                        ->limit(5)
-                                        ->get();
-
-        // active projects dengan progress
-        $activeProjects = Project::with(['student.user', 'student.university', 'problem'])
-                                ->where('institution_id', $institution->id)
-                                ->where('status', 'active')
-                                ->orderBy('progress_percentage', 'asc')
-                                ->limit(5)
-                                ->get();
-
-        // projects yang perlu direview (completed tapi belum ada rating)
-        $pendingReviews = $this->reviewService->getPendingReviews($institution->id, 5);
-
-        // top problems (most applications)
-        $topProblems = $this->analyticsService->getTopProblems($institution->id, 5);
-
-        // time series data untuk chart (30 hari terakhir)
-        $timeSeriesData = $this->analyticsService->getTimeSeriesData($institution->id, 30);
-
-        // application funnel untuk conversion metrics
-        $applicationFunnel = $this->analyticsService->getApplicationFunnel($institution->id);
-
-        // recent reviews yang diberikan
-        $recentReviews = $this->reviewService->getRecentInstitutionReviews($institution->id, 3);
-
-        // urgent items
-        $urgentItems = [
-            'pending_applications' => $stats['applications']['pending'],
-            'pending_reviews' => $pendingReviews->count(),
-            'overdue_milestones' => Project::where('institution_id', $institution->id)
-                ->whereHas('milestones', function($q) {
-                    $q->where('target_date', '<', now())
-                    ->where('status', '!=', 'completed');
-                })->count(),
+        // statistik utama
+        $stats = [
+            'active_projects' => Project::where('student_id', $student->id)
+                                       ->where('status', 'active')
+                                       ->count(),
+            'total_applications' => Application::where('student_id', $student->id)->count(),
+            'pending_applications' => Application::where('student_id', $student->id)
+                                                 ->where('status', 'pending')
+                                                 ->count(),
+            'completed_projects' => Project::where('student_id', $student->id)
+                                          ->where('status', 'completed')
+                                          ->count(),
         ];
 
-        return view('institution.dashboard.index', compact(
+        // active projects dengan progress
+        $activeProjects = Project::where('student_id', $student->id)
+                                ->where('status', 'active')
+                                ->with(['problem', 'institution', 'milestones'])
+                                ->latest()
+                                ->take(3)
+                                ->get();
+
+        // recent applications
+        $recentApplications = Application::where('student_id', $student->id)
+                                        ->with(['problem.institution', 'problem.province', 'problem.regency'])
+                                        ->latest()
+                                        ->take(5)
+                                        ->get();
+
+        // recommended problems berdasarkan jurusan dan skills
+        $recommendedProblems = Problem::where('status', 'open')
+                                     ->where('application_deadline', '>=', Carbon::now())
+                                     ->with(['institution', 'province', 'regency', 'images'])
+                                     ->when($student->major, function($query) use ($student) {
+                                         // filter berdasarkan jurusan jika ada
+                                         $query->where(function($q) use ($student) {
+                                             $q->whereJsonContains('required_majors', $student->major)
+                                               ->orWhereNull('required_majors');
+                                         });
+                                     })
+                                     ->withCount('applications')
+                                     ->latest()
+                                     ->take(4)
+                                     ->get();
+
+        // unread notifications
+        $unreadNotifications = Notification::where('user_id', Auth::id())
+                                          ->whereNull('read_at')
+                                          ->latest()
+                                          ->take(5)
+                                          ->get();
+
+        // upcoming milestones dari active projects
+        $upcomingMilestones = collect();
+        foreach ($activeProjects as $project) {
+            $milestones = $project->milestones()
+                                 ->where('status', '!=', 'completed')
+                                 ->where('target_date', '>=', Carbon::now())
+                                 ->orderBy('target_date')
+                                 ->take(3)
+                                 ->get();
+            $upcomingMilestones = $upcomingMilestones->merge($milestones);
+        }
+        $upcomingMilestones = $upcomingMilestones->sortBy('target_date')->take(5);
+
+        // profile completion check
+        $profileCompletion = $this->calculateProfileCompletion($student);
+
+        return view('student.dashboard.index', compact(
             'stats',
-            'recentProblems',
-            'recentApplications',
             'activeProjects',
-            'pendingReviews',
-            'topProblems',
-            'timeSeriesData',
-            'applicationFunnel',
-            'recentReviews',
-            'urgentItems',
-            'institution'
+            'recentApplications',
+            'recommendedProblems',
+            'unreadNotifications',
+            'upcomingMilestones',
+            'profileCompletion'
         ));
     }
 
     /**
-     * get chart data untuk dashboard (AJAX)
+     * hitung persentase kelengkapan profil
      */
-    public function getChartData(Request $request)
+    private function calculateProfileCompletion($student)
     {
-        $institution = auth()->user()->institution;
-        $days = $request->input('days', 30);
+        $fields = [
+            'profile_photo' => $student->profile_photo_path ? 1 : 0,
+            'first_name' => $student->first_name ? 1 : 0,
+            'last_name' => $student->last_name ? 1 : 0,
+            'university' => $student->university_id ? 1 : 0,
+            'major' => $student->major ? 1 : 0,
+            'nim' => $student->nim ? 1 : 0,
+            'semester' => $student->semester ? 1 : 0,
+            'phone' => $student->phone ? 1 : 0,
+            'bio' => $student->bio ? 1 : 0,
+        ];
 
-        $timeSeriesData = $this->analyticsService->getTimeSeriesData($institution->id, $days);
+        $completed = array_sum($fields);
+        $total = count($fields);
+        $percentage = ($completed / $total) * 100;
 
-        return response()->json([
-            'success' => true,
-            'data' => $timeSeriesData
-        ]);
-    }
-
-    /**
-     * get sdg distribution data (AJAX)
-     */
-    public function getSdgDistribution()
-    {
-        $institution = auth()->user()->institution;
-
-        $sdgData = $this->analyticsService->getProblemsBySdgCategory($institution->id);
-
-        return response()->json([
-            'success' => true,
-            'data' => $sdgData
-        ]);
-    }
-
-    /**
-     * export dashboard report
-     */
-    public function exportReport(Request $request)
-    {
-        $institution = auth()->user()->institution;
-        $format = $request->input('format', 'json');
-
-        $report = $this->analyticsService->exportFullReport($institution->id, $format);
-
-        if ($format === 'json') {
-            return response()->json([
-                'success' => true,
-                'data' => $report
-            ]);
-        }
-
-        // untuk format lain seperti PDF atau Excel, bisa ditambahkan nanti
-        return response()->download($report);
+        return [
+            'percentage' => round($percentage),
+            'fields' => $fields,
+            'is_complete' => $percentage == 100,
+            'missing_fields' => array_keys(array_filter($fields, function($value) {
+                return $value == 0;
+            })),
+        ];
     }
 }

@@ -107,27 +107,6 @@
             <p class="text-white text-lg mt-2 text-shadow-dashboard">Selamat Datang Kembali, {{ Auth::user()->name }}!</p>
         </div>
 
-        {{-- profile completion alert --}}
-        @if($profileCompletion['percentage'] < 100)
-        <div class="stats-card-dashboard rounded-xl p-4 mb-6 fade-in-up" style="animation-delay: 0.1s;">
-            <div class="flex items-start">
-                <svg class="w-6 h-6 text-white mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                <div class="ml-3 flex-1">
-                    <h3 class="text-sm font-semibold text-white">Lengkapi Profil Anda</h3>
-                    <p class="mt-1 text-sm text-white opacity-90">
-                        Profil Anda {{ $profileCompletion['percentage'] }}% lengkap. Lengkapi profil untuk mendapat rekomendasi proyek yang lebih sesuai.
-                    </p>
-                </div>
-                <a href="{{ route('student.profile.edit') }}" 
-                   class="ml-4 px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-blue-50 transition-colors font-medium text-sm whitespace-nowrap">
-                    Lengkapi Sekarang
-                </a>
-            </div>
-        </div>
-        @endif
-
         {{-- statistics cards --}}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {{-- total applications --}}
@@ -321,9 +300,40 @@
             {{-- sidebar (1 column) --}}
             <div class="space-y-6">
                 
+                {{-- profile completion alert --}}
+                @if($profileCompletion['percentage'] < 100)
+                <div class="bg-blue-600 rounded-xl shadow-sm border border-blue-500 p-6 fade-in-up content-card" style="animation-delay: 0.35s;">
+                    <div class="flex items-start mb-4">
+                        <div class="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <div class="ml-4 flex-1">
+                            <h3 class="text-lg font-bold text-white mb-2">Lengkapi Profil Anda</h3>
+                            <p class="text-sm text-white opacity-90 leading-relaxed">
+                                Profil Anda {{ $profileCompletion['percentage'] }}% lengkap. Lengkapi profil untuk mendapat rekomendasi proyek yang lebih sesuai.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    {{-- progress bar --}}
+                    <div class="mb-4">
+                        <div class="w-full bg-white bg-opacity-20 rounded-full h-2">
+                            <div class="bg-white h-2 rounded-full transition-all duration-500" style="width: {{ $profileCompletion['percentage'] }}%"></div>
+                        </div>
+                    </div>
+                    
+                    <a href="{{ route('student.profile.edit') }}" 
+                       class="block w-full px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-blue-50 transition-colors font-semibold text-sm text-center">
+                        Lengkapi Sekarang
+                    </a>
+                </div>
+                @endif
+                
                 {{-- recommended problems --}}
                 @if($recommendedProblems->isNotEmpty())
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 fade-in-up content-card" style="animation-delay: 0.4s;">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 fade-in-up content-card" style="animation-delay: {{ $profileCompletion['percentage'] < 100 ? '0.45s' : '0.35s' }};">
                     <h2 class="text-lg font-bold text-gray-900 mb-4">Rekomendasi Proyek</h2>
                     <div class="space-y-4">
                         @foreach($recommendedProblems->take(3) as $problem)
@@ -362,7 +372,7 @@
 
                 {{-- upcoming milestones --}}
                 @if($upcomingMilestones->isNotEmpty())
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 fade-in-up content-card" style="animation-delay: 0.45s;">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 fade-in-up content-card" style="animation-delay: {{ $profileCompletion['percentage'] < 100 ? '0.5s' : '0.4s' }};">
                     <h2 class="text-lg font-bold text-gray-900 mb-4">Milestone Mendatang</h2>
                     <div class="space-y-3">
                         @foreach($upcomingMilestones as $milestone)
