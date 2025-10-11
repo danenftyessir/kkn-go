@@ -36,7 +36,7 @@ class DashboardController extends Controller
                                                  ->count(),
             'pending_reviews' => Project::where('institution_id', $institution->id)
                                        ->where('status', 'completed')
-                                       ->whereDoesntHave('review')
+                                       ->whereDoesntHave('institutionReview')
                                        ->count(),
             'overdue_milestones' => DB::table('project_milestones')
                                       ->join('projects', 'project_milestones.project_id', '=', 'projects.id')
@@ -143,7 +143,7 @@ class DashboardController extends Controller
                                                    ->count(),
             'projects_completed_this_month' => Project::where('institution_id', $institution->id)
                                                      ->where('status', 'completed')
-                                                     ->whereMonth('completed_at', Carbon::now()->month)
+                                                     ->whereMonth('updated_at', Carbon::now()->month)
                                                      ->count(),
         ];
 
