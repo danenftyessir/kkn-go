@@ -13,8 +13,7 @@
         background-position: center;
         background-attachment: fixed;
         min-height: 450px;
-        margin-top: 80px; /* PERBAIKAN: tambah margin-top lebih besar untuk memberi jarak dari navbar */
-        padding-top: 40px; /* PERBAIKAN: tambah padding-top untuk menurunkan konten */
+        padding-top: 40px; /* PERBAIKAN: padding-top untuk menurunkan konten */
     }
     
     .dashboard-hero-background::before {
@@ -87,12 +86,16 @@
 
     /* PERBAIKAN: styling untuk icon di card statistik */
     .stats-card-dashboard svg {
-        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
     }
 
     .stats-card-dashboard .backdrop-blur-sm {
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
+    }
+    
+    .stats-card-dashboard .shadow-lg {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
     }
 
     /* accessibility - prefers reduced motion */
@@ -128,7 +131,7 @@
                         <p class="text-sm text-white opacity-90 mb-1">Total Aplikasi</p>
                         <p class="text-4xl font-bold text-white text-shadow-dashboard">{{ $stats['total_applications'] }}</p>
                     </div>
-                    <div class="w-16 h-16 bg-white bg-opacity-30 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                    <div class="w-16 h-16 bg-blue-500 bg-opacity-90 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-lg">
                         <svg class="w-9 h-9 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path d="M7 18h10v-2H7v2zM17 14H7v-2h10v2zM7 10h4V8H7v2zM21 4H3v16h18V4zm-2 14H5V6h14v12z"/>
                         </svg>
@@ -149,7 +152,7 @@
                         <p class="text-sm text-white opacity-90 mb-1">Aplikasi Pending</p>
                         <p class="text-4xl font-bold text-white text-shadow-dashboard">{{ $stats['pending_applications'] }}</p>
                     </div>
-                    <div class="w-16 h-16 bg-white bg-opacity-30 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                    <div class="w-16 h-16 bg-yellow-500 bg-opacity-90 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-lg">
                         <svg class="w-9 h-9 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.2 3.2.8-1.3-4.5-2.7V7z"/>
                         </svg>
@@ -170,7 +173,7 @@
                         <p class="text-sm text-white opacity-90 mb-1">Proyek Aktif</p>
                         <p class="text-4xl font-bold text-white text-shadow-dashboard">{{ $stats['active_projects'] }}</p>
                     </div>
-                    <div class="w-16 h-16 bg-white bg-opacity-30 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                    <div class="w-16 h-16 bg-orange-500 bg-opacity-90 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-lg">
                         <svg class="w-9 h-9 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path d="M7 2v11h3v9l7-12h-4l3-8z"/>
                         </svg>
@@ -191,7 +194,7 @@
                         <p class="text-sm text-white opacity-90 mb-1">Proyek Selesai</p>
                         <p class="text-4xl font-bold text-white text-shadow-dashboard">{{ $stats['completed_projects'] }}</p>
                     </div>
-                    <div class="w-16 h-16 bg-white bg-opacity-30 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                    <div class="w-16 h-16 bg-green-500 bg-opacity-90 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-lg">
                         <svg class="w-9 h-9 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                         </svg>
