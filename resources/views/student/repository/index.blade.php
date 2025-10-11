@@ -103,14 +103,15 @@
     
     /* featured document styling */
     .featured-document {
-        background: linear-gradient(135deg, #3b82f6 0%, #10b981 100%);
-        color: white;
-        border: none;
+        background: white;
+        border: 1px solid #e5e7eb;
+        color: inherit;
     }
     
     .featured-document:hover {
         transform: translate3d(0, -6px, 0);
-        box-shadow: 0 15px 35px -5px rgba(59, 130, 246, 0.4);
+        box-shadow: 0 15px 35px -5px rgba(59, 130, 246, 0.3);
+        border-color: #3b82f6;
     }
     
     /* filter section styling */
@@ -233,17 +234,17 @@
                 <a href="{{ route('student.repository.show', $document->id) }}" 
                    class="featured-document p-6 rounded-xl block group">
                     <div class="flex items-start gap-4 mb-4">
-                        <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center flex-shrink-0">
+                        <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
                             <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
                         </div>
                         <div class="flex-1">
-                            <h3 class="text-lg font-bold mb-2 group-hover:underline">{{ Str::limit($document->title, 60) }}</h3>
-                            <p class="text-sm text-white/80">{{ Str::limit($document->description, 100) }}</p>
+                            <h3 class="text-lg font-bold mb-2 text-gray-900 group-hover:text-blue-600 transition-colors">{{ Str::limit($document->title, 60) }}</h3>
+                            <p class="text-sm text-gray-600">{{ Str::limit($document->description, 100) }}</p>
                         </div>
                     </div>
-                    <div class="flex items-center gap-4 text-sm text-white/70">
+                    <div class="flex items-center gap-4 text-sm text-gray-500">
                         <span class="flex items-center gap-1">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
