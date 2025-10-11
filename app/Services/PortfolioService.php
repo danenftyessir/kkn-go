@@ -39,10 +39,14 @@ class PortfolioService
             ->whereIn('project_id', $completedProjects->pluck('id'))
             ->get();
 
+        // hitung total impact beneficiaries
+        $totalImpactBeneficiaries = $this->calculateTotalImpactBeneficiaries($completedProjects);
+
         // hitung statistik
         $statistics = [
             'completed_projects' => $completedProjects->count(),
             'sdgs_addressed' => $this->countUniqueSDGs($completedProjects),
+            'total_impact_beneficiaries' => $totalImpactBeneficiaries,
             'positive_reviews' => $reviews->where('rating', '>=', 4)->count(),
             'average_rating' => $reviews->isEmpty() ? 0 : round($reviews->avg('rating'), 1),
         ];
@@ -89,10 +93,14 @@ class PortfolioService
             ->whereIn('project_id', $completedProjects->pluck('id'))
             ->get();
 
+        // hitung total impact beneficiaries
+        $totalImpactBeneficiaries = $this->calculateTotalImpactBeneficiaries($completedProjects);
+
         // hitung statistik
         $statistics = [
             'completed_projects' => $completedProjects->count(),
             'sdgs_addressed' => $this->countUniqueSDGs($completedProjects),
+            'total_impact_beneficiaries' => $totalImpactBeneficiaries,
             'positive_reviews' => $reviews->where('rating', '>=', 4)->count(),
             'average_rating' => $reviews->isEmpty() ? 0 : round($reviews->avg('rating'), 1),
         ];
@@ -152,6 +160,31 @@ class PortfolioService
         }
         
         return count(array_unique($sdgs));
+    }
+
+    /**
+     * hitung total impact beneficiaries dari completed projects
+     */
+    private function calculateTotalImpactBeneficiaries($completedProjects)
+    {
+        $totalBeneficiaries = 0;
+
+        foreach ($completedProjects as $project) {
+            if ($project->impact_metrics) {
+                $impactMetrics = $project->impact_metrics;
+                
+                // pastikan dalam bentuk array
+                if (is_string($impactMetrics)) {
+                    $impactMetrics = json_decode($impactMetrics, true) ?? [];
+                }
+                
+                if (is_array($impactMetrics) && isset($impactMetrics['beneficiaries'])) {
+                    $totalBeneficiaries += intval($impactMetrics['beneficiaries']);
+                }
+            }
+        }
+
+        return $totalBeneficiaries;
     }
 
     /**
