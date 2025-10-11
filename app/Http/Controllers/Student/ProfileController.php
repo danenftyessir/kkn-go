@@ -112,15 +112,21 @@ class ProfileController extends Controller
                     $this->storageService->delete($profilePhotoPath);
                 }
                 
-                // upload foto baru
-                $profilePhotoPath = $this->storageService->upload(
-                    $file,
-                    'profile-photos',
-                    'profile_' . $student->id . '_' . time() . '.' . $file->extension()
-                );
+                // ✅ PERBAIKAN: gunakan uploadProfilePhoto() yang tersedia di SupabaseStorageService
+                $uploadedPath = $this->storageService->uploadProfilePhoto($file, $student->id);
+                
+                // jika upload berhasil, gunakan path baru. Jika gagal, tetap gunakan foto lama
+                if ($uploadedPath) {
+                    $profilePhotoPath = $uploadedPath;
+                    Log::info("Foto profil berhasil diupload untuk student ID {$student->id}");
+                } else {
+                    // tetap gunakan foto lama jika upload gagal
+                    $profilePhotoPath = $student->profile_photo_path;
+                    Log::warning("Gagal upload foto profil untuk student ID {$student->id}, menggunakan foto lama");
+                }
             }
             
-            // ✅ PERBAIKAN: gunakan whatsapp_number dari request dan simpan ke field phone
+            // ✅ PERBAIKAN: gunakan field 'phone' untuk menyimpan whatsapp_number dari request
             $student->update([
                 'first_name' => $request->first_name,
                 'last_name' => $request->last_name,
@@ -128,7 +134,7 @@ class ProfileController extends Controller
                 'university_id' => $request->university_id,
                 'major' => $request->major,
                 'semester' => $request->semester,
-                'phone' => $request->whatsapp_number, // field database adalah 'phone', request adalah 'whatsapp_number'
+                'phone' => $request->whatsapp_number, // field database adalah 'phone'
                 'profile_photo_path' => $profilePhotoPath,
                 'bio' => $request->bio,
             ]);
