@@ -11,7 +11,6 @@ use App\Http\Controllers\Student\DashboardController as StudentDashboardControll
 use App\Http\Controllers\Student\BrowseProblemsController;
 use App\Http\Controllers\Student\ApplicationController;
 use App\Http\Controllers\Student\MyProjectsController;
-use App\Http\Controllers\Student\PortfolioController;
 use App\Http\Controllers\Student\ProfileController as StudentProfileController;
 use App\Http\Controllers\Student\WishlistController;
 use App\Http\Controllers\Student\KnowledgeRepositoryController;
@@ -28,40 +27,57 @@ use App\Http\Controllers\NotificationController;
 | Web Routes - KKN-GO Platform
 |--------------------------------------------------------------------------
 |
-| file ini berisi semua web routes untuk aplikasi KKN-GO
-| routes dikelompokkan berdasarkan user type dan authentication requirement
-|
+| file ini berisi semua routing untuk aplikasi KKN-GO
+| 
 */
 
 /*
 |--------------------------------------------------------------------------
-| Public Routes (Tidak Perlu Login)
+| Public Routes
 |--------------------------------------------------------------------------
 */
 
-// halaman utama
+// home page
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
+// public student profile/portfolio (dapat diakses tanpa login)
+Route::get('/profile/{username}', [StudentProfileController::class, 'publicView'])->name('profile.public');
+
+// redirect portfolio ke profile untuk backward compatibility
+Route::get('/portfolio/{username}', function($username) {
+    return redirect()->route('profile.public', $username);
+});
+
+// public institution profile
+Route::get('/institution/{id}', [InstitutionProfileController::class, 'showPublic'])->name('institution.public');
+
 /*
 |--------------------------------------------------------------------------
-| Guest Routes (Hanya untuk yang Belum Login)
+| Development Routes (hanya untuk development)
+|--------------------------------------------------------------------------
+*/
+
+if (config('app.env') === 'local' || config('app.env') === 'development') {
+    Route::get('/dev/login', function () {
+        return view('dev.login');
+    })->name('dev.login');
+}
+
+/*
+|--------------------------------------------------------------------------
+| Guest Routes (hanya bisa diakses jika belum login)
 |--------------------------------------------------------------------------
 */
 
 Route::middleware('guest')->group(function () {
     
-    // login
+    // authentication pages
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [LoginController::class, 'login']);
     
-    // register - halaman pilihan
     Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
-    
-    // register student
     Route::get('/register/student', [RegisterController::class, 'showStudentForm'])->name('register.student');
     Route::post('/register/student', [RegisterController::class, 'registerStudent'])->name('register.student.submit');
-    
-    // register institution
     Route::get('/register/institution', [RegisterController::class, 'showInstitutionForm'])->name('register.institution');
     Route::post('/register/institution', [RegisterController::class, 'registerInstitution'])->name('register.institution.submit');
     
@@ -77,7 +93,7 @@ Route::middleware('guest')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Authenticated Routes (Perlu Login)
+| Authenticated Routes (perlu login)
 |--------------------------------------------------------------------------
 */
 
@@ -133,17 +149,19 @@ Route::middleware(['auth', 'check.user.type:student'])->prefix('student')->name(
         Route::post('/{id}/final-report', [MyProjectsController::class, 'storeFinalReport'])->name('store-final-report');
     });
     
-    Route::prefix('portfolio')->name('portfolio.')->group(function () {
-        Route::get('/', [PortfolioController::class, 'index'])->name('index');
-        Route::get('/{username}', [PortfolioController::class, 'publicView'])->name('public');
-    });
-    
-    // profile
+    // profile (gabungan dengan portfolio) - private routes
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [StudentProfileController::class, 'index'])->name('index');
         Route::get('/edit', [StudentProfileController::class, 'edit'])->name('edit');
         Route::put('/', [StudentProfileController::class, 'update'])->name('update');
         Route::put('/password', [StudentProfileController::class, 'updatePassword'])->name('password.update');
+        Route::post('/project/{projectId}/toggle-visibility', [StudentProfileController::class, 'toggleProjectVisibility'])->name('project.toggle-visibility');
+        Route::get('/share-link', [StudentProfileController::class, 'getShareLink'])->name('share-link');
+    });
+    
+    // redirect portfolio ke profile untuk backward compatibility
+    Route::get('/portfolio', function() {
+        return redirect()->route('student.profile.index');
     });
     
     // wishlist
@@ -233,15 +251,3 @@ Route::middleware(['auth'])->prefix('notifications')->name('notifications.')->gr
     Route::post('/read-all', [NotificationController::class, 'markAllAsRead'])->name('read-all');
     Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('destroy');
 });
-
-/*
-|--------------------------------------------------------------------------
-| Public Portfolio & Institution Profile Routes
-|--------------------------------------------------------------------------
-*/
-
-// public student portfolio
-Route::get('/portfolio/{username}', [PortfolioController::class, 'publicView'])->name('portfolio.public');
-
-// public institution profile
-Route::get('/institution/{id}', [InstitutionProfileController::class, 'showPublic'])->name('institution.public');

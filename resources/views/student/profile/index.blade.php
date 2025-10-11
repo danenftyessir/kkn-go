@@ -74,7 +74,7 @@
                 </div>
 
                 {{-- statistik portfolio --}}
-                @if($statistics)
+                @if(isset($statistics) && $statistics)
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 fade-in-up" style="animation-delay: 0.1s;">
                     <h3 class="text-lg font-bold text-gray-900 mb-4">statistik portfolio</h3>
                     
@@ -183,7 +183,7 @@
                 </div>
 
                 {{-- skills (dari portfolio) --}}
-                @if($skills && count($skills) > 0)
+                @if(isset($skills) && $skills && count($skills) > 0)
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 fade-in-up" style="animation-delay: 0.4s;">
                     <h3 class="text-lg font-bold text-gray-900 mb-4">skills & keahlian</h3>
                     
@@ -198,7 +198,7 @@
                 @endif
 
                 {{-- completed projects showcase --}}
-                @if($completed_projects && $completed_projects->isNotEmpty())
+                @if(isset($completed_projects) && $completed_projects && $completed_projects->isNotEmpty())
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 fade-in-up" style="animation-delay: 0.5s;">
                     <div class="flex items-center justify-between mb-6">
                         <h3 class="text-lg font-bold text-gray-900">proyek yang telah diselesaikan</h3>
