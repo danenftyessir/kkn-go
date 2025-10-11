@@ -1,276 +1,105 @@
 {{-- resources/views/student/repository/index.blade.php --}}
 @extends('layouts.app')
 
-@section('title', 'Knowledge Repository')
-
-@push('styles')
-<style>
-    /* hero section dengan background image */
-    .hero-repository-background {
-        position: relative;
-        background-image: url('/repo-student.jpeg');
-        background-size: cover;
-        background-position: center;
-        background-attachment: fixed;
-        min-height: 400px;
-    }
-    
-    .hero-repository-background::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(
-            135deg, 
-            rgba(37, 99, 235, 0.50) 0%,
-            rgba(59, 130, 246, 0.45) 35%,
-            rgba(16, 185, 129, 0.45) 65%,
-            rgba(5, 150, 105, 0.50) 100%
-        );
-        backdrop-filter: blur(1px);
-    }
-    
-    /* stats cards dengan glassmorphism */
-    .stats-card-repository {
-        background: rgba(255, 255, 255, 0.20);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        will-change: transform;
-    }
-    
-    .stats-card-repository:hover {
-        background: rgba(255, 255, 255, 0.30);
-        transform: translate3d(0, -4px, 0);
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
-    }
-    
-    .stats-card-repository svg {
-        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-    }
-    
-    .stats-card-repository .backdrop-blur-sm {
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-    }
-    
-    /* text shadow untuk hero */
-    .text-shadow-repository {
-        text-shadow: 
-            0 2px 4px rgba(0, 0, 0, 0.4),
-            0 4px 8px rgba(0, 0, 0, 0.3),
-            0 1px 2px rgba(0, 0, 0, 0.5);
-    }
-    
-    /* fade in animation */
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    .fade-in-up {
-        animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-        opacity: 0;
-        animation-fill-mode: forwards;
-    }
-    
-    /* document card animations */
-    .document-card {
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        will-change: transform, box-shadow;
-    }
-    
-    .document-card:hover {
-        transform: translate3d(0, -8px, 0);
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
-    }
-    
-    /* featured card special styling */
-    .featured-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    
-    .featured-card:hover {
-        transform: translate3d(0, -8px, 0);
-        box-shadow: 0 25px 35px -5px rgba(102, 126, 234, 0.4);
-    }
-    
-    /* smooth scrolling */
-    html {
-        scroll-behavior: smooth;
-    }
-    
-    /* GPU acceleration untuk performa */
-    .stats-card-repository,
-    .document-card,
-    .featured-card {
-        transform: translateZ(0);
-        backface-visibility: hidden;
-        perspective: 1000px;
-    }
-    
-    /* filter sidebar sticky */
-    .filter-sidebar-sticky {
-        position: sticky;
-        top: 100px;
-        max-height: calc(100vh - 120px);
-        overflow-y: auto;
-    }
-    
-    /* custom scrollbar untuk sidebar */
-    .filter-sidebar-sticky::-webkit-scrollbar {
-        width: 6px;
-    }
-    
-    .filter-sidebar-sticky::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 10px;
-    }
-    
-    .filter-sidebar-sticky::-webkit-scrollbar-thumb {
-        background: #888;
-        border-radius: 10px;
-    }
-    
-    .filter-sidebar-sticky::-webkit-scrollbar-thumb:hover {
-        background: #555;
-    }
-    
-    /* accessibility - prefers reduced motion */
-    @media (prefers-reduced-motion: reduce) {
-        *,
-        *::before,
-        *::after {
-            animation-duration: 0.01ms !important;
-            animation-iteration-count: 1 !important;
-            transition-duration: 0.01ms !important;
-            scroll-behavior: auto !important;
-        }
-        
-        .stats-card-repository:hover,
-        .document-card:hover,
-        .featured-card:hover {
-            transform: none;
-        }
-    }
-</style>
-@endpush
-
 @section('content')
-<div class="min-h-screen bg-gray-50">
-    
-    {{-- hero section dengan background image --}}
-    <div class="hero-repository-background text-white py-16 md:py-20">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div class="fade-in-up">
-                <h1 class="text-4xl md:text-5xl font-bold mb-4 text-shadow-repository">
-                    Knowledge Repository
-                </h1>
-                <p class="text-xl md:text-2xl text-white text-shadow-repository max-w-3xl">
-                    Akses dan pelajari dari dokumentasi proyek KKN sebelumnya
-                </p>
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {{-- header --}}
+        <div class="mb-8 fade-in-up">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Knowledge Repository</h1>
+            <p class="text-gray-600">Akses dan pelajari dari dokumentasi proyek KKN sebelumnya</p>
+        </div>
+
+        {{-- statistics cards --}}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 fade-in-up" style="animation-delay: 0.05s;">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Total Dokumen</p>
+                        <p class="text-3xl font-bold text-blue-600">{{ $stats['total_documents'] }}</p>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                </div>
             </div>
             
-            {{-- statistics cards --}}
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mt-10 fade-in-up" style="animation-delay: 0.2s;">
-                {{-- total documents --}}
-                <div class="stats-card-repository rounded-xl p-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-white opacity-90 mb-1">Total Dokumen</p>
-                            <p class="text-4xl md:text-5xl font-bold text-white text-shadow-repository">{{ $stats['total_documents'] }}</p>
-                        </div>
-                        <div class="w-14 h-14 md:w-16 md:h-16 bg-white bg-opacity-30 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-lg">
-                            <svg class="w-8 h-8 md:w-9 md:h-9 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                        </div>
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 fade-in-up" style="animation-delay: 0.1s;">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Total Downloads</p>
+                        <p class="text-3xl font-bold text-green-600">{{ number_format($stats['total_downloads']) }}</p>
+                    </div>
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
                     </div>
                 </div>
-
-                {{-- total downloads --}}
-                <div class="stats-card-repository rounded-xl p-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-white opacity-90 mb-1">Total Downloads</p>
-                            <p class="text-4xl md:text-5xl font-bold text-white text-shadow-repository">{{ number_format($stats['total_downloads']) }}</p>
-                        </div>
-                        <div class="w-14 h-14 md:w-16 md:h-16 bg-white bg-opacity-30 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-lg">
-                            <svg class="w-8 h-8 md:w-9 md:h-9 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                            </svg>
-                        </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 fade-in-up" style="animation-delay: 0.15s;">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Instansi Berkontribusi</p>
+                        <p class="text-3xl font-bold text-purple-600">{{ $stats['total_institutions'] }}</p>
                     </div>
-                </div>
-
-                {{-- contributing institutions --}}
-                <div class="stats-card-repository rounded-xl p-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-white opacity-90 mb-1">Instansi Berkontribusi</p>
-                            <p class="text-4xl md:text-5xl font-bold text-white text-shadow-repository">{{ $stats['contributing_institutions'] }}</p>
-                        </div>
-                        <div class="w-14 h-14 md:w-16 md:h-16 bg-white bg-opacity-30 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-lg">
-                            <svg class="w-8 h-8 md:w-9 md:h-9 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                            </svg>
-                        </div>
+                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                        </svg>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    {{-- main content area --}}
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        {{-- featured documents section --}}
-        @if($featured_documents && $featured_documents->count() > 0)
-            <div class="mb-8">
-                <h2 class="text-2xl font-bold text-gray-900 mb-6 fade-in-up" style="animation-delay: 0.3s;">Dokumen Unggulan</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    @foreach($featured_documents as $index => $featured)
-                        <div class="featured-card rounded-xl p-6 text-white fade-in-up" style="animation-delay: {{ 0.35 + ($index * 0.1) }}s;">
-                            <div class="flex items-start gap-3 mb-4">
-                                <div class="w-12 h-12 bg-white bg-opacity-30 rounded-lg flex items-center justify-center flex-shrink-0 backdrop-blur-sm">
-                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
-                                    </svg>
-                                </div>
-                                <div class="flex-1">
-                                    <h3 class="font-bold text-white mb-2 line-clamp-2">{{ $featured->title }}</h3>
-                                    <p class="text-sm text-white opacity-90 line-clamp-2">{{ $featured->description }}</p>
-                                </div>
+        {{-- featured documents --}}
+        @if($featuredDocuments->isNotEmpty())
+            <div class="mb-8 fade-in-up" style="animation-delay: 0.2s;">
+                <h2 class="text-2xl font-bold text-gray-900 mb-4">Dokumen Unggulan</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    @foreach($featuredDocuments as $featured)
+                        <div class="bg-gradient-to-br from-blue-50 to-green-50 rounded-xl shadow-sm border-2 border-blue-200 p-6 hover:shadow-lg transition-all">
+                            <div class="flex items-start justify-between mb-3">
+                                <span class="px-3 py-1 bg-blue-600 text-white text-xs font-bold rounded-full">
+                                    FEATURED
+                                </span>
+                                <span class="px-2 py-1 bg-white text-blue-700 text-xs font-bold rounded uppercase">
+                                    {{ $featured->file_type }}
+                                </span>
                             </div>
                             
-                            <div class="flex items-center justify-between text-sm text-white opacity-90 mb-4">
-                                <span class="flex items-center gap-1">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                                    </svg>
-                                    {{ $featured->download_count }}
-                                </span>
-                                <span class="flex items-center gap-1">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <h3 class="text-lg font-bold text-gray-900 mb-2 line-clamp-2">
+                                {{ $featured->title }}
+                            </h3>
+                            
+                            @if($featured->description)
+                                <p class="text-sm text-gray-600 mb-3 line-clamp-2">
+                                    {{ $featured->description }}
+                                </p>
+                            @endif
+                            
+                            <div class="flex items-center gap-3 text-xs text-gray-500 mb-3">
+                                <span class="flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                     </svg>
                                     {{ $featured->view_count }}
                                 </span>
+                                <span class="flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                    </svg>
+                                    {{ $featured->download_count }}
+                                </span>
                             </div>
                             
                             <a href="{{ route('student.repository.show', $featured->id) }}" 
-                               class="block w-full px-4 py-2 bg-white text-purple-600 text-center rounded-lg hover:bg-gray-100 transition-colors text-sm font-semibold">
+                               class="block w-full px-4 py-2 bg-blue-600 text-white text-center rounded-lg hover:bg-blue-700 transition-colors text-sm font-semibold">
                                 Lihat Detail
                             </a>
                         </div>
@@ -283,8 +112,8 @@
             
             {{-- filters sidebar --}}
             <div class="lg:col-span-1">
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 filter-sidebar-sticky fade-in-up" style="animation-delay: 0.4s;">
-                    <h3 class="font-semibold text-gray-900 mb-4 text-lg">Filter & Pencarian</h3>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sticky top-8 fade-in-up" style="animation-delay: 0.25s;">
+                    <h3 class="font-semibold text-gray-900 mb-4">Filter & Pencarian</h3>
                     
                     <form method="GET" action="{{ route('student.repository.index') }}" class="space-y-4">
                         {{-- search --}}
@@ -294,13 +123,13 @@
                                    name="search" 
                                    value="{{ request('search') }}"
                                    placeholder="Cari dokumen..."
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all">
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
                         </div>
 
                         {{-- category filter --}}
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Kategori SDG</label>
-                            <select name="category" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all">
+                            <select name="category" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
                                 <option value="">Semua Kategori</option>
                                 @for($i = 1; $i <= 17; $i++)
                                     <option value="{{ $i }}" {{ request('category') == $i ? 'selected' : '' }}>SDG {{ $i }}</option>
@@ -311,7 +140,7 @@
                         {{-- year filter --}}
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Tahun</label>
-                            <select name="year" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all">
+                            <select name="year" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
                                 <option value="">Semua Tahun</option>
                                 @foreach($years as $year)
                                     <option value="{{ $year }}" {{ request('year') == $year ? 'selected' : '' }}>{{ $year }}</option>
@@ -322,9 +151,7 @@
                         {{-- province filter --}}
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Provinsi</label>
-                            <select name="province_id" 
-                                    id="province-select"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all">
+                            <select name="province_id" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
                                 <option value="">Semua Provinsi</option>
                                 @foreach($provinces as $province)
                                     <option value="{{ $province->id }}" {{ request('province_id') == $province->id ? 'selected' : '' }}>
@@ -334,33 +161,36 @@
                             </select>
                         </div>
 
-                        {{-- regency filter (conditional) --}}
-                        @if(request('province_id') && $regencies->count() > 0)
+                        {{-- university filter --}}
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Kabupaten/Kota</label>
-                            <select name="regency_id" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all">
-                                <option value="">Semua Kabupaten/Kota</option>
-                                @foreach($regencies as $regency)
-                                    <option value="{{ $regency->id }}" {{ request('regency_id') == $regency->id ? 'selected' : '' }}>
-                                        {{ $regency->name }}
-                                    </option>
-                                @endforeach
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Universitas</label>
+                            <input type="text" 
+                                   name="university" 
+                                   value="{{ request('university') }}"
+                                   placeholder="Nama universitas..."
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+                        </div>
+
+                        {{-- sort --}}
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Urutkan</label>
+                            <select name="sort" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+                                <option value="latest" {{ request('sort') == 'latest' ? 'selected' : '' }}>Terbaru</option>
+                                <option value="popular" {{ request('sort') == 'popular' ? 'selected' : '' }}>Terpopuler</option>
+                                <option value="most_viewed" {{ request('sort') == 'most_viewed' ? 'selected' : '' }}>Paling Dilihat</option>
+                                <option value="most_cited" {{ request('sort') == 'most_cited' ? 'selected' : '' }}>Paling Disitasi</option>
                             </select>
                         </div>
-                        @endif
 
-                        {{-- action buttons --}}
-                        <div class="flex gap-2 pt-2">
+                        <div class="flex gap-2">
                             <button type="submit" 
-                                    class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all font-semibold text-sm shadow-sm hover:shadow-md">
+                                    class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-semibold">
                                 Filter
                             </button>
-                            @if(request()->hasAny(['search', 'category', 'year', 'province_id', 'regency_id']))
                             <a href="{{ route('student.repository.index') }}" 
-                               class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all font-semibold text-sm">
+                               class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm font-semibold">
                                 Reset
                             </a>
-                            @endif
                         </div>
                     </form>
                 </div>
@@ -369,91 +199,125 @@
             {{-- documents list --}}
             <div class="lg:col-span-3">
                 @if($documents->isEmpty())
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center fade-in-up" style="animation-delay: 0.5s;">
-                        <svg class="w-20 h-20 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center fade-in-up" style="animation-delay: 0.3s;">
+                        <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
-                        <h3 class="text-xl font-bold text-gray-900 mb-2">Tidak Ada Dokumen</h3>
-                        <p class="text-gray-600 mb-6">Tidak ada dokumen yang sesuai dengan kriteria pencarian Anda.</p>
-                        <a href="{{ route('student.repository.index') }}" 
-                           class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:shadow-lg transition-all font-semibold">
-                            Lihat Semua Dokumen
-                        </a>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Tidak Ada Dokumen</h3>
+                        <p class="text-gray-600">Tidak ditemukan dokumen yang sesuai dengan filter Anda</p>
                     </div>
                 @else
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
                         @foreach($documents as $index => $document)
-                            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden document-card fade-in-up" 
-                                 style="animation-delay: {{ 0.5 + ($index * 0.05) }}s;">
-                                <div class="p-6">
-                                    <div class="flex items-start gap-3 mb-4">
-                                        <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-green-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                            </svg>
-                                        </div>
-                                        <div class="flex-1">
-                                            <h3 class="font-bold text-gray-900 mb-2 line-clamp-2">{{ $document->title }}</h3>
-                                            <p class="text-sm text-gray-600 line-clamp-2">{{ $document->description }}</p>
-                                        </div>
-                                    </div>
-
-                                    <div class="flex flex-wrap gap-2 text-xs text-gray-600 mb-4">
-                                        <span class="flex items-center gap-1">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                            </svg>
-                                            {{ $document->view_count }} views
-                                        </span>
-                                        <span class="flex items-center gap-1">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                                            </svg>
-                                            {{ $document->download_count }} downloads
-                                        </span>
-                                        <span class="flex items-center gap-1">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
-                                            </svg>
-                                            {{ $document->citation_count }} citations
-                                        </span>
-                                        <span class="px-2 py-1 bg-gray-100 rounded">
-                                            {{ $document->readable_file_size ?? 'N/A' }}
-                                        </span>
-                                    </div>
-
-                                    {{-- categories --}}
-                                    @php
-                                        $categories = [];
-                                        if ($document->categories) {
-                                            if (is_array($document->categories)) {
-                                                $categories = $document->categories;
-                                            } elseif (is_string($document->categories)) {
-                                                $decoded = json_decode($document->categories, true);
-                                                $categories = is_array($decoded) ? $decoded : [];
-                                            }
-                                        }
-                                    @endphp
-                                    
-                                    @if(!empty($categories))
-                                    <div class="flex flex-wrap gap-2 mb-4">
-                                        @foreach(array_slice($categories, 0, 3) as $cat)
-                                            <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded">
-                                                SDG {{ $cat }}
-                                            </span>
-                                        @endforeach
-                                        @if(count($categories) > 3)
-                                            <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-semibold rounded">
-                                                +{{ count($categories) - 3 }}
-                                            </span>
+                            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all fade-in-up" 
+                                 style="animation-delay: {{ 0.3 + ($index * 0.05) }}s;">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="flex-1">
+                                        <h3 class="text-lg font-bold text-gray-900 mb-2 hover:text-blue-600 transition-colors">
+                                            <a href="{{ route('student.repository.show', $document->id) }}">
+                                                {{ $document->title }}
+                                            </a>
+                                        </h3>
+                                        @if($document->description)
+                                            <p class="text-sm text-gray-600 mb-3 line-clamp-2">
+                                                {{ $document->description }}
+                                            </p>
                                         @endif
                                     </div>
-                                    @endif
+                                    
+                                    {{-- file type badge --}}
+                                    <span class="ml-4 px-3 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-lg uppercase">
+                                        {{ $document->file_type }}
+                                    </span>
+                                </div>
 
+                                {{-- metadata --}}
+                                <div class="flex flex-wrap items-center gap-3 text-xs text-gray-500 mb-3">
+                                    @if($document->author_name)
+                                        <span class="flex items-center">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                            </svg>
+                                            {{ $document->author_name }}
+                                        </span>
+                                    @endif
+                                    @if($document->institution_name)
+                                        <span class="flex items-center">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                            </svg>
+                                            {{ $document->institution_name }}
+                                        </span>
+                                    @endif
+                                    @if($document->year)
+                                        <span class="flex items-center">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                            </svg>
+                                            {{ $document->year }}
+                                        </span>
+                                    @endif
+                                </div>
+
+                                {{-- statistics --}}
+                                <div class="flex flex-wrap items-center gap-3 text-xs text-gray-500 mb-3">
+                                    <span class="flex items-center">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                        </svg>
+                                        {{ $document->view_count }} views
+                                    </span>
+                                    <span class="flex items-center">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                        </svg>
+                                        {{ $document->download_count }} downloads
+                                    </span>
+                                    <span class="flex items-center">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
+                                        </svg>
+                                        {{ $document->citation_count }} citations
+                                    </span>
+                                    <span class="px-2 py-1 bg-gray-100 rounded text-xs">
+                                        {{ $document->readable_file_size ?? 'N/A' }}
+                                    </span>
+                                </div>
+
+                                {{-- categories - PERBAIKAN BUG --}}
+                                @php
+                                    // parse categories dengan aman
+                                    $categories = [];
+                                    if ($document->categories) {
+                                        if (is_array($document->categories)) {
+                                            $categories = $document->categories;
+                                        } elseif (is_string($document->categories)) {
+                                            $decoded = json_decode($document->categories, true);
+                                            $categories = is_array($decoded) ? $decoded : [];
+                                        }
+                                    }
+                                @endphp
+                                
+                                @if(!empty($categories))
+                                    <div class="flex flex-wrap gap-2 mb-3">
+                                        @foreach($categories as $category)
+                                            <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-semibold">
+                                                SDG {{ $category }}
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                @endif
+
+                                {{-- actions --}}
+                                <div class="flex gap-2">
                                     <a href="{{ route('student.repository.show', $document->id) }}" 
-                                       class="block w-full px-4 py-2 bg-gradient-to-r from-blue-600 to-green-600 text-white text-center rounded-lg hover:shadow-lg transition-all font-semibold text-sm">
+                                       class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-semibold">
                                         Lihat Detail
+                                    </a>
+                                    <a href="{{ route('student.repository.download', $document->id) }}" 
+                                       class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm font-semibold">
+                                        Download
                                     </a>
                                 </div>
                             </div>
@@ -461,12 +325,48 @@
                     </div>
 
                     {{-- pagination --}}
-                    <div class="mt-8 fade-in-up" style="animation-delay: 0.7s;">
-                        {{ $documents->appends(request()->query())->links() }}
+                    <div class="mt-8">
+                        {{ $documents->links() }}
                     </div>
                 @endif
             </div>
         </div>
     </div>
 </div>
+
+{{-- custom styles --}}
+<style>
+    .fade-in-up {
+        animation: fadeInUp 0.6s ease-out forwards;
+        opacity: 0;
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    
+    /* smooth hover transitions */
+    a, button {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    /* smooth scrolling */
+    html {
+        scroll-behavior: smooth;
+    }
+</style>
 @endsection
