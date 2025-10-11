@@ -5,32 +5,135 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/browse-problems.css') }}">
+<style>
+    .hero-browse-background {
+        position: relative;
+        background-image: url('/dashboard-student.jpg');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+    }
+    
+    .hero-browse-background::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+            135deg, 
+            rgba(37, 99, 235, 0.85) 0%, 
+            rgba(59, 130, 246, 0.75) 35%,
+            rgba(16, 185, 129, 0.75) 65%,
+            rgba(5, 150, 105, 0.85) 100%
+        );
+        backdrop-filter: blur(2px);
+    }
+    
+    .stats-card-modern {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .stats-card-modern:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: translateY(-4px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+    }
+    
+    .text-shadow-strong {
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+    
+    .browse-fade-in {
+        animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
 @endpush
 
 @section('content')
 <div class="min-h-screen bg-gray-50">
     
-    {{-- header section --}}
-    <div class="bg-gradient-to-r from-blue-600 to-green-600 text-white py-12">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h1 class="text-4xl font-bold mb-4">Jelajahi Proyek KKN</h1>
-            <p class="text-xl text-blue-100">
-                Temukan proyek KKN yang sesuai dengan minat dan keahlian Anda
-            </p>
+    {{-- header section dengan background image --}}
+    <div class="hero-browse-background text-white py-16 md:py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="browse-fade-in">
+                <h1 class="text-4xl md:text-5xl font-bold mb-4 text-shadow-strong">
+                    Jelajahi Proyek KKN
+                </h1>
+                <p class="text-xl md:text-2xl text-white/90 text-shadow-strong max-w-3xl">
+                    Temukan proyek KKN yang sesuai dengan minat dan keahlian Anda
+                </p>
+            </div>
             
-            {{-- stats --}}
-            <div class="grid grid-cols-3 gap-6 mt-8">
-                <div class="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                    <div class="text-3xl font-bold">{{ $totalProblems ?? 0 }}</div>
-                    <div class="text-sm text-blue-100">Total Proyek</div>
+            {{-- stats cards dengan modern glassmorphism effect --}}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mt-10 browse-fade-in" style="animation-delay: 0.2s;">
+                <div class="stats-card-modern rounded-xl p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-4xl md:text-5xl font-bold text-white text-shadow-strong">
+                                {{ $totalProblems ?? 0 }}
+                            </div>
+                            <div class="text-sm md:text-base text-white/90 mt-2 font-medium">
+                                Total Proyek
+                            </div>
+                        </div>
+                        <div class="w-14 h-14 md:w-16 md:h-16 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                            <svg class="w-7 h-7 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </div>
+                    </div>
                 </div>
-                <div class="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                    <div class="text-3xl font-bold">{{ $openProblems ?? 0 }}</div>
-                    <div class="text-sm text-blue-100">Proyek Terbuka</div>
+                
+                <div class="stats-card-modern rounded-xl p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-4xl md:text-5xl font-bold text-white text-shadow-strong">
+                                {{ $openProblems ?? 0 }}
+                            </div>
+                            <div class="text-sm md:text-base text-white/90 mt-2 font-medium">
+                                Proyek Terbuka
+                            </div>
+                        </div>
+                        <div class="w-14 h-14 md:w-16 md:h-16 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                            <svg class="w-7 h-7 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                            </svg>
+                        </div>
+                    </div>
                 </div>
-                <div class="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                    <div class="text-3xl font-bold">{{ $totalInstitutions ?? 0 }}</div>
-                    <div class="text-sm text-blue-100">Instansi Partner</div>
+                
+                <div class="stats-card-modern rounded-xl p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-4xl md:text-5xl font-bold text-white text-shadow-strong">
+                                {{ $totalInstitutions ?? 0 }}
+                            </div>
+                            <div class="text-sm md:text-base text-white/90 mt-2 font-medium">
+                                Instansi Partner
+                            </div>
+                        </div>
+                        <div class="w-14 h-14 md:w-16 md:h-16 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                            <svg class="w-7 h-7 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                            </svg>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -39,7 +142,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
         {{-- search & filter bar --}}
-        <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+        <div class="bg-white rounded-xl shadow-sm p-6 mb-6 border border-gray-100">
             <form method="GET" action="{{ route('student.browse-problems.index') }}" class="space-y-4">
                 
                 {{-- search bar --}}
@@ -51,223 +154,130 @@
                                    value="{{ request('search') }}"
                                    placeholder="Cari proyek berdasarkan judul, deskripsi, atau lokasi..."
                                    class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
-                            <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            <svg class="w-5 h-5 text-gray-400 absolute left-4 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                             </svg>
                         </div>
                     </div>
-                    <button type="submit" class="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold">
-                        Cari
-                    </button>
-                    <button type="button" onclick="toggleFilter()" class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-                        <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
-                        </svg>
-                        Filter
-                    </button>
+                    
+                    <div class="flex gap-2">
+                        {{-- toggle view --}}
+                        <button type="button" 
+                                id="toggle-view"
+                                class="px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                                title="Toggle View">
+                            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                            </svg>
+                        </button>
+                        
+                        {{-- filter button --}}
+                        <button type="button" 
+                                id="toggle-filter"
+                                class="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                            </svg>
+                            <span class="hidden sm:inline">Filter</span>
+                        </button>
+                        
+                        {{-- submit button --}}
+                        <button type="submit" 
+                                class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+                            Cari
+                        </button>
+                    </div>
                 </div>
 
-                {{-- advanced filters (initially hidden) --}}
-                <div id="advancedFilters" class="hidden pt-4 border-t border-gray-200 space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Provinsi</label>
-                            <select name="province_id" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                <option value="">Semua Provinsi</option>
-                                @foreach($provinces as $province)
-                                    <option value="{{ $province->id }}" {{ request('province_id') == $province->id ? 'selected' : '' }}>
-                                        {{ $province->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Tingkat Kesulitan</label>
-                            <select name="difficulty" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                <option value="">Semua Tingkat</option>
-                                <option value="beginner" {{ request('difficulty') == 'beginner' ? 'selected' : '' }}>Beginner</option>
-                                <option value="intermediate" {{ request('difficulty') == 'intermediate' ? 'selected' : '' }}>Intermediate</option>
-                                <option value="advanced" {{ request('difficulty') == 'advanced' ? 'selected' : '' }}>Advanced</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Durasi</label>
-                            <select name="duration" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                <option value="">Semua Durasi</option>
-                                <option value="1-2" {{ request('duration') == '1-2' ? 'selected' : '' }}>1-2 Bulan</option>
-                                <option value="3-4" {{ request('duration') == '3-4' ? 'selected' : '' }}>3-4 Bulan</option>
-                                <option value="5-6" {{ request('duration') == '5-6' ? 'selected' : '' }}>5-6 Bulan</option>
-                            </select>
-                        </div>
-                    </div>
+                {{-- filter section (collapsible) --}}
+                <div id="filter-section" class="hidden">
+                    @include('student.browse-problems.components.filter-sidebar')
                 </div>
             </form>
         </div>
 
-        {{-- view toggle --}}
+        {{-- view mode toggle --}}
         <div class="flex items-center justify-between mb-6">
-            <p class="text-gray-600">
-                Menampilkan <span class="font-semibold">{{ $problems->firstItem() ?? 0 }}</span> - 
-                <span class="font-semibold">{{ $problems->lastItem() ?? 0 }}</span> dari 
-                <span class="font-semibold">{{ $problems->total() }}</span> proyek
-            </p>
+            <div>
+                <p class="text-gray-600">
+                    Menampilkan <span class="font-semibold text-gray-900">{{ $problems->count() }}</span> dari 
+                    <span class="font-semibold text-gray-900">{{ $problems->total() }}</span> proyek
+                </p>
+            </div>
+            
             <div class="flex items-center gap-2">
-                <button onclick="setView('grid')" class="p-2 rounded-lg transition-colors {{ request('view') !== 'list' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-100' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+                <button id="grid-view-btn" 
+                        class="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors active-view"
+                        onclick="switchView('grid')">
+                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
                     </svg>
                 </button>
-                <button onclick="setView('list')" class="p-2 rounded-lg transition-colors {{ request('view') === 'list' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-100' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                <button id="list-view-btn" 
+                        class="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+                        onclick="switchView('list')">
+                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                    </svg>
+                </button>
+                <button id="map-view-btn" 
+                        class="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+                        onclick="switchView('map')">
+                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
                     </svg>
                 </button>
             </div>
         </div>
 
-        {{-- problems list/grid --}}
-        @if(request('view') === 'list')
-            <div class="space-y-4">
-                @forelse($problems as $problem)
-                    @include('student.browse-problems.components.problem-card-list', ['problem' => $problem])
-                @empty
-                    <div class="bg-white rounded-xl shadow-sm p-12 text-center">
-                        <svg class="w-24 h-24 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <h3 class="text-xl font-bold text-gray-900 mb-2">Tidak Ada Proyek Ditemukan</h3>
-                        <p class="text-gray-600">Maaf, tidak ada proyek yang sesuai dengan kriteria pencarian Anda.</p>
-                    </div>
-                @endforelse
-            </div>
-        @else
-            @include('student.browse-problems.components.problems-grid', ['problems' => $problems])
-        @endif
+        {{-- problems display --}}
+        <div id="grid-view" class="view-content">
+            @include('student.browse-problems.components.problems-grid')
+        </div>
+
+        <div id="list-view" class="view-content hidden">
+            @foreach($problems as $problem)
+                @include('student.browse-problems.components.problem-card-list', ['problem' => $problem])
+            @endforeach
+        </div>
+
+        <div id="map-view" class="view-content hidden">
+            @include('student.browse-problems.components.map-view')
+        </div>
 
         {{-- pagination --}}
-        @if($problems->hasPages())
         <div class="mt-8">
             {{ $problems->links() }}
         </div>
-        @endif
     </div>
 </div>
-@endsection
 
 @push('scripts')
+<script src="{{ asset('js/pages/browse-problems.js') }}"></script>
 <script>
-function toggleFilter() {
-    const filters = document.getElementById('advancedFilters');
-    filters.classList.toggle('hidden');
-}
+    // toggle filter section
+    document.getElementById('toggle-filter').addEventListener('click', function() {
+        const filterSection = document.getElementById('filter-section');
+        filterSection.classList.toggle('hidden');
+    });
 
-function setView(view) {
-    const url = new URL(window.location.href);
-    url.searchParams.set('view', view);
-    window.location.href = url.toString();
-}
-
-async function toggleWishlist(problemId, button) {
-    // disable button sementara
-    button.disabled = true;
-    
-    // simpan state awal
-    const wasWishlisted = button.getAttribute('data-wishlisted') === 'true';
-    
-    // add loading state
-    const originalHTML = button.innerHTML;
-    button.innerHTML = `
-        <svg class="animate-spin w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-    `;
-    
-    try {
-        const response = await fetch(`/student/wishlist/${problemId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                'Accept': 'application/json'
-            }
+    // view switcher
+    function switchView(view) {
+        // hide semua view
+        document.querySelectorAll('.view-content').forEach(el => el.classList.add('hidden'));
+        
+        // remove active class dari semua button
+        document.querySelectorAll('[id$="-view-btn"]').forEach(btn => {
+            btn.classList.remove('active-view', 'bg-blue-50', 'border-blue-500');
         });
         
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
+        // tampilkan view yang dipilih
+        document.getElementById(view + '-view').classList.remove('hidden');
         
-        const data = await response.json();
-        
-        if (data.success) {
-            // update button state
-            button.setAttribute('data-wishlisted', data.saved ? 'true' : 'false');
-            
-            if (data.saved) {
-                // wishlisted - red filled heart
-                button.innerHTML = `
-                    <svg class="w-5 h-5 fill-red-500 text-red-500" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                    </svg>
-                `;
-                button.classList.add('text-red-500');
-                button.classList.remove('text-gray-400', 'hover:text-red-500');
-            } else {
-                // not wishlisted - gray outline heart
-                button.innerHTML = `
-                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                    </svg>
-                `;
-                button.classList.add('text-gray-400', 'hover:text-red-500');
-                button.classList.remove('text-red-500');
-            }
-            
-            // animation heartbeat
-            button.style.transform = 'scale(1.2)';
-            setTimeout(() => {
-                button.style.transform = 'scale(1)';
-            }, 200);
-            
-            // tampilkan notification
-            showNotification(data.message || (data.saved ? 'Ditambahkan ke wishlist' : 'Dihapus dari wishlist'), 'success');
-        }
-        
-    } catch (error) {
-        console.error('Error toggling wishlist:', error);
-        showNotification('Terjadi kesalahan. Silakan coba lagi.', 'error');
-        
-        // restore original state
-        button.innerHTML = originalHTML;
-    } finally {
-        button.disabled = false;
+        // add active class ke button yang dipilih
+        const activeBtn = document.getElementById(view + '-view-btn');
+        activeBtn.classList.add('active-view', 'bg-blue-50', 'border-blue-500');
     }
-}
-
-// fungsi untuk menampilkan notifikasi
-function showNotification(message, type = 'success') {
-    const notification = document.createElement('div');
-    notification.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white z-50 transform transition-all duration-300 ${
-        type === 'success' ? 'bg-green-500' : 'bg-red-500'
-    }`;
-    notification.textContent = message;
-    notification.style.opacity = '0';
-    notification.style.transform = 'translateY(20px)';
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        notification.style.opacity = '1';
-        notification.style.transform = 'translateY(0)';
-    }, 10);
-    
-    setTimeout(() => {
-        notification.style.opacity = '0';
-        notification.style.transform = 'translateY(20px)';
-        setTimeout(() => notification.remove(), 300);
-    }, 3000);
-}
 </script>
 @endpush
+@endsection
