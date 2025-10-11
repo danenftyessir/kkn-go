@@ -111,7 +111,7 @@
         
         {{-- header --}}
         <div class="mb-10 fade-in-up">
-            <h1 class="text-4xl md:text-5xl text-white mb-4 text-shadow-strong">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4 text-shadow-strong">
                 Dashboard
             </h1>
             <p class="text-xl md:text-2xl text-white text-shadow-strong max-w-3xl">
@@ -348,7 +348,7 @@
                         <div>
                             <h3 class="font-bold text-lg mb-1">Lengkapi Profil Anda</h3>
                             <p class="text-sm opacity-90">
-                                Profil anda {{ $profileCompletion['percentage'] }}% lengkap ({{ $profileCompletion['completed'] }}/{{ $profileCompletion['total'] }} field). Lengkapi profil untuk mendapat rekomendasi proyek yang lebih sesuai.
+                                Profil anda {{ $profileCompletion['percentage'] }}% lengkap ({{ $profileCompletion['fields']['profile_photo'] + $profileCompletion['fields']['bio'] + $profileCompletion['fields']['skills'] + $profileCompletion['fields']['whatsapp'] + $profileCompletion['fields']['semester'] }}/{{ count($profileCompletion['fields']) }} field). Lengkapi profil untuk mendapat rekomendasi proyek yang lebih sesuai.
                             </p>
                         </div>
                     </div>

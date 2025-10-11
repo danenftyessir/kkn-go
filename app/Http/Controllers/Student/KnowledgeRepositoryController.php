@@ -86,7 +86,7 @@ class KnowledgeRepositoryController extends Controller
             ->limit(3)
             ->get();
 
-        // statistik untuk dashboard repository
+        // ✅ PERBAIKAN: tambahkan total_institutions ke stats
         $stats = [
             'total_documents' => Document::where('is_public', true)
                                         ->where('status', 'approved')
@@ -97,7 +97,7 @@ class KnowledgeRepositoryController extends Controller
             'total_views' => Document::where('is_public', true)
                                     ->where('status', 'approved')
                                     ->sum('view_count'),
-            'contributing_institutions' => Document::where('is_public', true)
+            'total_institutions' => Document::where('is_public', true)
                                            ->where('status', 'approved')
                                            ->distinct('institution_name')
                                            ->count('institution_name'),
