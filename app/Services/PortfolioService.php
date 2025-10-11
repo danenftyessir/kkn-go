@@ -56,7 +56,8 @@ class PortfolioService
 
         return [
             'student' => $student,
-            'completed_projects' => $completedProjects,
+            'completedProjects' => $completedProjects,
+            'completed_projects' => $completedProjects, // backward compatibility
             'reviews' => $reviews,
             'statistics' => $statistics,
             'skills' => $skills,
@@ -110,7 +111,8 @@ class PortfolioService
 
         return [
             'student' => $student,
-            'completed_projects' => $completedProjects,
+            'completedProjects' => $completedProjects,
+            'completed_projects' => $completedProjects, // backward compatibility
             'reviews' => $reviews,
             'statistics' => $statistics,
             'skills' => $skills,
