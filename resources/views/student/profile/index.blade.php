@@ -183,12 +183,22 @@
                 </div>
 
                 {{-- skills (dari portfolio) --}}
-                @if(isset($skills) && $skills && count($skills) > 0)
+                @php
+                    $skillsList = $skills ?? [];
+                    // pastikan dalam bentuk array
+                    if (is_string($skillsList)) {
+                        $skillsList = json_decode($skillsList, true) ?? [];
+                    }
+                    if (!is_array($skillsList)) {
+                        $skillsList = [];
+                    }
+                @endphp
+                @if(count($skillsList) > 0)
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 fade-in-up" style="animation-delay: 0.4s;">
                     <h3 class="text-lg font-bold text-gray-900 mb-4">skills & keahlian</h3>
                     
                     <div class="flex flex-wrap gap-2">
-                        @foreach($skills as $skill)
+                        @foreach($skillsList as $skill)
                             <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
                                 {{ $skill }}
                             </span>

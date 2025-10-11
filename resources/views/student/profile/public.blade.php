@@ -158,11 +158,21 @@
             <div class="lg:col-span-1">
                 
                 {{-- skills section --}}
-                @if(isset($skills) && is_array($skills) && count($skills) > 0)
+                @php
+                    $skillsList = $skills ?? [];
+                    // pastikan dalam bentuk array
+                    if (is_string($skillsList)) {
+                        $skillsList = json_decode($skillsList, true) ?? [];
+                    }
+                    if (!is_array($skillsList)) {
+                        $skillsList = [];
+                    }
+                @endphp
+                @if(count($skillsList) > 0)
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6 profile-container" style="animation-delay: 0.2s;">
                     <h3 class="text-lg font-bold text-gray-900 mb-4">skills & keahlian</h3>
                     <div class="flex flex-wrap gap-2">
-                        @foreach($skills as $skill)
+                        @foreach($skillsList as $skill)
                             <span class="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium skill-tag">
                                 {{ $skill }}
                             </span>
@@ -281,9 +291,19 @@
                                     </div>
 
                                     {{-- SDG categories --}}
-                                    @if($project->problem->sdg_categories && count($project->problem->sdg_categories) > 0)
+                                    @php
+                                        $sdgCategories = $project->problem->sdg_categories;
+                                        // pastikan dalam bentuk array
+                                        if (is_string($sdgCategories)) {
+                                            $sdgCategories = json_decode($sdgCategories, true) ?? [];
+                                        }
+                                        if (!is_array($sdgCategories)) {
+                                            $sdgCategories = [];
+                                        }
+                                    @endphp
+                                    @if(count($sdgCategories) > 0)
                                         <div class="flex flex-wrap gap-2 mb-4">
-                                            @foreach($project->problem->sdg_categories as $sdg)
+                                            @foreach($sdgCategories as $sdg)
                                                 <span class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium">
                                                     SDG {{ $sdg }}
                                                 </span>
