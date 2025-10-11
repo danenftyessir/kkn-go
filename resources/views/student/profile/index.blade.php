@@ -63,7 +63,7 @@
                     </a>
 
                     {{-- tombol lihat profil publik --}}
-                    <a href="{{ route('student.profile.public', $user->username) }}" 
+                    <a href="{{ route('profile.public', $user->username) }}" 
                        target="_blank"
                        class="mt-3 w-full inline-flex items-center justify-center px-6 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-300 font-medium">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -293,7 +293,7 @@
 @push('scripts')
 <script>
 function sharePortfolio() {
-    const portfolioUrl = "{{ route('student.profile.public', $user->username) }}";
+    const portfolioUrl = "{{ route('profile.public', $user->username) }}";
     
     if (navigator.share) {
         navigator.share({
