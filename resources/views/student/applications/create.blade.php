@@ -3,7 +3,7 @@
 
 @extends('layouts.app')
 
-@section('title', 'Apply ke Proyek')
+@section('title', 'Apply Ke Proyek')
 
 @push('styles')
 <style>
@@ -99,6 +99,17 @@
 .tips-card:hover {
     transform: translateX(4px);
 }
+
+/* reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
 </style>
 @endpush
 
@@ -108,12 +119,12 @@
         
         <!-- back button -->
         <div class="mb-6">
-            <a href="{{ route('student.problems.show', $problem->id) }}" 
+            <a href="{{ route('student.browse-problems.show', $problem->id) }}" 
                class="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                 </svg>
-                Kembali ke Detail Proyek
+                Kembali Ke Detail Proyek
             </a>
         </div>
 
@@ -121,32 +132,25 @@
         <div class="form-container bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
             <div class="flex items-start">
                 @if($problem->institution->logo_path)
-                <img src="{{ asset('storage/' . $problem->institution->logo_path) }}" 
+                <img src="{{ $problem->institution->getLogoUrl() }}" 
                      alt="{{ $problem->institution->name }}"
                      class="w-16 h-16 rounded-lg object-cover mr-4">
                 @else
-                <div class="w-16 h-16 rounded-lg bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center mr-4">
-                    <span class="text-white font-bold text-2xl">
-                        {{ strtoupper(substr($problem->institution->name, 0, 1)) }}
-                    </span>
+                <div class="w-16 h-16 rounded-lg bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center text-white text-2xl font-bold mr-4">
+                    {{ strtoupper(substr($problem->institution->name, 0, 1)) }}
                 </div>
                 @endif
-
+                
                 <div class="flex-1">
-                    <h1 class="text-2xl font-bold text-gray-900">Apply ke: {{ $problem->title }}</h1>
-                    <p class="text-gray-600 mt-1">{{ $problem->institution->name }}</p>
-                    <div class="flex flex-wrap gap-2 mt-3">
+                    <h1 class="text-2xl font-bold text-gray-900 mb-2">{{ $problem->title }}</h1>
+                    <p class="text-gray-600 mb-3">{{ $problem->institution->name }}</p>
+                    <div class="flex flex-wrap gap-2">
                         <span class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-md">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                             </svg>
-                            {{ $problem->regency->name }}
-                        </span>
-                        <span class="inline-flex items-center px-3 py-1 bg-green-100 text-green-800 text-sm rounded-md">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            {{ $problem->duration_months }} bulan
+                            {{ $problem->regency->name ?? 'Lokasi' }}
                         </span>
                         <span class="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 text-sm rounded-md">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -165,12 +169,15 @@
                 <div class="form-container bg-white rounded-xl shadow-sm border border-gray-200 p-6" style="animation-delay: 0.1s;">
                     <h2 class="text-xl font-bold text-gray-900 mb-6">Form Aplikasi</h2>
 
-                    <form action="{{ route('student.applications.store', $problem->id) }}" 
+                    <form action="{{ route('student.applications.store') }}" 
                           method="POST" 
                           enctype="multipart/form-data"
                           x-data="applicationForm()"
                           @submit="submitForm">
                         @csrf
+
+                        {{-- hidden problem id --}}
+                        <input type="hidden" name="problem_id" value="{{ $problem->id }}">
 
                         <!-- motivation -->
                         <div class="mb-6">
@@ -179,91 +186,67 @@
                             </label>
                             <p class="text-sm text-gray-600 mb-3">Jelaskan mengapa Anda tertarik dengan proyek ini dan apa yang bisa Anda kontribusikan (minimal 100 karakter)</p>
                             <textarea id="motivation" 
-                                      name="motivation" 
-                                      rows="8"
+                                      name="motivation"
+                                      rows="6"
                                       x-model="motivation"
-                                      @input="updateCharCount('motivation')"
+                                      @input="updateCharCount"
                                       class="form-textarea w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                      placeholder="Contoh: Saya tertarik dengan proyek ini karena saya memiliki pengalaman dalam..."
                                       required>{{ old('motivation') }}</textarea>
                             <div class="flex justify-between items-center mt-2">
-                                <span class="text-xs text-gray-500">Minimal 100 karakter</span>
-                                <span class="char-counter text-sm font-medium" 
-                                      :class="{
-                                          'text-gray-600': motivationCount < 100,
-                                          'text-green-600': motivationCount >= 100 && motivationCount <= 1800,
-                                          'warning': motivationCount > 1800 && motivationCount <= 2000,
-                                          'danger': motivationCount > 2000
-                                      }"
-                                      x-text="motivationCount + ' / 2000'"></span>
+                                <p class="text-sm" 
+                                   :class="charCount < 100 ? 'text-red-600' : 'text-green-600'"
+                                   x-text="charCount + ' / min. 100 karakter'"></p>
+                                <p class="text-sm char-counter" 
+                                   :class="{
+                                       'danger': charCount > 1800,
+                                       'warning': charCount > 1500 && charCount <= 1800,
+                                       'text-gray-500': charCount <= 1500
+                                   }"
+                                   x-text="'Maksimal: ' + charCount + ' / 2000'"></p>
                             </div>
                             @error('motivation')
                             <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
 
-                        <!-- cover letter (optional) -->
-                        <div class="mb-6">
-                            <label for="cover_letter" class="block text-sm font-semibold text-gray-900 mb-2">
-                                Cover Letter <span class="text-gray-400">(Opsional)</span>
-                            </label>
-                            <p class="text-sm text-gray-600 mb-3">Ceritakan tentang pengalaman, skill, atau pencapaian relevan Anda</p>
-                            <textarea id="cover_letter" 
-                                      name="cover_letter" 
-                                      rows="6"
-                                      x-model="coverLetter"
-                                      @input="updateCharCount('coverLetter')"
-                                      class="form-textarea w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">{{ old('cover_letter') }}</textarea>
-                            <div class="flex justify-end mt-2">
-                                <span class="char-counter text-sm font-medium" 
-                                      :class="{
-                                          'text-gray-600': coverLetterCount <= 1800,
-                                          'warning': coverLetterCount > 1800 && coverLetterCount <= 2000,
-                                          'danger': coverLetterCount > 2000
-                                      }"
-                                      x-text="coverLetterCount + ' / 2000'"></span>
-                            </div>
-                            @error('cover_letter')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-
                         <!-- proposal upload (optional) -->
-                        <div class="mb-8">
+                        <div class="mb-6">
                             <label for="proposal" class="block text-sm font-semibold text-gray-900 mb-2">
-                                Upload Proposal <span class="text-gray-400">(Opsional)</span>
+                                Upload Proposal <span class="text-gray-500 font-normal">(Opsional)</span>
                             </label>
                             <p class="text-sm text-gray-600 mb-3">Format: PDF, DOC, DOCX. Maksimal 5MB</p>
                             
-                            <div class="file-upload-area rounded-lg p-8 text-center cursor-pointer"
+                            <div class="file-upload-area rounded-lg p-6 text-center cursor-pointer"
+                                 @click="$refs.proposalInput.click()"
                                  @dragover.prevent="isDragging = true"
                                  @dragleave.prevent="isDragging = false"
-                                 @drop.prevent="handleFileDrop"
-                                 @click="$refs.fileInput.click()"
+                                 @drop.prevent="handleDrop"
                                  :class="{'dragging': isDragging}">
+                                
                                 <input type="file" 
-                                       name="proposal" 
+                                       x-ref="proposalInput"
+                                       name="proposal"
                                        id="proposal"
                                        accept=".pdf,.doc,.docx"
-                                       class="hidden"
-                                       x-ref="fileInput"
-                                       @change="handleFileSelect">
+                                       @change="handleFileSelect"
+                                       class="hidden">
                                 
                                 <div x-show="!fileName">
                                     <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                                     </svg>
-                                    <p class="mt-2 text-sm text-gray-600">Klik atau drag file ke sini</p>
-                                    <p class="mt-1 text-xs text-gray-500">PDF, DOC, DOCX (Max 5MB)</p>
+                                    <p class="mt-2 text-sm text-gray-600">
+                                        <span class="font-semibold text-blue-600">Klik untuk upload</span> atau drag and drop
+                                    </p>
+                                    <p class="mt-1 text-xs text-gray-500">PDF, DOC, DOCX (Max. 5MB)</p>
                                 </div>
-
+                                
                                 <div x-show="fileName" class="flex items-center justify-center">
                                     <svg class="h-8 w-8 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                     </svg>
-                                    <div class="text-left">
-                                        <p class="text-sm font-medium text-gray-900" x-text="fileName"></p>
-                                        <p class="text-xs text-gray-500" x-text="fileSize"></p>
-                                    </div>
+                                    <span x-text="fileName" class="text-sm text-gray-700"></span>
                                     <button type="button" 
                                             @click.stop="clearFile"
                                             class="ml-4 text-red-600 hover:text-red-800">
@@ -285,7 +268,7 @@
                                     :disabled="submitting"
                                     x-text="submitting ? 'Mengirim...' : 'Kirim Aplikasi'">
                             </button>
-                            <a href="{{ route('student.problems.show', $problem->id) }}" 
+                            <a href="{{ route('student.browse-problems.show', $problem->id) }}" 
                                class="flex-1 px-6 py-3 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 text-center transition-colors">
                                 Batal
                             </a>
@@ -294,171 +277,144 @@
                         <p class="mt-4 text-sm text-gray-500 text-center">
                             Dengan mengirim aplikasi, Anda menyetujui bahwa informasi yang diberikan adalah benar dan dapat dipertanggungjawabkan.
                         </p>
+
                     </form>
                 </div>
             </div>
 
-            <!-- sidebar tips -->
-            <div class="lg:col-span-1">
-                <div class="form-container sticky top-8 space-y-6" style="animation-delay: 0.2s;">
-                    <div class="bg-blue-50 rounded-xl border border-blue-200 p-6">
-                        <h3 class="text-lg font-bold text-blue-900 mb-4 flex items-center">
-                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
-                            </svg>
-                            Tips Aplikasi
-                        </h3>
+            <!-- sidebar info -->
+            <div class="lg:col-span-1 space-y-6">
+                <!-- tips -->
+                <div class="form-container bg-gradient-to-br from-blue-50 to-green-50 rounded-xl shadow-sm border border-blue-100 p-6" style="animation-delay: 0.2s;">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">💡 Tips Sukses</h3>
+                    <div class="space-y-3">
+                        <div class="tips-card p-3 bg-white rounded-lg border border-blue-100">
+                            <p class="text-sm text-blue-900 font-medium mb-1">🎯 Spesifik</p>
+                            <p class="text-xs text-blue-700">Jelaskan pengalaman atau skill yang relevan dengan proyek</p>
+                        </div>
                         
-                        <div class="space-y-3">
-                            <div class="tips-card p-3 bg-white rounded-lg border border-blue-100">
-                                <p class="text-sm text-blue-900 font-medium mb-1">📝 Jelas & Spesifik</p>
-                                <p class="text-xs text-blue-700">Jelaskan secara detail mengapa Anda cocok untuk proyek ini</p>
-                            </div>
-                            
-                            <div class="tips-card p-3 bg-white rounded-lg border border-blue-100">
-                                <p class="text-sm text-blue-900 font-medium mb-1">🎯 Relevan</p>
-                                <p class="text-xs text-blue-700">Hubungkan pengalaman dan skill Anda dengan kebutuhan proyek</p>
-                            </div>
-                            
-                            <div class="tips-card p-3 bg-white rounded-lg border border-blue-100">
-                                <p class="text-sm text-blue-900 font-medium mb-1">💡 Inovatif</p>
-                                <p class="text-xs text-blue-700">Tunjukkan ide atau perspektif unik yang bisa Anda bawa</p>
-                            </div>
-                            
-                            <div class="tips-card p-3 bg-white rounded-lg border border-blue-100">
-                                <p class="text-sm text-blue-900 font-medium mb-1">📄 Proposal (Opsional)</p>
-                                <p class="text-xs text-blue-700">Lampirkan proposal untuk meningkatkan peluang diterima</p>
-                            </div>
+                        <div class="tips-card p-3 bg-white rounded-lg border border-blue-100">
+                            <p class="text-sm text-blue-900 font-medium mb-1">🎨 Relevan</p>
+                            <p class="text-xs text-blue-700">Hubungkan pengalaman dan skill Anda dengan kebutuhan proyek</p>
+                        </div>
+                        
+                        <div class="tips-card p-3 bg-white rounded-lg border border-blue-100">
+                            <p class="text-sm text-blue-900 font-medium mb-1">💡 Inovatif</p>
+                            <p class="text-xs text-blue-700">Tunjukkan ide atau perspektif unik yang bisa Anda bawa</p>
+                        </div>
+                        
+                        <div class="tips-card p-3 bg-white rounded-lg border border-blue-100">
+                            <p class="text-sm text-blue-900 font-medium mb-1">📄 Proposal (Opsional)</p>
+                            <p class="text-xs text-blue-700">Lampirkan proposal untuk meningkatkan peluang diterima</p>
                         </div>
                     </div>
+                </div>
 
-                    <!-- project info -->
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                        <h3 class="text-lg font-bold text-gray-900 mb-4">Info Proyek</h3>
-                        <dl class="space-y-3">
-                            <div>
-                                <dt class="text-sm text-gray-600">Mahasiswa Dibutuhkan</dt>
-                                <dd class="text-sm font-semibold text-gray-900 mt-1">{{ $problem->required_students }} orang</dd>
-                            </div>
-                            <div>
-                                <dt class="text-sm text-gray-600">Sudah Melamar</dt>
-                                <dd class="text-sm font-semibold text-gray-900 mt-1">{{ $problem->applications_count }} aplikasi</dd>
-                            </div>
-                            <div>
-                                <dt class="text-sm text-gray-600">Periode</dt>
-                                <dd class="text-sm font-semibold text-gray-900 mt-1">
-                                    {{ $problem->start_date->format('M Y') }} - {{ $problem->end_date->format('M Y') }}
-                                </dd>
-                            </div>
-                            <div>
-                                <dt class="text-sm text-gray-600">Deadline</dt>
-                                <dd class="text-sm font-semibold text-red-600 mt-1">
-                                    {{ $problem->application_deadline->format('d M Y') }}
+                <!-- project info -->
+                <div class="form-container bg-white rounded-xl shadow-sm border border-gray-200 p-6" style="animation-delay: 0.3s;">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Info Proyek</h3>
+                    <dl class="space-y-3">
+                        <div>
+                            <dt class="text-sm text-gray-600">Mahasiswa Dibutuhkan</dt>
+                            <dd class="text-sm font-semibold text-gray-900 mt-1">{{ $problem->required_students }} Orang</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm text-gray-600">Sudah Melamar</dt>
+                            <dd class="text-sm font-semibold text-gray-900 mt-1">{{ $problem->applications_count }} Aplikasi</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm text-gray-600">Periode</dt>
+                            <dd class="text-sm font-semibold text-gray-900 mt-1">
+                                {{ $problem->start_date->format('M Y') }} - {{ $problem->end_date->format('M Y') }}
+                            </dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm text-gray-600">Deadline</dt>
+                            <dd class="text-sm font-semibold text-red-600 mt-1">
+                                {{ $problem->application_deadline->format('d M Y') }}
+                                <span class="text-xs text-gray-500">
                                     ({{ $problem->application_deadline->diffForHumans() }})
-                                </dd>
-                            </div>
-                        </dl>
-                    </div>
+                                </span>
+                            </dd>
+                        </div>
+                    </dl>
                 </div>
             </div>
         </div>
+
     </div>
 </div>
-@endsection
 
 @push('scripts')
 <script>
-// alpine.js component untuk application form
 function applicationForm() {
     return {
         motivation: '',
-        coverLetter: '',
-        motivationCount: 0,
-        coverLetterCount: 0,
+        charCount: 0,
         fileName: '',
-        fileSize: '',
         isDragging: false,
         submitting: false,
         
         init() {
-            // hitung karakter awal jika ada old input
-            this.updateCharCount('motivation');
-            this.updateCharCount('coverLetter');
+            this.updateCharCount();
         },
         
-        updateCharCount(field) {
-            if (field === 'motivation') {
-                this.motivationCount = this.motivation.length;
-            } else if (field === 'coverLetter') {
-                this.coverLetterCount = this.coverLetter.length;
-            }
+        updateCharCount() {
+            this.charCount = this.motivation.length;
         },
         
         handleFileSelect(event) {
             const file = event.target.files[0];
             if (file) {
-                this.setFileInfo(file);
+                this.fileName = file.name;
+                this.validateFile(file);
             }
         },
         
-        handleFileDrop(event) {
+        handleDrop(event) {
             this.isDragging = false;
             const file = event.dataTransfer.files[0];
             if (file) {
-                // validasi tipe file
-                const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-                if (!validTypes.includes(file.type)) {
-                    alert('Format file tidak valid. Gunakan PDF, DOC, atau DOCX');
-                    return;
-                }
-                
-                // validasi ukuran (5MB)
-                if (file.size > 5 * 1024 * 1024) {
-                    alert('Ukuran file terlalu besar. Maksimal 5MB');
-                    return;
-                }
-                
-                this.$refs.fileInput.files = event.dataTransfer.files;
-                this.setFileInfo(file);
+                this.$refs.proposalInput.files = event.dataTransfer.files;
+                this.fileName = file.name;
+                this.validateFile(file);
             }
         },
         
-        setFileInfo(file) {
-            this.fileName = file.name;
-            this.fileSize = this.formatFileSize(file.size);
-        },
-        
-        clearFile() {
-            this.$refs.fileInput.value = '';
-            this.fileName = '';
-            this.fileSize = '';
-        },
-        
-        formatFileSize(bytes) {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-        },
-        
-        submitForm(event) {
-            // validasi motivasi
-            if (this.motivationCount < 100) {
-                alert('Motivasi minimal 100 karakter');
-                event.preventDefault();
+        validateFile(file) {
+            const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+            const maxSize = 5 * 1024 * 1024; // 5MB
+            
+            if (!validTypes.includes(file.type)) {
+                alert('Format file tidak valid. Hanya PDF, DOC, dan DOCX yang diperbolehkan.');
+                this.clearFile();
                 return;
             }
             
-            if (this.motivationCount > 2000) {
-                alert('Motivasi maksimal 2000 karakter');
+            if (file.size > maxSize) {
+                alert('Ukuran file terlalu besar. Maksimal 5MB.');
+                this.clearFile();
+                return;
+            }
+        },
+        
+        clearFile() {
+            this.fileName = '';
+            this.$refs.proposalInput.value = '';
+        },
+        
+        submitForm(event) {
+            // validasi minimal karakter motivasi
+            if (this.charCount < 100) {
                 event.preventDefault();
+                alert('Motivasi minimal 100 karakter. Saat ini: ' + this.charCount + ' karakter.');
                 return;
             }
             
             this.submitting = true;
         }
-    };
+    }
 }
 </script>
 @endpush
+@endsection

@@ -5,10 +5,11 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\Application;
 use App\Models\Problem;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 /**
  * controller untuk mengelola aplikasi mahasiswa ke problems
@@ -18,6 +19,13 @@ use Illuminate\Support\Facades\Storage;
  */
 class ApplicationController extends Controller
 {
+    protected $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+
     /**
      * tampilkan daftar semua aplikasi mahasiswa
      */
@@ -62,7 +70,7 @@ class ApplicationController extends Controller
                 ->with('error', 'Maaf, proyek ini sudah tidak menerima aplikasi');
         }
         
-        // FIX: validasi deadline belum lewat - gunakan application_deadline
+        // validasi deadline belum lewat
         if ($problem->application_deadline < now()) {
             return redirect()
                 ->route('student.browse-problems.show', $problem->id)
@@ -91,20 +99,21 @@ class ApplicationController extends Controller
     {
         $student = Auth::user()->student;
         
+        // validasi input
         $validated = $request->validate([
             'problem_id' => 'required|exists:problems,id',
             'motivation' => 'required|string|min:100',
-            'relevant_experience' => 'nullable|string',
-            'proposal' => 'required|file|mimes:pdf|max:5120', // max 5MB
+            'proposal' => 'nullable|file|mimes:pdf,doc,docx|max:5120', // proposal opsional, max 5MB
         ], [
+            'motivation.required' => 'Motivasi wajib diisi',
             'motivation.min' => 'Motivasi minimal 100 karakter',
-            'proposal.required' => 'Proposal wajib diunggah',
-            'proposal.mimes' => 'Proposal harus berformat PDF',
+            'proposal.mimes' => 'Proposal harus berformat PDF, DOC, atau DOCX',
             'proposal.max' => 'Ukuran proposal maksimal 5MB',
         ]);
         
         $problem = Problem::findOrFail($validated['problem_id']);
         
+        // validasi problem masih open dan deadline belum lewat
         if ($problem->status !== 'open' || $problem->application_deadline < now()) {
             return back()->with('error', 'Proyek sudah tidak menerima aplikasi');
         }
@@ -121,24 +130,34 @@ class ApplicationController extends Controller
         try {
             DB::beginTransaction();
             
-            // upload proposal
-            $proposalPath = $request->file('proposal')->store('proposals', 'public');
+            $proposalPath = null;
+            
+            // upload proposal jika ada
+            if ($request->hasFile('proposal')) {
+                $proposalPath = $request->file('proposal')->store('proposals', 'public');
+            }
             
             // simpan aplikasi
             $application = Application::create([
                 'student_id' => $student->id,
                 'problem_id' => $problem->id,
                 'motivation' => $validated['motivation'],
-                'relevant_experience' => $validated['relevant_experience'] ?? null,
                 'proposal_path' => $proposalPath,
                 'status' => 'pending',
                 'applied_at' => now(),
             ]);
             
-            // increment counter di problem
+            // increment counter aplikasi di problem
             $problem->increment('applications_count');
             
-            // TODO: kirim notifikasi ke instansi
+            // kirim notifikasi ke instansi
+            try {
+                $this->notificationService->applicationSubmitted($application);
+                Log::info("Notifikasi aplikasi berhasil dikirim ke instansi ID: {$problem->institution_id}");
+            } catch (\Exception $e) {
+                Log::error("Gagal mengirim notifikasi aplikasi: " . $e->getMessage());
+                // jangan batalkan transaksi hanya karena notifikasi gagal
+            }
             
             DB::commit();
             
@@ -149,9 +168,11 @@ class ApplicationController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             
+            Log::error("Error saat menyimpan aplikasi: " . $e->getMessage());
+            
             // hapus file proposal jika ada error
-            if (isset($proposalPath)) {
-                Storage::disk('public')->delete($proposalPath);
+            if (isset($proposalPath) && $proposalPath) {
+                \Storage::disk('public')->delete($proposalPath);
             }
             
             return back()
@@ -202,10 +223,10 @@ class ApplicationController extends Controller
             
             // hapus file proposal jika ada
             if ($application->proposal_path) {
-                Storage::disk('public')->delete($application->proposal_path);
+                \Storage::disk('public')->delete($application->proposal_path);
             }
             
-            // decrement counter di problem
+            // decrement counter aplikasi di problem
             $application->problem->decrement('applications_count');
             
             // hapus aplikasi
@@ -219,6 +240,8 @@ class ApplicationController extends Controller
             
         } catch (\Exception $e) {
             DB::rollBack();
+            
+            Log::error("Error saat membatalkan aplikasi: " . $e->getMessage());
             
             return back()->with('error', 'Terjadi kesalahan saat membatalkan aplikasi.');
         }
