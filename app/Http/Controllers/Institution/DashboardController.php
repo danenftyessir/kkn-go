@@ -177,4 +177,16 @@ class DashboardController extends Controller
             'quickStats'
         ));
     }
+
+    /**
+     * hitung persentase pertumbuhan
+     */
+    private function calculateGrowth($current, $previous)
+    {
+        if ($previous == 0) {
+            return $current > 0 ? 100 : 0;
+        }
+        
+        return (($current - $previous) / $previous) * 100;
+    }
 }
