@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\Document;
 use App\Models\Province;
-use App\Models\Regency;
 use App\Models\Institution;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -80,14 +79,14 @@ class KnowledgeRepositoryController extends Controller
         $documents = $query->paginate(12);
 
         // featured documents
-        $featured_documents = Document::where('is_public', true)
+        $featuredDocuments = Document::where('is_public', true)
             ->where('status', 'approved')
             ->where('is_featured', true)
             ->orderBy('created_at', 'desc')
             ->limit(3)
             ->get();
 
-        // statistik
+        // statistik untuk dashboard repository
         $stats = [
             'total_documents' => Document::where('is_public', true)
                                         ->where('status', 'approved')
@@ -98,7 +97,7 @@ class KnowledgeRepositoryController extends Controller
             'total_views' => Document::where('is_public', true)
                                     ->where('status', 'approved')
                                     ->sum('view_count'),
-            'total_institutions' => Document::where('is_public', true)
+            'contributing_institutions' => Document::where('is_public', true)
                                            ->where('status', 'approved')
                                            ->distinct('institution_name')
                                            ->count('institution_name'),
@@ -106,15 +105,6 @@ class KnowledgeRepositoryController extends Controller
 
         // data untuk filters
         $provinces = Province::orderBy('name')->get();
-        
-        // load regencies jika ada province_id yang dipilih
-        $regencies = collect();
-        if ($request->filled('province_id')) {
-            $regencies = Regency::where('province_id', $request->province_id)
-                               ->orderBy('name')
-                               ->get();
-        }
-        
         $years = Document::where('is_public', true)
                         ->where('status', 'approved')
                         ->whereNotNull('year')
@@ -126,10 +116,9 @@ class KnowledgeRepositoryController extends Controller
 
         return view('student.repository.index', compact(
             'documents',
-            'featured_documents',
+            'featuredDocuments',
             'stats',
             'provinces',
-            'regencies',
             'years'
         ));
     }
@@ -157,36 +146,44 @@ class KnowledgeRepositoryController extends Controller
                     ? $document->categories
                     : json_decode($document->categories, true) ?? [];
 
-                if (!empty($categories)) {
-                    foreach ($categories as $category) {
-                        $query->orWhereJsonContains('categories', $category);
-                    }
+                foreach ($categories as $category) {
+                    $query->orWhereJsonContains('categories', $category);
                 }
             })
-            ->orderBy('download_count', 'desc')
-            ->limit(6)
+            ->limit(4)
             ->get();
 
         return view('student.repository.show', compact('document', 'relatedDocuments'));
     }
 
     /**
-     * download dokumen
+     * download dokumen dari supabase (redirect ke public URL)
      */
     public function download($id)
     {
-        $document = Document::where('is_public', true)
-            ->where('status', 'approved')
-            ->findOrFail($id);
+        try {
+            $document = Document::findOrFail($id);
 
-        // increment download count
-        $document->increment('download_count');
+            // cek akses
+            if (!$document->is_public || $document->status !== 'approved') {
+                return back()->with('error', 'Anda tidak memiliki akses ke dokumen ini');
+            }
 
-        // return download response
-        if (Storage::disk('public')->exists($document->file_path)) {
-            return Storage::disk('public')->download($document->file_path, $document->title . '.' . $document->file_type);
+            // increment download count
+            $document->increment('download_count');
+
+            // redirect ke supabase public URL
+            $publicUrl = document_url($document->file_path);
+            
+            return redirect($publicUrl);
+
+        } catch (\Exception $e) {
+            \Log::error('Document download error', [
+                'document_id' => $id,
+                'error_message' => $e->getMessage(),
+            ]);
+
+            return back()->with('error', 'Terjadi kesalahan saat mengunduh file.');
         }
-
-        abort(404, 'File tidak ditemukan');
     }
 }
