@@ -67,6 +67,7 @@ class ProfileController extends Controller
             
             return view('student.profile.public', $portfolioData);
         } catch (\Exception $e) {
+            Log::error("Error loading public profile for username {$username}: " . $e->getMessage());
             abort(404, 'Profil tidak ditemukan');
         }
     }

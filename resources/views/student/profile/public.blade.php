@@ -158,7 +158,7 @@
             <div class="lg:col-span-1">
                 
                 {{-- skills section --}}
-                @if($skills && count($skills) > 0)
+                @if(isset($skills) && is_array($skills) && count($skills) > 0)
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6 profile-container" style="animation-delay: 0.2s;">
                     <h3 class="text-lg font-bold text-gray-900 mb-4">skills & keahlian</h3>
                     <div class="flex flex-wrap gap-2">
@@ -207,7 +207,7 @@
                 <div class="profile-container" style="animation-delay: 0.4s;">
                     <h2 class="text-2xl font-bold text-gray-900 mb-6">proyek yang telah diselesaikan</h2>
 
-                    @if($completed_projects->isEmpty())
+                    @if(!isset($completed_projects) || $completed_projects->isEmpty())
                         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
                             <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>

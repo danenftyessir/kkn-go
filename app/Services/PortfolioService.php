@@ -138,7 +138,16 @@ class PortfolioService
         
         foreach ($completedProjects as $project) {
             if ($project->problem && $project->problem->sdg_categories) {
-                $sdgs = array_merge($sdgs, $project->problem->sdg_categories);
+                $categories = $project->problem->sdg_categories;
+                
+                // pastikan dalam bentuk array
+                if (is_string($categories)) {
+                    $categories = json_decode($categories, true) ?? [];
+                }
+                
+                if (is_array($categories)) {
+                    $sdgs = array_merge($sdgs, $categories);
+                }
             }
         }
         
@@ -154,7 +163,16 @@ class PortfolioService
         
         foreach ($completedProjects as $project) {
             if ($project->problem && $project->problem->required_skills) {
-                $skills = array_merge($skills, $project->problem->required_skills);
+                $requiredSkills = $project->problem->required_skills;
+                
+                // pastikan dalam bentuk array
+                if (is_string($requiredSkills)) {
+                    $requiredSkills = json_decode($requiredSkills, true) ?? [];
+                }
+                
+                if (is_array($requiredSkills)) {
+                    $skills = array_merge($skills, $requiredSkills);
+                }
             }
         }
         
