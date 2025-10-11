@@ -1,231 +1,241 @@
 @extends('layouts.app')
 
-@section('title', 'Detail Review')
+@section('title', 'Detail Review - ' . config('app.name'))
 
 @section('content')
-<div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 py-8">
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-8">
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {{-- breadcrumb --}}
-        <nav class="mb-6">
-            <ol class="flex items-center gap-2 text-sm">
-                <li><a href="{{ route('institution.dashboard') }}" class="text-gray-500 hover:text-gray-700 transition-colors duration-200">Dashboard</a></li>
-                <li class="text-gray-400">/</li>
-                <li><a href="{{ route('institution.reviews.index') }}" class="text-gray-500 hover:text-gray-700 transition-colors duration-200">Review</a></li>
-                <li class="text-gray-400">/</li>
-                <li class="text-gray-900 font-medium">Detail</li>
-            </ol>
+        <nav class="mb-8 flex items-center gap-2 text-sm text-gray-600">
+            <a href="{{ route('institution.dashboard.index') }}" class="hover:text-blue-600 transition-colors">Dashboard</a>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+            <a href="{{ route('institution.reviews.index') }}" class="hover:text-blue-600 transition-colors">Reviews</a>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+            <span class="text-gray-900 font-medium">Detail Review</span>
         </nav>
 
         {{-- header section --}}
         <div class="bg-white rounded-xl shadow-sm p-8 mb-6 border border-gray-100">
-            <div class="flex items-start justify-between mb-6">
-                <div class="flex items-start gap-6">
-                    {{-- student avatar --}}
-                    <img src="{{ $review->student->user->profile_picture ? asset('storage/' . $review->student->user->profile_picture) : 'https://ui-avatars.com/api/?name=' . urlencode($review->student->user->name) }}" 
-                         alt="{{ $review->student->user->name }}"
-                         class="w-24 h-24 rounded-full object-cover border-4 border-gray-200 shadow-md">
-                    
-                    <div>
-                        <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ $review->student->user->name }}</h1>
-                        <div class="space-y-2 text-gray-600">
-                            <div class="flex items-center gap-2">
-                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                                </svg>
-                                <span>{{ $review->student->university->name }}</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                                </svg>
-                                <span>{{ $review->student->major }}</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                </svg>
-                                <span>Direview {{ $review->created_at->diffForHumans() }}</span>
+            @if($review->reviewee && $review->reviewee->student)
+                <div class="flex items-start justify-between mb-6">
+                    <div class="flex items-start gap-6">
+                        {{-- student avatar --}}
+                        <img src="{{ $review->reviewee->profile_picture ? asset('storage/' . $review->reviewee->profile_picture) : 'https://ui-avatars.com/api/?name=' . urlencode($review->reviewee->name) }}" 
+                             alt="{{ $review->reviewee->name }}"
+                             class="w-24 h-24 rounded-full object-cover border-4 border-gray-200 shadow-md">
+                        
+                        <div>
+                            <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ $review->reviewee->name }}</h1>
+                            <div class="space-y-2 text-gray-600">
+                                <div class="flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                                    </svg>
+                                    <span>{{ $review->reviewee->student->university->name }}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                    </svg>
+                                    <span>{{ $review->reviewee->student->major }}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                    <span>Direview {{ $review->created_at->diffForHumans() }}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                {{-- action buttons --}}
-                <div class="flex items-center gap-2">
-                    @if($review->created_at->addDays(30)->isFuture())
-                        <a href="{{ route('institution.reviews.edit', $review->id) }}" 
-                           class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                            </svg>
-                            Edit Review
-                        </a>
-                    @endif
-                    
-                    @if($review->created_at->addDays(7)->isFuture())
-                        <form action="{{ route('institution.reviews.destroy', $review->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus review ini?')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200 flex items-center gap-2">
+                    {{-- action buttons --}}
+                    <div class="flex items-center gap-2">
+                        @if($review->created_at->addDays(30)->isFuture())
+                            <a href="{{ route('institution.reviews.edit', $review->id) }}" 
+                               class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center gap-2">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                 </svg>
-                                Hapus
-                            </button>
-                        </form>
-                    @endif
-                </div>
-            </div>
-
-            {{-- edit/delete notice --}}
-            <div class="flex gap-3">
-                @if($review->created_at->addDays(30)->isFuture())
-                    <div class="flex-1 bg-blue-50 border border-blue-200 rounded-lg p-3">
-                        <p class="text-sm text-blue-700">
-                            <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                Edit Review
+                            </a>
+                        @endif
+                        
+                        <a href="{{ route('institution.reviews.index') }}" 
+                           class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all duration-200 flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
                             </svg>
-                            Review dapat diedit hingga {{ $review->created_at->addDays(30)->format('d M Y') }}
-                        </p>
+                            Kembali
+                        </a>
                     </div>
-                @endif
-                
-                @if($review->created_at->addDays(7)->isFuture())
-                    <div class="flex-1 bg-amber-50 border border-amber-200 rounded-lg p-3">
-                        <p class="text-sm text-amber-700">
-                            <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                            </svg>
-                            Review dapat dihapus hingga {{ $review->created_at->addDays(7)->format('d M Y') }}
-                        </p>
+                </div>
+            @else
+                {{-- fallback jika data reviewee atau student tidak ada --}}
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-6">
+                    <div class="flex items-start gap-3">
+                        <svg class="w-6 h-6 text-yellow-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                        </svg>
+                        <div>
+                            <h3 class="font-semibold text-yellow-800 mb-1">Data Mahasiswa Tidak Tersedia</h3>
+                            <p class="text-sm text-yellow-700">Informasi mahasiswa untuk review ini tidak dapat ditemukan. Mungkin akun mahasiswa telah dihapus.</p>
+                        </div>
                     </div>
-                @endif
-            </div>
-        </div>
+                </div>
+            @endif
 
-        {{-- project info --}}
-        <div class="bg-white rounded-xl shadow-sm p-6 mb-6 border border-gray-100">
-            <h2 class="text-xl font-bold text-gray-900 mb-4">Informasi Proyek</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <p class="text-sm text-gray-600 mb-1">Judul Proyek</p>
-                    <p class="font-semibold text-gray-900">{{ $review->project->problem->title }}</p>
-                </div>
-                <div>
-                    <p class="text-sm text-gray-600 mb-1">Periode Proyek</p>
-                    <p class="font-semibold text-gray-900">{{ $review->project->start_date->format('d M Y') }} - {{ $review->project->end_date->format('d M Y') }}</p>
-                </div>
-                <div>
-                    <p class="text-sm text-gray-600 mb-1">Status Proyek</p>
-                    <span class="inline-flex px-3 py-1 text-xs font-semibold rounded-full 
-                        {{ $review->project->status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800' }}">
-                        {{ ucfirst($review->project->status) }}
-                    </span>
-                </div>
-                <div>
-                    <p class="text-sm text-gray-600 mb-1">Lokasi</p>
-                    <p class="font-semibold text-gray-900">{{ $review->project->problem->location }}</p>
+            {{-- project info --}}
+            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <h3 class="text-sm font-semibold text-gray-700 mb-2">Informasi Proyek</h3>
+                <div class="space-y-1 text-sm text-gray-600">
+                    <p><span class="font-medium text-gray-700">Proyek:</span> {{ $review->project->problem->title }}</p>
+                    <p><span class="font-medium text-gray-700">Tanggal Review:</span> {{ $review->created_at->format('d M Y H:i') }}</p>
                 </div>
             </div>
         </div>
 
         {{-- rating section --}}
-        <div class="bg-gradient-to-r from-blue-500 to-green-500 rounded-xl shadow-lg p-8 mb-6 text-white">
-            <div class="text-center">
-                <p class="text-lg font-medium mb-3 text-blue-100">Rating Keseluruhan</p>
-                <div class="flex items-center justify-center gap-3 mb-4">
-                    <span class="text-6xl font-bold">{{ $review->rating }}</span>
-                    <span class="text-3xl text-blue-100">/5</span>
-                </div>
-                <div class="flex justify-center gap-2">
-                    @for($i = 1; $i <= 5; $i++)
-                        <svg class="w-10 h-10 {{ $i <= $review->rating ? 'text-yellow-300 fill-current' : 'text-blue-200 fill-current' }}" viewBox="0 0 20 20">
-                            <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
-                        </svg>
-                    @endfor
-                </div>
-            </div>
-        </div>
-
-        {{-- review content --}}
         <div class="bg-white rounded-xl shadow-sm p-8 mb-6 border border-gray-100">
-            <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
-                </svg>
-                Review
-            </h2>
-            <p class="text-gray-700 leading-relaxed text-lg whitespace-pre-line">{{ $review->review }}</p>
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Rating & Penilaian</h2>
+            
+            {{-- overall rating --}}
+            <div class="flex items-center gap-4 mb-8 pb-8 border-b border-gray-200">
+                <div class="text-center">
+                    <div class="text-5xl font-bold text-blue-600 mb-2">{{ number_format($review->rating, 1) }}</div>
+                    <div class="flex text-yellow-400 justify-center mb-1">
+                        @for($i = 1; $i <= 5; $i++)
+                            <svg class="w-6 h-6 {{ $i <= $review->rating ? 'fill-current' : 'fill-gray-300' }}" viewBox="0 0 24 24">
+                                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                            </svg>
+                        @endfor
+                    </div>
+                    <p class="text-sm text-gray-600">Rating Keseluruhan</p>
+                </div>
+
+                {{-- detailed ratings --}}
+                <div class="flex-1 space-y-3">
+                    @if($review->professionalism_rating)
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm font-medium text-gray-700 w-32">Profesionalisme</span>
+                        <div class="flex-1 bg-gray-200 rounded-full h-2">
+                            <div class="bg-blue-600 h-2 rounded-full" style="width: {{ ($review->professionalism_rating / 5) * 100 }}%"></div>
+                        </div>
+                        <span class="text-sm font-semibold text-gray-900 w-8">{{ $review->professionalism_rating }}</span>
+                    </div>
+                    @endif
+
+                    @if($review->communication_rating)
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm font-medium text-gray-700 w-32">Komunikasi</span>
+                        <div class="flex-1 bg-gray-200 rounded-full h-2">
+                            <div class="bg-blue-600 h-2 rounded-full" style="width: {{ ($review->communication_rating / 5) * 100 }}%"></div>
+                        </div>
+                        <span class="text-sm font-semibold text-gray-900 w-8">{{ $review->communication_rating }}</span>
+                    </div>
+                    @endif
+
+                    @if($review->quality_rating)
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm font-medium text-gray-700 w-32">Kualitas Kerja</span>
+                        <div class="flex-1 bg-gray-200 rounded-full h-2">
+                            <div class="bg-blue-600 h-2 rounded-full" style="width: {{ ($review->quality_rating / 5) * 100 }}%"></div>
+                        </div>
+                        <span class="text-sm font-semibold text-gray-900 w-8">{{ $review->quality_rating }}</span>
+                    </div>
+                    @endif
+
+                    @if($review->timeliness_rating)
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm font-medium text-gray-700 w-32">Ketepatan Waktu</span>
+                        <div class="flex-1 bg-gray-200 rounded-full h-2">
+                            <div class="bg-blue-600 h-2 rounded-full" style="width: {{ ($review->timeliness_rating / 5) * 100 }}%"></div>
+                        </div>
+                        <span class="text-sm font-semibold text-gray-900 w-8">{{ $review->timeliness_rating }}</span>
+                    </div>
+                    @endif
+                </div>
+            </div>
+
+            {{-- review text --}}
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-3">Ulasan</h3>
+                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <p class="text-gray-700 leading-relaxed">{{ $review->review_text }}</p>
+                </div>
+            </div>
+
+            {{-- strengths --}}
+            @if($review->strengths)
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Kelebihan
+                </h3>
+                <div class="bg-green-50 rounded-lg p-4 border border-green-200">
+                    <p class="text-gray-700 leading-relaxed">{{ $review->strengths }}</p>
+                </div>
+            </div>
+            @endif
+
+            {{-- improvements --}}
+            @if($review->improvements)
+            <div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                    Area Pengembangan
+                </h3>
+                <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                    <p class="text-gray-700 leading-relaxed">{{ $review->improvements }}</p>
+                </div>
+            </div>
+            @endif
         </div>
 
-        {{-- strengths & improvements --}}
-        @if($review->strengths || $review->improvements)
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                @if($review->strengths)
-                    <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-green-500">
-                        <h3 class="text-lg font-bold text-green-700 mb-3 flex items-center gap-2">
-                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                            </svg>
-                            Kelebihan
-                        </h3>
-                        <p class="text-gray-700 leading-relaxed">{{ $review->strengths }}</p>
-                    </div>
-                @endif
-
-                @if($review->improvements)
-                    <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-blue-500">
-                        <h3 class="text-lg font-bold text-blue-700 mb-3 flex items-center gap-2">
-                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                            </svg>
-                            Saran Perbaikan
-                        </h3>
-                        <p class="text-gray-700 leading-relaxed">{{ $review->improvements }}</p>
-                    </div>
-                @endif
-            </div>
-        @endif
-
-        {{-- collaboration status --}}
-        <div class="bg-white rounded-xl shadow-sm p-6 mb-6 border border-gray-100">
-            <div class="flex items-center gap-4">
-                <div class="p-4 rounded-full {{ $review->would_collaborate_again ? 'bg-green-100' : 'bg-gray-100' }}">
-                    <svg class="w-8 h-8 {{ $review->would_collaborate_again ? 'text-green-600' : 'text-gray-400' }}" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"/>
-                    </svg>
-                </div>
+        {{-- metadata --}}
+        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">Informasi Review</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                 <div>
-                    <h3 class="text-lg font-bold text-gray-900 mb-1">Status Kolaborasi</h3>
-                    <p class="text-gray-600">
-                        @if($review->would_collaborate_again)
-                            <span class="text-green-600 font-semibold">Bersedia berkolaborasi lagi</span> dengan mahasiswa ini di proyek mendatang
+                    <p class="text-gray-600 mb-1">Status</p>
+                    <p class="font-semibold text-gray-900">
+                        @if($review->is_public)
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+                                    <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>
+                                </svg>
+                                Publik
+                            </span>
                         @else
-                            <span class="text-gray-600 font-semibold">Tidak ada preferensi</span> untuk kolaborasi mendatang
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clip-rule="evenodd"/>
+                                    <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z"/>
+                                </svg>
+                                Privat
+                            </span>
                         @endif
                     </p>
                 </div>
+                <div>
+                    <p class="text-gray-600 mb-1">Tanggal Dibuat</p>
+                    <p class="font-semibold text-gray-900">{{ $review->created_at->format('d M Y H:i') }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-600 mb-1">Terakhir Diupdate</p>
+                    <p class="font-semibold text-gray-900">{{ $review->updated_at->format('d M Y H:i') }}</p>
+                </div>
             </div>
-        </div>
-
-        {{-- back button --}}
-        <div class="flex justify-between items-center">
-            <a href="{{ route('institution.reviews.index') }}" 
-               class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all duration-200 flex items-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-                </svg>
-                Kembali ke Daftar Review
-            </a>
-
-            <a href="{{ route('institution.projects.show', $review->project->id) }}" 
-               class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center gap-2">
-                Lihat Proyek
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-                </svg>
-            </a>
         </div>
 
     </div>
