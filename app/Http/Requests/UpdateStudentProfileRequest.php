@@ -3,11 +3,12 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateStudentProfileRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * tentukan apakah user diizinkan untuk melakukan request ini
      */
     public function authorize(): bool
     {
@@ -16,16 +17,24 @@ class UpdateStudentProfileRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
+     * aturan validasi yang diterapkan pada request
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
+        $userId = auth()->id();
+        
         return [
             'first_name' => 'required|string|max:50',
             'last_name' => 'required|string|max:50',
-            'email' => 'required|email|max:255',
+            // ✅ PERBAIKAN: tambahkan validasi unique untuk email, tapi ignore email user sendiri
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')->ignore($userId),
+            ],
             'university_id' => 'required|exists:universities,id',
             'major' => 'required|string|max:100',
             'nim' => 'required|string|max:20',
@@ -41,7 +50,7 @@ class UpdateStudentProfileRequest extends FormRequest
     }
 
     /**
-     * Get the custom error messages for validator errors.
+     * pesan error kustom untuk validator
      *
      * @return array<string, string>
      */
@@ -54,6 +63,7 @@ class UpdateStudentProfileRequest extends FormRequest
             'last_name.max' => 'Nama belakang maksimal 50 karakter.',
             'email.required' => 'Email wajib diisi.',
             'email.email' => 'Format email tidak valid.',
+            'email.unique' => 'Email sudah digunakan oleh pengguna lain.',
             'university_id.required' => 'Universitas wajib dipilih.',
             'university_id.exists' => 'Universitas tidak valid.',
             'major.required' => 'Jurusan wajib diisi.',
@@ -80,10 +90,11 @@ class UpdateStudentProfileRequest extends FormRequest
     }
 
     /**
-     * Prepare the data for validation.
+     * persiapkan data sebelum validasi
      */
     protected function prepareForValidation(): void
     {
+        // normalize nomor whatsapp jika ada
         if ($this->whatsapp_number) {
             $this->merge([
                 'whatsapp_number' => $this->normalizePhoneNumber($this->whatsapp_number),
@@ -92,7 +103,7 @@ class UpdateStudentProfileRequest extends FormRequest
     }
 
     /**
-     * Normalize phone number to a consistent format.
+     * normalize nomor telepon ke format yang konsisten
      */
     private function normalizePhoneNumber(string $phone): string
     {
