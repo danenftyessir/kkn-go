@@ -18,45 +18,45 @@
                         {{-- menu untuk student --}}
                         <a href="{{ route('student.dashboard') }}" 
                            class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('student.dashboard') ? 'text-blue-600' : '' }}">
-                            dashboard
+                            Dashboard
                         </a>
                         <a href="{{ route('student.browse-problems.index') }}" 
                            class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('student.browse-problems.*') || request()->routeIs('student.problems.*') ? 'text-blue-600' : '' }}">
-                            browse
+                            Browse
                         </a>
                         <a href="{{ route('student.applications.index') }}" 
                            class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('student.applications.*') ? 'text-blue-600' : '' }}">
-                            applications
+                            Applications
                         </a>
                         <a href="{{ route('student.projects.index') }}" 
                            class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('student.projects.*') ? 'text-blue-600' : '' }}">
-                            projects
+                            Projects
                         </a>
                         <a href="{{ route('student.repository.index') }}" 
                            class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('student.repository.*') ? 'text-blue-600' : '' }}">
-                            repository
+                            Repository
                         </a>
                     @elseif(Auth::user()->isInstitution())
                         {{-- menu untuk institution --}}
                         <a href="{{ route('institution.dashboard') }}" 
                            class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('institution.dashboard') ? 'text-blue-600' : '' }}">
-                            dashboard
+                            Dashboard
                         </a>
                         <a href="{{ route('institution.problems.index') }}" 
                            class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('institution.problems.*') ? 'text-blue-600' : '' }}">
-                            problems
+                            Problems
                         </a>
                         <a href="{{ route('institution.applications.index') }}" 
                            class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('institution.applications.*') ? 'text-blue-600' : '' }}">
-                            applications
+                            Applications
                         </a>
                         <a href="{{ route('institution.projects.index') }}" 
                            class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('institution.projects.*') ? 'text-blue-600' : '' }}">
-                            projects
+                            Projects
                         </a>
                         <a href="{{ route('institution.reviews.index') }}" 
                            class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('institution.reviews.*') ? 'text-blue-600' : '' }}">
-                            reviews
+                            Reviews
                         </a>
                     @endif
 
@@ -136,14 +136,14 @@
                                         <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                                         </svg>
-                                        profil & portfolio
+                                        Profil & Portfolio
                                     </a>
                                     <a href="{{ route('student.wishlist.index') }}" 
                                        class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
                                         <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
                                         </svg>
-                                        wishlist
+                                        Wishlist
                                     </a>
                                 @elseif(Auth::user()->isInstitution())
                                     <a href="{{ route('institution.profile.index') }}" 
@@ -151,7 +151,7 @@
                                         <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                                         </svg>
-                                        profil instansi
+                                        Profil Instansi
                                     </a>
                                 @endif
                             </div>
@@ -165,7 +165,7 @@
                                         <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
                                         </svg>
-                                        logout
+                                        Logout
                                     </button>
                                 </form>
                             </div>
@@ -175,15 +175,15 @@
                     {{-- menu untuk guest --}}
                     <a href="{{ route('home') }}" 
                        class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">
-                        home
+                        Home
                     </a>
                     <a href="{{ route('login') }}" 
                        class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">
-                        login
+                        Login
                     </a>
                     <a href="{{ route('register') }}" 
                        class="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                        register
+                        Register
                     </a>
                 @endauth
             </div>
@@ -212,52 +212,52 @@
                 @if(Auth::user()->isStudent())
                     <a href="{{ route('student.dashboard') }}" 
                        class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
-                        dashboard
+                        Dashboard
                     </a>
                     <a href="{{ route('student.browse-problems.index') }}" 
                        class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
-                        browse
+                        Browse
                     </a>
                     <a href="{{ route('student.applications.index') }}" 
                        class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
-                        applications
+                        Applications
                     </a>
                     <a href="{{ route('student.projects.index') }}" 
                        class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
-                        projects
+                        Projects
                     </a>
                     <a href="{{ route('student.profile.index') }}" 
                        class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
-                        profil & portfolio
+                        Profil & Portfolio
                     </a>
                     <a href="{{ route('student.repository.index') }}" 
                        class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
-                        repository
+                        Repository
                     </a>
                     <a href="{{ route('student.wishlist.index') }}" 
                        class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
-                        wishlist
+                        Wishlist
                     </a>
                 @elseif(Auth::user()->isInstitution())
                     <a href="{{ route('institution.dashboard') }}" 
                        class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
-                        dashboard
+                        Dashboard
                     </a>
                     <a href="{{ route('institution.problems.index') }}" 
                        class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
-                        problems
+                        Problems
                     </a>
                     <a href="{{ route('institution.applications.index') }}" 
                        class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
-                        applications
+                        Applications
                     </a>
                     <a href="{{ route('institution.projects.index') }}" 
                        class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
-                        projects
+                        Projects
                     </a>
                     <a href="{{ route('institution.profile.index') }}" 
                        class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
-                        profil instansi
+                        Profil Instansi
                     </a>
                 @endif
                 
@@ -265,21 +265,21 @@
                     @csrf
                     <button type="submit" 
                             class="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-red-50">
-                        logout
+                        Logout
                     </button>
                 </form>
             @else
                 <a href="{{ route('home') }}" 
                    class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
-                    home
+                    Home
                 </a>
                 <a href="{{ route('login') }}" 
                    class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
-                    login
+                    Login
                 </a>
                 <a href="{{ route('register') }}" 
                    class="block px-3 py-2 rounded-md text-base font-medium bg-blue-600 text-white hover:bg-blue-700">
-                    register
+                    Register
                 </a>
             @endauth
         </div>
