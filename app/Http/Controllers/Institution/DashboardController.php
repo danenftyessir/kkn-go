@@ -46,27 +46,43 @@ class DashboardController extends Controller
                                       ->count(),
         ];
 
-        // statistik utama
+        // statistik utama dengan growth calculation
+        $currentMonth = Carbon::now()->month;
+        $lastMonth = Carbon::now()->subMonth()->month;
+        
         $stats = [
-            'total_problems' => Problem::where('institution_id', $institution->id)->count(),
-            'active_problems' => Problem::where('institution_id', $institution->id)
-                                       ->where('status', 'open')
-                                       ->count(),
-            'total_applications' => Application::whereHas('problem', function($q) use ($institution) {
-                                                  $q->where('institution_id', $institution->id);
-                                              })
-                                              ->count(),
-            'pending_applications' => Application::whereHas('problem', function($q) use ($institution) {
-                                                     $q->where('institution_id', $institution->id);
-                                                 })
-                                                 ->where('status', 'pending')
-                                                 ->count(),
-            'active_projects' => Project::where('institution_id', $institution->id)
+            'problems' => [
+                'total' => Problem::where('institution_id', $institution->id)->count(),
+                'active' => Problem::where('institution_id', $institution->id)->where('status', 'open')->count(),
+                'growth' => $this->calculateGrowth(
+                    Problem::where('institution_id', $institution->id)->whereMonth('created_at', $currentMonth)->count(),
+                    Problem::where('institution_id', $institution->id)->whereMonth('created_at', $lastMonth)->count()
+                ),
+            ],
+            'applications' => [
+                'total' => Application::whereHas('problem', function($q) use ($institution) {
+                              $q->where('institution_id', $institution->id);
+                          })->count(),
+                'pending' => Application::whereHas('problem', function($q) use ($institution) {
+                                $q->where('institution_id', $institution->id);
+                            })->where('status', 'pending')->count(),
+                'growth' => $this->calculateGrowth(
+                    Application::whereHas('problem', function($q) use ($institution) {
+                        $q->where('institution_id', $institution->id);
+                    })->whereMonth('created_at', $currentMonth)->count(),
+                    Application::whereHas('problem', function($q) use ($institution) {
+                        $q->where('institution_id', $institution->id);
+                    })->whereMonth('created_at', $lastMonth)->count()
+                ),
+            ],
+            'projects' => [
+                'total' => Project::where('institution_id', $institution->id)->count(),
+                'active' => Project::where('institution_id', $institution->id)->where('status', 'active')->count(),
+                'completed' => Project::where('institution_id', $institution->id)->where('status', 'completed')->count(),
+                'avg_progress' => Project::where('institution_id', $institution->id)
                                        ->where('status', 'active')
-                                       ->count(),
-            'completed_projects' => Project::where('institution_id', $institution->id)
-                                          ->where('status', 'completed')
-                                          ->count(),
+                                       ->avg('progress_percentage') ?? 0,
+            ],
         ];
 
         // recent problems
