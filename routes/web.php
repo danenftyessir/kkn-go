@@ -21,6 +21,7 @@ use App\Http\Controllers\Institution\ProjectManagementController;
 use App\Http\Controllers\Institution\ProfileController as InstitutionProfileController;
 use App\Http\Controllers\Institution\ReviewController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\AboutController;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,6 +40,9 @@ use App\Http\Controllers\NotificationController;
 
 // home page
 Route::get('/', [HomeController::class, 'index'])->name('home');
+
+// about us page
+Route::get('/about', [AboutController::class, 'index'])->name('about'); 
 
 // public student profile/portfolio (dapat diakses tanpa login)
 Route::get('/profile/{username}', [StudentProfileController::class, 'publicView'])->name('profile.public');
