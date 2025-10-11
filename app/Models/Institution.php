@@ -77,6 +77,14 @@ class Institution extends Model
     }
 
     /**
+     * relasi ke projects
+     */
+    public function projects()
+    {
+        return $this->hasMany(Project::class);
+    }
+
+    /**
      * get full address
      */
     public function getFullAddress(): string
@@ -113,12 +121,13 @@ class Institution extends Model
             return asset('storage/' . str_replace('public/', '', $this->logo_path));
         }
         
-        // default logo jika tidak ada
-        return asset('images/default-institution-logo.png');
+        // default logo dengan initial institusi
+        $initial = strtoupper(substr($this->name, 0, 1));
+        return 'https://ui-avatars.com/api/?name=' . urlencode($initial) . '&size=200&background=10B981&color=ffffff';
     }
 
     /**
-     * get logo URL sebagai accessor untuk compatibility
+     * accessor untuk logo_url
      */
     public function getLogoUrlAttribute(): string
     {
@@ -126,7 +135,39 @@ class Institution extends Model
     }
 
     /**
-     * get total masalah yang dipublikasikan
+     * get verification document URL
+     */
+    public function getVerificationDocumentUrl(): ?string
+    {
+        if ($this->verification_document_path) {
+            // cek apakah path sudah berupa URL lengkap
+            if (str_starts_with($this->verification_document_path, 'http')) {
+                return $this->verification_document_path;
+            }
+            
+            // cek apakah ini adalah path dari Supabase
+            if (!str_starts_with($this->verification_document_path, 'public/')) {
+                $storageService = app(\App\Services\SupabaseStorageService::class);
+                return $storageService->getPublicUrl($this->verification_document_path);
+            }
+            
+            // fallback ke local storage
+            return asset('storage/' . str_replace('public/', '', $this->verification_document_path));
+        }
+        
+        return null;
+    }
+
+    /**
+     * cek apakah institusi sudah diverifikasi
+     */
+    public function isVerified(): bool
+    {
+        return $this->is_verified === true;
+    }
+
+    /**
+     * get total problems count
      */
     public function getTotalProblemsAttribute()
     {
@@ -134,12 +175,26 @@ class Institution extends Model
     }
 
     /**
-     * get total masalah yang aktif
+     * get active problems count
      */
     public function getActiveProblemsAttribute()
     {
-        return $this->problems()
-            ->whereIn('status', ['open', 'in_progress'])
-            ->count();
+        return $this->problems()->where('status', 'open')->count();
+    }
+
+    /**
+     * get total projects count
+     */
+    public function getTotalProjectsAttribute()
+    {
+        return $this->projects()->count();
+    }
+
+    /**
+     * get completed projects count
+     */
+    public function getCompletedProjectsAttribute()
+    {
+        return $this->projects()->where('status', 'completed')->count();
     }
 }
