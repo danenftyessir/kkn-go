@@ -112,14 +112,10 @@ class DashboardController extends Controller
     {
         $fields = [
             'profile_photo' => $student->profile_photo_path ? 1 : 0,
-            'first_name' => $student->first_name ? 1 : 0,
-            'last_name' => $student->last_name ? 1 : 0,
-            'university' => $student->university_id ? 1 : 0,
-            'major' => $student->major ? 1 : 0,
-            'nim' => $student->nim ? 1 : 0,
-            'semester' => $student->semester ? 1 : 0,
-            'phone' => $student->phone ? 1 : 0,
             'bio' => $student->bio ? 1 : 0,
+            'skills' => $student->skills ? 1 : 0,
+            'whatsapp' => $student->whatsapp_number ? 1 : 0,
+            'semester' => $student->semester ? 1 : 0,
         ];
 
         $completed = array_sum($fields);
@@ -130,9 +126,6 @@ class DashboardController extends Controller
             'percentage' => round($percentage),
             'fields' => $fields,
             'is_complete' => $percentage == 100,
-            'missing_fields' => array_keys(array_filter($fields, function($value) {
-                return $value == 0;
-            })),
         ];
     }
 }
