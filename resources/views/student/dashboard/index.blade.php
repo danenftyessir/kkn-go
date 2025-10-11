@@ -13,6 +13,7 @@
         background-position: center;
         background-attachment: fixed;
         min-height: 450px;
+        margin-top: 64px;
     }
     
     .dashboard-hero-background::before {
@@ -75,7 +76,7 @@
         transform: translate3d(0, 0, 0);
         backface-visibility: hidden;
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                    box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                   box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .content-card:hover {
@@ -279,9 +280,19 @@
                                         {{ $application->status === 'under_review' ? 'bg-blue-100 text-blue-800' : '' }}
                                         {{ $application->status === 'accepted' ? 'bg-green-100 text-green-800' : '' }}
                                         {{ $application->status === 'rejected' ? 'bg-red-100 text-red-800' : '' }}">
-                                        {{ ucfirst(str_replace('_', ' ', $application->status)) }}
+                                        @if($application->status === 'pending')
+                                            Pending
+                                        @elseif($application->status === 'under_review')
+                                            Under Review
+                                        @elseif($application->status === 'accepted')
+                                            Accepted
+                                        @elseif($application->status === 'rejected')
+                                            Rejected
+                                        @else
+                                            {{ ucfirst($application->status) }}
+                                        @endif
                                     </span>
-                                    <span class="text-xs text-gray-500">{{ $application->applied_at->diffForHumans() }}</span>
+                                    <span class="text-xs text-gray-500">{{ $application->created_at->diffForHumans() }}</span>
                                 </div>
                             </div>
                             <a href="{{ route('student.applications.show', $application->id) }}" 
@@ -298,21 +309,19 @@
             </div>
 
             {{-- sidebar (1 column) --}}
-            <div class="space-y-6">
+            <div class="lg:col-span-1 space-y-6">
                 
                 {{-- profile completion alert --}}
                 @if($profileCompletion['percentage'] < 100)
-                <div class="bg-blue-600 rounded-xl shadow-sm border border-blue-500 p-6 fade-in-up content-card" style="animation-delay: 0.35s;">
-                    <div class="flex items-start mb-4">
-                        <div class="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
-                            </svg>
-                        </div>
-                        <div class="ml-4 flex-1">
-                            <h3 class="text-lg font-bold text-white mb-2">Lengkapi Profil Anda</h3>
-                            <p class="text-sm text-white opacity-90 leading-relaxed">
-                                Profil Anda {{ $profileCompletion['percentage'] }}% lengkap ({{ $profileCompletion['completed'] ?? 0 }}/{{ $profileCompletion['total'] ?? 9 }} field). Lengkapi profil untuk mendapat rekomendasi proyek yang lebih sesuai.
+                <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-sm p-6 text-white fade-in-up content-card" style="animation-delay: {{ $profileCompletion['percentage'] < 100 ? '0.4s' : '0.35s' }};">
+                    <div class="flex items-start gap-3 mb-3">
+                        <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <div>
+                            <h3 class="font-bold text-lg mb-1">Lengkapi Profil Anda</h3>
+                            <p class="text-sm opacity-90">
+                                Profil anda {{ $profileCompletion['percentage'] }}% lengkap ({{ $profileCompletion['fields']['profile_photo'] + $profileCompletion['fields']['bio'] + $profileCompletion['fields']['skills'] + $profileCompletion['fields']['whatsapp'] + $profileCompletion['fields']['semester'] }}/{{ count($profileCompletion['fields']) }} field). Lengkapi profil untuk mendapat rekomendasi proyek yang lebih sesuai.
                             </p>
                         </div>
                     </div>
@@ -376,17 +385,21 @@
                     <h2 class="text-lg font-bold text-gray-900 mb-4">Milestone Mendatang</h2>
                     <div class="space-y-3">
                         @foreach($upcomingMilestones as $milestone)
-                        <div class="border-l-4 border-blue-500 pl-3 py-2">
-                            <h3 class="font-semibold text-sm text-gray-900 mb-1">{{ $milestone->title }}</h3>
-                            <p class="text-xs text-gray-600 mb-1">{{ $milestone->project->problem->title }}</p>
-                            <div class="flex items-center text-xs text-gray-500">
-                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
-                                <span>{{ \Carbon\Carbon::parse($milestone->target_date)->format('d M Y') }}</span>
-                                <span class="ml-2 text-orange-600 font-medium">
-                                    ({{ \Carbon\Carbon::parse($milestone->target_date)->diffForHumans() }})
-                                </span>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-sm font-semibold text-gray-900 mb-1">{{ $milestone->title }}</h3>
+                                <p class="text-xs text-gray-600 mb-1">{{ $milestone->project->title ?? 'N/A' }}</p>
+                                <div class="flex items-center text-xs text-gray-500">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                    {{ \Carbon\Carbon::parse($milestone->target_date)->format('d M Y') }}
+                                </div>
                             </div>
                         </div>
                         @endforeach
@@ -394,34 +407,27 @@
                 </div>
                 @endif
 
+                {{-- notifications --}}
+                @if($unreadNotifications->isNotEmpty())
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 fade-in-up content-card" style="animation-delay: {{ $profileCompletion['percentage'] < 100 ? '0.55s' : '0.45s' }};">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-bold text-gray-900">Notifikasi</h2>
+                        <a href="{{ route('student.notifications.index') }}" class="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors">
+                            Lihat Semua →
+                        </a>
+                    </div>
+                    <div class="space-y-3">
+                        @foreach($unreadNotifications as $notification)
+                        <div class="p-3 bg-blue-50 rounded-lg border border-blue-100">
+                            <p class="text-sm text-gray-900 mb-1">{{ $notification->title }}</p>
+                            <p class="text-xs text-gray-600">{{ $notification->created_at->diffForHumans() }}</p>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
             </div>
         </div>
     </div>
 </div>
 @endsection
-
-@push('scripts')
-<script>
-    // smooth scroll untuk semua link internal
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            }
-        });
-    });
-
-    // preload images untuk performance
-    window.addEventListener('load', function() {
-        const images = document.querySelectorAll('img[data-src]');
-        images.forEach(img => {
-            img.src = img.dataset.src;
-        });
-    });
-</script>
-@endpush
