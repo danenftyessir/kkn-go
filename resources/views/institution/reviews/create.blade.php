@@ -20,8 +20,7 @@
         {{-- header --}}
         <div class="bg-white rounded-xl shadow-sm p-6 mb-6 border border-gray-100">
             <div class="flex items-start gap-4">
-                {{-- student avatar - FIXED: gunakan profile_photo_url dari user --}}
-                <img src="{{ $project->student->user->profile_photo_url }}" 
+                <img src="{{ $project->student->user->profile_picture ? asset('storage/' . $project->student->user->profile_picture) : 'https://ui-avatars.com/api/?name=' . urlencode($project->student->user->name) }}" 
                      alt="{{ $project->student->user->name }}"
                      class="w-20 h-20 rounded-full object-cover border-2 border-gray-200">
                 
@@ -53,106 +52,129 @@
                                     @mouseleave="hover = 0"
                                     class="transition-transform duration-200 transform hover:scale-110">
                                 <svg class="w-12 h-12 transition-colors duration-200" 
-                                     :class="(hover >= {{ $i }} || rating >= {{ $i }}) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'"
-                                     fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                                     :class="(hover >= {{ $i }} || rating >= {{ $i }}) ? 'text-yellow-400 fill-current' : 'text-gray-300 fill-current'" 
+                                     viewBox="0 0 20 20">
+                                    <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
                                 </svg>
                             </button>
                         @endfor
                     </div>
-                    <input type="hidden" name="rating" x-model="rating" required>
-                    <span class="text-2xl font-bold text-gray-900" x-show="rating > 0" x-text="rating + '/5'"></span>
+                    
+                    <div x-show="rating > 0" x-transition class="text-2xl font-bold text-gray-900">
+                        <span x-text="rating"></span>/5
+                    </div>
+
+                    <input type="hidden" name="rating" :value="rating" required>
                 </div>
 
                 @error('rating')
                     <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                 @enderror
 
-                <div class="mt-4 p-4 bg-blue-50 rounded-lg">
-                    <div class="flex items-start gap-3">
-                        <svg class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                        </svg>
-                        <p class="text-sm text-blue-700">Rating yang Anda berikan akan mempengaruhi reputasi mahasiswa di platform ini.</p>
+                <div class="mt-4 grid grid-cols-5 gap-2 text-xs text-gray-500">
+                    <div class="text-center">Sangat Buruk</div>
+                    <div class="text-center">Buruk</div>
+                    <div class="text-center">Cukup</div>
+                    <div class="text-center">Baik</div>
+                    <div class="text-center">Sangat Baik</div>
+                </div>
+            </div>
+
+            {{-- review text --}}
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                <label class="block text-lg font-semibold text-gray-900 mb-2">Review <span class="text-red-500">*</span></label>
+                <p class="text-sm text-gray-600 mb-4">Berikan penilaian Anda terhadap kinerja mahasiswa selama proyek berlangsung</p>
+                
+                <textarea name="review" 
+                          rows="6" 
+                          required
+                          maxlength="1000"
+                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none"
+                          placeholder="Tuliskan review Anda... (maksimal 1000 karakter)">{{ old('review') }}</textarea>
+                
+                <div class="flex justify-between items-center mt-2">
+                    @error('review')
+                        <p class="text-sm text-red-600">{{ $message }}</p>
+                    @else
+                        <p class="text-sm text-gray-500">Minimal 10 karakter</p>
+                    @enderror
+                    <p class="text-sm text-gray-400" x-data="{ count: {{ old('review') ? strlen(old('review')) : 0 }} }">
+                        <span x-text="count"></span>/1000
+                        <script>
+                            document.querySelector('textarea[name="review"]').addEventListener('input', function(e) {
+                                Alpine.store('count', e.target.value.length);
+                            });
+                        </script>
+                    </p>
+                </div>
+            </div>
+
+            {{-- strengths --}}
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                <label class="block text-lg font-semibold text-gray-900 mb-2">Kelebihan Mahasiswa</label>
+                <p class="text-sm text-gray-600 mb-4">Sebutkan hal-hal positif yang ditunjukkan mahasiswa (opsional)</p>
+                
+                <textarea name="strengths" 
+                          rows="4" 
+                          maxlength="500"
+                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 resize-none"
+                          placeholder="Contoh: Komunikasi baik, proaktif dalam mengidentifikasi masalah, tepat waktu...">{{ old('strengths') }}</textarea>
+                
+                @error('strengths')
+                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+
+            {{-- improvements --}}
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                <label class="block text-lg font-semibold text-gray-900 mb-2">Saran Perbaikan</label>
+                <p class="text-sm text-gray-600 mb-4">Berikan saran konstruktif untuk pengembangan mahasiswa (opsional)</p>
+                
+                <textarea name="improvements" 
+                          rows="4" 
+                          maxlength="500"
+                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none"
+                          placeholder="Contoh: Bisa lebih aktif dalam diskusi tim, perlu meningkatkan dokumentasi...">{{ old('improvements') }}</textarea>
+                
+                @error('improvements')
+                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+
+            {{-- would collaborate again --}}
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                <div class="flex items-start gap-3">
+                    <input type="checkbox" 
+                           id="would_collaborate_again" 
+                           name="would_collaborate_again" 
+                           value="1"
+                           {{ old('would_collaborate_again') ? 'checked' : '' }}
+                           class="mt-1 w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-green-500 transition-colors duration-200">
+                    <div class="flex-1">
+                        <label for="would_collaborate_again" class="block text-lg font-semibold text-gray-900 mb-1 cursor-pointer">
+                            Bersedia Berkolaborasi Lagi
+                        </label>
+                        <p class="text-sm text-gray-600">Centang jika Anda bersedia bekerja sama dengan mahasiswa ini di proyek mendatang</p>
                     </div>
                 </div>
             </div>
 
-            {{-- comment section --}}
-            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <label for="comment" class="block text-lg font-semibold text-gray-900 mb-4">Ulasan <span class="text-red-500">*</span></label>
-                
-                <textarea id="comment" 
-                          name="comment" 
-                          rows="8" 
-                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @error('comment') border-red-500 @enderror"
-                          placeholder="Tuliskan ulasan Anda tentang kinerja mahasiswa, dedikasi, kreativitas, dan kontribusinya terhadap proyek..."
-                          required>{{ old('comment') }}</textarea>
-
-                @error('comment')
-                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-
-                <div class="mt-3 flex items-center justify-between text-sm text-gray-500">
-                    <p>Minimal 50 karakter</p>
-                    <p id="charCount" class="font-medium">0 karakter</p>
-                </div>
-            </div>
-
-            {{-- visibility section --}}
-            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <label class="block text-lg font-semibold text-gray-900 mb-4">Visibilitas Review</label>
-                
-                <div class="space-y-3">
-                    <label class="flex items-start gap-3 p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-500 transition-colors duration-200">
-                        <input type="radio" name="is_public" value="1" class="mt-1" {{ old('is_public', '1') == '1' ? 'checked' : '' }}>
-                        <div class="flex-1">
-                            <div class="flex items-center gap-2 mb-1">
-                                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                                </svg>
-                                <span class="font-semibold text-gray-900">Publik</span>
-                            </div>
-                            <p class="text-sm text-gray-600">Review akan ditampilkan di portofolio mahasiswa dan dapat dilihat oleh siapa saja</p>
-                        </div>
-                    </label>
-
-                    <label class="flex items-start gap-3 p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-500 transition-colors duration-200">
-                        <input type="radio" name="is_public" value="0" class="mt-1" {{ old('is_public') == '0' ? 'checked' : '' }}>
-                        <div class="flex-1">
-                            <div class="flex items-center gap-2 mb-1">
-                                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
-                                </svg>
-                                <span class="font-semibold text-gray-900">Privat</span>
-                            </div>
-                            <p class="text-sm text-gray-600">Review hanya dapat dilihat oleh Anda dan mahasiswa yang bersangkutan</p>
-                        </div>
-                    </label>
-                </div>
-
-                @error('is_public')
-                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-            </div>
-
             {{-- action buttons --}}
-            <div class="flex justify-between gap-4">
+            <div class="flex items-center justify-between pt-4">
                 <a href="{{ route('institution.projects.show', $project->id) }}" 
-                   class="inline-flex items-center px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all duration-200 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
                     </svg>
-                    Batal
+                    Kembali
                 </a>
 
                 <button type="submit" 
-                        class="inline-flex items-center px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-semibold">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        class="px-8 py-3 bg-gradient-to-r from-blue-600 to-green-600 text-white rounded-lg hover:from-blue-700 hover:to-green-700 transition-all duration-200 transform hover:scale-105 flex items-center gap-2 shadow-lg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>
-                    Simpan Review
+                    Kirim Review
                 </button>
             </div>
         </form>
@@ -160,27 +182,8 @@
     </div>
 </div>
 
+{{-- alpine.js --}}
 @push('scripts')
-<script>
-// character counter untuk textarea
-const commentTextarea = document.getElementById('comment');
-const charCount = document.getElementById('charCount');
-
-if (commentTextarea && charCount) {
-    commentTextarea.addEventListener('input', function() {
-        const length = this.value.length;
-        charCount.textContent = length + ' karakter';
-        
-        if (length < 50) {
-            charCount.classList.remove('text-green-600');
-            charCount.classList.add('text-red-600');
-        } else {
-            charCount.classList.remove('text-red-600');
-            charCount.classList.add('text-green-600');
-        }
-    });
-}
-</script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 @endpush
-
 @endsection
