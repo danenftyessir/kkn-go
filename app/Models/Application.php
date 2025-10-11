@@ -125,16 +125,44 @@ class Application extends Model
     }
 
     /**
-     * get status badge color
+     * get status badge color classes (untuk tailwind)
      */
-    public function getStatusBadgeAttribute()
+    public function getStatusBadgeColor(): string
     {
         return match($this->status) {
-            'pending' => ['text' => 'Pending', 'color' => 'yellow'],
-            'reviewed' => ['text' => 'Direview', 'color' => 'blue'],
-            'accepted' => ['text' => 'Diterima', 'color' => 'green'],
-            'rejected' => ['text' => 'Ditolak', 'color' => 'red'],
-            default => ['text' => 'Unknown', 'color' => 'gray'],
+            'pending' => 'bg-yellow-100 text-yellow-800',
+            'reviewed' => 'bg-blue-100 text-blue-800',
+            'accepted' => 'bg-green-100 text-green-800',
+            'rejected' => 'bg-red-100 text-red-800',
+            default => 'bg-gray-100 text-gray-800',
+        };
+    }
+
+    /**
+     * get status label dalam bahasa indonesia
+     */
+    public function getStatusLabel(): string
+    {
+        return match($this->status) {
+            'pending' => 'Menunggu Review',
+            'reviewed' => 'Sedang Direview',
+            'accepted' => 'Diterima',
+            'rejected' => 'Ditolak',
+            default => 'Unknown',
+        };
+    }
+
+    /**
+     * get status badge attribute (array dengan text dan color)
+     */
+    public function getStatusBadgeAttribute(): array
+    {
+        return match($this->status) {
+            'pending' => ['text' => 'Menunggu Review', 'color' => 'bg-yellow-100 text-yellow-800'],
+            'reviewed' => ['text' => 'Sedang Direview', 'color' => 'bg-blue-100 text-blue-800'],
+            'accepted' => ['text' => 'Diterima', 'color' => 'bg-green-100 text-green-800'],
+            'rejected' => ['text' => 'Ditolak', 'color' => 'bg-red-100 text-red-800'],
+            default => ['text' => 'Unknown', 'color' => 'bg-gray-100 text-gray-800'],
         };
     }
 }
