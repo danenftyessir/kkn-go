@@ -211,7 +211,7 @@ class ProfileController extends Controller
         $student = Auth::user()->student;
         $username = $this->portfolioService->generatePortfolioSlug($student);
         
-        $shareUrl = route('student.profile.public', $username);
+        $shareUrl = route('profile.public', $username);
 
         return response()->json([
             'success' => true,

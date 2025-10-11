@@ -146,13 +146,28 @@ class Student extends Model
     }
 
     /**
+     * get whatsapp number - alias untuk field phone
+     */
+    public function getWhatsappAttribute()
+    {
+        return $this->phone;
+    }
+
+    /**
+     * get whatsapp_number - alias untuk field phone
+     */
+    public function getWhatsappNumberAttribute()
+    {
+        return $this->phone;
+    }
+
+    /**
      * get profile photo URL
-     * PERBAIKAN BUG: sekarang menggunakan Supabase URL yang benar
      */
     public function getProfilePhotoUrlAttribute()
     {
         if ($this->profile_photo_path) {
-            // cek apakah path sudah berupa URL lengkap atau masih path relatif
+            // cek apakah path sudah berupa URL lengkap
             if (str_starts_with($this->profile_photo_path, 'http')) {
                 return $this->profile_photo_path;
             }
@@ -168,7 +183,8 @@ class Student extends Model
             return asset('storage/' . str_replace('public/', '', $this->profile_photo_path));
         }
         
-        return asset('images/default-avatar.png');
+        // default avatar
+        return 'https://ui-avatars.com/api/?name=' . urlencode($this->full_name) . '&size=200&background=4F46E5&color=ffffff';
     }
 
     /**
@@ -184,7 +200,16 @@ class Student extends Model
         $sdgs = [];
         foreach ($completedProjects as $project) {
             if ($project->problem && $project->problem->sdg_categories) {
-                $sdgs = array_merge($sdgs, $project->problem->sdg_categories);
+                $categories = $project->problem->sdg_categories;
+                
+                // handle jika masih string JSON
+                if (is_string($categories)) {
+                    $categories = json_decode($categories, true) ?? [];
+                }
+                
+                if (is_array($categories)) {
+                    $sdgs = array_merge($sdgs, $categories);
+                }
             }
         }
 

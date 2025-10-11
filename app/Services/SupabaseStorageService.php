@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * service untuk handle file operations dengan Supabase Storage
- * menggunakan Supabase REST API tanpa S3 driver
+ * menggunakan Supabase REST API
  * 
  * dokumentasi: https://supabase.com/docs/reference/javascript/storage-from-upload
  */
@@ -19,21 +19,23 @@ class SupabaseStorageService
     protected $serviceKey;
     protected $bucketName;
     protected $baseUrl;
+    protected $storageUrl;
 
     public function __construct()
     {
         $this->projectId = config('services.supabase.project_id');
         $this->anonKey = config('services.supabase.anon_key');
         $this->serviceKey = config('services.supabase.service_key');
-        $this->bucketName = config('services.supabase.bucket', 'kkn-go storage');
+        $this->bucketName = config('services.supabase.bucket', 'kkn-go-storage');
         $this->baseUrl = "https://{$this->projectId}.supabase.co/storage/v1";
+        $this->storageUrl = "https://{$this->projectId}.supabase.co/storage/v1/object/public/{$this->bucketName}";
     }
 
     /**
      * upload file ke supabase storage
      * 
      * @param UploadedFile $file file yang akan diupload
-     * @param string $path path tujuan di bucket (contoh: problems/image.jpg)
+     * @param string $path path tujuan di bucket (contoh: profiles/students/image.jpg)
      * @return string|false path file yang berhasil diupload atau false jika gagal
      */
     public function uploadFile(UploadedFile $file, string $path)
@@ -43,7 +45,9 @@ class SupabaseStorageService
             $fileContent = file_get_contents($file->getRealPath());
             $mimeType = $file->getMimeType();
 
-            // upload ke supabase menggunakan PUT method untuk upsert
+            Log::info("Uploading file to Supabase: {$path}, MIME: {$mimeType}");
+
+            // upload ke supabase menggunakan POST method
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $this->serviceKey,
                 'Content-Type' => $mimeType,
@@ -55,11 +59,12 @@ class SupabaseStorageService
                 return $path;
             }
 
-            Log::error("Gagal upload file ke Supabase: " . $response->body());
+            Log::error("Gagal upload file ke Supabase. Status: " . $response->status() . ", Body: " . $response->body());
             return false;
 
         } catch (\Exception $e) {
-            Log::error("Error saat upload file ke Supabase: " . $e->getMessage());
+            Log::error("Exception saat upload file ke Supabase: " . $e->getMessage());
+            Log::error("Stack trace: " . $e->getTraceAsString());
             return false;
         }
     }
@@ -79,6 +84,8 @@ class SupabaseStorageService
             $filename = 'student-' . $studentId . '-' . time() . '.' . $extension;
             $path = 'profiles/students/' . $filename;
 
+            Log::info("Memulai upload foto profil untuk student ID {$studentId}");
+
             // upload menggunakan method uploadFile yang sudah ada
             $uploadedPath = $this->uploadFile($file, $path);
 
@@ -87,10 +94,12 @@ class SupabaseStorageService
                 return $uploadedPath;
             }
 
+            Log::error("Gagal upload foto profil untuk student ID {$studentId}");
             return false;
 
         } catch (\Exception $e) {
-            Log::error("Error saat upload foto profil student ID {$studentId}: " . $e->getMessage());
+            Log::error("Exception saat upload foto profil student ID {$studentId}: " . $e->getMessage());
+            Log::error("Stack trace: " . $e->getTraceAsString());
             return false;
         }
     }
@@ -110,6 +119,8 @@ class SupabaseStorageService
             $filename = 'institution-' . $institutionId . '-' . time() . '.' . $extension;
             $path = 'profiles/institutions/' . $filename;
 
+            Log::info("Memulai upload logo untuk institution ID {$institutionId}");
+
             // upload menggunakan method uploadFile yang sudah ada
             $uploadedPath = $this->uploadFile($file, $path);
 
@@ -118,10 +129,122 @@ class SupabaseStorageService
                 return $uploadedPath;
             }
 
+            Log::error("Gagal upload logo untuk institution ID {$institutionId}");
             return false;
 
         } catch (\Exception $e) {
-            Log::error("Error saat upload logo institution ID {$institutionId}: " . $e->getMessage());
+            Log::error("Exception saat upload logo institution ID {$institutionId}: " . $e->getMessage());
+            Log::error("Stack trace: " . $e->getTraceAsString());
+            return false;
+        }
+    }
+
+    /**
+     * upload gambar problem ke supabase
+     * 
+     * @param UploadedFile $file file gambar
+     * @param int $problemId ID problem
+     * @param bool $isCover apakah ini cover image
+     * @return string|false path file yang berhasil diupload atau false jika gagal
+     */
+    public function uploadProblemImage(UploadedFile $file, int $problemId, bool $isCover = false)
+    {
+        try {
+            $extension = $file->getClientOriginalExtension();
+            $prefix = $isCover ? 'cover' : 'img';
+            $filename = "problem-{$problemId}-{$prefix}-" . time() . '.' . $extension;
+            $path = 'problems/' . $filename;
+
+            Log::info("Memulai upload gambar problem ID {$problemId}");
+
+            $uploadedPath = $this->uploadFile($file, $path);
+
+            if ($uploadedPath) {
+                Log::info("Gambar problem berhasil diupload untuk problem ID {$problemId}: {$uploadedPath}");
+                return $uploadedPath;
+            }
+
+            Log::error("Gagal upload gambar problem ID {$problemId}");
+            return false;
+
+        } catch (\Exception $e) {
+            Log::error("Exception saat upload gambar problem ID {$problemId}: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * upload document ke supabase
+     * 
+     * @param UploadedFile $file file document (PDF, DOCX, dll)
+     * @param string $category kategori document (reports, certificates, dll)
+     * @return string|false path file yang berhasil diupload atau false jika gagal
+     */
+    public function uploadDocument(UploadedFile $file, string $category = 'documents')
+    {
+        try {
+            $extension = $file->getClientOriginalExtension();
+            $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+            $filename = $originalName . '-' . time() . '.' . $extension;
+            $path = $category . '/' . $filename;
+
+            Log::info("Memulai upload document: {$filename}");
+
+            $uploadedPath = $this->uploadFile($file, $path);
+
+            if ($uploadedPath) {
+                Log::info("Document berhasil diupload: {$uploadedPath}");
+                return $uploadedPath;
+            }
+
+            Log::error("Gagal upload document: {$filename}");
+            return false;
+
+        } catch (\Exception $e) {
+            Log::error("Exception saat upload document: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * get public URL untuk file di Supabase
+     * 
+     * @param string $path path file di bucket
+     * @return string public URL
+     */
+    public function getPublicUrl(string $path)
+    {
+        // hilangkan slash di awal jika ada
+        $path = ltrim($path, '/');
+        
+        return "{$this->storageUrl}/{$path}";
+    }
+
+    /**
+     * delete file dari supabase storage
+     * 
+     * @param string $path path file yang akan dihapus
+     * @return bool true jika berhasil, false jika gagal
+     */
+    public function delete(string $path)
+    {
+        try {
+            Log::info("Menghapus file dari Supabase: {$path}");
+
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $this->serviceKey,
+            ])->delete("{$this->baseUrl}/object/{$this->bucketName}/{$path}");
+
+            if ($response->successful()) {
+                Log::info("File berhasil dihapus dari Supabase: {$path}");
+                return true;
+            }
+
+            Log::warning("Gagal menghapus file dari Supabase (mungkin tidak ada): {$path}");
+            return false;
+
+        } catch (\Exception $e) {
+            Log::error("Exception saat hapus file dari Supabase: " . $e->getMessage());
             return false;
         }
     }
@@ -150,97 +273,30 @@ class SupabaseStorageService
                 $filePaths = [];
                 foreach ($files as $file) {
                     if (isset($file['name']) && !empty($file['name'])) {
-                        // jika ada folder prefix, gabungkan
                         $filePath = $folder ? $folder . '/' . $file['name'] : $file['name'];
-                        
-                        // skip jika folder (biasanya ditandai dengan metadata)
-                        if (isset($file['metadata']) && !empty($file['metadata'])) {
-                            $filePaths[] = $filePath;
-                        }
+                        $filePaths[] = $filePath;
                     }
                 }
                 
                 return $filePaths;
             }
 
-            Log::warning("Gagal list files dari Supabase: " . $response->body());
+            Log::error("Gagal list files dari Supabase folder: {$folder}");
             return [];
 
         } catch (\Exception $e) {
-            Log::error("Error saat list files dari Supabase: " . $e->getMessage());
+            Log::error("Exception saat list files dari Supabase: " . $e->getMessage());
             return [];
         }
     }
 
     /**
-     * delete file dari supabase storage
-     * 
-     * @param string $path path file yang akan dihapus
-     * @return bool true jika berhasil, false jika gagal
-     */
-    public function deleteFile(string $path): bool
-    {
-        try {
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->serviceKey,
-            ])->delete("{$this->baseUrl}/object/{$this->bucketName}/{$path}");
-
-            if ($response->successful()) {
-                Log::info("File berhasil dihapus dari Supabase: {$path}");
-                return true;
-            }
-
-            // tidak error jika file tidak ditemukan (sudah terhapus)
-            if ($response->status() === 404) {
-                Log::info("File tidak ditemukan di Supabase (mungkin sudah dihapus): {$path}");
-                return true;
-            }
-
-            Log::error("Gagal hapus file dari Supabase: " . $response->body());
-            return false;
-
-        } catch (\Exception $e) {
-            Log::error("Error saat hapus file dari Supabase: " . $e->getMessage());
-            return false;
-        }
-    }
-
-    /**
-     * alias untuk deleteFile - untuk backward compatibility
-     * 
-     * @param string $path path file yang akan dihapus
-     * @return bool true jika berhasil, false jika gagal
-     */
-    public function delete(string $path): bool
-    {
-        return $this->deleteFile($path);
-    }
-
-    /**
-     * dapatkan public URL untuk file
-     * 
-     * @param string $path path file di bucket
-     * @return string URL publik file
-     */
-    public function getPublicUrl(string $path): string
-    {
-        // clean path
-        $cleanPath = ltrim($path, '/');
-        
-        // encode bucket name untuk handle spasi
-        $encodedBucket = rawurlencode($this->bucketName);
-        
-        // return public URL
-        return "https://{$this->projectId}.supabase.co/storage/v1/object/public/{$encodedBucket}/{$cleanPath}";
-    }
-
-    /**
-     * cek apakah file exists di storage
+     * cek apakah file exists di bucket
      * 
      * @param string $path path file
-     * @return bool true jika file ada
+     * @return bool true jika exists, false jika tidak
      */
-    public function fileExists(string $path): bool
+    public function exists(string $path)
     {
         try {
             $response = Http::withHeaders([
@@ -250,55 +306,7 @@ class SupabaseStorageService
             return $response->successful();
 
         } catch (\Exception $e) {
-            Log::error("Error saat cek file existence: " . $e->getMessage());
             return false;
         }
-    }
-
-    /**
-     * upload multiple files sekaligus
-     * 
-     * @param array $files array of UploadedFile
-     * @param string $folder folder tujuan
-     * @param string $prefix prefix untuk nama file
-     * @return array array of uploaded paths
-     */
-    public function uploadMultipleFiles(array $files, string $folder, string $prefix = ''): array
-    {
-        $uploadedPaths = [];
-
-        foreach ($files as $index => $file) {
-            if ($file instanceof UploadedFile) {
-                $filename = $prefix . time() . '-' . $index . '.' . $file->extension();
-                $path = $folder . '/' . $filename;
-                
-                $uploadedPath = $this->uploadFile($file, $path);
-                
-                if ($uploadedPath) {
-                    $uploadedPaths[] = $uploadedPath;
-                }
-            }
-        }
-
-        return $uploadedPaths;
-    }
-
-    /**
-     * delete multiple files sekaligus
-     * 
-     * @param array $paths array of file paths
-     * @return int jumlah file yang berhasil dihapus
-     */
-    public function deleteMultipleFiles(array $paths): int
-    {
-        $deletedCount = 0;
-
-        foreach ($paths as $path) {
-            if ($this->deleteFile($path)) {
-                $deletedCount++;
-            }
-        }
-
-        return $deletedCount;
     }
 }
