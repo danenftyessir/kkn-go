@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Province;
 use App\Models\Regency;
+use App\Models\Institution;
 
 class ProfileController extends Controller
 {
@@ -132,13 +133,16 @@ class ProfileController extends Controller
 
     /**
      * tampilkan profil publik institution
+     * 
+     * FIX: method ini sebelumnya bernama public() yang menyebabkan error
+     * karena di routes menggunakan showPublic()
      */
-    public function public($slug)
+    public function showPublic($id)
     {
         // untuk saat ini gunakan id, nanti bisa diubah ke slug
         $institution = Institution::with(['user', 'province', 'regency', 'problems' => function($q) {
             $q->where('status', 'open')->orWhere('status', 'completed');
-        }])->findOrFail($slug);
+        }])->findOrFail($id);
         
         return view('institution.profile.public', compact('institution'));
     }
