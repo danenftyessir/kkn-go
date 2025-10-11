@@ -159,7 +159,7 @@ html {
                            class="block w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
                             Edit Profil
                         </a>
-                        <a href="{{ route('institution.profile.public', $institution->id) }}" 
+                        <a href="{{ route('institution.public', $institution->id) }}" 
                            target="_blank"
                            class="block w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors">
                             Lihat Profil Publik
