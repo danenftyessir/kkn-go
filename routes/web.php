@@ -48,9 +48,6 @@ Route::get('/portfolio/{username}', function($username) {
     return redirect()->route('profile.public', $username);
 });
 
-// public institution profile
-Route::get('/institution/{id}', [InstitutionProfileController::class, 'showPublic'])->name('institution.public');
-
 /*
 |--------------------------------------------------------------------------
 | Development Routes (hanya untuk development)
@@ -253,3 +250,13 @@ Route::middleware(['auth'])->prefix('notifications')->name('notifications.')->gr
     Route::post('/read-all', [NotificationController::class, 'markAllAsRead'])->name('read-all');
     Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('destroy');
 });
+
+/*
+|--------------------------------------------------------------------------
+| Public Institution Profile
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/institution/{id}', [InstitutionProfileController::class, 'showPublic'])
+    ->where('id', '[0-9]+')
+    ->name('institution.public');
