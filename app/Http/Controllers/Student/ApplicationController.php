@@ -20,10 +20,14 @@ use Illuminate\Support\Facades\Log;
 class ApplicationController extends Controller
 {
     protected $notificationService;
+    protected $storageService;
 
-    public function __construct(NotificationService $notificationService)
-    {
+    public function __construct(
+        NotificationService $notificationService,
+        \App\Services\SupabaseStorageService $storageService
+    ) {
         $this->notificationService = $notificationService;
+        $this->storageService = $storageService;
     }
 
     /**
@@ -132,9 +136,19 @@ class ApplicationController extends Controller
             
             $proposalPath = null;
             
-            // upload proposal jika ada
+            // upload proposal ke supabase jika ada
             if ($request->hasFile('proposal')) {
-                $proposalPath = $request->file('proposal')->store('proposals', 'public');
+                $file = $request->file('proposal');
+                $filename = 'proposal-' . $student->id . '-' . time() . '.' . $file->getClientOriginalExtension();
+                $path = 'proposals/' . $filename;
+                
+                $proposalPath = $this->storageService->uploadFile($file, $path);
+                
+                if (!$proposalPath) {
+                    throw new \Exception('Gagal upload proposal ke storage');
+                }
+                
+                Log::info("Proposal berhasil diupload: {$proposalPath}");
             }
             
             // simpan aplikasi
@@ -170,9 +184,13 @@ class ApplicationController extends Controller
             
             Log::error("Error saat menyimpan aplikasi: " . $e->getMessage());
             
-            // hapus file proposal jika ada error
+            // hapus file proposal dari supabase jika ada error
             if (isset($proposalPath) && $proposalPath) {
-                \Storage::disk('public')->delete($proposalPath);
+                try {
+                    $this->storageService->delete($proposalPath);
+                } catch (\Exception $deleteError) {
+                    Log::error("Gagal menghapus proposal: " . $deleteError->getMessage());
+                }
             }
             
             return back()
@@ -221,9 +239,15 @@ class ApplicationController extends Controller
         try {
             DB::beginTransaction();
             
-            // hapus file proposal jika ada
+            // hapus file proposal dari supabase jika ada
             if ($application->proposal_path) {
-                \Storage::disk('public')->delete($application->proposal_path);
+                try {
+                    $this->storageService->delete($application->proposal_path);
+                    Log::info("Proposal berhasil dihapus: {$application->proposal_path}");
+                } catch (\Exception $e) {
+                    Log::error("Gagal menghapus proposal: " . $e->getMessage());
+                    // tidak perlu rollback jika gagal hapus file
+                }
             }
             
             // decrement counter aplikasi di problem
