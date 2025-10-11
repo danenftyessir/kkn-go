@@ -13,7 +13,7 @@
         background-position: center;
         background-attachment: fixed;
         min-height: 450px;
-        margin-top: 64px;
+        margin-top: 64px; /* PERBAIKAN: tambah margin-top untuk memberi jarak dari navbar */
     }
     
     .dashboard-hero-background::before {
@@ -412,7 +412,7 @@
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 fade-in-up content-card" style="animation-delay: {{ $profileCompletion['percentage'] < 100 ? '0.55s' : '0.45s' }};">
                     <div class="flex items-center justify-between mb-4">
                         <h2 class="text-lg font-bold text-gray-900">Notifikasi</h2>
-                        <a href="{{ route('student.notifications.index') }}" class="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors">
+                        <a href="{{ route('notifications.index') }}" class="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors">
                             Lihat Semua →
                         </a>
                     </div>
