@@ -8,11 +8,11 @@
 <style>
     .dashboard-hero-background {
         position: relative;
-        background-image: url('/dashboard-student2.JPG');
+        background-image: url('/dashboard-student2.jpeg');
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
-        min-height: 320px;
+        min-height: 450px;
     }
     
     .dashboard-hero-background::before {
