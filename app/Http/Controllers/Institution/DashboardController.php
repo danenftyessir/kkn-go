@@ -111,11 +111,11 @@ class DashboardController extends Controller
     private function calculateProfileCompletion($student)
     {
         $fields = [
-            'profile_photo' => $student->profile_photo_path ? 1 : 0,
-            'bio' => $student->bio ? 1 : 0,
-            'skills' => $student->skills ? 1 : 0,
-            'whatsapp' => $student->whatsapp_number ? 1 : 0,
-            'semester' => $student->semester ? 1 : 0,
+            'profile_photo' => !empty($student->profile_photo_path) ? 1 : 0,
+            'bio' => !empty($student->bio) ? 1 : 0,
+            'skills' => (!empty($student->skills) && is_array($student->skills) && count($student->skills) > 0) ? 1 : 0,
+            'whatsapp' => !empty($student->phone) ? 1 : 0,
+            'semester' => !empty($student->semester) ? 1 : 0,
         ];
 
         $completed = array_sum($fields);
@@ -124,6 +124,8 @@ class DashboardController extends Controller
 
         return [
             'percentage' => round($percentage),
+            'completed' => $completed,
+            'total' => $total,
             'fields' => $fields,
             'is_complete' => $percentage == 100,
         ];
