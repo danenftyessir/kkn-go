@@ -21,31 +21,35 @@
         left: 0;
         right: 0;
         bottom: 0;
+        /* Gradient lebih transparan - opacity dikurangi dari 0.75-0.85 jadi 0.45-0.55 */
         background: linear-gradient(
             135deg, 
-            rgba(37, 99, 235, 0.85) 0%, 
-            rgba(59, 130, 246, 0.75) 35%,
-            rgba(16, 185, 129, 0.75) 65%,
-            rgba(5, 150, 105, 0.85) 100%
+            rgba(37, 99, 235, 0.50) 0%,     /* Biru lebih transparan */
+            rgba(59, 130, 246, 0.45) 35%,   /* Biru medium transparan */
+            rgba(16, 185, 129, 0.45) 65%,   /* Hijau medium transparan */
+            rgba(5, 150, 105, 0.50) 100%    /* Hijau transparan */
         );
-        backdrop-filter: blur(2px);
+        backdrop-filter: blur(1px);  /* Blur dikurangi dari 2px ke 1px */
     }
     
     .stats-card-modern {
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.20);  /* Sedikit lebih solid dari sebelumnya */
+        backdrop-filter: blur(16px);             /* Blur diperkuat untuk clarity */
+        border: 1px solid rgba(255, 255, 255, 0.3);
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
     .stats-card-modern:hover {
-        background: rgba(255, 255, 255, 0.25);
+        background: rgba(255, 255, 255, 0.30);
         transform: translateY(-4px);
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
     }
     
     .text-shadow-strong {
-        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        text-shadow: 
+            0 2px 4px rgba(0, 0, 0, 0.4),
+            0 4px 8px rgba(0, 0, 0, 0.3),
+            0 1px 2px rgba(0, 0, 0, 0.5);  /* Multiple layers untuk readability maksimal */
     }
     
     .browse-fade-in {
@@ -75,7 +79,7 @@
                 <h1 class="text-4xl md:text-5xl font-bold mb-4 text-shadow-strong">
                     Jelajahi Proyek KKN
                 </h1>
-                <p class="text-xl md:text-2xl text-white/90 text-shadow-strong max-w-3xl">
+                <p class="text-xl md:text-2xl text-white text-shadow-strong max-w-3xl">
                     Temukan proyek KKN yang sesuai dengan minat dan keahlian Anda
                 </p>
             </div>
@@ -88,12 +92,12 @@
                             <div class="text-4xl md:text-5xl font-bold text-white text-shadow-strong">
                                 {{ $totalProblems ?? 0 }}
                             </div>
-                            <div class="text-sm md:text-base text-white/90 mt-2 font-medium">
+                            <div class="text-sm md:text-base text-white font-medium text-shadow-strong mt-2">
                                 Total Proyek
                             </div>
                         </div>
-                        <div class="w-14 h-14 md:w-16 md:h-16 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                            <svg class="w-7 h-7 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="w-14 h-14 md:w-16 md:h-16 bg-white/25 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                            <svg class="w-7 h-7 md:w-8 md:h-8 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                             </svg>
                         </div>
@@ -106,12 +110,12 @@
                             <div class="text-4xl md:text-5xl font-bold text-white text-shadow-strong">
                                 {{ $openProblems ?? 0 }}
                             </div>
-                            <div class="text-sm md:text-base text-white/90 mt-2 font-medium">
+                            <div class="text-sm md:text-base text-white font-medium text-shadow-strong mt-2">
                                 Proyek Terbuka
                             </div>
                         </div>
-                        <div class="w-14 h-14 md:w-16 md:h-16 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                            <svg class="w-7 h-7 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="w-14 h-14 md:w-16 md:h-16 bg-white/25 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                            <svg class="w-7 h-7 md:w-8 md:h-8 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
                             </svg>
                         </div>
@@ -124,12 +128,12 @@
                             <div class="text-4xl md:text-5xl font-bold text-white text-shadow-strong">
                                 {{ $totalInstitutions ?? 0 }}
                             </div>
-                            <div class="text-sm md:text-base text-white/90 mt-2 font-medium">
+                            <div class="text-sm md:text-base text-white font-medium text-shadow-strong mt-2">
                                 Instansi Partner
                             </div>
                         </div>
-                        <div class="w-14 h-14 md:w-16 md:h-16 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                            <svg class="w-7 h-7 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="w-14 h-14 md:w-16 md:h-16 bg-white/25 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                            <svg class="w-7 h-7 md:w-8 md:h-8 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                             </svg>
                         </div>
