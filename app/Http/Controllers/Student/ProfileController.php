@@ -98,7 +98,7 @@ class ProfileController extends Controller
             // update data user
             $user->update([
                 'name' => $request->first_name . ' ' . $request->last_name,
-                'username' => $request->username,
+                'username' => $request->username ?? $user->username,
             ]);
             
             // handle upload foto profil jika ada
@@ -120,7 +120,7 @@ class ProfileController extends Controller
                 );
             }
             
-            // update data student
+            // ✅ PERBAIKAN: gunakan whatsapp_number dari request dan simpan ke field phone
             $student->update([
                 'first_name' => $request->first_name,
                 'last_name' => $request->last_name,
@@ -128,7 +128,7 @@ class ProfileController extends Controller
                 'university_id' => $request->university_id,
                 'major' => $request->major,
                 'semester' => $request->semester,
-                'whatsapp' => $request->whatsapp,
+                'phone' => $request->whatsapp_number, // field database adalah 'phone', request adalah 'whatsapp_number'
                 'profile_photo_path' => $profilePhotoPath,
                 'bio' => $request->bio,
             ]);
