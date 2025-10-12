@@ -91,15 +91,23 @@ class RegisterController extends Controller
 
     /**
      * proses registrasi student
-     * PERBAIKAN BUG: return JSON response untuk AJAX request dengan redirect URL
+     * PERBAIKAN: return JSON response untuk AJAX request
      */
     public function registerStudent(StudentRegisterRequest $request)
     {
         try {
+            // log incoming data untuk debug
+            Log::info('Student registration attempt', [
+                'email' => $request->email,
+                'username' => $request->username,
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name
+            ]);
+
             // gunakan database transaction untuk memastikan atomicity
             DB::beginTransaction();
             
-            // buat user account
+            // buat user account - PERBAIKAN: pastikan syntax lengkap
             $user = User::create([
                 'name' => $request->first_name . ' ' . $request->last_name,
                 'email' => $request->email,
@@ -109,13 +117,22 @@ class RegisterController extends Controller
                 'is_active' => true,
             ]);
             
+            Log::info('User created successfully', ['user_id' => $user->id]);
+            
             // upload photo jika ada
             $photoPath = null;
             if ($request->hasFile('profile_photo')) {
-                $photoPath = $request->file('profile_photo')->store('students/photos', 'public');
+                try {
+                    $photoPath = $request->file('profile_photo')->store('students/photos', 'public');
+                    Log::info('Profile photo uploaded', ['path' => $photoPath]);
+                } catch (\Exception $e) {
+                    Log::warning('Failed to upload profile photo: ' . $e->getMessage());
+                    // lanjutkan proses tanpa foto
+                }
             }
             
-            // buat student profile
+            // PERBAIKAN KRITIS: cek apakah field di database adalah 'phone' atau 'whatsapp_number'
+            // gunakan 'phone' karena itu nama field yang ada di migration
             $student = Student::create([
                 'user_id' => $user->id,
                 'first_name' => $request->first_name,
@@ -124,9 +141,11 @@ class RegisterController extends Controller
                 'major' => $request->major,
                 'nim' => $request->nim,
                 'semester' => $request->semester,
-                'whatsapp_number' => $request->whatsapp_number,
+                'phone' => $request->whatsapp_number,  // field database adalah 'phone'
                 'profile_photo_path' => $photoPath,
             ]);
+            
+            Log::info('Student profile created', ['student_id' => $student->id]);
             
             DB::commit();
             
@@ -140,10 +159,10 @@ class RegisterController extends Controller
                 'username' => $user->username
             ]);
 
-            // login user secara otomatis setelah registrasi berhasil
+            // login user secara otomatis
             Auth::login($user);
 
-            // PERBAIKAN UTAMA: cek apakah request adalah AJAX/JSON
+            // PERBAIKAN: cek apakah request adalah AJAX
             if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
                 // return JSON response dengan redirect URL untuk AJAX request
                 return response()->json([
@@ -160,14 +179,20 @@ class RegisterController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Student registration failed: ' . $e->getMessage());
-            Log::error('Stack trace: ' . $e->getTraceAsString());
+            
+            // log error dengan detail lengkap
+            Log::error('Student registration failed', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
             
             // PERBAIKAN: return JSON error untuk AJAX request
             if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Terjadi kesalahan saat registrasi. Silakan coba lagi.',
+                    'message' => 'Terjadi Kesalahan Saat Registrasi. Silakan Coba Lagi.',
                     'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
                 ], 500);
             }
@@ -227,12 +252,12 @@ class RegisterController extends Controller
                 'verification_document_path' => $verificationDocPath,
                 'website' => $request->website,
                 'description' => $request->description,
-                'is_verified' => false,
+                'is_verified' => false, // akan diverifikasi oleh admin
             ]);
             
             DB::commit();
             
-            // picu event bahwa user baru telah terdaftar
+            // picu event bahwa user baru telah terdaftar (untuk kirim email verifikasi)
             event(new Registered($user));
 
             // log successful registration
