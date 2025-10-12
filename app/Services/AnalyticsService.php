@@ -56,8 +56,8 @@ class AnalyticsService
         })->count();
         $avgApplications = $total > 0 ? $totalApplications / $total : 0;
 
-        // total views
-        $totalViews = Problem::where('institution_id', $institutionId)->sum('view_count');
+        // total views (PERBAIKAN: kolom database adalah 'views_count' bukan 'view_count')
+        $totalViews = Problem::where('institution_id', $institutionId)->sum('views_count');
         $avgViewsPerProblem = $total > 0 ? $totalViews / $total : 0;
 
         // hitung growth dari bulan lalu
