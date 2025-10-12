@@ -17,7 +17,7 @@
             <a href="{{ route('home') }}" class="text-gray-600 hover:text-blue-600 transition-colors duration-200">
                 Beranda
             </a>
-            <a href="#" class="text-gray-600 hover:text-blue-600 transition-colors duration-200">
+            <a href="{{ route('about') }}" class="text-gray-600 hover:text-blue-600 transition-colors duration-200">
                 Tentang Kami
             </a>
             <a href="#" class="text-gray-600 hover:text-blue-600 transition-colors duration-200">
