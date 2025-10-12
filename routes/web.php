@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
-use App\Http\Controllers\Auth\ValidationController;  // TAMBAHAN: Import ValidationController
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\EmailVerificationController;
@@ -22,6 +21,7 @@ use App\Http\Controllers\Institution\ProjectManagementController;
 use App\Http\Controllers\Institution\ProfileController as InstitutionProfileController;
 use App\Http\Controllers\Institution\ReviewController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\AboutController;
 
 /*
 |--------------------------------------------------------------------------
@@ -40,6 +40,9 @@ use App\Http\Controllers\NotificationController;
 
 // home page
 Route::get('/', [HomeController::class, 'index'])->name('home');
+
+// about us page
+Route::get('/about', [AboutController::class, 'index'])->name('about'); 
 
 // public student profile/portfolio (dapat diakses tanpa login)
 Route::get('/profile/{username}', [StudentProfileController::class, 'publicView'])->name('profile.public');
@@ -74,18 +77,11 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [LoginController::class, 'login']);
     
     Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
-    
-    // student registration
     Route::get('/register/student', [RegisterController::class, 'showStudentForm'])->name('register.student');
     Route::post('/register/student', [RegisterController::class, 'registerStudent'])->name('register.student.submit');
-    
-    // institution registration  
     Route::get('/register/institution', [RegisterController::class, 'showInstitutionForm'])->name('register.institution');
     Route::post('/register/institution', [RegisterController::class, 'registerInstitution'])->name('register.institution.submit');
-    
-    // TAMBAHAN: validation routes untuk step-by-step registration
     Route::post('/validation/student/step', [ValidationController::class, 'validateStudentStep'])->name('validation.student.step');
-    Route::post('/validation/institution/step', [ValidationController::class, 'validateInstitutionStep'])->name('validation.institution.step');
     
     // forgot password
     Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
@@ -139,48 +135,52 @@ Route::middleware(['auth', 'check.user.type:student'])->prefix('student')->name(
     // applications
     Route::prefix('applications')->name('applications.')->group(function () {
         Route::get('/', [ApplicationController::class, 'index'])->name('index');
-        Route::get('/create/{problem_id}', [ApplicationController::class, 'create'])->name('create');
-        Route::post('/store', [ApplicationController::class, 'store'])->name('store');
+        Route::get('/create/{problemId}', [ApplicationController::class, 'create'])->name('create');
+        Route::post('/', [ApplicationController::class, 'store'])->name('store');
         Route::get('/{id}', [ApplicationController::class, 'show'])->name('show');
-        Route::delete('/{id}', [ApplicationController::class, 'destroy'])->name('destroy');
+        Route::delete('/{id}', [ApplicationController::class, 'destroy'])->name('withdraw');
+        Route::get('/{id}/download-proposal', [ApplicationController::class, 'downloadProposal'])->name('download-proposal');
     });
     
-    // my projects
+    // projects
     Route::prefix('projects')->name('projects.')->group(function () {
         Route::get('/', [MyProjectsController::class, 'index'])->name('index');
         Route::get('/{id}', [MyProjectsController::class, 'show'])->name('show');
-        Route::get('/{id}/report/create', [MyProjectsController::class, 'createReport'])->name('report.create');
-        Route::post('/{id}/report/store', [MyProjectsController::class, 'storeReport'])->name('report.store');
-        Route::get('/{id}/final-report/create', [MyProjectsController::class, 'createFinalReport'])->name('final-report.create');
-        Route::post('/{id}/final-report/store', [MyProjectsController::class, 'storeFinalReport'])->name('final-report.store');
+        Route::get('/{id}/report/create', [MyProjectsController::class, 'createReport'])->name('create-report');
+        Route::post('/{id}/report', [MyProjectsController::class, 'storeReport'])->name('store-report');
+        Route::get('/{id}/final-report/create', [MyProjectsController::class, 'createFinalReport'])->name('create-final-report');
+        Route::post('/{id}/final-report', [MyProjectsController::class, 'storeFinalReport'])->name('store-final-report');
     });
     
-    // profile
+    // profile (gabungan dengan portfolio) - private routes
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [StudentProfileController::class, 'index'])->name('index');
         Route::get('/edit', [StudentProfileController::class, 'edit'])->name('edit');
-        Route::put('/update', [StudentProfileController::class, 'update'])->name('update');
+        Route::put('/', [StudentProfileController::class, 'update'])->name('update');
         Route::put('/password', [StudentProfileController::class, 'updatePassword'])->name('password.update');
+        Route::post('/project/{projectId}/toggle-visibility', [StudentProfileController::class, 'toggleProjectVisibility'])->name('project.toggle-visibility');
+        Route::get('/share-link', [StudentProfileController::class, 'getShareLink'])->name('share-link');
+    });
+    
+    // redirect portfolio ke profile untuk backward compatibility
+    Route::get('/portfolio', function() {
+        return redirect()->route('student.profile.index');
     });
     
     // wishlist
     Route::prefix('wishlist')->name('wishlist.')->group(function () {
         Route::get('/', [WishlistController::class, 'index'])->name('index');
-        Route::post('/toggle/{problem_id}', [WishlistController::class, 'toggle'])->name('toggle');
+        Route::post('/{problemId}', [WishlistController::class, 'toggle'])->name('toggle');
+        Route::delete('/{wishlistId}/remove', [WishlistController::class, 'remove'])->name('remove');
     });
     
     // knowledge repository
     Route::prefix('repository')->name('repository.')->group(function () {
         Route::get('/', [KnowledgeRepositoryController::class, 'index'])->name('index');
         Route::get('/{id}', [KnowledgeRepositoryController::class, 'show'])->name('show');
+        Route::get('/{id}/download', [KnowledgeRepositoryController::class, 'download'])->name('download');
     });
     
-    // notifications
-    Route::prefix('notifications')->name('notifications.')->group(function () {
-        Route::get('/', [NotificationController::class, 'index'])->name('index');
-        Route::post('/{id}/read', [NotificationController::class, 'markAsRead'])->name('read');
-        Route::post('/read-all', [NotificationController::class, 'markAllAsRead'])->name('read-all');
-    });
 });
 
 /*
@@ -198,12 +198,11 @@ Route::middleware(['auth', 'check.user.type:institution'])->prefix('institution'
     Route::prefix('problems')->name('problems.')->group(function () {
         Route::get('/', [ProblemController::class, 'index'])->name('index');
         Route::get('/create', [ProblemController::class, 'create'])->name('create');
-        Route::post('/store', [ProblemController::class, 'store'])->name('store');
+        Route::post('/', [ProblemController::class, 'store'])->name('store');
         Route::get('/{id}', [ProblemController::class, 'show'])->name('show');
         Route::get('/{id}/edit', [ProblemController::class, 'edit'])->name('edit');
         Route::put('/{id}', [ProblemController::class, 'update'])->name('update');
         Route::delete('/{id}', [ProblemController::class, 'destroy'])->name('destroy');
-        Route::post('/{id}/toggle-status', [ProblemController::class, 'toggleStatus'])->name('toggle-status');
     });
     
     // applications review
@@ -220,14 +219,15 @@ Route::middleware(['auth', 'check.user.type:institution'])->prefix('institution'
         Route::get('/', [ProjectManagementController::class, 'index'])->name('index');
         Route::get('/{id}', [ProjectManagementController::class, 'show'])->name('show');
         Route::get('/{id}/manage', [ProjectManagementController::class, 'manage'])->name('manage');
-        Route::post('/{id}/complete', [ProjectManagementController::class, 'complete'])->name('complete');
+        Route::post('/{id}/milestone', [ProjectManagementController::class, 'addMilestone'])->name('add-milestone');
+        Route::put('/{id}/milestone/{milestoneId}', [ProjectManagementController::class, 'updateMilestone'])->name('update-milestone');
     });
-    
+
     // reviews
     Route::prefix('reviews')->name('reviews.')->group(function () {
         Route::get('/', [ReviewController::class, 'index'])->name('index');
-        Route::get('/create/{project_id}', [ReviewController::class, 'create'])->name('create');
-        Route::post('/store', [ReviewController::class, 'store'])->name('store');
+        Route::get('/create/{projectId}', [ReviewController::class, 'create'])->name('create');
+        Route::post('/', [ReviewController::class, 'store'])->name('store');
         Route::get('/{id}', [ReviewController::class, 'show'])->name('show');
         Route::get('/{id}/edit', [ReviewController::class, 'edit'])->name('edit');
         Route::put('/{id}', [ReviewController::class, 'update'])->name('update');
@@ -237,14 +237,43 @@ Route::middleware(['auth', 'check.user.type:institution'])->prefix('institution'
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [InstitutionProfileController::class, 'index'])->name('index');
         Route::get('/edit', [InstitutionProfileController::class, 'edit'])->name('edit');
-        Route::put('/update', [InstitutionProfileController::class, 'update'])->name('update');
+        Route::put('/', [InstitutionProfileController::class, 'update'])->name('update');
         Route::put('/password', [InstitutionProfileController::class, 'updatePassword'])->name('password.update');
     });
-    
-    // notifications
-    Route::prefix('notifications')->name('notifications.')->group(function () {
-        Route::get('/', [NotificationController::class, 'index'])->name('index');
-        Route::post('/{id}/read', [NotificationController::class, 'markAsRead'])->name('read');
-        Route::post('/read-all', [NotificationController::class, 'markAllAsRead'])->name('read-all');
-    });
+
+
+/*
+|--------------------------------------------------------------------------
+| API Routes untuk Dynamic Dropdown
+|--------------------------------------------------------------------------
+*/
+
+// API untuk mendapatkan regencies berdasarkan province
+// digunakan di form create/edit problem untuk dynamic dropdown
+Route::get('/api/regencies/{provinceId}', [ProblemController::class, 'getRegencies'])->name('api.regencies');
+
 });
+
+/*
+|--------------------------------------------------------------------------
+| Notifications Routes (Student & Institution)
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth'])->prefix('notifications')->name('notifications.')->group(function () {
+    Route::get('/', [NotificationController::class, 'index'])->name('index');
+    Route::get('/latest', [NotificationController::class, 'getLatest'])->name('latest');
+    Route::post('/{id}/read', [NotificationController::class, 'markAsRead'])->name('read');
+    Route::post('/read-all', [NotificationController::class, 'markAllAsRead'])->name('read-all');
+    Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('destroy');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Public Institution Profile
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/institution/{id}', [InstitutionProfileController::class, 'showPublic'])
+    ->where('id', '[0-9]+')
+    ->name('institution.public');
