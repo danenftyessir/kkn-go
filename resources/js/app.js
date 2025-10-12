@@ -45,13 +45,13 @@ class NotificationManager {
             warning: '<svg class="w-5 h-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>'
         };
 
-        notification.className = `${colors[type]} px-4 py-3 rounded-lg border shadow-lg flex items-start space-x-3 animate-slideInRight`;
+        notification.className = `${colors[type]} border-l-4 rounded-lg p-4 shadow-lg transform transition-all duration-300 opacity-0 translate-x-full flex items-start gap-3`;
         notification.innerHTML = `
             ${icons[type]}
             <div class="flex-1">
                 <p class="text-sm font-medium">${message}</p>
             </div>
-            <button onclick="this.parentElement.remove()" class="text-gray-400 hover:text-gray-600">
+            <button onclick="this.parentElement.remove()" class="text-gray-500 hover:text-gray-700">
                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
                 </svg>
@@ -60,172 +60,141 @@ class NotificationManager {
 
         this.container.appendChild(notification);
 
-        // auto remove setelah duration
+        // trigger animation
+        setTimeout(() => {
+            notification.classList.remove('opacity-0', 'translate-x-full');
+        }, 10);
+
+        // auto remove
         if (duration > 0) {
             setTimeout(() => {
-                notification.style.animation = 'slideOutRight 0.3s ease-in forwards';
+                notification.classList.add('opacity-0', 'translate-x-full');
                 setTimeout(() => notification.remove(), 300);
             }, duration);
         }
     }
 
     showFlashMessages() {
-        // cek data attributes dari blade template
         const successMsg = document.querySelector('[data-success-message]');
         const errorMsg = document.querySelector('[data-error-message]');
         const infoMsg = document.querySelector('[data-info-message]');
         const warningMsg = document.querySelector('[data-warning-message]');
 
-        if (successMsg) {
-            this.show(successMsg.dataset.successMessage, 'success');
-        }
-        if (errorMsg) {
-            this.show(errorMsg.dataset.errorMessage, 'error');
-        }
-        if (infoMsg) {
-            this.show(infoMsg.dataset.infoMessage, 'info');
-        }
-        if (warningMsg) {
-            this.show(warningMsg.dataset.warningMessage, 'warning');
-        }
+        if (successMsg) this.show(successMsg.dataset.successMessage, 'success');
+        if (errorMsg) this.show(errorMsg.dataset.errorMessage, 'error');
+        if (infoMsg) this.show(infoMsg.dataset.infoMessage, 'info');
+        if (warningMsg) this.show(warningMsg.dataset.warningMessage, 'warning');
     }
 }
 
-// init notification manager
-const notificationManager = new NotificationManager();
-
-// export untuk digunakan di tempat lain
-window.showNotification = (message, type, duration) => {
-    notificationManager.show(message, type, duration);
-};
+// inisialisasi notification manager
+const notifications = new NotificationManager();
+window.notifications = notifications;
 
 /**
- * page transition effect
+ * fungsi wishlist global
+ * untuk toggle wishlist dari browse problems page
  */
-document.addEventListener('DOMContentLoaded', () => {
-    // fade in saat load
-    document.body.style.opacity = '0';
-    setTimeout(() => {
-        document.body.style.transition = 'opacity 0.3s ease-in';
-        document.body.style.opacity = '1';
-    }, 10);
-
-    // fade out sebelum navigate
-    document.querySelectorAll('a:not([target="_blank"])').forEach(link => {
-        if (link.hostname === window.location.hostname && !link.href.includes('#')) {
-            link.addEventListener('click', function(e) {
-                if (e.ctrlKey || e.metaKey) return;
-                
-                e.preventDefault();
-                const destination = this.href;
-                
-                document.body.style.transition = 'opacity 0.2s ease-out';
-                document.body.style.opacity = '0';
-                
-                setTimeout(() => {
-                    window.location.href = destination;
-                }, 200);
-            });
-        }
-    });
-});
-
-/**
- * scroll to top button
- */
-document.addEventListener('DOMContentLoaded', () => {
-    const scrollBtn = document.getElementById('scroll-to-top');
-    if (!scrollBtn) return;
-
-    window.addEventListener('scroll', () => {
-        if (window.pageYOffset > 300) {
-            scrollBtn.classList.remove('hidden');
-        } else {
-            scrollBtn.classList.add('hidden');
-        }
-    }, { passive: true });
-
-    scrollBtn.addEventListener('click', () => {
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
-    });
-});
-
-/**
- * logout loading state
- */
-document.addEventListener('DOMContentLoaded', () => {
-    const logoutForms = document.querySelectorAll('form[action*="logout"]');
-    logoutForms.forEach(form => {
-        form.addEventListener('submit', function(e) {
-            const button = form.querySelector('button[type="submit"]');
-            if (button) {
-                button.disabled = true;
-                button.innerHTML = '<span class="flex items-center space-x-2"><svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span>keluar...</span></span>';
+window.toggleWishlist = async function(problemId, button) {
+    // disable button sementara
+    button.disabled = true;
+    const originalHTML = button.innerHTML;
+    
+    // tampilkan loading
+    button.innerHTML = `
+        <svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+    `;
+    
+    try {
+        const response = await fetch(`/student/wishlist/${problemId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
             }
         });
-    });
+        
+        if (!response.ok) {
+            throw new Error('gagal toggle wishlist');
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // update button state
+            const svg = button.querySelector('svg');
+            const isWishlisted = data.saved;
+            
+            // restore button content
+            button.innerHTML = originalHTML;
+            
+            // update style
+            button.setAttribute('data-wishlisted', isWishlisted ? 'true' : 'false');
+            
+            const newSvg = button.querySelector('svg');
+            if (newSvg) {
+                newSvg.setAttribute('fill', isWishlisted ? 'currentColor' : 'none');
+                newSvg.classList.toggle('fill-red-500', isWishlisted);
+                newSvg.classList.toggle('text-red-500', isWishlisted);
+                newSvg.classList.toggle('text-gray-600', !isWishlisted);
+            }
+            
+            // add animation
+            button.style.transform = 'scale(1.2)';
+            setTimeout(() => {
+                button.style.transform = 'scale(1)';
+            }, 200);
+            
+            // tampilkan notifikasi
+            notifications.show(
+                data.message || (isWishlisted ? 'Ditambahkan ke wishlist' : 'Dihapus dari wishlist'),
+                'success',
+                3000
+            );
+            
+            // dispatch event untuk update UI lain
+            window.dispatchEvent(new CustomEvent('wishlistUpdated', {
+                detail: { problemId, saved: isWishlisted }
+            }));
+        }
+    } catch (error) {
+        console.error('error toggle wishlist:', error);
+        
+        // restore button
+        button.innerHTML = originalHTML;
+        
+        notifications.show('Terjadi kesalahan. Silakan coba lagi.', 'error');
+    } finally {
+        button.disabled = false;
+    }
+};
+
+/**
+ * smooth scroll to top button
+ */
+document.addEventListener('DOMContentLoaded', function() {
+    const scrollBtn = document.getElementById('scroll-to-top');
+    
+    if (scrollBtn) {
+        // tampilkan button saat scroll
+        window.addEventListener('scroll', function() {
+            if (window.pageYOffset > 300) {
+                scrollBtn.classList.remove('hidden');
+            } else {
+                scrollBtn.classList.add('hidden');
+            }
+        });
+        
+        // scroll to top dengan smooth animation
+        scrollBtn.addEventListener('click', function() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+    }
 });
-
-/**
- * helper functions
- */
-window.getCsrfToken = function() {
-    return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-};
-
-window.showLoading = function() {
-    const overlay = document.createElement('div');
-    overlay.id = 'loading-overlay';
-    overlay.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]';
-    overlay.innerHTML = `
-        <div class="bg-white rounded-lg p-6 flex items-center space-x-3">
-            <svg class="animate-spin h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <span class="text-gray-700 font-medium">memproses...</span>
-        </div>
-    `;
-    document.body.appendChild(overlay);
-};
-
-window.hideLoading = function() {
-    const overlay = document.getElementById('loading-overlay');
-    if (overlay) overlay.remove();
-};
-
-/**
- * animation styles
- */
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideInRight {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
-    }
-    
-    @keyframes slideOutRight {
-        from {
-            transform: translateX(0);
-            opacity: 1;
-        }
-        to {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-    }
-    
-    .animate-slideInRight {
-        animation: slideInRight 0.3s ease-out;
-    }
-`;
-document.head.appendChild(style);

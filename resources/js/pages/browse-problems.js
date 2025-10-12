@@ -118,21 +118,28 @@ function initializeSearch() {
     }
 }
 
-// handle province change - load regencies
+// initialize province change handler
 function initializeProvinceChange() {
     if (provinceSelect) {
         provinceSelect.addEventListener('change', handleProvinceChange);
     }
 }
 
-// handle province change
-function handleProvinceChange() {
+// initialize reset button
+function initializeResetButton() {
+    if (resetButton) {
+        resetButton.addEventListener('click', resetFilters);
+    }
+}
+
+// handle province change - load regencies
+async function handleProvinceChange() {
     const provinceId = provinceSelect.value;
     filterState.province_id = provinceId;
     filterState.regency_id = '';
     
     if (provinceId) {
-        loadRegencies(provinceId);
+        await loadRegencies(provinceId);
     } else {
         clearRegencies();
     }
@@ -144,44 +151,45 @@ function handleProvinceChange() {
 async function loadRegencies(provinceId) {
     if (!regencySelect) return;
     
+    regencySelect.disabled = true;
+    regencySelect.innerHTML = '<option value="">Memuat...</option>';
+    
     try {
-        // show loading state
-        regencySelect.disabled = true;
-        regencySelect.innerHTML = '<option value="">Loading...</option>';
+        const response = await fetch(`/api/regencies/${provinceId}`);
+        const data = await response.json();
         
-        const response = await fetch(`/api/public/regencies/${provinceId}`);
-        const regencies = await response.json();
+        clearRegencies();
         
-        // populate regencies
-        regencySelect.innerHTML = '<option value="">Semua Kabupaten/Kota</option>';
-        regencies.forEach(regency => {
-            const option = document.createElement('option');
-            option.value = regency.id;
-            option.textContent = regency.name;
-            regencySelect.appendChild(option);
-        });
-        
-        regencySelect.disabled = false;
+        if (data.regencies && data.regencies.length > 0) {
+            data.regencies.forEach(regency => {
+                const option = document.createElement('option');
+                option.value = regency.id;
+                option.textContent = regency.name;
+                regencySelect.appendChild(option);
+            });
+            regencySelect.disabled = false;
+        } else {
+            regencySelect.innerHTML = '<option value="">Tidak ada kabupaten/kota</option>';
+        }
     } catch (error) {
-        console.error('Error loading regencies:', error);
-        regencySelect.innerHTML = '<option value="">Error loading data</option>';
-        regencySelect.disabled = false;
+        console.error('error loading regencies:', error);
+        regencySelect.innerHTML = '<option value="">Gagal memuat</option>';
     }
 }
 
 // clear regencies dropdown
 function clearRegencies() {
     if (!regencySelect) return;
-    regencySelect.innerHTML = '<option value="">Pilih Provinsi terlebih dahulu</option>';
+    
+    regencySelect.innerHTML = '<option value="">Pilih Kabupaten/Kota</option>';
     regencySelect.disabled = true;
 }
 
-// apply filters dan fetch results
+// apply filters - kirim ke server
 async function applyFilters() {
     showLoading();
     
     try {
-        // build query string
         const params = new URLSearchParams();
         Object.keys(filterState).forEach(key => {
             if (filterState[key]) {
@@ -189,71 +197,35 @@ async function applyFilters() {
             }
         });
         
-        // fetch filtered results
-        const response = await fetch(`/student/problems?${params.toString()}`, {
+        const response = await fetch(`/student/browse-problems?${params.toString()}`, {
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
                 'Accept': 'application/json'
             }
         });
         
-        const data = await response.json();
-        
-        // update DOM with new results
-        if (data.html) {
-            problemsContainer.innerHTML = data.html;
+        if (!response.ok) {
+            throw new Error('gagal memuat data');
         }
         
-        // update pagination if exists
-        if (data.pagination) {
-            updatePagination(data.pagination);
+        const html = await response.text();
+        
+        // update content
+        if (problemsContainer) {
+            problemsContainer.innerHTML = html;
+            
+            // scroll to top dengan smooth animation
+            smoothScrollTo(0);
+            
+            // reinitialize lazy loading untuk images baru
+            initializeLazyLoading();
         }
-        
-        // update URL tanpa reload
-        window.history.pushState({}, '', `?${params.toString()}`);
-        
-        // smooth scroll to results
-        if (window.scrollY > 200) {
-            smoothScrollTo(problemsContainer.offsetTop - 100);
-        }
-        
-        // reinitialize lazy loading untuk images baru
-        initializeLazyLoading();
         
     } catch (error) {
-        console.error('Error applying filters:', error);
+        console.error('error applying filters:', error);
         showError('Gagal memuat data. Silakan coba lagi.');
     } finally {
         hideLoading();
-    }
-}
-
-// update pagination links
-function updatePagination(paginationHtml) {
-    const paginationContainer = document.getElementById('pagination-container');
-    if (paginationContainer) {
-        paginationContainer.innerHTML = paginationHtml;
-        initializePaginationLinks();
-    }
-}
-
-// initialize pagination links
-function initializePaginationLinks() {
-    const paginationLinks = document.querySelectorAll('.pagination a');
-    paginationLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            const url = new URL(this.href);
-            filterState.page = url.searchParams.get('page') || 1;
-            applyFilters();
-        });
-    });
-}
-
-// initialize reset button
-function initializeResetButton() {
-    if (resetButton) {
-        resetButton.addEventListener('click', resetFilters);
     }
 }
 
@@ -308,7 +280,13 @@ function hideLoading() {
 
 // show error message
 function showError(message) {
-    // implementasi toast notification
+    // gunakan notification manager global jika ada
+    if (window.notifications) {
+        window.notifications.show(message, 'error');
+        return;
+    }
+    
+    // fallback: implementasi toast notification sederhana
     const toast = document.createElement('div');
     toast.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-slide-in';
     toast.textContent = message;
