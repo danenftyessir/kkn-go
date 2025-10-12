@@ -60,6 +60,7 @@ class ValidationController extends Controller
 
     /**
      * validasi step registrasi institution
+     * PERBAIKAN: sesuaikan dengan 4 steps di UI
      */
     public function validateInstitutionStep(Request $request)
     {
@@ -71,12 +72,19 @@ class ValidationController extends Controller
         $allMessages = $formRequest->messages();
         
         // tentukan field mana yang akan divalidasi untuk setiap langkah
+        // PERBAIKAN: pisahkan menjadi 4 steps sesuai UI
         $rulesForStep = [];
         if ($step == 1) {
-            $fields = ['institution_name', 'institution_type', 'province_id', 'regency_id', 'address', 'official_email'];
+            // step 1: data instansi
+            $fields = ['institution_name', 'institution_type', 'official_email'];
         } elseif ($step == 2) {
-            $fields = ['pic_name', 'pic_position', 'phone_number', 'logo', 'verification_document', 'website', 'description'];
+            // step 2: lokasi
+            $fields = ['address', 'province_id', 'regency_id'];
         } elseif ($step == 3) {
+            // step 3: penanggung jawab
+            $fields = ['pic_name', 'pic_position', 'phone_number', 'logo', 'verification_document', 'website', 'description'];
+        } elseif ($step == 4) {
+            // step 4: akun & verifikasi
             $fields = ['username', 'password', 'password_confirmation'];
         } else {
             return response()->json(['message' => 'langkah tidak valid.'], 400);

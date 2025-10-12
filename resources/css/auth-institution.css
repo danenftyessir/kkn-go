@@ -1,77 +1,59 @@
 /* ============================================
-   INSTITUTION REGISTER - THEME HIJAU
-   resources/css/auth-institution.css
+   INSTITUTION REGISTRATION - FULL STYLING
    ============================================ */
 
-/* background gradient yang lebih subtle */
-.institution-register .register-container {
+.institution-register {
     min-height: 100vh;
-    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #f0fdf4 100%);
-    position: relative;
-    overflow: hidden;
-}
-
-/* pattern background dengan opacity lebih rendah */
-.institution-register .register-container::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: 
-        radial-gradient(circle at 25% 40%, rgba(34, 197, 94, 0.05) 0%, transparent 50%), 
-        radial-gradient(circle at 75% 70%, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
-    animation: bgPulse 15s ease-in-out infinite;
-}
-
-@keyframes bgPulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    padding: 2rem 0;
 }
 
 /* ============================================
-   STEP INDICATOR - MINIMALIS & CLEAN
+   CONTAINER & LAYOUT
    ============================================ */
 
-/* step container dengan spacing yang lebih baik */
-.institution-register .step-indicator-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    width: 100%;
-    max-width: 600px;
+.institution-register .container {
+    max-width: 800px;
     margin: 0 auto;
-    position: relative;
     padding: 0 1rem;
 }
 
-/* step item wrapper */
+.institution-register .register-card {
+    background: #ffffff;
+    border-radius: 1rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+/* ============================================
+   STEP INDICATOR - MINIMAL & CLEAN
+   ============================================ */
+
+.institution-register .step-indicator {
+    margin-bottom: 3rem;
+    padding: 1.5rem 0;
+}
+
+.institution-register .step-indicator-wrapper {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    position: relative;
+}
+
 .institution-register .step-item {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 0.75rem;
     position: relative;
-    z-index: 2;
-    flex-shrink: 0;
-    opacity: 0;
-    animation: fadeInStep 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    z-index: 10;
 }
 
-.institution-register .step-item:nth-child(1) { animation-delay: 0.1s; }
-.institution-register .step-item:nth-child(3) { animation-delay: 0.2s; }
-.institution-register .step-item:nth-child(5) { animation-delay: 0.3s; }
+/* ============================================
+   STEP CIRCLE - CLEAN & MODERN
+   ============================================ */
 
-@keyframes fadeInStep {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* step circle - design minimalis */
 .institution-register .step-circle {
     width: 52px;
     height: 52px;
@@ -79,63 +61,39 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 700;
-    font-size: 1.25rem;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    font-weight: 600;
+    font-size: 1.125rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
-    background: white;
-    border: 3px solid #e5e7eb;
+    background: #ffffff;
+    border: 2px solid #d1d5db;
     color: #9ca3af;
 }
 
-/* state inactive - subtle */
+/* step inactive - default state */
 .institution-register .step-circle.inactive {
-    background: white;
-    border-color: #e5e7eb;
+    border-color: #d1d5db;
     color: #9ca3af;
+    background: #ffffff;
 }
 
-/* state active - clean dengan gradient lembut */
+/* step active - current step */
 .institution-register .step-circle.active {
-    background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);
     border-color: #10b981;
-    color: white;
-    transform: scale(1.08);
-    box-shadow: 
-        0 4px 12px rgba(16, 185, 129, 0.25),
-        0 2px 4px rgba(16, 185, 129, 0.15);
+    background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    transform: scale(1.05);
 }
 
-/* ring effect saat active - lebih subtle */
-.institution-register .step-circle.active::before {
-    content: '';
-    position: absolute;
-    inset: -6px;
-    border-radius: 50%;
-    background: rgba(16, 185, 129, 0.12);
-    animation: pulseRing 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes pulseRing {
-    0%, 100% {
-        transform: scale(1);
-        opacity: 0.5;
-    }
-    50% {
-        transform: scale(1.15);
-        opacity: 0.2;
-    }
-}
-
-/* state completed - gradient berbeda */
+/* step completed - previous steps */
 .institution-register .step-circle.completed {
-    background: linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%);
-    border-color: #14b8a6;
-    color: white;
-    box-shadow: 0 2px 8px rgba(20, 184, 166, 0.2);
+    border-color: #10b981;
+    background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);
+    color: #ffffff;
 }
 
-/* checkmark icon untuk completed */
+/* hide number pada completed step dan tampilkan checkmark */
 .institution-register .step-circle.completed .step-number {
     display: none;
 }
@@ -173,6 +131,7 @@
 
 /* ============================================
    STEP CONNECTOR - LINE ANTAR STEP
+   PERBAIKAN: alignment dengan center circle
    ============================================ */
 
 .institution-register .step-connector {
@@ -181,7 +140,11 @@
     background: #d1d5db;
     position: relative;
     margin: 0 1.5rem;
-    margin-top: 26px;
+    /* PERBAIKAN: gunakan transform untuk center alignment dengan circle */
+    /* circle height 52px, jadi center ada di 26px dari top */
+    /* tambahkan margin-top setengah dari height circle */
+    align-self: flex-start;
+    margin-top: 26px; /* 52px / 2 = 26px (center circle) */
     border-radius: 1px;
 }
 
@@ -208,45 +171,162 @@
    FORM ELEMENTS - KONSISTEN DENGAN STEP
    ============================================ */
 
-/* input focus dengan warna theme */
-.institution-register .form-input:focus {
+.institution-register .form-field-group {
+    margin-bottom: 1.5rem;
+}
+
+.institution-register .form-label {
+    display: block;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.institution-register .form-label.required::after {
+    content: ' *';
+    color: #ef4444;
+}
+
+.institution-register .form-input-wrapper {
+    position: relative;
+}
+
+.institution-register .form-input,
+.institution-register .form-select,
+.institution-register .form-textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: #ffffff;
+}
+
+.institution-register .form-input:focus,
+.institution-register .form-select:focus,
+.institution-register .form-textarea:focus {
+    outline: none;
     border-color: #10b981;
     box-shadow: 
         0 0 0 3px rgba(16, 185, 129, 0.1),
         0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
+.institution-register .form-input.error,
+.institution-register .form-select.error,
+.institution-register .form-textarea.error {
+    border-color: #ef4444;
+}
+
+.institution-register .form-input-icon {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1.25rem;
+    height: 1.25rem;
+    color: #9ca3af;
+    transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 .institution-register .form-input:focus ~ .form-input-icon {
     color: #10b981;
 }
 
-/* spacing untuk input dengan icon dan dropdown */
-.institution-register .form-input-wrapper .form-input {
-    padding-right: 3.5rem;
+/* ============================================
+   ERROR MESSAGES
+   ============================================ */
+
+.institution-register .error-message {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #ef4444;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background: #fef2f2;
+    border-radius: 0.375rem;
+    border-left: 3px solid #ef4444;
 }
 
-/* spacing untuk select dengan icon */
-.institution-register select.form-input {
-    padding-right: 3rem;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
-    background-position: right 0.75rem center;
-    background-repeat: no-repeat;
-    background-size: 1.25rem 1.25rem;
+.institution-register .error-message svg {
+    flex-shrink: 0;
 }
 
-/* icon positioning - lebih ke kiri */
-.institution-register .form-input-icon {
-    right: 2.5rem;
+/* ============================================
+   FILE UPLOAD STYLING
+   ============================================ */
+
+.institution-register .file-upload-wrapper {
+    position: relative;
+}
+
+.institution-register .file-upload-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 2rem;
+    border: 2px dashed #d1d5db;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: #f9fafb;
+}
+
+.institution-register .file-upload-label:hover {
+    border-color: #10b981;
+    background: #f0fdf4;
+}
+
+.institution-register .file-upload-input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.institution-register .file-upload-text {
+    text-align: center;
+}
+
+.institution-register .file-upload-text p {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin: 0;
+}
+
+.institution-register .file-upload-text .file-name {
+    font-weight: 600;
+    color: #10b981;
+    margin-top: 0.5rem;
 }
 
 /* ============================================
    BUTTONS - SMOOTH INTERACTIONS
    ============================================ */
 
+.institution-register .btn-primary,
+.institution-register .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    border: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 .institution-register .btn-primary {
     background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
 }
 
 .institution-register .btn-primary:hover:not(:disabled) {
@@ -259,46 +339,199 @@
     transform: translateY(0);
 }
 
-/* button secondary */
+.institution-register .btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.institution-register .btn-secondary {
+    background: #f3f4f6;
+    color: #4b5563;
+}
+
 .institution-register .btn-secondary:hover {
-    border-color: #10b981;
-    color: #10b981;
+    background: #e5e7eb;
+    transform: translateY(-1px);
+}
+
+.institution-register .btn-secondary:active {
+    transform: translateY(0);
 }
 
 /* ============================================
-   FILE UPLOAD - HOVER EFFECT
+   CHECKBOX & RADIO
    ============================================ */
 
-.institution-register .file-upload-area:hover {
-    border-color: #10b981;
-    background: rgba(16, 185, 129, 0.03);
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.08);
+.institution-register .checkbox-wrapper {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
 }
 
-.institution-register .file-upload-area:hover .file-upload-icon {
-    color: #10b981;
-    transform: scale(1.05);
+.institution-register .checkbox-input {
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 2px solid #d1d5db;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.institution-register .checkbox-input:checked {
+    background-color: #10b981;
+    border-color: #10b981;
+}
+
+.institution-register .checkbox-label {
+    flex: 1;
+    font-size: 0.875rem;
+    color: #4b5563;
+    line-height: 1.5;
 }
 
 /* ============================================
-   LINKS & ACCENT COLORS
+   LOADING OVERLAY
    ============================================ */
 
-.institution-register a.text-green-600 {
-    color: #10b981;
-    transition: color 0.2s ease;
+.institution-register .loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.institution-register a.text-green-600:hover {
+.institution-register .loading-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.institution-register .loading-spinner {
+    width: 60px;
+    height: 60px;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #10b981;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.institution-register .loading-text {
+    color: #ffffff;
+    margin-top: 1.5rem;
+    font-size: 1.125rem;
+    font-weight: 500;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ============================================
+   HEADER SECTION
+   ============================================ */
+
+.institution-register .header-section {
+    text-align: center;
+    padding: 2rem 0 1rem;
+}
+
+.institution-register .header-section h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+}
+
+.institution-register .header-section p {
+    font-size: 1rem;
+    color: #6b7280;
+}
+
+.institution-register .login-link {
+    text-align: center;
+    margin-top: 1rem;
+    padding: 1rem 0;
+}
+
+.institution-register .login-link span {
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.institution-register .login-link a {
+    color: #10b981;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.institution-register .login-link a:hover {
     color: #059669;
 }
 
 /* ============================================
-   LOADING SPINNER
+   STEP CONTENT SECTIONS
    ============================================ */
 
-.institution-register .spinner {
-    border-top-color: #10b981;
+.institution-register .step-content {
+    padding: 2rem;
+}
+
+.institution-register .step-content h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+}
+
+.institution-register .step-content > p {
+    color: #6b7280;
+    margin-bottom: 2rem;
+}
+
+.institution-register .space-y-6 > * + * {
+    margin-top: 1.5rem;
+}
+
+/* ============================================
+   GRID LAYOUTS
+   ============================================ */
+
+.institution-register .grid {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.institution-register .grid-cols-2 {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+.institution-register .fade-in-up {
+    animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* ============================================
@@ -306,40 +539,94 @@
    ============================================ */
 
 @media (max-width: 768px) {
-    .institution-register .step-indicator-container {
-        max-width: 100%;
-        padding: 0 0.5rem;
+    .institution-register {
+        padding: 1rem 0;
     }
-    
+
     .institution-register .step-circle {
         width: 44px;
         height: 44px;
-        font-size: 1.125rem;
-    }
-    
-    .institution-register .step-label {
-        font-size: 0.8125rem;
+        font-size: 1rem;
     }
     
     .institution-register .step-connector {
         margin: 0 1rem;
-        margin-top: 22px;
+        margin-top: 22px; /* 44px / 2 = 22px untuk mobile */
+    }
+    
+    .institution-register .step-label {
+        font-size: 0.75rem;
+    }
+
+    .institution-register .step-content {
+        padding: 1.5rem;
+    }
+
+    .institution-register .grid-cols-2 {
+        grid-template-columns: 1fr;
+    }
+
+    .institution-register .header-section h1 {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .institution-register .step-connector {
+        margin: 0 0.5rem;
+    }
+
+    .institution-register .step-label {
+        font-size: 0.7rem;
+    }
+
+    .institution-register .btn-primary,
+    .institution-register .btn-secondary {
+        width: 100%;
+        margin-top: 0.5rem;
+    }
+
+    .institution-register .flex.justify-between {
+        flex-direction: column-reverse;
     }
 }
 
 /* ============================================
-   ACCESSIBILITY - REDUCED MOTION
+   UTILITY CLASSES
    ============================================ */
 
-@media (prefers-reduced-motion: reduce) {
-    .institution-register .step-item,
-    .institution-register .step-circle,
-    .institution-register .step-connector::before {
-        animation: none !important;
-        transition-duration: 0.05s !important;
-    }
-    
-    .institution-register .register-container::before {
-        animation: none;
-    }
+.institution-register .hidden {
+    display: none !important;
+}
+
+.institution-register .text-center {
+    text-align: center;
+}
+
+.institution-register .flex {
+    display: flex;
+}
+
+.institution-register .justify-between {
+    justify-content: space-between;
+}
+
+.institution-register .items-center {
+    align-items: center;
+}
+
+.institution-register .gap-2 {
+    gap: 0.5rem;
+}
+
+.institution-register .gap-4 {
+    gap: 1rem;
+}
+
+.institution-register .mt-8 {
+    margin-top: 2rem;
+}
+
+.institution-register .mb-8 {
+    margin-bottom: 2rem;
 }
