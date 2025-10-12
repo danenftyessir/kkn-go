@@ -5,7 +5,6 @@
 @section('content')
 <div class="min-h-screen bg-white">
     
-    {{-- hero section - jakarta smart city style --}}
     <section class="relative h-screen min-h-[600px] overflow-hidden">
         {{-- background image --}}
         <div class="absolute inset-0">
@@ -28,6 +27,119 @@
         </div>
     </section>
 
+    {{-- layer 4: latar belakang masalah - light gray background --}}
+    <section class="py-24 bg-gray-50">
+        <div class="container mx-auto px-6">
+            {{-- header dengan logo --}}
+            <div class="text-center mb-16">
+                <div class="flex justify-center mb-8">
+                    <img src="{{ asset('kkn-go-logo.png') }}" alt="Logo KKN-Go" class="h-20 w-20">
+                </div>
+                <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
+                    Latar Belakang Masalah
+                </h2>
+                <div class="max-w-4xl mx-auto">
+                    <p class="text-lg text-gray-700 leading-relaxed mb-4">
+                        Indonesia memiliki potensi intelektual yang luar biasa dengan <span class="font-bold text-blue-600">8,3 juta mahasiswa aktif</span> di 4.500 perguruan tinggi, dimana sekitar <span class="font-bold text-blue-600">520.000 mahasiswa melaksanakan KKN</span> setiap tahun menghasilkan lebih dari 100.000 laporan penelitian.
+                    </p>
+                    <p class="text-lg text-gray-700 leading-relaxed">
+                        Namun, data menunjukkan bahwa <span class="font-bold text-red-600">76% hasil penelitian mahasiswa hanya berakhir sebagai dokumen arsip</span> tanpa implementasi nyata, menciptakan pemborosan sumber daya senilai <span class="font-bold text-red-600">±Rp 1,2 triliun per tahun</span>.
+                    </p>
+                </div>
+            </div>
+
+            {{-- 3 masalah krusial --}}
+            <div class="max-w-6xl mx-auto">
+                <div class="grid md:grid-cols-3 gap-8">
+                    {{-- masalah 1 --}}
+                    <div class="bg-white rounded-lg p-8 shadow-lg hover:shadow-xl transition-shadow">
+                        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-6">
+                            <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-4">Ketidakselarasan Program</h3>
+                        <p class="text-gray-600 leading-relaxed mb-4">
+                            Mahasiswa menghabiskan waktu mencari masalah yang sering kali tidak tepat sasaran dengan kebutuhan prioritas daerah.
+                        </p>
+                        <p class="text-sm text-gray-500 italic">
+                            "Setiap tahun kami memiliki daftar masalah prioritas, tapi mahasiswa KKN justru mencari masalah baru yang tidak tepat sasaran." - Kepala Desa Karanganyar
+                        </p>
+                    </div>
+
+                    {{-- masalah 2 --}}
+                    <div class="bg-white rounded-lg p-8 shadow-lg hover:shadow-xl transition-shadow">
+                        <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-6">
+                            <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-4">Tidak Ada Pengakuan Resmi</h3>
+                        <p class="text-gray-600 leading-relaxed mb-4">
+                            Tidak ada mekanisme untuk mengevaluasi dan memberikan pengakuan resmi terhadap hasil KKN berkualitas.
+                        </p>
+                        <p class="text-sm text-gray-500 italic">
+                            "Kami tidak memiliki sistem untuk memberikan pengakuan resmi, padahal ini bisa menjadi portofolio berharga bagi mahasiswa." - Kepala Bidang Pengembangan Desa
+                        </p>
+                    </div>
+
+                    {{-- masalah 3 --}}
+                    <div class="bg-white rounded-lg p-8 shadow-lg hover:shadow-xl transition-shadow">
+                        <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-6">
+                            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-4">Pemborosan Pengetahuan</h3>
+                        <p class="text-gray-600 leading-relaxed mb-4">
+                            Indonesia kehilangan harta karun pengetahuan karena tidak ada sistem yang mengintegrasikan hasil KKN secara nasional.
+                        </p>
+                        <p class="text-sm text-gray-500 italic">
+                            "Bayangkan jika seluruh warga negara bisa mengakses ribuan solusi inovatif yang dihasilkan mahasiswa setiap tahun." - Prof. Widodo, Universitas Indonesia
+                        </p>
+                    </div>
+                </div>
+
+                {{-- statistik tambahan --}}
+                <div class="mt-16 grid md:grid-cols-2 gap-8">
+                    <div class="bg-white rounded-lg p-8 border-l-4 border-blue-600">
+                        <div class="flex items-start gap-4">
+                            <div class="flex-shrink-0">
+                                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div>
+                                <p class="text-gray-600 leading-relaxed">
+                                    Dari <span class="font-bold text-gray-900">83.436 desa/kelurahan</span> di Indonesia, hanya <span class="font-bold text-blue-600">23%</span> yang telah menerapkan digitalisasi administrasi.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg p-8 border-l-4 border-red-600">
+                        <div class="flex items-start gap-4">
+                            <div class="flex-shrink-0">
+                                <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div>
+                                <p class="text-gray-600 leading-relaxed">
+                                    <span class="font-bold text-red-600">72%</span> pemerintah desa mengalami kesulitan mengakses data dan riset untuk pengambilan keputusan berbasis bukti.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     {{-- layer 1: intro section - white background --}}
     <section class="py-24 bg-white">
         <div class="container mx-auto px-6">
@@ -44,12 +156,6 @@
                     <p class="text-lg text-gray-700 leading-relaxed">
                         KKN-Go berdiri sebagai katalisator dalam menciptakan ekosistem Kuliah Kerja Nyata 4.0 di Indonesia. Kami adalah laboratorium inovasi sekaligus wadah sinergi antara mahasiswa dan pemerintah daerah.
                     </p>
-                    <a href="#" class="inline-flex items-center text-blue-600 font-semibold hover:text-blue-700 transition-colors group">
-                        Sejarah KKN-Go
-                        <svg class="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
-                        </svg>
-                    </a>
                 </div>
             </div>
         </div>
@@ -94,35 +200,7 @@
         </div>
     </section>
 
-    {{-- layer 3: cta section - dark blue background with pattern --}}
-    <section class="relative py-24 bg-gradient-to-br from-blue-900 to-indigo-900 overflow-hidden">
-        {{-- decorative pattern --}}
-        <div class="absolute inset-0 opacity-10">
-            <div class="absolute inset-0" style="background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,.1) 35px, rgba(255,255,255,.1) 70px);">
-            </div>
-        </div>
-        
-        <div class="container mx-auto px-6 relative z-10">
-            <div class="max-w-4xl mx-auto text-center">
-                <h2 class="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">
-                    Revolusi Mahasiswa – Mengubah KKN Menjadi Solusi Nyata Bangsa
-                </h2>
-                <p class="text-xl text-blue-100 leading-relaxed mb-10">
-                    Platform digital yang mentransformasi Kuliah Kerja Nyata dari sekadar kewajiban akademik menjadi katalisator pembangunan berbasis data di Indonesia
-                </p>
-                <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <a href="{{ route('register.student') }}" class="px-8 py-4 bg-white text-blue-900 rounded-lg font-bold hover:bg-blue-50 transition-all duration-300 shadow-lg hover:shadow-xl">
-                        Daftar Sebagai Mahasiswa
-                    </a>
-                    <a href="{{ route('register.institution') }}" class="px-8 py-4 bg-transparent text-white rounded-lg font-bold hover:bg-white/10 transition-all duration-300 border-2 border-white">
-                        Daftar Sebagai Instansi
-                    </a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    {{-- layer 4: impact section - white background with image and icon list --}}
+    {{-- layer 3: impact section - white background with image and icon list --}}
     <section class="py-24 bg-white">
         <div class="container mx-auto px-6">
             <div class="grid md:grid-cols-2 gap-12 items-center">
