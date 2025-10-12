@@ -5,36 +5,34 @@ namespace App\Services;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * service untuk handle file operations dengan Supabase Storage
- * menggunakan Supabase REST API
+ * menggunakan Supabase REST API dengan fallback ke local storage
  * 
  * dokumentasi: https://supabase.com/docs/reference/javascript/storage-from-upload
- * 
- * path: app/Services/SupabaseStorageService.php
  */
 class SupabaseStorageService
 {
     protected $projectId;
-    protected $anonKey;
     protected $serviceKey;
     protected $bucketName;
     protected $baseUrl;
-    protected $storageUrl;
+    protected $useSupabase;
 
     public function __construct()
     {
         $this->projectId = config('services.supabase.project_id');
-        $this->anonKey = config('services.supabase.anon_key');
         $this->serviceKey = config('services.supabase.service_key');
         $this->bucketName = config('services.supabase.bucket', 'kkn-go storage');
         $this->baseUrl = "https://{$this->projectId}.supabase.co/storage/v1";
-        $this->storageUrl = "https://{$this->projectId}.supabase.co/storage/v1/object/public/{$this->bucketName}";
         
-        // log config untuk debugging (hanya di development)
-        if (config('app.debug') && (!$this->projectId || !$this->serviceKey)) {
-            Log::warning("⚠️ Supabase config tidak lengkap!", [
+        // cek apakah supabase dikonfigurasi dengan benar
+        $this->useSupabase = !empty($this->projectId) && !empty($this->serviceKey);
+        
+        if (config('app.debug') && !$this->useSupabase) {
+            Log::warning("⚠️ Supabase config tidak lengkap - akan menggunakan local storage!", [
                 'project_id' => $this->projectId ? '✅' : '❌',
                 'service_key' => $this->serviceKey ? '✅' : '❌',
                 'bucket' => $this->bucketName,
@@ -43,21 +41,20 @@ class SupabaseStorageService
     }
 
     /**
-     * upload file ke supabase storage
+     * upload file ke supabase storage dengan fallback ke local
      * 
      * @param UploadedFile $file file yang akan diupload
-     * @param string $path path tujuan di bucket (contoh: proposals/file.pdf)
+     * @param string $path path tujuan di bucket (contoh: problems/file.jpg)
      * @return string|false path file yang berhasil diupload atau false jika gagal
      */
     public function uploadFile(UploadedFile $file, string $path)
     {
+        // jika supabase tidak dikonfigurasi, gunakan local storage
+        if (!$this->useSupabase) {
+            return $this->uploadToLocal($file, $path);
+        }
+
         try {
-            // validasi config
-            if (!$this->projectId || !$this->serviceKey) {
-                Log::error("❌ Supabase config tidak lengkap - tidak bisa upload");
-                return false;
-            }
-            
             // baca file content
             $fileContent = file_get_contents($file->getRealPath());
             $mimeType = $file->getMimeType();
@@ -66,52 +63,102 @@ class SupabaseStorageService
             Log::info("📤 Uploading to Supabase", [
                 'path' => $path,
                 'mime' => $mimeType,
-                'size' => $fileSize . ' bytes',
+                'size' => number_format($fileSize) . ' bytes',
                 'bucket' => $this->bucketName,
             ]);
+
+            // encode path untuk URL
+            $encodedPath = $this->encodePath($path);
 
             // upload ke supabase menggunakan POST method
             $response = Http::timeout(30)
                 ->withHeaders([
                     'Authorization' => 'Bearer ' . $this->serviceKey,
                     'Content-Type' => $mimeType,
-                    'x-upsert' => 'false', // jangan overwrite jika sudah ada
+                    'x-upsert' => 'true', // allow overwrite jika file sudah ada
                 ])
                 ->withBody($fileContent, $mimeType)
-                ->post("{$this->baseUrl}/object/{$this->bucketName}/{$path}");
+                ->post("{$this->baseUrl}/object/{$this->bucketName}/{$encodedPath}");
 
             // check response
             if ($response->successful()) {
                 $publicUrl = $this->getPublicUrl($path);
                 
-                Log::info("✅ Upload SUCCESS", [
+                Log::info("✅ Upload SUCCESS to Supabase", [
                     'path' => $path,
                     'status' => $response->status(),
                     'public_url' => $publicUrl,
                 ]);
                 
-                return $path;
+                return $path; // return path yang akan disimpan di database
             }
 
-            // log error detail
-            Log::error("❌ Upload FAILED", [
+            // jika gagal, log error dan coba local storage
+            Log::error("❌ Upload FAILED to Supabase", [
                 'path' => $path,
                 'status' => $response->status(),
                 'body' => $response->body(),
-                'headers' => $response->headers(),
             ]);
             
-            return false;
+            // fallback ke local storage
+            Log::info("⚠️ Falling back to local storage");
+            return $this->uploadToLocal($file, $path);
 
         } catch (\Exception $e) {
-            Log::error("❌ Upload EXCEPTION", [
+            Log::error("❌ Upload EXCEPTION to Supabase", [
                 'path' => $path,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
             ]);
             
+            // fallback ke local storage
+            Log::info("⚠️ Falling back to local storage");
+            return $this->uploadToLocal($file, $path);
+        }
+    }
+
+    /**
+     * upload file ke local storage sebagai fallback
+     * 
+     * @param UploadedFile $file file yang akan diupload
+     * @param string $path path tujuan
+     * @return string|false path file atau false jika gagal
+     */
+    protected function uploadToLocal(UploadedFile $file, string $path)
+    {
+        try {
+            Log::info("📁 Uploading to local storage", ['path' => $path]);
+            
+            // simpan ke storage/app/public/
+            $storedPath = $file->storeAs(
+                dirname($path), 
+                basename($path), 
+                'public'
+            );
+            
+            if ($storedPath) {
+                Log::info("✅ Upload SUCCESS to local storage", [
+                    'path' => $storedPath,
+                    'url' => Storage::disk('public')->url($storedPath)
+                ]);
+                return $storedPath;
+            }
+            
+            return false;
+            
+        } catch (\Exception $e) {
+            Log::error("❌ Upload FAILED to local storage", [
+                'error' => $e->getMessage()
+            ]);
             return false;
         }
+    }
+
+    /**
+     * encode path untuk URL (handle spasi dan karakter khusus)
+     */
+    protected function encodePath(string $path): string
+    {
+        return implode('/', array_map('rawurlencode', explode('/', $path)));
     }
 
     /**
@@ -122,11 +169,16 @@ class SupabaseStorageService
      */
     public function getPublicUrl(string $path): string
     {
+        if (!$this->useSupabase) {
+            // return local storage URL
+            return asset('storage/' . $path);
+        }
+        
         // hilangkan slash di awal jika ada
         $path = ltrim($path, '/');
         
         // encode path untuk URL
-        $encodedPath = implode('/', array_map('rawurlencode', explode('/', $path)));
+        $encodedPath = $this->encodePath($path);
         
         // encode bucket name (ganti spasi dengan %20)
         $encodedBucket = str_replace(' ', '%20', $this->bucketName);
@@ -142,27 +194,26 @@ class SupabaseStorageService
      */
     public function exists(string $path): bool
     {
+        if (!$this->useSupabase) {
+            return Storage::disk('public')->exists($path);
+        }
+
         try {
-            Log::info("🔍 Checking if file exists", ['path' => $path]);
+            $encodedPath = $this->encodePath($path);
             
             $response = Http::timeout(10)
                 ->withHeaders([
                     'Authorization' => 'Bearer ' . $this->serviceKey,
                 ])
-                ->head("{$this->baseUrl}/object/{$this->bucketName}/{$path}");
+                ->head("{$this->baseUrl}/object/{$this->bucketName}/{$encodedPath}");
 
-            $exists = $response->successful();
-            
-            Log::info($exists ? "✅ File exists" : "❌ File tidak ditemukan", ['path' => $path]);
-            
-            return $exists;
+            return $response->successful();
 
         } catch (\Exception $e) {
-            Log::error("❌ Check file EXCEPTION", [
+            Log::error("❌ Check file exists EXCEPTION", [
                 'path' => $path,
                 'error' => $e->getMessage(),
             ]);
-            
             return false;
         }
     }
@@ -175,19 +226,20 @@ class SupabaseStorageService
      */
     public function delete(string $path): bool
     {
-        try {
-            if (!$this->projectId || !$this->serviceKey) {
-                Log::error("❌ Supabase config tidak lengkap - tidak bisa delete");
-                return false;
-            }
+        if (!$this->useSupabase) {
+            return Storage::disk('public')->delete($path);
+        }
 
+        try {
             Log::info("🗑️ Deleting file from Supabase", ['path' => $path]);
+
+            $encodedPath = $this->encodePath($path);
 
             $response = Http::timeout(10)
                 ->withHeaders([
                     'Authorization' => 'Bearer ' . $this->serviceKey,
                 ])
-                ->delete("{$this->baseUrl}/object/{$this->bucketName}/{$path}");
+                ->delete("{$this->baseUrl}/object/{$this->bucketName}/{$encodedPath}");
 
             if ($response->successful()) {
                 Log::info("✅ Delete SUCCESS", ['path' => $path]);
@@ -207,65 +259,26 @@ class SupabaseStorageService
                 'path' => $path,
                 'error' => $e->getMessage(),
             ]);
-            
             return false;
         }
     }
 
     /**
-     * list files di folder tertentu
+     * upload gambar problem ke supabase
      * 
-     * @param string $folder folder path (contoh: proposals/)
-     * @return array list file paths
+     * @param UploadedFile $file file gambar
+     * @param int $problemId ID problem
+     * @param bool $isCover apakah ini cover image
+     * @return string|false path file yang berhasil diupload atau false jika gagal
      */
-    public function listFiles(string $folder = ''): array
+    public function uploadProblemImage(UploadedFile $file, int $problemId, bool $isCover = false)
     {
-        try {
-            Log::info("📂 Listing files in folder", ['folder' => $folder]);
+        $extension = $file->getClientOriginalExtension();
+        $prefix = $isCover ? 'cover' : 'img';
+        $filename = "problem-{$problemId}-{$prefix}-" . time() . '.' . $extension;
+        $path = 'problems/' . $filename;
 
-            $response = Http::timeout(10)
-                ->withHeaders([
-                    'Authorization' => 'Bearer ' . $this->serviceKey,
-                ])
-                ->post("{$this->baseUrl}/object/list/{$this->bucketName}", [
-                    'prefix' => $folder,
-                ]);
-
-            if ($response->successful()) {
-                $files = $response->json();
-                
-                Log::info("✅ List files SUCCESS", [
-                    'folder' => $folder,
-                    'count' => count($files),
-                ]);
-                
-                // ambil hanya name dari setiap file
-                $filePaths = [];
-                foreach ($files as $file) {
-                    if (isset($file['name'])) {
-                        $filePath = $folder ? $folder . '/' . $file['name'] : $file['name'];
-                        $filePaths[] = $filePath;
-                    }
-                }
-                
-                return $filePaths;
-            }
-
-            Log::error("❌ List files FAILED", [
-                'folder' => $folder,
-                'status' => $response->status(),
-            ]);
-            
-            return [];
-
-        } catch (\Exception $e) {
-            Log::error("❌ List files EXCEPTION", [
-                'folder' => $folder,
-                'error' => $e->getMessage(),
-            ]);
-            
-            return [];
-        }
+        return $this->uploadFile($file, $path);
     }
 
     /**
@@ -301,31 +314,13 @@ class SupabaseStorageService
     }
 
     /**
-     * upload gambar problem ke supabase
-     * 
-     * @param UploadedFile $file file gambar
-     * @param int $problemId ID problem
-     * @param bool $isCover apakah ini cover image
-     * @return string|false path file yang berhasil diupload atau false jika gagal
-     */
-    public function uploadProblemImage(UploadedFile $file, int $problemId, bool $isCover = false)
-    {
-        $extension = $file->getClientOriginalExtension();
-        $prefix = $isCover ? 'cover' : 'img';
-        $filename = "problem-{$problemId}-{$prefix}-" . time() . '.' . $extension;
-        $path = 'problems/' . $filename;
-
-        return $this->uploadFile($file, $path);
-    }
-
-    /**
      * upload document ke supabase
      * 
      * @param UploadedFile $file file document
      * @param string $category kategori document (reports, certificates, dll)
      * @return string|false path file yang berhasil diupload atau false jika gagal
      */
-    public function uploadDocument(UploadedFile $file, string $category = 'documents')
+    public function uploadDocument(UploadedFile $file, string $category = 'documents/reports')
     {
         $extension = $file->getClientOriginalExtension();
         $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
