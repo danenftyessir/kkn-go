@@ -25,13 +25,11 @@ class StudentRegisterRequest extends FormRequest
                 'required',
                 'string',
                 'max:50',
-                'regex:/^[a-zA-Z\s]+$/'
             ],
             'last_name' => [
                 'required',
                 'string',
                 'max:50',
-                'regex:/^[a-zA-Z\s]+$/'
             ],
             'email' => [
                 'required',
@@ -39,26 +37,19 @@ class StudentRegisterRequest extends FormRequest
                 'email',
                 'max:255',
                 'unique:users,email',
-                // validasi email harus dari domain universitas (.ac.id atau .edu)
-                'regex:/^[a-zA-Z0-9._%+-]+@([a-zA-Z0-9-]+\.)*ac\.id$|^[a-zA-Z0-9._%+-]+@([a-zA-Z0-9-]+\.)*edu$/'
             ],
             'username' => [
                 'required',
                 'string',
                 'max:50',
                 'unique:users,username',
-                'regex:/^[a-zA-Z0-9._-]+$/',
-                'min:4'
+                'min:4',
             ],
             'password' => [
                 'required',
                 'string',
                 'confirmed',
-                Password::min(8)
-                    ->mixedCase()
-                    ->numbers()
-                    ->symbols()
-                    ->uncompromised(app()->isProduction() ? 3 : 0) // Cek hanya di produksi
+                'min:8',
             ],
             'university_id' => [
                 'required',
@@ -73,7 +64,7 @@ class StudentRegisterRequest extends FormRequest
                 'required',
                 'string',
                 'max:20',
-                'regex:/^[0-9]+$/'
+                'unique:students,nim',
             ],
             'semester' => [
                 'required',
@@ -84,7 +75,8 @@ class StudentRegisterRequest extends FormRequest
             'whatsapp_number' => [
                 'required',
                 'string',
-                'regex:/^(\+62|62|0)[0-9]{9,12}$/'
+                'min:10',
+                'max:20',
             ],
             'profile_photo' => [
                 'nullable',
@@ -101,70 +93,31 @@ class StudentRegisterRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'first_name.required' => 'nama depan wajib diisi',
-            'first_name.regex' => 'nama depan hanya boleh berisi huruf',
-            'last_name.required' => 'nama belakang wajib diisi',
-            'last_name.regex' => 'nama belakang hanya boleh berisi huruf',
-            'email.required' => 'email wajib diisi',
-            'email.email' => 'format email tidak valid',
-            'email.unique' => 'email sudah terdaftar',
-            'email.regex' => 'gunakan email universitas (.ac.id atau .edu)',
-            'username.required' => 'username wajib diisi',
-            'username.unique' => 'username sudah digunakan',
-            'username.regex' => 'username hanya boleh berisi huruf, angka, titik, underscore, dan strip',
-            'username.min' => 'username minimal 4 karakter',
-            'password.required' => 'password wajib diisi',
-            'password.confirmed' => 'konfirmasi password tidak cocok',
-            'university_id.required' => 'universitas wajib dipilih',
-            'university_id.exists' => 'universitas tidak valid',
-            'major.required' => 'jurusan wajib diisi',
-            'nim.required' => 'nim wajib diisi',
-            'nim.regex' => 'nim hanya boleh berisi angka',
-            'semester.required' => 'semester wajib dipilih',
-            'semester.min' => 'semester minimal 1',
-            'semester.max' => 'semester maksimal 14',
-            'whatsapp_number.required' => 'nomor whatsapp wajib diisi',
-            'whatsapp_number.regex' => 'format nomor whatsapp tidak valid',
-            'profile_photo.image' => 'file harus berupa gambar',
-            'profile_photo.mimes' => 'foto profil harus berformat jpeg, jpg, atau png',
-            'profile_photo.max' => 'ukuran foto profil maksimal 2MB'
+            'first_name.required' => 'Nama Depan Wajib Diisi',
+            'last_name.required' => 'Nama Belakang Wajib Diisi',
+            'email.required' => 'Email Wajib Diisi',
+            'email.email' => 'Format Email Tidak Valid',
+            'email.unique' => 'Email Sudah Terdaftar',
+            'username.required' => 'Username Wajib Diisi',
+            'username.unique' => 'Username Sudah Digunakan',
+            'username.min' => 'Username Minimal 4 Karakter',
+            'password.required' => 'Password Wajib Diisi',
+            'password.confirmed' => 'Konfirmasi Password Tidak Cocok',
+            'password.min' => 'Password Minimal 8 Karakter',
+            'university_id.required' => 'Universitas Wajib Dipilih',
+            'university_id.exists' => 'Universitas Tidak Valid',
+            'major.required' => 'Jurusan Wajib Diisi',
+            'nim.required' => 'NIM Wajib Diisi',
+            'nim.unique' => 'NIM Sudah Terdaftar',
+            'semester.required' => 'Semester Wajib Dipilih',
+            'semester.min' => 'Semester Minimal 1',
+            'semester.max' => 'Semester Maksimal 14',
+            'whatsapp_number.required' => 'Nomor WhatsApp Wajib Diisi',
+            'whatsapp_number.min' => 'Nomor WhatsApp Minimal 10 Digit',
+            'profile_photo.image' => 'File Harus Berupa Gambar',
+            'profile_photo.mimes' => 'Foto Profil Harus Berformat JPEG, JPG, Atau PNG',
+            'profile_photo.max' => 'Ukuran Foto Profil Maksimal 2MB'
         ];
-    }
-
-    /**
-     * normalize data sebelum validasi
-     */
-    protected function prepareForValidation(): void
-    {
-        $this->merge([
-            'email' => strtolower($this->email ?? ''),
-            'username' => strtolower($this->username ?? ''),
-            'first_name' => ucwords(strtolower($this->first_name ?? '')),
-            'last_name' => ucwords(strtolower($this->last_name ?? '')),
-            // normalize nomor whatsapp
-            'whatsapp_number' => $this->normalizePhoneNumber($this->whatsapp_number ?? '')
-        ]);
-    }
-
-    /**
-     * normalize nomor telepon
-     */
-    private function normalizePhoneNumber(string $phone): string
-    {
-        // hapus spasi dan karakter non-numeric
-        $phone = preg_replace('/[^0-9+]/', '', $phone);
-        
-        // convert 08xx menjadi 628xx
-        if (str_starts_with($phone, '08')) {
-            $phone = '62' . substr($phone, 1);
-        }
-        
-        // tambahkan + jika belum ada
-        if (!str_starts_with($phone, '+')) {
-            $phone = '+' . $phone;
-        }
-        
-        return $phone;
     }
 
     /**
@@ -173,17 +126,17 @@ class StudentRegisterRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'first_name' => 'nama depan',
-            'last_name' => 'nama belakang',
-            'email' => 'email',
-            'username' => 'username',
-            'password' => 'password',
-            'university_id' => 'universitas',
-            'major' => 'jurusan',
-            'nim' => 'nim',
-            'semester' => 'semester',
-            'whatsapp_number' => 'nomor whatsapp',
-            'profile_photo' => 'foto profil'
+            'first_name' => 'Nama Depan',
+            'last_name' => 'Nama Belakang',
+            'email' => 'Email',
+            'username' => 'Username',
+            'password' => 'Password',
+            'university_id' => 'Universitas',
+            'major' => 'Jurusan',
+            'nim' => 'NIM',
+            'semester' => 'Semester',
+            'whatsapp_number' => 'Nomor WhatsApp',
+            'profile_photo' => 'Foto Profil'
         ];
     }
 }

@@ -754,9 +754,14 @@
 
         } catch(error) {
             console.error('Submit error:', error);
-            alert('Terjadi kesalahan saat mengirimkan formulir. Silakan coba lagi.');
+            alert('Terjadi Kesalahan Saat Mengirimkan Formulir. Periksa Koneksi Internet Anda Dan Coba Lagi.');
             loadingOverlay.style.display = 'none';
         }
+    });
+
+    // handle server errors di console untuk debugging
+    window.addEventListener('error', function(e) {
+        console.error('Global error:', e);
     });
     </script>
 </body>
