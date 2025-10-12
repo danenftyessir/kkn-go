@@ -221,7 +221,7 @@ Route::middleware(['auth', 'check.user.type:institution'])->prefix('institution'
         Route::post('/{id}/milestone', [ProjectManagementController::class, 'addMilestone'])->name('add-milestone');
         Route::put('/{id}/milestone/{milestoneId}', [ProjectManagementController::class, 'updateMilestone'])->name('update-milestone');
     });
-    
+
     // reviews
     Route::prefix('reviews')->name('reviews.')->group(function () {
         Route::get('/', [ReviewController::class, 'index'])->name('index');
@@ -239,6 +239,18 @@ Route::middleware(['auth', 'check.user.type:institution'])->prefix('institution'
         Route::put('/', [InstitutionProfileController::class, 'update'])->name('update');
         Route::put('/password', [InstitutionProfileController::class, 'updatePassword'])->name('password.update');
     });
+
+
+/*
+|--------------------------------------------------------------------------
+| API Routes untuk Dynamic Dropdown
+|--------------------------------------------------------------------------
+*/
+
+// API untuk mendapatkan regencies berdasarkan province
+// digunakan di form create/edit problem untuk dynamic dropdown
+Route::get('/api/regencies/{provinceId}', [ProblemController::class, 'getRegencies'])->name('api.regencies');
+
 });
 
 /*
