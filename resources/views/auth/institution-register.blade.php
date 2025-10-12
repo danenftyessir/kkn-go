@@ -104,21 +104,26 @@
             font-weight: 600;
         }
         
-        /* Step Track Line - Pas dengan lingkaran step */
+        /* Step Track Line - Presisi pas dengan lingkaran step */
         .step-track {
             position: absolute;
             top: 1.25rem;
-            left: 12.5%;
-            right: 12.5%;
+            left: calc(25% + 1.25rem);
+            right: calc(25% + 1.25rem);
             height: 2px;
             background: rgba(156, 163, 175, 0.2);
             z-index: 0;
         }
         
-        /* Perbaikan positioning step */
+        /* Container step indicator */
         .step-indicator > div:last-child {
             position: relative;
-            padding: 0 2rem;
+        }
+        
+        /* Individual step positioning */
+        .step {
+            position: relative;
+            z-index: 1;
         }
         
         /* GLASS MORPHISM CARD */
@@ -809,6 +814,25 @@
     // multi-step form navigation
     let currentStep = 1;
 
+    // cek apakah ada error validation saat page load
+    window.addEventListener('DOMContentLoaded', function() {
+        // jika ada error, tetap di step terakhir yang diisi user
+        @if($errors->any())
+            // tentukan step mana yang error
+            @if($errors->has('institution_name') || $errors->has('institution_type') || $errors->has('official_email') || $errors->has('phone_number'))
+                showStep(1);
+            @elseif($errors->has('address') || $errors->has('province_id') || $errors->has('regency_id'))
+                showStep(2);
+            @elseif($errors->has('pic_name') || $errors->has('pic_position'))
+                showStep(3);
+            @elseif($errors->has('username') || $errors->has('password') || $errors->has('logo') || $errors->has('verification_document'))
+                showStep(4);
+            @else
+                showStep(1);
+            @endif
+        @endif
+    });
+
     function showStep(step) {
         // sembunyikan semua step content
         document.querySelectorAll('.step-content').forEach(content => {
@@ -879,12 +903,15 @@
         }
     }
 
-    // handle form submission
+    // handle form submission - PERBAIKAN: tidak tampilkan loading jika ada error
     document.getElementById('institutionRegisterForm')?.addEventListener('submit', function(e) {
         const loadingOverlay = document.getElementById('loadingOverlay');
         if (loadingOverlay) {
             loadingOverlay.classList.add('active');
         }
+        
+        // simpan current step ke sessionStorage untuk restore jika ada error
+        sessionStorage.setItem('lastStep', currentStep);
     });
 
     // CRITICAL FIX: Alpine.js component untuk handle dropdown dinamis provinsi-kabupaten
