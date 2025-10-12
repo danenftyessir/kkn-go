@@ -21,15 +21,19 @@ class ProblemImage extends Model
         'image_path',
         'caption',
         'order',
+        'is_cover',
     ];
 
     protected $casts = [
         'order' => 'integer',
+        'is_cover' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
 
-    // relasi ke problem
+    /**
+     * relasi ke problem
+     */
     public function problem(): BelongsTo
     {
         return $this->belongsTo(Problem::class);

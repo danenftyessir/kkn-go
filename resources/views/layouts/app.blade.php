@@ -7,6 +7,8 @@
 
     <title>{{ config('app.name', 'KKN-GO') }} - @yield('title', 'Platform Digital untuk Kuliah Kerja Nyata')</title>
 
+    <link rel="icon" href="{{ asset('kkn-go-logo.png') }}" type="image/png">
+
     <!-- fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:300,400,500,600,700,800|poppins:300,400,500,600,700,800" rel="stylesheet" />
