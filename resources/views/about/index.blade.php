@@ -288,11 +288,6 @@
     </section>
 
 </div>
-{{-- ============================================ --}}
-{{-- HOW IT WORKS - TAB MAHASISWA & INSTITUSI   --}}
-{{-- TARUH DI PALING BAWAH SEBELUM @endsection --}}
-{{-- ============================================ --}}
-
 <section class="py-24 bg-gradient-to-br from-blue-50 to-white">
     <div class="container mx-auto px-6">
         <div class="max-w-7xl mx-auto">
@@ -333,10 +328,10 @@
             {{-- timeline container mahasiswa --}}
             <div id="contentMahasiswa" class="tab-content active">
                 <div class="relative overflow-x-auto pb-8" id="timelineMahasiswa">
-                    <div class="flex min-w-max relative">
+                    <div class="flex min-w-max relative" style="padding-top: 40px;">
                         
-                        {{-- garis horizontal --}}
-                        <div class="absolute top-12 left-0 right-0 h-0.5 bg-blue-600"></div>
+                        {{-- garis horizontal - posisi & ketebalan diperbaiki --}}
+                        <div class="absolute left-0 right-0 bg-blue-600" style="top: 50px; height: 3px;"></div>
                         
                         {{-- langkah 1 --}}
                         <div class="flex-shrink-0 px-4" style="width: 400px;">
@@ -460,10 +455,10 @@
             {{-- timeline container institusi --}}
             <div id="contentInstitusi" class="tab-content">
                 <div class="relative overflow-x-auto pb-8" id="timelineInstitusi">
-                    <div class="flex min-w-max relative">
+                    <div class="flex min-w-max relative" style="padding-top: 40px;">
                         
-                        {{-- garis horizontal --}}
-                        <div class="absolute top-12 left-0 right-0 h-0.5 bg-blue-600"></div>
+                        {{-- garis horizontal - posisi & ketebalan diperbaiki --}}
+                        <div class="absolute left-0 right-0 bg-blue-600" style="top: 50px; height: 3px;"></div>
                         
                         {{-- langkah 1 --}}
                         <div class="flex-shrink-0 px-4" style="width: 400px;">
