@@ -92,7 +92,7 @@
                             <div class="text-4xl md:text-5xl font-bold text-white text-shadow-strong">
                                 {{ $totalProblems ?? 0 }}
                             </div>
-                            <div class="text-sm md:text-base bg-white/20 text-white font-medium text-shadow-strong mt-2">
+                            <div class="text-sm md:text-base text-white font-medium text-shadow-strong mt-2">
                                 Total Proyek
                             </div>
                         </div>
@@ -107,7 +107,7 @@
                 <div class="stats-card-modern rounded-xl p-6">
                     <div class="flex items-center justify-between">
                         <div>
-                            <div class="text-4xl md:text-5xl bg-white/20 font-bold text-white text-shadow-strong">
+                            <div class="text-4xl md:text-5xl font-bold text-white text-shadow-strong">
                                 {{ $openProblems ?? 0 }}
                             </div>
                             <div class="text-sm md:text-base text-white font-medium text-shadow-strong mt-2">
@@ -125,7 +125,7 @@
                 <div class="stats-card-modern rounded-xl p-6">
                     <div class="flex items-center justify-between">
                         <div>
-                            <div class="text-4xl md:text-5xl font-bold bg-white/20 text-white text-shadow-strong">
+                            <div class="text-4xl md:text-5xl font-bold text-white text-shadow-strong">
                                 {{ $totalInstitutions ?? 0 }}
                             </div>
                             <div class="text-sm md:text-base text-white font-medium text-shadow-strong mt-2">
