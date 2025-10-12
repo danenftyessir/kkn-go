@@ -91,6 +91,7 @@ class RegisterController extends Controller
 
     /**
      * proses registrasi student
+     * PERBAIKAN: return JSON response untuk AJAX request
      */
     public function registerStudent(StudentRegisterRequest $request)
     {
@@ -110,8 +111,8 @@ class RegisterController extends Controller
             
             // upload photo jika ada
             $photoPath = null;
-            if ($request->hasFile('photo')) {
-                $photoPath = $request->file('photo')->store('students/photos', 'public');
+            if ($request->hasFile('profile_photo')) {
+                $photoPath = $request->file('profile_photo')->store('students/photos', 'public');
             }
             
             // buat student profile
@@ -124,7 +125,7 @@ class RegisterController extends Controller
                 'nim' => $request->nim,
                 'semester' => $request->semester,
                 'whatsapp_number' => $request->whatsapp_number,
-                'photo_path' => $photoPath,
+                'profile_photo_path' => $photoPath,
             ]);
             
             DB::commit();
@@ -142,7 +143,17 @@ class RegisterController extends Controller
             // login user secara otomatis
             Auth::login($user);
 
-            // redirect ke dashboard dengan pesan sukses
+            // PERBAIKAN: cek apakah request adalah AJAX
+            if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+                // return JSON response dengan redirect URL untuk AJAX request
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Selamat Datang di KKN-GO! Akun Anda berhasil dibuat. Jangan lupa verifikasi email Anda.',
+                    'redirect_url' => route('student.dashboard')
+                ], 200);
+            }
+
+            // redirect normal untuk non-AJAX request
             return redirect()
                 ->route('student.dashboard')
                 ->with('success', 'Selamat Datang di KKN-GO! Akun Anda berhasil dibuat. Jangan lupa verifikasi email Anda.');
@@ -152,6 +163,15 @@ class RegisterController extends Controller
             Log::error('Student registration failed: ' . $e->getMessage());
             Log::error('Stack trace: ' . $e->getTraceAsString());
             
+            // PERBAIKAN: return JSON error untuk AJAX request
+            if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Terjadi kesalahan saat registrasi. Silakan coba lagi.',
+                    'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
+                ], 500);
+            }
+            
             return back()
                 ->withInput()
                 ->with('error', 'Terjadi kesalahan saat registrasi. Silakan coba lagi. Error: ' . $e->getMessage());
@@ -160,7 +180,7 @@ class RegisterController extends Controller
 
     /**
      * proses registrasi institution
-     * PERBAIKAN: auto-login setelah registrasi berhasil seperti student registration
+     * sudah benar, tidak perlu diubah
      */
     public function registerInstitution(InstitutionRegisterRequest $request)
     {
@@ -223,8 +243,7 @@ class RegisterController extends Controller
                 'institution_name' => $request->institution_name
             ]);
 
-            // PERBAIKAN: auto-login user setelah registrasi berhasil
-            // ini memberikan feedback langsung bahwa data sudah tersimpan
+            // auto-login user setelah registrasi berhasil
             Auth::login($user);
 
             // redirect ke dashboard institusi dengan pesan sukses

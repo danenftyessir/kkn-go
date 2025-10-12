@@ -19,12 +19,12 @@
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                 </svg>
-                <span class="font-medium">kembali ke beranda</span>
+                <span class="font-medium">Kembali Ke Beranda</span>
             </a>
             
             <div class="flex items-center space-x-6">
-                <a href="#" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">tentang</a>
-                <a href="#" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">kontak</a>
+                <a href="#" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">Tentang</a>
+                <a href="#" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">Kontak</a>
             </div>
         </div>
     </nav>
@@ -33,24 +33,24 @@
         <div class="relative z-10 flex items-center justify-center min-h-screen py-12 px-4">
             <div class="w-full max-w-4xl">
                 {{-- logo & header --}}
-                <div class="text-center mb-8 fade-in-up">
-                    <a href="{{ route('home') }}" class="inline-block mb-6">
-                        <img src="{{ asset('kkn-go-logo.png') }}" alt="KKN-GO" class="h-16 w-auto">
-                    </a>
-                    <h1 class="text-4xl font-bold text-gray-900 mb-2">bergabung bersama KKN-GO!</h1>
-                    <p class="text-gray-600 text-lg">wujudkan dampak positif untuk Indonesia</p>
+                <div class="text-center mb-8">
+                    <img src="{{ asset('kkn-go-logo.png') }}" 
+                         alt="KKN-GO Logo" 
+                         class="h-20 w-auto mx-auto mb-4">
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">Daftar Sebagai Mahasiswa</h1>
+                    <p class="text-gray-600">Bergabunglah dengan platform KKN terbesar di Indonesia</p>
                 </div>
 
-                {{-- form container --}}
-                <div class="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden fade-in-scale" style="animation-delay: 0.1s;">
-                    {{-- progress steps --}}
-                    <div class="bg-gradient-to-br from-gray-50 to-white border-b-2 border-gray-100 px-8 py-6">
+                {{-- card form --}}
+                <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                    {{-- step indicator --}}
+                    <div class="bg-gradient-to-r from-blue-50 to-cyan-50 p-8 pb-6 border-b border-gray-100">
                         <div class="step-indicator-container">
                             <div class="step-item" id="step1-item">
                                 <div class="step-circle active" id="step1-circle">
                                     <span class="step-number">1</span>
                                 </div>
-                                <span class="step-label">data pribadi</span>
+                                <span class="step-label">Data Pribadi</span>
                             </div>
                             
                             <div class="step-connector" id="connector1"></div>
@@ -59,7 +59,7 @@
                                 <div class="step-circle inactive" id="step2-circle">
                                     <span class="step-number">2</span>
                                 </div>
-                                <span class="step-label">data akademik</span>
+                                <span class="step-label">Data Akademik</span>
                             </div>
                             
                             <div class="step-connector" id="connector2"></div>
@@ -68,13 +68,13 @@
                                 <div class="step-circle inactive" id="step3-circle">
                                     <span class="step-number">3</span>
                                 </div>
-                                <span class="step-label">buat akun</span>
+                                <span class="step-label">Buat Akun</span>
                             </div>
                         </div>
                     </div>
 
                     {{-- form content --}}
-                    <form method="POST" action="{{ route('register.student') }}" 
+                    <form method="POST" action="{{ route('register.student.submit') }}" 
                           enctype="multipart/form-data" 
                           id="studentRegisterForm"
                           class="p-8">
@@ -83,105 +83,144 @@
                         {{-- step 1: data pribadi --}}
                         <div id="step1-content" class="step-content">
                             <div class="mb-8">
-                                <h2 class="text-2xl font-bold text-gray-800 mb-2">data pribadi</h2>
-                                <p class="text-gray-600">isi data diri kamu dengan lengkap ya!</p>
+                                <h2 class="text-2xl font-bold text-gray-800 mb-2">Data Pribadi</h2>
+                                <p class="text-gray-600">Isi data diri kamu dengan lengkap ya!</p>
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {{-- nama depan --}}
                                 <div class="form-field-group">
-                                    <label for="first_name" class="form-label required">nama depan</label>
+                                    <label for="first_name" class="form-label required">Nama Depan</label>
                                     <div class="form-input-wrapper">
                                         <input type="text" 
                                                id="first_name" 
                                                name="first_name" 
                                                value="{{ old('first_name') }}"
-                                               placeholder="contoh: Budi"
-                                               class="form-input @error('first_name') error @enderror"
+                                               placeholder="Contoh: Ahmad"
+                                               class="form-input"
                                                required>
                                         <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                                         </svg>
                                     </div>
-                                    <p id="error-first_name" class="error-message hidden"></p>
+                                    <p class="error-message hidden" id="error-first_name"></p>
+                                    @error('first_name')
+                                        <p class="error-message">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            {{ $message }}
+                                        </p>
+                                    @enderror
                                 </div>
 
                                 {{-- nama belakang --}}
                                 <div class="form-field-group">
-                                    <label for="last_name" class="form-label required">nama belakang</label>
+                                    <label for="last_name" class="form-label required">Nama Belakang</label>
                                     <div class="form-input-wrapper">
                                         <input type="text" 
                                                id="last_name" 
                                                name="last_name" 
                                                value="{{ old('last_name') }}"
-                                               placeholder="contoh: Santoso"
-                                               class="form-input @error('last_name') error @enderror"
+                                               placeholder="Contoh: Fauzi"
+                                               class="form-input"
                                                required>
                                         <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                                         </svg>
                                     </div>
-                                    <p id="error-last_name" class="error-message mt-2 text-sm text-red-600 hidden"></p>
+                                    <p class="error-message hidden" id="error-last_name"></p>
+                                    @error('last_name')
+                                        <p class="error-message">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            {{ $message }}
+                                        </p>
+                                    @enderror
                                 </div>
+                            </div>
 
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                                 {{-- email --}}
                                 <div class="form-field-group">
-                                    <label for="email" class="form-label required">email universitas</label>
+                                    <label for="email" class="form-label required">Email Universitas</label>
                                     <div class="form-input-wrapper">
                                         <input type="email" 
                                                id="email" 
                                                name="email" 
                                                value="{{ old('email') }}"
-                                               placeholder="contoh: budisantoso@student.ac.id"
-                                               class="form-input @error('email') error @enderror"
+                                               placeholder="nama@university.ac.id"
+                                               class="form-input"
                                                required>
                                         <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                                         </svg>
                                     </div>
-                                    <p id="error-email" class="error-message mt-2 text-sm text-red-600 hidden"></p>
+                                    <p class="text-xs text-gray-500 mt-1">Gunakan email resmi universitas (.ac.id atau .edu)</p>
+                                    <p class="error-message hidden" id="error-email"></p>
+                                    @error('email')
+                                        <p class="error-message">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            {{ $message }}
+                                        </p>
+                                    @enderror
                                 </div>
 
-                                {{-- no whatsapp --}}
+                                {{-- whatsapp --}}
                                 <div class="form-field-group">
-                                    <label for="whatsapp_number" class="form-label required">no. WhatsApp</label>
+                                    <label for="whatsapp_number" class="form-label required">Nomor WhatsApp</label>
                                     <div class="form-input-wrapper">
                                         <input type="tel" 
                                                id="whatsapp_number" 
                                                name="whatsapp_number" 
                                                value="{{ old('whatsapp_number') }}"
-                                               placeholder="contoh: 081234567890"
-                                               class="form-input @error('whatsapp_number') error @enderror"
+                                               placeholder="08123456789"
+                                               class="form-input"
                                                required>
                                         <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
                                         </svg>
                                     </div>
-                                    <p id="error-whatsapp_number" class="error-message mt-2 text-sm text-red-600 hidden"></p>
+                                    <p class="text-xs text-gray-500 mt-1">Format: 08xxxxxxxxxx atau +62xxxxxxxxxx</p>
+                                    <p class="error-message hidden" id="error-whatsapp_number"></p>
+                                    @error('whatsapp_number')
+                                        <p class="error-message">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            {{ $message }}
+                                        </p>
+                                    @enderror
                                 </div>
                             </div>
 
-                            {{-- upload foto profil --}}
+                            {{-- foto profil --}}
                             <div class="mt-6">
-                                <label class="form-label">foto profil (opsional)</label>
-                                <div class="file-upload-area mt-2">
+                                <label class="form-label">Foto Profil (Opsional)</label>
+                                <div class="file-upload-area">
                                     <input type="file" 
                                            id="profile_photo" 
                                            name="profile_photo" 
                                            accept="image/jpeg,image/jpg,image/png"
                                            class="hidden"
                                            onchange="previewImage(event)">
-                                    <label for="profile_photo" class="cursor-pointer">
-                                        <svg class="file-upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-                                        </svg>
-                                        <p class="text-gray-600 font-medium" id="fileLabel">klik untuk upload foto</p>
-                                        <p class="text-sm text-gray-500 mt-1">JPG, JPEG atau PNG (max. 2MB)</p>
+                                    <label for="profile_photo" class="file-upload-label cursor-pointer">
+                                        <div class="file-upload-icon">
+                                            <svg class="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                            </svg>
+                                        </div>
+                                        <p class="file-upload-text" id="fileLabel">Klik untuk unggah foto</p>
+                                        <p class="text-xs text-gray-500 mt-1">Format: JPG, JPEG, PNG (Maks. 2MB)</p>
                                     </label>
                                     <div id="imagePreview" class="mt-4 hidden">
                                         <img src="" alt="preview" class="mx-auto h-32 w-32 rounded-full object-cover">
                                     </div>
                                 </div>
+                                <p class="error-message hidden" id="error-profile_photo"></p>
                                 @error('profile_photo')
                                     <p class="error-message mt-2">
                                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -195,7 +234,7 @@
                             {{-- navigation --}}
                             <div class="mt-8 flex justify-end">
                                 <button type="button" onclick="nextStep(2)" class="btn btn-primary">
-                                    lanjutkan
+                                    Lanjutkan
                                     <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
                                     </svg>
@@ -206,29 +245,31 @@
                         {{-- step 2: data akademik --}}
                         <div id="step2-content" class="step-content hidden">
                             <div class="mb-8">
-                                <h2 class="text-2xl font-bold text-gray-800 mb-2">data akademik</h2>
-                                <p class="text-gray-600">informasi terkait kampus dan perkuliahan kamu</p>
+                                <h2 class="text-2xl font-bold text-gray-800 mb-2">Data Akademik</h2>
+                                <p class="text-gray-600">Informasi kampus dan perkuliahanmu</p>
                             </div>
 
-                            <div class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {{-- universitas --}}
                                 <div class="form-field-group">
-                                    <label for="university_id" class="form-label required">universitas</label>
+                                    <label for="university_id" class="form-label required">Universitas</label>
                                     <div class="form-input-wrapper">
                                         <select id="university_id" 
                                                 name="university_id" 
-                                                class="form-input form-select @error('university_id') error @enderror"
+                                                class="form-select"
                                                 required>
-                                            <option value="">-- pilih universitas --</option>
-                                            {{-- TODO: ambil dari database --}}
-                                            <option value="1" {{ old('university_id') == 1 ? 'selected' : '' }}>Universitas Indonesia</option>
-                                            <option value="2" {{ old('university_id') == 2 ? 'selected' : '' }}>Institut Teknologi Bandung</option>
-                                            <option value="3" {{ old('university_id') == 3 ? 'selected' : '' }}>Universitas Gadjah Mada</option>
+                                            <option value="">Pilih Universitas</option>
+                                            @foreach($universities as $university)
+                                                <option value="{{ $university->id }}" {{ old('university_id') == $university->id ? 'selected' : '' }}>
+                                                    {{ $university->name }}
+                                                </option>
+                                            @endforeach
                                         </select>
                                         <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                                         </svg>
                                     </div>
+                                    <p class="error-message hidden" id="error-university_id"></p>
                                     @error('university_id')
                                         <p class="error-message">
                                             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -241,19 +282,20 @@
 
                                 {{-- jurusan --}}
                                 <div class="form-field-group">
-                                    <label for="major" class="form-label required">jurusan</label>
+                                    <label for="major" class="form-label required">Jurusan</label>
                                     <div class="form-input-wrapper">
                                         <input type="text" 
                                                id="major" 
                                                name="major" 
                                                value="{{ old('major') }}"
-                                               placeholder="contoh: Teknik Informatika"
-                                               class="form-input @error('major') error @enderror"
+                                               placeholder="Contoh: Teknik Informatika"
+                                               class="form-input"
                                                required>
                                         <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                                         </svg>
                                     </div>
+                                    <p class="error-message hidden" id="error-major"></p>
                                     @error('major')
                                         <p class="error-message">
                                             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -263,58 +305,61 @@
                                         </p>
                                     @enderror
                                 </div>
+                            </div>
 
-                                {{-- nim & semester --}}
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div class="form-field-group">
-                                        <label for="nim" class="form-label required">NIM</label>
-                                        <div class="form-input-wrapper">
-                                            <input type="text" 
-                                                   id="nim" 
-                                                   name="nim" 
-                                                   value="{{ old('nim') }}"
-                                                   placeholder="contoh: 2021xxxx"
-                                                   class="form-input @error('nim') error @enderror"
-                                                   required>
-                                            <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path>
-                                            </svg>
-                                        </div>
-                                        @error('nim')
-                                            <p class="error-message">
-                                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                                                </svg>
-                                                {{ $message }}
-                                            </p>
-                                        @enderror
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                                {{-- nim --}}
+                                <div class="form-field-group">
+                                    <label for="nim" class="form-label required">NIM</label>
+                                    <div class="form-input-wrapper">
+                                        <input type="text" 
+                                               id="nim" 
+                                               name="nim" 
+                                               value="{{ old('nim') }}"
+                                               placeholder="Contoh: 118012345"
+                                               class="form-input"
+                                               required>
+                                        <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path>
+                                        </svg>
                                     </div>
+                                    <p class="error-message hidden" id="error-nim"></p>
+                                    @error('nim')
+                                        <p class="error-message">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            {{ $message }}
+                                        </p>
+                                    @enderror
+                                </div>
 
-                                    <div class="form-field-group">
-                                        <label for="semester" class="form-label required">semester</label>
-                                        <div class="form-input-wrapper">
-                                            <select id="semester" 
-                                                    name="semester" 
-                                                    class="form-input form-select @error('semester') error @enderror"
-                                                    required>
-                                                <option value="">-- pilih semester --</option>
-                                                @for($i = 1; $i <= 14; $i++)
-                                                    <option value="{{ $i }}" {{ old('semester') == $i ? 'selected' : '' }}>semester {{ $i }}</option>
-                                                @endfor
-                                            </select>
-                                            <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                            </svg>
-                                        </div>
-                                        @error('semester')
-                                            <p class="error-message">
-                                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                                                </svg>
-                                                {{ $message }}
-                                            </p>
-                                        @enderror
+                                {{-- semester --}}
+                                <div class="form-field-group">
+                                    <label for="semester" class="form-label required">Semester</label>
+                                    <div class="form-input-wrapper">
+                                        <select id="semester" 
+                                                name="semester" 
+                                                class="form-select"
+                                                required>
+                                            <option value="">Pilih Semester</option>
+                                            @for($i = 1; $i <= 14; $i++)
+                                                <option value="{{ $i }}" {{ old('semester') == $i ? 'selected' : '' }}>Semester {{ $i }}</option>
+                                            @endfor
+                                        </select>
+                                        <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                        </svg>
                                     </div>
+                                    <p class="error-message hidden" id="error-semester"></p>
+                                    @error('semester')
+                                        <p class="error-message">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            {{ $message }}
+                                        </p>
+                                    @enderror
                                 </div>
                             </div>
 
@@ -324,10 +369,10 @@
                                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                                     </svg>
-                                    kembali
+                                    Kembali
                                 </button>
                                 <button type="button" onclick="nextStep(3)" class="btn btn-primary">
-                                    lanjutkan
+                                    Lanjutkan
                                     <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
                                     </svg>
@@ -338,42 +383,48 @@
                         {{-- step 3: buat akun --}}
                         <div id="step3-content" class="step-content hidden">
                             <div class="mb-8">
-                                <h2 class="text-2xl font-bold text-gray-800 mb-2">buat akun</h2>
-                                <p class="text-gray-600">buat username dan password untuk akun kamu</p>
+                                <h2 class="text-2xl font-bold text-gray-800 mb-2">Buat Akun</h2>
+                                <p class="text-gray-600">Buat username dan password untuk akunmu</p>
                             </div>
 
                             <div class="space-y-6">
                                 {{-- username --}}
                                 <div class="form-field-group">
-                                    <label for="username" class="form-label required">username</label>
+                                    <label for="username" class="form-label required">Username</label>
                                     <div class="form-input-wrapper">
                                         <input type="text" 
                                                id="username" 
                                                name="username" 
                                                value="{{ old('username') }}"
-                                               placeholder="contoh: budisantoso123"
-                                               class="form-input @error('username') error @enderror"
+                                               placeholder="Contoh: ahmadfauzi123"
+                                               class="form-input"
                                                required>
                                         <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
                                         </svg>
                                     </div>
-                                    <p id="error-username" class="error-message mt-2 text-sm text-red-600 hidden"></p>
+                                    <p class="text-xs text-gray-500 mt-1">Username harus unik, minimal 4 karakter, hanya huruf, angka, titik, garis bawah, dan strip</p>
+                                    <p class="error-message hidden" id="error-username"></p>
+                                    @error('username')
+                                        <p class="error-message">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            {{ $message }}
+                                        </p>
+                                    @enderror
                                 </div>
 
                                 {{-- password --}}
                                 <div class="form-field-group">
-                                    <label for="password" class="form-label required">password</label>
+                                    <label for="password" class="form-label required">Password</label>
                                     <div class="form-input-wrapper">
                                         <input type="password" 
                                                id="password" 
                                                name="password" 
-                                               placeholder="minimal 8 karakter"
-                                               class="form-input @error('password') error @enderror"
+                                               placeholder="Min. 8 karakter"
+                                               class="form-input"
                                                required>
-                                        <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                                        </svg>
                                         <button type="button" 
                                                 onclick="togglePassword('password')" 
                                                 class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -383,23 +434,28 @@
                                             </svg>
                                         </button>
                                     </div>
-                                    <p id="error-password" class="error-message mt-2 text-sm text-red-600 hidden"></p>
+                                    <p class="text-xs text-gray-500 mt-1">Password harus mengandung huruf besar, huruf kecil, angka, dan simbol</p>
+                                    <p class="error-message hidden" id="error-password"></p>
+                                    @error('password')
+                                        <p class="error-message">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            {{ $message }}
+                                        </p>
+                                    @enderror
                                 </div>
 
-                                {{-- konfirmasi password --}}
+                                {{-- confirm password --}}
                                 <div class="form-field-group">
-                                    <label for="password_confirmation" class="form-label required">konfirmasi password</label>
+                                    <label for="password_confirmation" class="form-label required">Konfirmasi Password</label>
                                     <div class="form-input-wrapper">
-                                        <p id="error-password_confirmation" class="error-message mt-2 text-sm text-red-600 hidden"></p>
                                         <input type="password" 
                                                id="password_confirmation" 
                                                name="password_confirmation" 
-                                               placeholder="ketik ulang password"
+                                               placeholder="Ketik ulang password"
                                                class="form-input"
                                                required>
-                                        <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                                        </svg>
                                         <button type="button" 
                                                 onclick="togglePassword('password_confirmation')" 
                                                 class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -409,6 +465,15 @@
                                             </svg>
                                         </button>
                                     </div>
+                                    <p class="error-message hidden" id="error-password_confirmation"></p>
+                                    @error('password_confirmation')
+                                        <p class="error-message">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            {{ $message }}
+                                        </p>
+                                    @enderror
                                 </div>
 
                                 {{-- terms --}}
@@ -419,7 +484,7 @@
                                                class="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                                                required>
                                         <span class="text-sm text-gray-700">
-                                            saya setuju dengan <a href="#" class="text-blue-600 hover:text-blue-700 font-medium">syarat dan ketentuan</a> serta <a href="#" class="text-blue-600 hover:text-blue-700 font-medium">kebijakan privasi</a>
+                                            Saya setuju dengan <a href="#" class="text-blue-600 hover:text-blue-700 font-medium">Syarat Dan Ketentuan</a> serta <a href="#" class="text-blue-600 hover:text-blue-700 font-medium">Kebijakan Privasi</a>
                                         </span>
                                     </label>
                                 </div>
@@ -431,10 +496,10 @@
                                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                                     </svg>
-                                    kembali
+                                    Kembali
                                 </button>
                                 <button type="submit" class="btn btn-primary">
-                                    daftar sekarang
+                                    Daftar Sekarang
                                     <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
@@ -446,9 +511,9 @@
                     {{-- sudah punya akun --}}
                     <div class="px-8 pb-8">
                         <div class="text-center text-sm text-gray-600 mt-4">
-                            sudah punya akun?
+                            Sudah punya akun?
                             <a href="{{ route('login') }}" class="text-blue-600 hover:text-blue-700 font-medium">
-                                login di sini
+                                Login Di Sini
                             </a>
                         </div>
                     </div>
@@ -460,8 +525,8 @@
         <div class="loading-overlay" id="loadingOverlay">
             <div class="bg-white rounded-lg p-8 text-center">
                 <div class="spinner mx-auto mb-4" style="width: 3rem; height: 3rem;"></div>
-                <p class="text-gray-700 font-medium">mendaftarkan akun kamu...</p>
-                <p class="text-sm text-gray-500 mt-1">mohon tunggu sebentar</p>
+                <p class="text-gray-700 font-medium">Mendaftarkan akun kamu...</p>
+                <p class="text-sm text-gray-500 mt-1">Mohon tunggu sebentar</p>
             </div>
         </div>
     </div>
@@ -469,29 +534,29 @@
     <script>
     let currentStep = 1;
 
-    // ==========================================================
-    // FUNGSI BARU: Menampilkan/Menyembunyikan Error Secara Dinamis
-    // ==========================================================
+    // fungsi untuk menampilkan/menyembunyikan error secara dinamis
     function handleValidationErrors(errors) {
-        // Sembunyikan semua error lama terlebih dahulu
+        // sembunyikan semua error lama terlebih dahulu
         document.querySelectorAll('.error-message').forEach(el => {
-            el.textContent = '';
-            el.classList.add('hidden');
+            if (el.id.startsWith('error-')) {
+                el.textContent = '';
+                el.classList.add('hidden');
+            }
         });
         document.querySelectorAll('.form-input, .form-select').forEach(el => el.classList.remove('error'));
 
-        // Tampilkan error baru yang diterima dari backend
+        // tampilkan error baru yang diterima dari backend
         for (const field in errors) {
             const errorElement = document.getElementById(`error-${field}`);
             const inputElement = document.getElementById(field);
 
             if (errorElement) {
-                errorElement.textContent = errors[field][0]; // Tampilkan hanya pesan error pertama
+                errorElement.textContent = errors[field][0]; // tampilkan hanya pesan error pertama
                 errorElement.classList.remove('hidden');
             }
             if (inputElement) {
                 inputElement.classList.add('error');
-                // Scroll ke input pertama yang error
+                // scroll ke input pertama yang error
                 if (Object.keys(errors)[0] === field) {
                     inputElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
@@ -499,16 +564,14 @@
         }
     }
 
-    // ==========================================================
-    // FUNGSI NAVIGASI YANG DIMODIFIKASI DENGAN VALIDASI AJAX
-    // ==========================================================
+    // fungsi navigasi dengan validasi AJAX
     async function nextStep(step) {
         const form = document.getElementById('studentRegisterForm');
         const formData = new FormData(form);
-        formData.append('step', currentStep); // Menambahkan informasi langkah saat ini ke request
+        formData.append('step', currentStep); // menambahkan informasi langkah saat ini ke request
 
         const loadingOverlay = document.getElementById('loadingOverlay');
-        loadingOverlay.classList.add('active'); // Tampilkan loading
+        loadingOverlay.classList.add('active'); // tampilkan loading
 
         try {
             const response = await fetch("{{ route('api.public.validate.student.step') }}", {
@@ -521,19 +584,20 @@
             });
 
             if (!response.ok) {
-                if (response.status === 422) { // Kode 422 berarti error validasi
+                if (response.status === 422) { // kode 422 berarti error validasi
                     const data = await response.json();
                     handleValidationErrors(data.errors);
                 } else {
                     alert('Terjadi kesalahan pada server. Silakan coba lagi.');
                 }
-                return; // Hentikan fungsi jika validasi gagal
+                loadingOverlay.classList.remove('active');
+                return; // hentikan fungsi jika validasi gagal
             }
 
-            // --- Jika validasi berhasil, lanjutkan alur visual ---
-            handleValidationErrors({}); // Bersihkan error lama
+            // jika validasi berhasil, lanjutkan alur visual
+            handleValidationErrors({}); // bersihkan error lama
             
-            // Logika visual untuk pindah step (sama seperti sebelumnya)
+            // logika visual untuk pindah step
             const currentCircle = document.getElementById(`step${currentStep}-circle`);
             const currentContent = document.getElementById(`step${currentStep}-content`);
             
@@ -559,13 +623,13 @@
             console.error('Terjadi kesalahan saat validasi:', error);
             alert('Tidak dapat terhubung ke server. Periksa koneksi internet Anda.');
         } finally {
-            loadingOverlay.classList.remove('active'); // Selalu sembunyikan loading
+            loadingOverlay.classList.remove('active'); // selalu sembunyikan loading
         }
     }
 
-    // Fungsi prevStep tidak perlu diubah
+    // fungsi untuk kembali ke step sebelumnya
     function prevStep(step) {
-        handleValidationErrors({}); // Bersihkan error saat kembali
+        handleValidationErrors({}); // bersihkan error saat kembali
         const currentCircle = document.getElementById(`step${currentStep}-circle`);
         const currentContent = document.getElementById(`step${currentStep}-content`);
         
@@ -588,9 +652,7 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // ==========================================================
-    // FUNGSI UTILITAS (TIDAK BERUBAH)
-    // ==========================================================
+    // fungsi utilitas
     function togglePassword(inputId) {
         const input = document.getElementById(inputId);
         input.type = input.type === 'password' ? 'text' : 'password';
@@ -612,34 +674,30 @@
         }
     }
 
-    // ==========================================================
-    // EVENT LISTENER UNTUK SUBMIT FORM (DIMODIFIKASI)
-    // ==========================================================
+    // PERBAIKAN: event listener untuk submit form
     document.getElementById('studentRegisterForm')?.addEventListener('submit', async function(e) {
-        e.preventDefault(); // Selalu batalkan submit bawaan terlebih dahulu
+        e.preventDefault(); // selalu batalkan submit bawaan terlebih dahulu
 
         const loadingOverlay = document.getElementById('loadingOverlay');
         loadingOverlay.classList.add('active');
         
-        // Lakukan validasi terakhir untuk semua data sebelum submit
         const formData = new FormData(this);
-        // Kita tidak perlu mengirim `step` karena kita ingin backend memvalidasi semua
         
         try {
             const response = await fetch("{{ route('register.student.submit') }}", {
                 method: 'POST',
                 headers: { 
-                    'Accept': 'application/json' 
-                    // CSRF token sudah otomatis ditangani oleh FormData
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 },
                 body: formData
             });
 
-            // Jika backend mengembalikan error validasi saat submit akhir
+            const data = await response.json();
+
+            // jika backend mengembalikan error validasi saat submit akhir
             if (response.status === 422) {
-                const data = await response.json();
-                
-                // Cari tahu di langkah mana error pertama terjadi
+                // cari tahu di langkah mana error pertama terjadi
                 const errorFields = Object.keys(data.errors);
                 const step1Fields = ['first_name', 'last_name', 'email', 'whatsapp_number', 'profile_photo'];
                 const step2Fields = ['university_id', 'major', 'nim', 'semester'];
@@ -651,15 +709,15 @@
                     errorStep = 2;
                 }
                 
-                // Pindah ke step yang error dan tampilkan pesan
+                // pindah ke step yang error dan tampilkan pesan
                 if (currentStep !== errorStep) {
-                    // Reset semua step indicator
+                    // reset semua step indicator
                     for(let i=1; i<=3; i++) {
                         document.getElementById(`step${i}-content`).classList.add('hidden');
                         document.getElementById(`step${i}-circle`).className = 'step-circle inactive';
                         if(i < 3) document.getElementById(`connector${i}`).classList.remove('completed');
                     }
-                    // Setup ulang ke step yang error
+                    // setup ulang ke step yang error
                     for(let i=1; i<errorStep; i++) {
                         document.getElementById(`step${i}-circle`).classList.add('completed');
                         if(i < 3) document.getElementById(`connector${i}`).classList.add('completed');
@@ -674,22 +732,22 @@
                 return;
             }
 
-            // Jika sukses, Laravel akan me-redirect. Kita cek jika ada URL redirect
-            if (response.redirected) {
-                window.location.href = response.url;
+            // PERBAIKAN: jika sukses (status 200), redirect ke URL yang diberikan backend
+            if (response.ok && data.success) {
+                // redirect ke dashboard student
+                window.location.href = data.redirect_url;
             } else {
-                 // Fallback jika tidak ada redirect, reload halaman
-                window.location.reload();
+                // handle error lainnya
+                alert(data.message || 'Terjadi kesalahan saat pendaftaran.');
+                loadingOverlay.classList.remove('active');
             }
 
         } catch(error) {
             console.error('Submit error:', error);
-            alert('Terjadi kesalahan saat mengirimkan formulir.');
+            alert('Terjadi kesalahan saat mengirimkan formulir. Silakan coba lagi.');
             loadingOverlay.classList.remove('active');
         }
     });
-</script>
-
-    @vite(['resources/js/app.js'])
+    </script>
 </body>
 </html>
