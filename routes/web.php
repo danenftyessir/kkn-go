@@ -262,11 +262,23 @@ Route::get('/api/regencies/{provinceId}', [ProblemController::class, 'getRegenci
 */
 
 Route::middleware(['auth'])->prefix('notifications')->name('notifications.')->group(function () {
+    // halaman index notifikasi (dapat diakses langsung)
     Route::get('/', [NotificationController::class, 'index'])->name('index');
+    
+    // endpoint untuk dropdown (hanya via ajax)
     Route::get('/latest', [NotificationController::class, 'getLatest'])->name('latest');
+    
+    // mark as read (support ajax dan form submit)
     Route::post('/{id}/read', [NotificationController::class, 'markAsRead'])->name('read');
+    
+    // mark all as read (support ajax dan form submit)
     Route::post('/read-all', [NotificationController::class, 'markAllAsRead'])->name('read-all');
+    
+    // hapus notifikasi
     Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('destroy');
+    
+    // hapus semua notifikasi yang sudah dibaca
+    Route::delete('/read', [NotificationController::class, 'destroyRead'])->name('destroy-read');
 });
 
 /*
