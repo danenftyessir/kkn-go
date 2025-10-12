@@ -181,12 +181,12 @@ class AnalyticsService
     /**
      * get top problems berdasarkan jumlah aplikasi
      * 
-     * PERBAIKAN: gunakan alias unik untuk menghindari konflik dengan accessor/attribute
+     * PERBAIKAN: tabel applications tidak ada soft deletes
      */
     public function getTopProblems($institutionId, $limit = 5)
     {
         return Problem::where('problems.institution_id', $institutionId)
-            ->selectRaw('problems.*, (SELECT COUNT(*) FROM applications WHERE applications.problem_id = problems.id AND applications.deleted_at IS NULL) as total_applications')
+            ->selectRaw('problems.*, (SELECT COUNT(*) FROM applications WHERE applications.problem_id = problems.id) as total_applications')
             ->orderByDesc('total_applications')
             ->limit($limit)
             ->get();
