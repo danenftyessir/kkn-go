@@ -111,7 +111,7 @@
         
         {{-- header --}}
         <div class="mb-10 fade-in-up">
-            <h1 class="text-4xl md:text-5xl font-bold mb-4 text-shadow-strong">
+            <h1 class="text-4xl md:text-5xl mb-4 text-white">
                 Dashboard
             </h1>
             <p class="text-xl md:text-2xl text-white text-shadow-strong max-w-3xl">
