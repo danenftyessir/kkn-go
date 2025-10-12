@@ -85,9 +85,9 @@
             <h2 class="text-2xl font-bold text-gray-900 mb-6">Masalah Yang Dipublikasi</h2>
 
             @if($institution->problems->isEmpty())
-                <div class="text-center py-8">
-                    <svg class="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                <div class="text-center py-12">
+                    <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
                     <p class="text-gray-500">Belum Ada Masalah Yang Dipublikasi</p>
                 </div>
@@ -95,10 +95,12 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     @foreach($institution->problems as $problem)
                     <a href="{{ route('student.browse-problems.detail', $problem->id) }}" class="block bg-gray-50 rounded-lg p-4 hover:shadow-md transition-shadow border border-gray-100">
+                        {{-- ✅ PERBAIKAN: gunakan accessor coverImage --}}
                         @if($problem->coverImage)
                             <img src="{{ $problem->coverImage->image_url }}" 
-                                 alt="{{ $problem->title }}"
-                                 class="w-full h-40 object-cover rounded-lg mb-4">
+                                alt="{{ $problem->title }}"
+                                onerror="this.onerror=null; this.src='https://via.placeholder.com/400x200?text=No+Image';"
+                                class="w-full h-40 object-cover rounded-lg mb-4">
                         @endif
                         
                         <h3 class="font-bold text-gray-900 mb-2 line-clamp-2">{{ $problem->title }}</h3>
@@ -114,7 +116,7 @@
                         <div class="flex items-center justify-between mt-4">
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium
                                 {{ $problem->status === 'open' ? 'bg-green-100 text-green-800' : 
-                                   ($problem->status === 'in_progress' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800') }}">
+                                ($problem->status === 'in_progress' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800') }}">
                                 {{ ucfirst(str_replace('_', ' ', $problem->status)) }}
                             </span>
                             

@@ -2,16 +2,19 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * model Problem
- * untuk menyimpan masalah/proyek yang dipublikasikan oleh instansi
  */
 class Problem extends Model
 {
+    use HasFactory, SoftDeletes;
+
     protected $fillable = [
         'institution_id',
         'title',
@@ -23,8 +26,6 @@ class Problem extends Model
         'regency_id',
         'village',
         'detailed_location',
-        'latitude',
-        'longitude',
         'sdg_categories',
         'required_students',
         'required_skills',
@@ -34,13 +35,10 @@ class Problem extends Model
         'application_deadline',
         'duration_months',
         'difficulty_level',
+        'status',
         'expected_outcomes',
         'deliverables',
         'facilities_provided',
-        'contact_person',
-        'contact_phone',
-        'contact_email',
-        'status',
         'views_count',
         'applications_count',
         'accepted_students',
@@ -106,6 +104,26 @@ class Problem extends Model
     }
 
     /**
+     * prioritas: is_cover = true, fallback ke gambar pertama
+     * 
+     * usage di blade: {{ $problem->coverImage->image_url }}
+     * 
+     * @return ProblemImage|null
+     */
+    public function getCoverImageAttribute(): ?ProblemImage
+    {
+        // cari gambar dengan is_cover = true
+        $coverImage = $this->images->where('is_cover', true)->first();
+        
+        // fallback ke gambar pertama jika tidak ada cover
+        if (!$coverImage) {
+            $coverImage = $this->images->first();
+        }
+        
+        return $coverImage;
+    }
+
+    /**
      * accessor untuk mendapatkan gambar pertama
      * 
      * usage di blade: 
@@ -154,158 +172,82 @@ class Problem extends Model
      */
     public function getSdgLabelsAttribute(): array
     {
-        if (!$this->sdg_categories || !is_array($this->sdg_categories)) {
-            return [];
+        $sdgLabels = [
+            1 => 'Tanpa Kemiskinan',
+            2 => 'Tanpa Kelaparan',
+            3 => 'Kehidupan Sehat Dan Sejahtera',
+            4 => 'Pendidikan Berkualitas',
+            5 => 'Kesetaraan Gender',
+            6 => 'Air Bersih Dan Sanitasi Layak',
+            7 => 'Energi Bersih Dan Terjangkau',
+            8 => 'Pekerjaan Layak Dan Pertumbuhan Ekonomi',
+            9 => 'Industri, Inovasi, Dan Infrastruktur',
+            10 => 'Berkurangnya Kesenjangan',
+            11 => 'Kota Dan Komunitas Berkelanjutan',
+            12 => 'Konsumsi Dan Produksi Bertanggung Jawab',
+            13 => 'Penanganan Perubahan Iklim',
+            14 => 'Ekosistem Lautan',
+            15 => 'Ekosistem Daratan',
+            16 => 'Perdamaian, Keadilan, Dan Kelembagaan Yang Tangguh',
+            17 => 'Kemitraan Untuk Mencapai Tujuan',
+        ];
+
+        $labels = [];
+        foreach ($this->sdg_categories ?? [] as $sdgNumber) {
+            if (isset($sdgLabels[$sdgNumber])) {
+                $labels[] = $sdgLabels[$sdgNumber];
+            }
         }
-        
-        return array_map(function($category) {
-            return sdg_label($category);
-        }, $this->sdg_categories);
+
+        return $labels;
     }
 
     /**
-     * accessor untuk cek apakah deadline sudah dekat (kurang dari 7 hari)
-     * 
-     * usage di blade: @if($problem->is_deadline_near) ... @endif
-     * 
-     * @return bool
+     * scope untuk filter by status
      */
-    public function getIsDeadlineNearAttribute(): bool
+    public function scopeStatus($query, string $status)
     {
-        if (!$this->application_deadline) {
-            return false;
-        }
-        
-        return $this->application_deadline->diffInDays(now()) <= 7;
+        return $query->where('status', $status);
     }
 
     /**
-     * accessor untuk cek apakah sudah full
-     * 
-     * usage di blade: @if($problem->is_full) ... @endif
-     * 
-     * @return bool
-     */
-    public function getIsFullAttribute(): bool
-    {
-        return $this->accepted_students >= $this->required_students;
-    }
-
-    /**
-     * accessor untuk slot yang tersisa
-     * 
-     * usage di blade: {{ $problem->remaining_slots }} slot tersisa
-     * 
-     * @return int
-     */
-    public function getRemainingSlotsAttribute(): int
-    {
-        return max(0, $this->required_students - $this->accepted_students);
-    }
-
-    /**
-     * scope untuk problem yang open
+     * scope untuk problem yang sedang open
      */
     public function scopeOpen($query)
     {
         return $query->where('status', 'open')
-                    ->where('application_deadline', '>', now());
+                    ->where('application_deadline', '>=', now());
     }
 
     /**
-     * scope untuk problem featured
+     * scope untuk filter by difficulty
      */
-    public function scopeFeatured($query)
-    {
-        return $query->where('is_featured', true);
-    }
-
-    /**
-     * scope untuk problem urgent
-     */
-    public function scopeUrgent($query)
-    {
-        return $query->where('is_urgent', true);
-    }
-
-    /**
-     * scope untuk search
-     */
-    public function scopeSearch($query, $keyword)
-    {
-        return $query->where(function($q) use ($keyword) {
-            $q->where('title', 'like', "%{$keyword}%")
-              ->orWhere('description', 'like', "%{$keyword}%")
-              ->orWhere('village', 'like', "%{$keyword}%")
-              ->orWhereHas('institution', function($q) use ($keyword) {
-                  $q->where('name', 'like', "%{$keyword}%");
-              });
-        });
-    }
-
-    /**
-     * scope untuk filter by SDG categories
-     */
-    public function scopeWithSdgCategories($query, array $categories)
-    {
-        return $query->where(function($q) use ($categories) {
-            foreach ($categories as $category) {
-                $q->orWhereJsonContains('sdg_categories', $category);
-            }
-        });
-    }
-
-    /**
-     * scope untuk filter by difficulty level
-     */
-    public function scopeWithDifficulty($query, $difficulty)
+    public function scopeDifficulty($query, string $difficulty)
     {
         return $query->where('difficulty_level', $difficulty);
     }
 
     /**
-     * scope untuk filter by duration
+     * scope untuk filter by province
      */
-    public function scopeWithDuration($query, $minMonths, $maxMonths = null)
+    public function scopeProvince($query, int $provinceId)
     {
-        $query->where('duration_months', '>=', $minMonths);
-        
-        if ($maxMonths !== null) {
-            $query->where('duration_months', '<=', $maxMonths);
-        }
-        
-        return $query;
+        return $query->where('province_id', $provinceId);
+    }
+
+    /**
+     * scope untuk filter by regency
+     */
+    public function scopeRegency($query, int $regencyId)
+    {
+        return $query->where('regency_id', $regencyId);
     }
 
     /**
      * increment views count
      */
-    public function incrementViews(): void
+    public function incrementViews()
     {
         $this->increment('views_count');
-    }
-
-    /**
-     * increment applications count
-     */
-    public function incrementApplications(): void
-    {
-        $this->increment('applications_count');
-    }
-
-    /**
-     * increment accepted students count
-     */
-    public function incrementAcceptedStudents(): void
-    {
-        $this->increment('accepted_students');
-    }
-
-    /**
-     * decrement accepted students count
-     */
-    public function decrementAcceptedStudents(): void
-    {
-        $this->decrement('accepted_students');
     }
 }

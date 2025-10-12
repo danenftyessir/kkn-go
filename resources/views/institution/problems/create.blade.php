@@ -13,7 +13,7 @@
 
         @if($errors->any())
         <div class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-            <div class="font-semibold mb-2">Terdapat kesalahan pada form:</div>
+            <div class="font-semibold mb-2">Terdapat Kesalahan Pada Form:</div>
             <ul class="list-disc list-inside space-y-1">
                 @foreach($errors->all() as $error)
                     <li>{{ $error }}</li>
@@ -65,17 +65,12 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Ruang Lingkup</label>
-                        <textarea name="scope" rows="3"
-                                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  placeholder="Jelaskan ruang lingkup pekerjaan...">{{ old('scope') }}</textarea>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Expected Outcomes</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Hasil Yang Diharapkan
+                        </label>
                         <textarea name="expected_outcomes" rows="3"
                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  placeholder="Hasil yang diharapkan dari proyek ini...">{{ old('expected_outcomes') }}</textarea>
+                                  placeholder="Apa hasil yang diharapkan dari proyek ini?">{{ old('expected_outcomes') }}</textarea>
                     </div>
                 </div>
             </div>
@@ -112,74 +107,67 @@
                         @error('regency_id') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Desa</label>
-                        <input type="text" name="village" value="{{ old('village') }}"
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Alamat Detail</label>
+                        <input type="text" name="address" value="{{ old('address') }}"
                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                               placeholder="Nama desa">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Detail Lokasi</label>
-                        <input type="text" name="detailed_location" value="{{ old('detailed_location') }}"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                               placeholder="Alamat lengkap">
+                               placeholder="Contoh: Jl. Raya Desa No. 123">
                     </div>
                 </div>
             </div>
 
-            {{-- kategori SDG --}}
+            {{-- kategori sdg --}}
             <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <h2 class="text-xl font-bold text-gray-900 mb-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-4">
                     Kategori SDG <span class="text-red-500">*</span>
                 </h2>
                 <p class="text-sm text-gray-600 mb-4">Pilih minimal 1 kategori Sustainable Development Goals yang relevan</p>
                 
-                <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                     @php
-                    $sdgs = [
-                        1 => 'No Poverty',
-                        2 => 'Zero Hunger',
-                        3 => 'Good Health',
-                        4 => 'Quality Education',
-                        5 => 'Gender Equality',
-                        6 => 'Clean Water',
-                        7 => 'Clean Energy',
-                        8 => 'Economic Growth',
-                        9 => 'Innovation',
-                        10 => 'Reduced Inequalities',
-                        11 => 'Sustainable Cities',
-                        12 => 'Responsible Consumption',
-                        13 => 'Climate Action',
-                        14 => 'Life Below Water',
-                        15 => 'Life On Land',
-                        16 => 'Peace And Justice',
-                        17 => 'Partnerships'
-                    ];
+                        $sdgCategories = [
+                            1 => 'Tanpa Kemiskinan',
+                            2 => 'Tanpa Kelaparan',
+                            3 => 'Kehidupan Sehat Dan Sejahtera',
+                            4 => 'Pendidikan Berkualitas',
+                            5 => 'Kesetaraan Gender',
+                            6 => 'Air Bersih Dan Sanitasi Layak',
+                            7 => 'Energi Bersih Dan Terjangkau',
+                            8 => 'Pekerjaan Layak Dan Pertumbuhan Ekonomi',
+                            9 => 'Industri, Inovasi Dan Infrastruktur',
+                            10 => 'Berkurangnya Kesenjangan',
+                            11 => 'Kota Dan Komunitas Berkelanjutan',
+                            12 => 'Konsumsi Dan Produksi Bertanggung Jawab',
+                            13 => 'Penanganan Perubahan Iklim',
+                            14 => 'Ekosistem Laut',
+                            15 => 'Ekosistem Daratan',
+                            16 => 'Perdamaian, Keadilan Dan Kelembagaan Yang Tangguh',
+                            17 => 'Kemitraan Untuk Mencapai Tujuan'
+                        ];
+                        $oldSdg = old('sdg_categories', []);
                     @endphp
-                    
-                    @foreach($sdgs as $key => $sdg)
-                        <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-all">
-                            <input type="checkbox" name="sdg_categories[]" value="{{ $key }}"
-                                   {{ in_array($key, old('sdg_categories', [])) ? 'checked' : '' }}
-                                   class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                            <span class="ml-2 text-sm text-gray-700">{{ $key }}. {{ $sdg }}</span>
+                    @foreach($sdgCategories as $id => $name)
+                        <label class="flex items-start gap-2 p-3 border border-gray-200 rounded-lg hover:bg-blue-50 cursor-pointer transition-colors">
+                            <input type="checkbox" name="sdg_categories[]" value="{{ $id }}"
+                                   {{ in_array($id, $oldSdg) ? 'checked' : '' }}
+                                   class="mt-1 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500">
+                            <span class="text-sm text-gray-700 leading-tight">{{ $name }}</span>
                         </label>
                     @endforeach
                 </div>
-                @error('sdg_categories') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
+                @error('sdg_categories') <p class="text-red-600 text-sm mt-2">{{ $message }}</p> @enderror
             </div>
 
             {{-- requirements --}}
             <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <h2 class="text-xl font-bold text-gray-900 mb-6">Kebutuhan Mahasiswa</h2>
+                <h2 class="text-xl font-bold text-gray-900 mb-6">Requirements</h2>
                 
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Jumlah Mahasiswa Dibutuhkan <span class="text-red-500">*</span>
+                            Jumlah Mahasiswa Yang Dibutuhkan <span class="text-red-500">*</span>
                         </label>
-                        <input type="number" name="required_students" value="{{ old('required_students', 1) }}" required min="1"
+                        <input type="number" name="required_students" value="{{ old('required_students', 1) }}" min="1" required
                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         @error('required_students') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
                     </div>
@@ -188,19 +176,50 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             Skills Yang Dibutuhkan <span class="text-red-500">*</span>
                         </label>
-                        <p class="text-xs text-gray-500 mb-2">Pisahkan dengan koma. Contoh: Komunikasi, Penelitian, Desain Grafis</p>
-                        <input type="text" name="required_skills" value="{{ old('required_skills') }}" required
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                               placeholder="Contoh: Komunikasi, Penelitian, Desain Grafis">
+                        <p class="text-xs text-gray-500 mb-2">Tambahkan skill satu per satu menggunakan tombol "+ Tambah Skill"</p>
+                        <div id="skills-container" class="space-y-2">
+                            @php
+                                $skills = old('required_skills', []);
+                                if (empty($skills)) {
+                                    $skills = [''];
+                                }
+                            @endphp
+                            @foreach($skills as $skill)
+                            <input type="text" 
+                                   name="required_skills[]" 
+                                   value="{{ $skill }}"
+                                   required
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                   placeholder="Contoh: Komunikasi">
+                            @endforeach
+                        </div>
+                        <button type="button" onclick="addSkillField()" class="mt-2 text-blue-600 hover:text-blue-700 text-sm font-semibold">
+                            + Tambah Skill
+                        </button>
                         @error('required_skills') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Jurusan Yang Dibutuhkan (Opsional)</label>
-                        <p class="text-xs text-gray-500 mb-2">Pisahkan dengan koma. Contoh: Teknik Informatika, Kesehatan Masyarakat</p>
-                        <input type="text" name="required_majors" value="{{ old('required_majors') }}"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                               placeholder="Kosongkan jika tidak ada persyaratan khusus">
+                        <p class="text-xs text-gray-500 mb-2">Tambahkan jurusan satu per satu menggunakan tombol "+ Tambah Jurusan"</p>
+                        <div id="majors-container" class="space-y-2">
+                            @php
+                                $majors = old('required_majors', []);
+                                if (empty($majors)) {
+                                    $majors = [''];
+                                }
+                            @endphp
+                            @foreach($majors as $major)
+                            <input type="text" 
+                                   name="required_majors[]" 
+                                   value="{{ $major }}"
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                   placeholder="Contoh: Teknik Informatika">
+                            @endforeach
+                        </div>
+                        <button type="button" onclick="addMajorField()" class="mt-2 text-blue-600 hover:text-blue-700 text-sm font-semibold">
+                            + Tambah Jurusan
+                        </button>
                     </div>
 
                     <div>
@@ -215,12 +234,35 @@
                         </select>
                         @error('difficulty_level') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
                     </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Deliverables</label>
+                        <p class="text-xs text-gray-500 mb-2">Output yang diharapkan dari mahasiswa</p>
+                        <div id="deliverables-container" class="space-y-2">
+                            @php
+                                $deliverables = old('deliverables', []);
+                                if (empty($deliverables)) {
+                                    $deliverables = [''];
+                                }
+                            @endphp
+                            @foreach($deliverables as $deliverable)
+                            <input type="text" 
+                                   name="deliverables[]" 
+                                   value="{{ $deliverable }}"
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                   placeholder="Contoh: Laporan Penelitian">
+                            @endforeach
+                        </div>
+                        <button type="button" onclick="addDeliverableField()" class="mt-2 text-blue-600 hover:text-blue-700 text-sm font-semibold">
+                            + Tambah Deliverable
+                        </button>
+                    </div>
                 </div>
             </div>
 
             {{-- timeline --}}
             <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <h2 class="text-xl font-bold text-gray-900 mb-6">Timeline Proyek</h2>
+                <h2 class="text-xl font-bold text-gray-900 mb-6">Timeline</h2>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -254,57 +296,62 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             Durasi (Bulan) <span class="text-red-500">*</span>
                         </label>
-                        <input type="number" name="duration_months" value="{{ old('duration_months', 2) }}" required min="1"
+                        <input type="number" name="duration_months" value="{{ old('duration_months', 1) }}" min="1" required
                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         @error('duration_months') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
                     </div>
                 </div>
             </div>
 
-            {{-- deliverables & fasilitas --}}
+            {{-- fasilitas --}}
             <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <h2 class="text-xl font-bold text-gray-900 mb-6">Deliverables & Fasilitas</h2>
+                <h2 class="text-xl font-bold text-gray-900 mb-4">Fasilitas Yang Disediakan</h2>
+                <p class="text-sm text-gray-600 mb-4">Fasilitas yang akan diberikan kepada mahasiswa</p>
                 
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Deliverables</label>
-                        <div id="deliverables-container" class="space-y-2">
-                            <input type="text" name="deliverables[]" value="{{ old('deliverables.0', 'Laporan Akhir') }}"
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                   placeholder="Contoh: Laporan Akhir">
-                        </div>
-                        <button type="button" onclick="addDeliverableField()" class="mt-2 text-blue-600 hover:text-blue-700 text-sm font-semibold">
-                            + Tambah Deliverable
-                        </button>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Fasilitas Yang Disediakan</label>
-                        <div id="facilities-container" class="space-y-2">
-                            <input type="text" name="facilities_provided[]" value="{{ old('facilities_provided.0', 'Akomodasi') }}"
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                   placeholder="Contoh: Akomodasi">
-                        </div>
-                        <button type="button" onclick="addFacilityField()" class="mt-2 text-blue-600 hover:text-blue-700 text-sm font-semibold">
-                            + Tambah Fasilitas
-                        </button>
-                    </div>
+                <div id="facilities-container" class="space-y-2">
+                    @php
+                        $facilities = old('facilities_provided', []);
+                        if (empty($facilities)) {
+                            $facilities = [''];
+                        }
+                    @endphp
+                    @foreach($facilities as $facility)
+                    <input type="text" 
+                           name="facilities_provided[]" 
+                           value="{{ $facility }}"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           placeholder="Contoh: Akomodasi">
+                    @endforeach
                 </div>
+                <button type="button" onclick="addFacilityField()" class="mt-2 text-blue-600 hover:text-blue-700 text-sm font-semibold">
+                    + Tambah Fasilitas
+                </button>
             </div>
 
-            {{-- gambar --}}
+            {{-- dokumentasi --}}
             <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <h2 class="text-xl font-bold text-gray-900 mb-6">Gambar Pendukung</h2>
+                <h2 class="text-xl font-bold text-gray-900 mb-4">Dokumentasi</h2>
+                <p class="text-sm text-gray-600 mb-4">Upload foto dokumentasi masalah (maksimal 5 foto, masing-masing max 5MB)</p>
                 
-                <input type="file" name="images[]" multiple accept="image/*" id="images-input"
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                <p class="text-sm text-gray-500 mt-2">Upload maksimal 5 gambar (JPG, PNG). Maksimal 5MB per file.</p>
-                <div id="images-preview" class="mt-4 grid grid-cols-2 md:grid-cols-5 gap-2"></div>
+                <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors cursor-pointer">
+                    <input type="file" name="images[]" id="images-input" accept="image/*" multiple class="hidden">
+                    <label for="images-input" class="cursor-pointer">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <p class="mt-2 text-sm text-gray-600">Klik untuk memilih gambar atau drag & drop</p>
+                        <p class="mt-1 text-xs text-gray-500">PNG, JPG, JPEG hingga 5MB</p>
+                    </label>
+                </div>
+                
+                <div id="images-preview" class="grid grid-cols-2 md:grid-cols-5 gap-4 mt-4"></div>
+                @error('images') <p class="text-red-600 text-sm mt-2">{{ $message }}</p> @enderror
+                @error('images.*') <p class="text-red-600 text-sm mt-2">{{ $message }}</p> @enderror
             </div>
 
-            {{-- status --}}
+            {{-- status publikasi --}}
             <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <h2 class="text-xl font-bold text-gray-900 mb-6">Status Publikasi</h2>
+                <h2 class="text-xl font-bold text-gray-900 mb-4">Status Publikasi</h2>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -338,23 +385,47 @@
 </div>
 
 <script>
-// dynamic fields functions
+// fungsi untuk menambah field skill
+function addSkillField() {
+    const container = document.getElementById('skills-container');
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.name = 'required_skills[]';
+    input.required = true;
+    input.placeholder = 'Contoh: Penelitian';
+    input.className = 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent';
+    container.appendChild(input);
+}
+
+// fungsi untuk menambah field jurusan
+function addMajorField() {
+    const container = document.getElementById('majors-container');
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.name = 'required_majors[]';
+    input.placeholder = 'Contoh: Kesehatan Masyarakat';
+    input.className = 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent';
+    container.appendChild(input);
+}
+
+// fungsi untuk menambah field deliverable
 function addDeliverableField() {
     const container = document.getElementById('deliverables-container');
     const input = document.createElement('input');
     input.type = 'text';
     input.name = 'deliverables[]';
-    input.placeholder = 'Deliverable lainnya';
+    input.placeholder = 'Contoh: Modul Pelatihan';
     input.className = 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent';
     container.appendChild(input);
 }
 
+// fungsi untuk menambah field fasilitas
 function addFacilityField() {
     const container = document.getElementById('facilities-container');
     const input = document.createElement('input');
     input.type = 'text';
     input.name = 'facilities_provided[]';
-    input.placeholder = 'Fasilitas lainnya';
+    input.placeholder = 'Contoh: Transportasi';
     input.className = 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent';
     container.appendChild(input);
 }
