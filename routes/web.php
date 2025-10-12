@@ -276,3 +276,162 @@ Route::middleware(['auth'])->prefix('notifications')->name('notifications.')->gr
 Route::get('/institution/{id}', [InstitutionProfileController::class, 'showPublic'])
     ->where('id', '[0-9]+')
     ->name('institution.public');
+
+/**
+ * DEBUGGING HELPER SCRIPT
+ * 
+ * Taruh file ini di: routes/web.php (temporary route untuk debugging)
+ * Akses via: /institution/problems/{id}/debug-form
+ * 
+ * Script ini akan:
+ * 1. Cek data problem dari database
+ * 2. Cek validasi rules
+ * 3. Cek fillable di model
+ * 4. Simulate form submission
+ */
+
+// tambahkan route ini SEMENTARA di routes/web.php untuk debugging
+Route::get('/institution/problems/{id}/debug-form', function($id) {
+    $problem = \App\Models\Problem::with('images')->findOrFail($id);
+    
+    // 1. CEK DATA PROBLEM
+    echo "<h2>1. DATA PROBLEM DARI DATABASE</h2>";
+    echo "<pre>";
+    echo "ID: " . $problem->id . "\n";
+    echo "Title: " . $problem->title . "\n";
+    echo "Status: " . $problem->status . "\n";
+    echo "Province ID: " . $problem->province_id . "\n";
+    echo "Regency ID: " . $problem->regency_id . "\n";
+    echo "Village: " . ($problem->village ?? 'NULL') . "\n";
+    echo "Detailed Location: " . ($problem->detailed_location ?? 'NULL') . "\n";
+    echo "Background: " . ($problem->background ?? 'NULL') . "\n";
+    echo "Objectives: " . ($problem->objectives ?? 'NULL') . "\n";
+    echo "Scope: " . ($problem->scope ?? 'NULL') . "\n";
+    echo "Images Count: " . $problem->images->count() . "\n";
+    echo "</pre>";
+    
+    // 2. CEK FILLABLE MODEL
+    echo "<h2>2. FILLABLE FIELDS DI MODEL</h2>";
+    echo "<pre>";
+    print_r($problem->getFillable());
+    echo "</pre>";
+    
+    // 3. CEK SDG CATEGORIES
+    echo "<h2>3. SDG CATEGORIES</h2>";
+    echo "<pre>";
+    $sdg = is_array($problem->sdg_categories) ? $problem->sdg_categories : json_decode($problem->sdg_categories, true);
+    print_r($sdg);
+    echo "</pre>";
+    
+    // 4. CEK REQUIRED SKILLS
+    echo "<h2>4. REQUIRED SKILLS</h2>";
+    echo "<pre>";
+    $skills = is_array($problem->required_skills) ? $problem->required_skills : json_decode($problem->required_skills, true);
+    print_r($skills);
+    echo "</pre>";
+    
+    // 5. SIMULATE FORM DATA
+    echo "<h2>5. SIMULATE FORM DATA (Copy ini untuk test Postman)</h2>";
+    $formData = [
+        'title' => $problem->title . ' (EDITED)',
+        'description' => $problem->description,
+        'background' => $problem->background,
+        'objectives' => $problem->objectives,
+        'scope' => $problem->scope,
+        'province_id' => $problem->province_id,
+        'regency_id' => $problem->regency_id,
+        'village' => $problem->village,
+        'detailed_location' => $problem->detailed_location,
+        'latitude' => $problem->latitude,
+        'longitude' => $problem->longitude,
+        'sdg_categories' => is_array($problem->sdg_categories) ? $problem->sdg_categories : json_decode($problem->sdg_categories, true),
+        'required_students' => $problem->required_students,
+        'required_skills' => is_array($problem->required_skills) ? $problem->required_skills : json_decode($problem->required_skills, true),
+        'required_majors' => is_array($problem->required_majors) ? $problem->required_majors : json_decode($problem->required_majors, true),
+        'start_date' => $problem->start_date->format('Y-m-d'),
+        'end_date' => $problem->end_date->format('Y-m-d'),
+        'application_deadline' => $problem->application_deadline->format('Y-m-d'),
+        'duration_months' => $problem->duration_months,
+        'difficulty_level' => $problem->difficulty_level,
+        'status' => $problem->status,
+        'expected_outcomes' => $problem->expected_outcomes,
+        'deliverables' => is_array($problem->deliverables) ? $problem->deliverables : json_decode($problem->deliverables, true),
+        'facilities_provided' => is_array($problem->facilities_provided) ? $problem->facilities_provided : json_decode($problem->facilities_provided, true),
+    ];
+    echo "<textarea style='width:100%; height:300px;'>";
+    echo json_encode($formData, JSON_PRETTY_PRINT);
+    echo "</textarea>";
+    
+    // 6. TEST VALIDATION
+    echo "<h2>6. TEST VALIDATION</h2>";
+    $validator = \Illuminate\Support\Facades\Validator::make($formData, [
+        'title' => 'required|string|max:255',
+        'description' => 'required|string',
+        'background' => 'nullable|string',
+        'objectives' => 'nullable|string',
+        'scope' => 'nullable|string',
+        'province_id' => 'required|integer|exists:provinces,id',
+        'regency_id' => 'required|integer|exists:regencies,id',
+        'village' => 'nullable|string|max:255',
+        'detailed_location' => 'nullable|string',
+        'latitude' => 'nullable|numeric|between:-90,90',
+        'longitude' => 'nullable|numeric|between:-180,180',
+        'sdg_categories' => 'required|array|min:1',
+        'sdg_categories.*' => 'integer|between:1,17',
+        'required_students' => 'required|integer|min:1',
+        'required_skills' => 'required|array|min:1',
+        'required_majors' => 'nullable|array',
+        'start_date' => 'required|date',
+        'end_date' => 'required|date|after:start_date',
+        'application_deadline' => 'required|date|before:start_date',
+        'duration_months' => 'required|integer|min:1',
+        'difficulty_level' => 'required|in:beginner,intermediate,advanced',
+        'status' => 'required|in:draft,open,in_progress,completed,closed',
+        'expected_outcomes' => 'nullable|string',
+        'deliverables' => 'nullable|array',
+        'facilities_provided' => 'nullable|array',
+    ]);
+    
+    if ($validator->fails()) {
+        echo "<pre style='color:red;'>";
+        echo "❌ VALIDATION FAILED:\n";
+        print_r($validator->errors()->toArray());
+        echo "</pre>";
+    } else {
+        echo "<pre style='color:green;'>";
+        echo "✅ VALIDATION PASSED!";
+        echo "</pre>";
+    }
+    
+    // 7. CHECK MISSING FIELDS
+    echo "<h2>7. CHECK MISSING FIELDS IN FORM</h2>";
+    $modelFillable = $problem->getFillable();
+    $formFields = array_keys($formData);
+    $missingInForm = array_diff($modelFillable, $formFields);
+    
+    if (count($missingInForm) > 0) {
+        echo "<pre style='color:orange;'>";
+        echo "⚠️ Fields in Model but NOT in Form:\n";
+        print_r($missingInForm);
+        echo "\nNote: Ini mungkin OK jika field auto-generated (created_at, institution_id, dll)";
+        echo "</pre>";
+    } else {
+        echo "<pre style='color:green;'>";
+        echo "✅ All necessary fields present!";
+        echo "</pre>";
+    }
+    
+    // 8. LOG TEST
+    echo "<h2>8. RECENT LOGS (Last 50 lines from laravel.log)</h2>";
+    $logPath = storage_path('logs/laravel.log');
+    if (file_exists($logPath)) {
+        $lines = file($logPath);
+        $lastLines = array_slice($lines, -50);
+        echo "<textarea style='width:100%; height:300px;'>";
+        echo implode('', $lastLines);
+        echo "</textarea>";
+    } else {
+        echo "<p style='color:red;'>Log file not found</p>";
+    }
+    
+})->middleware(['auth', 'check.user.type:institution']);
