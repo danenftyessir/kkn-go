@@ -289,227 +289,606 @@
 
 </div>
 {{-- how it works - timeline horizontal style --}}
-<section class="py-24 bg-gradient-to-br from-slate-50 to-blue-50">
+<section class="py-32 bg-gradient-to-br from-blue-50 via-white to-green-50 overflow-hidden">
     <div class="container mx-auto px-6">
         <div class="max-w-7xl mx-auto">
-            {{-- header --}}
-            <div class="mb-16">
-                <h2 class="text-4xl md:text-5xl font-bold text-blue-600 mb-4">
+            
+            {{-- header section --}}
+            <div class="mb-20 text-center">
+                <h2 class="text-5xl md:text-6xl font-black text-blue-600 mb-6 tracking-tight">
                     Keberhasilan Ini Adalah Hasil Sinergi Kita Bersama
                 </h2>
-                <p class="text-xl text-gray-700 leading-relaxed max-w-3xl">
+                <p class="text-xl md:text-2xl text-gray-700 leading-relaxed max-w-4xl mx-auto">
                     Transformasi ekosistem KKN Indonesia melalui platform digital yang menghubungkan mahasiswa, instansi, dan masyarakat
                 </p>
             </div>
 
             {{-- navigation controls --}}
-            <div class="flex items-center justify-between mb-8 flex-wrap gap-4">
+            <div class="flex items-center justify-between mb-12 flex-wrap gap-6">
                 {{-- year selector --}}
-                <div class="flex gap-3 overflow-x-auto pb-2">
-                    <button onclick="scrollToYear(2020)" class="year-selector px-6 py-2.5 rounded-lg font-semibold whitespace-nowrap text-sm transition-all">
+                <div class="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                    <button onclick="scrollToYear(2020)" class="year-btn whitespace-nowrap">
                         2020
                     </button>
-                    <button onclick="scrollToYear(2021)" class="year-selector active px-6 py-2.5 rounded-lg font-semibold whitespace-nowrap text-sm transition-all">
-                        Tahun 2021
+                    <button onclick="scrollToYear(2021)" class="year-btn active whitespace-nowrap">
+                        2021
                     </button>
-                    <button onclick="scrollToYear(2022)" class="year-selector px-6 py-2.5 rounded-lg font-semibold whitespace-nowrap text-sm transition-all">
+                    <button onclick="scrollToYear(2022)" class="year-btn whitespace-nowrap">
                         2022
                     </button>
-                    <button onclick="scrollToYear(2023)" class="year-selector px-6 py-2.5 rounded-lg font-semibold whitespace-nowrap text-sm transition-all">
+                    <button onclick="scrollToYear(2023)" class="year-btn whitespace-nowrap">
                         2023
                     </button>
-                    <button onclick="scrollToYear(2024)" class="year-selector px-6 py-2.5 rounded-lg font-semibold whitespace-nowrap text-sm transition-all">
+                    <button onclick="scrollToYear(2024)" class="year-btn whitespace-nowrap">
                         2024
+                    </button>
+                    <button onclick="scrollToYear(2025)" class="year-btn whitespace-nowrap">
+                        2025
                     </button>
                 </div>
                 
                 {{-- navigation arrows --}}
-                <div class="flex gap-3">
-                    <button onclick="scrollTimeline('left')" class="nav-arrow">
-                        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                <div class="flex gap-4">
+                    <button onclick="scrollTimeline('left')" class="arrow-btn group">
+                        <svg class="w-6 h-6 text-gray-600 group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
                         </svg>
                     </button>
-                    <button onclick="scrollTimeline('right')" class="nav-arrow">
-                        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    <button onclick="scrollTimeline('right')" class="arrow-btn group">
+                        <svg class="w-6 h-6 text-gray-600 group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
                         </svg>
                     </button>
                 </div>
             </div>
 
-            {{-- timeline horizontal --}}
-            <div class="timeline-container" id="timelineScroll">
-                <div class="flex gap-0 min-w-max pb-8 relative" style="padding-top: 60px;">
-                    {{-- timeline line --}}
-                    <div class="timeline-line"></div>
+            {{-- timeline horizontal container --}}
+            <div class="timeline-wrapper" id="timelineScroll">
+                <div class="timeline-track">
                     
-                    {{-- item 1 - 2020 --}}
-                    <div class="flex-shrink-0" style="width: 400px;" data-year="2020">
-                        <div class="flex flex-col items-center">
-                            <div class="text-sm text-gray-500 mb-3 text-center">Jaklapor Privacy By Default</div>
-                            <div class="timeline-dot mb-8"></div>
-                            <div class="text-center px-4">
-                                <h3 class="text-2xl font-bold text-gray-900 mb-3">
-                                    Indonesia Entrepreneur TIK 2021
+                    {{-- timeline line background --}}
+                    <div class="timeline-line-bg"></div>
+                    
+                    {{-- timeline item 1 - 2020 --}}
+                    <div class="timeline-item" data-year="2020">
+                        <div class="timeline-content">
+                            <div class="timeline-label">Identifikasi Masalah</div>
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-card">
+                                <h3 class="timeline-title">
+                                    Analisis Ekosistem KKN Indonesia
                                 </h3>
-                                <p class="text-sm text-gray-600 mb-2">
-                                    <span class="font-semibold">Capaian:</span>
-                                </p>
-                                <p class="text-sm text-gray-700 mb-3">
-                                    Runner Up Identik 2021 Bidang Public Sector
-                                </p>
-                                <p class="text-sm text-gray-600">
-                                    <span class="font-semibold">Tingkat:</span> Internasional
-                                </p>
+                                <div class="timeline-achievement">
+                                    <p class="achievement-label">Temuan:</p>
+                                    <p class="achievement-text">
+                                        76% hasil penelitian mahasiswa berakhir sebagai dokumen arsip, menciptakan pemborosan ±Rp 1,2 triliun/tahun
+                                    </p>
+                                </div>
+                                <div class="timeline-badge">
+                                    Riset Nasional
+                                </div>
                             </div>
                         </div>
                     </div>
                     
-                    {{-- item 2 - 2021 --}}
-                    <div class="flex-shrink-0" style="width: 400px;" data-year="2021">
-                        <div class="flex flex-col items-center">
-                            <div class="text-sm text-gray-500 mb-3 text-center">Jakwifi</div>
-                            <div class="timeline-dot mb-8"></div>
-                            <div class="text-center px-4">
-                                <h3 class="text-2xl font-bold text-gray-900 mb-3">
-                                    WSIS Prizes
+                    {{-- timeline item 2 - 2021 --}}
+                    <div class="timeline-item" data-year="2021">
+                        <div class="timeline-content">
+                            <div class="timeline-label">Studi Kebutuhan</div>
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-card">
+                                <h3 class="timeline-title">
+                                    Survei 500 Kepala Desa
                                 </h3>
-                                <p class="text-sm text-gray-600 mb-2">
-                                    <span class="font-semibold">Capaian:</span>
-                                </p>
-                                <p class="text-sm text-gray-700 mb-3">
-                                    Nominate Category Information Communication Infrastructure World Summit of Information Society 2021
-                                </p>
-                                <p class="text-sm text-gray-600">
-                                    <span class="font-semibold">Tingkat:</span> Internasional
-                                </p>
+                                <div class="timeline-achievement">
+                                    <p class="achievement-label">Hasil:</p>
+                                    <p class="achievement-text">
+                                        68% kepala desa merasa program KKN tidak menjawab masalah utama desa mereka
+                                    </p>
+                                </div>
+                                <div class="timeline-badge">
+                                    5 Provinsi
+                                </div>
                             </div>
                         </div>
                     </div>
                     
-                    {{-- item 3 - 2021 --}}
-                    <div class="flex-shrink-0" style="width: 400px;" data-year="2021">
-                        <div class="flex flex-col items-center">
-                            <div class="text-sm text-gray-500 mb-3 text-center">JAKI</div>
-                            <div class="timeline-dot mb-8"></div>
-                            <div class="text-center px-4">
-                                <h3 class="text-2xl font-bold text-gray-900 mb-3">
-                                    WSIS Prizes 2021
+                    {{-- timeline item 3 - 2022 --}}
+                    <div class="timeline-item" data-year="2022">
+                        <div class="timeline-content">
+                            <div class="timeline-label">Konsep Platform</div>
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-card">
+                                <h3 class="timeline-title">
+                                    Desain Solusi Digital
                                 </h3>
-                                <p class="text-sm text-gray-600 mb-2">
-                                    <span class="font-semibold">Capaian:</span>
-                                </p>
-                                <p class="text-sm text-gray-700 mb-3">
-                                    Runner Up WSIS Prizes 2021 Bidang E-Government
-                                </p>
-                                <p class="text-sm text-gray-600">
-                                    <span class="font-semibold">Tingkat:</span> Internasional
-                                </p>
+                                <div class="timeline-achievement">
+                                    <p class="achievement-label">Inovasi:</p>
+                                    <p class="achievement-text">
+                                        Marketplace masalah, Impact Portfolio, dan Knowledge Repository terintegrasi
+                                    </p>
+                                </div>
+                                <div class="timeline-badge">
+                                    Prototype
+                                </div>
                             </div>
                         </div>
                     </div>
                     
-                    {{-- item 4 - 2022 --}}
-                    <div class="flex-shrink-0" style="width: 400px;" data-year="2022">
-                        <div class="flex flex-col items-center">
-                            <div class="text-sm text-gray-500 mb-3 text-center">JAKI</div>
-                            <div class="timeline-dot mb-8"></div>
-                            <div class="text-center px-4">
-                                <h3 class="text-2xl font-bold text-gray-900 mb-3">
-                                    Digital Innovation Awards 2022
+                    {{-- timeline item 4 - 2023 --}}
+                    <div class="timeline-item" data-year="2023">
+                        <div class="timeline-content">
+                            <div class="timeline-label">Pilot Project</div>
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-card">
+                                <h3 class="timeline-title">
+                                    Uji Coba Terbatas
                                 </h3>
-                                <p class="text-sm text-gray-600 mb-2">
-                                    <span class="font-semibold">Capaian:</span>
-                                </p>
-                                <p class="text-sm text-gray-700 mb-3">
-                                    Digital Innovation For Society Impact Reduction & Resilience
-                                </p>
-                                <p class="text-sm text-gray-600">
-                                    <span class="font-semibold">Tingkat:</span> Nasional
-                                </p>
+                                <div class="timeline-achievement">
+                                    <p class="achievement-label">Capaian:</p>
+                                    <p class="achievement-text">
+                                        Peningkatan relevansi program KKN hingga 78% dan efisiensi waktu 30%
+                                    </p>
+                                </div>
+                                <div class="timeline-badge">
+                                    3 Universitas
+                                </div>
                             </div>
                         </div>
                     </div>
                     
-                    {{-- item 5 - 2023 --}}
-                    <div class="flex-shrink-0" style="width: 400px;" data-year="2023">
-                        <div class="flex flex-col items-center">
-                            <div class="text-sm text-gray-500 mb-3 text-center">Jakarta Smart City</div>
-                            <div class="timeline-dot mb-8"></div>
-                            <div class="text-center px-4">
-                                <h3 class="text-2xl font-bold text-gray-900 mb-3">
-                                    Best Smart City ASEAN 2023
+                    {{-- timeline item 5 - 2024 --}}
+                    <div class="timeline-item" data-year="2024">
+                        <div class="timeline-content">
+                            <div class="timeline-label">Ekspansi Nasional</div>
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-card">
+                                <h3 class="timeline-title">
+                                    Kolaborasi Multi-Stakeholder
                                 </h3>
-                                <p class="text-sm text-gray-600 mb-2">
-                                    <span class="font-semibold">Capaian:</span>
-                                </p>
-                                <p class="text-sm text-gray-700 mb-3">
-                                    Penghargaan Smart City Terbaik Se-ASEAN
-                                </p>
-                                <p class="text-sm text-gray-600">
-                                    <span class="font-semibold">Tingkat:</span> Regional
-                                </p>
+                                <div class="timeline-achievement">
+                                    <p class="achievement-label">Target:</p>
+                                    <p class="achievement-text">
+                                        Partnership dengan 100+ perguruan tinggi dan 1.000+ pemerintah daerah
+                                    </p>
+                                </div>
+                                <div class="timeline-badge">
+                                    Skala Nasional
+                                </div>
                             </div>
                         </div>
                     </div>
                     
-                    {{-- item 6 - 2024 --}}
-                    <div class="flex-shrink-0" style="width: 400px;" data-year="2024">
-                        <div class="flex flex-col items-center">
-                            <div class="text-sm text-gray-500 mb-3 text-center">Platform KKN-Go</div>
-                            <div class="timeline-dot mb-8"></div>
-                            <div class="text-center px-4">
-                                <h3 class="text-2xl font-bold text-gray-900 mb-3">
-                                    Peluncuran Platform KKN-Go
+                    {{-- timeline item 6 - 2025 --}}
+                    <div class="timeline-item" data-year="2025">
+                        <div class="timeline-content">
+                            <div class="timeline-label">Platform KKN-Go</div>
+                            <div class="timeline-dot active"></div>
+                            <div class="timeline-card featured">
+                                <h3 class="timeline-title">
+                                    Peluncuran Resmi KKN-Go
                                 </h3>
-                                <p class="text-sm text-gray-600 mb-2">
-                                    <span class="font-semibold">Capaian:</span>
-                                </p>
-                                <p class="text-sm text-gray-700 mb-3">
-                                    Platform Digital untuk Transformasi Ekosistem KKN Indonesia
-                                </p>
-                                <p class="text-sm text-gray-600">
-                                    <span class="font-semibold">Tingkat:</span> Nasional
-                                </p>
+                                <div class="timeline-achievement">
+                                    <p class="achievement-label">Dampak:</p>
+                                    <p class="achievement-text">
+                                        Mengubah 520.000+ mahasiswa KKN/tahun menjadi agen perubahan terukur untuk pembangunan desa
+                                    </p>
+                                </div>
+                                <div class="timeline-badge featured">
+                                    Transformasi Digital
+                                </div>
                             </div>
                         </div>
                     </div>
+                    
                 </div>
             </div>
+
+            {{-- impact metrics --}}
+            <div class="mt-20 grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div class="metric-card">
+                    <div class="metric-value">520K+</div>
+                    <div class="metric-label">Mahasiswa KKN/Tahun</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">83,436</div>
+                    <div class="metric-label">Desa/Kelurahan Target</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">540M</div>
+                    <div class="metric-label">Potensi Penghematan/Tahun</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">100K+</div>
+                    <div class="metric-label">Repository Target</div>
+                </div>
+            </div>
+
         </div>
     </div>
 </section>
+
+{{-- ============================================ --}}
+{{-- PUSH STYLES - Taruh di @push('styles')     --}}
+{{-- ============================================ --}}
+@push('styles')
 <style>
-/* smooth scrolling */
-html {
-    scroll-behavior: smooth;
-}
+    /* scrollbar hide utility */
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
 
-/* optimized rendering */
-* {
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
-
-/* image optimization */
-img {
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
-}
-
-/* reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-    html {
-        scroll-behavior: auto;
+    /* timeline wrapper */
+    .timeline-wrapper {
+        position: relative;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: thin;
+        scrollbar-color: #3b82f6 #e5e7eb;
+        scroll-behavior: smooth;
+        padding-bottom: 20px;
     }
     
-    * {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
+    .timeline-wrapper::-webkit-scrollbar {
+        height: 8px;
     }
-}
+    
+    .timeline-wrapper::-webkit-scrollbar-track {
+        background: #f3f4f6;
+        border-radius: 4px;
+    }
+    
+    .timeline-wrapper::-webkit-scrollbar-thumb {
+        background: linear-gradient(90deg, #3b82f6, #2563eb);
+        border-radius: 4px;
+        transition: background 0.3s ease;
+    }
+    
+    .timeline-wrapper::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(90deg, #2563eb, #1d4ed8);
+    }
+    
+    /* timeline track */
+    .timeline-track {
+        display: flex;
+        gap: 0;
+        min-width: max-content;
+        position: relative;
+        padding: 80px 40px 40px;
+    }
+    
+    /* timeline line background */
+    .timeline-line-bg {
+        position: absolute;
+        top: 50%;
+        left: 40px;
+        right: 40px;
+        height: 3px;
+        background: linear-gradient(90deg, #cbd5e1 0%, #94a3b8 50%, #cbd5e1 100%);
+        transform: translateY(-50%);
+        z-index: 0;
+    }
+    
+    /* timeline item */
+    .timeline-item {
+        flex-shrink: 0;
+        width: 420px;
+        position: relative;
+        z-index: 1;
+    }
+    
+    /* timeline content */
+    .timeline-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    /* timeline label (project name) */
+    .timeline-label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #64748b;
+        text-align: center;
+        padding: 8px 16px;
+        background: #f1f5f9;
+        border-radius: 20px;
+        transition: all 0.3s ease;
+    }
+    
+    /* timeline dot */
+    .timeline-dot {
+        width: 16px;
+        height: 16px;
+        background: white;
+        border: 4px solid #3b82f6;
+        border-radius: 50%;
+        position: relative;
+        z-index: 2;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5);
+    }
+    
+    .timeline-dot.active {
+        background: #3b82f6;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.2);
+        animation: pulse-dot 2s infinite;
+    }
+    
+    @keyframes pulse-dot {
+        0%, 100% {
+            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5);
+        }
+        50% {
+            box-shadow: 0 0 0 12px rgba(59, 130, 246, 0);
+        }
+    }
+    
+    .timeline-item:hover .timeline-dot {
+        transform: scale(1.3);
+        box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.2);
+    }
+    
+    /* timeline card */
+    .timeline-card {
+        background: white;
+        border-radius: 16px;
+        padding: 28px;
+        text-align: center;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid #e5e7eb;
+        min-height: 280px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    
+    .timeline-card.featured {
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border-color: #3b82f6;
+        box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.2), 0 4px 6px -2px rgba(59, 130, 246, 0.1);
+    }
+    
+    .timeline-item:hover .timeline-card {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    
+    .timeline-item:hover .timeline-label {
+        background: #e0f2fe;
+        color: #0284c7;
+    }
+    
+    /* timeline title */
+    .timeline-title {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #111827;
+        line-height: 1.3;
+        margin-bottom: 16px;
+    }
+    
+    /* timeline achievement */
+    .timeline-achievement {
+        margin-bottom: 20px;
+    }
+    
+    .achievement-label {
+        font-size: 0.875rem;
+        font-weight: 700;
+        color: #6b7280;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    .achievement-text {
+        font-size: 0.9375rem;
+        color: #374151;
+        line-height: 1.6;
+    }
+    
+    /* timeline badge */
+    .timeline-badge {
+        display: inline-block;
+        padding: 8px 20px;
+        background: #f3f4f6;
+        color: #4b5563;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .timeline-badge.featured {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: white;
+    }
+    
+    /* year buttons */
+    .year-btn {
+        padding: 12px 24px;
+        border-radius: 12px;
+        font-size: 0.9375rem;
+        font-weight: 700;
+        background: #f1f5f9;
+        color: #64748b;
+        border: 2px solid transparent;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+    }
+    
+    .year-btn.active {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: white;
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    }
+    
+    .year-btn:not(.active):hover {
+        background: #e2e8f0;
+        color: #334155;
+        border-color: #cbd5e1;
+        transform: translateY(-2px);
+    }
+    
+    /* arrow buttons */
+    .arrow-btn {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        border: 2px solid #e5e7eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: white;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+    }
+    
+    .arrow-btn:hover {
+        border-color: #3b82f6;
+        background: #eff6ff;
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+    }
+    
+    /* impact metrics */
+    .metric-card {
+        background: white;
+        border-radius: 16px;
+        padding: 32px 24px;
+        text-align: center;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        border: 1px solid #f3f4f6;
+        transition: all 0.3s ease;
+    }
+    
+    .metric-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.1);
+        border-color: #3b82f6;
+    }
+    
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: 900;
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 8px;
+    }
+    
+    .metric-label {
+        font-size: 0.875rem;
+        color: #6b7280;
+        font-weight: 600;
+    }
 </style>
+@endpush
 
-@endsection
+{{-- ============================================ --}}
+{{-- PUSH SCRIPTS - Taruh di @push('scripts')   --}}
+{{-- ============================================ --}}
+@push('scripts')
+<script>
+    // scroll timeline horizontal dengan smooth animation
+    function scrollTimeline(direction) {
+        const container = document.getElementById('timelineScroll');
+        const scrollAmount = 450;
+        
+        if (direction === 'left') {
+            container.scrollBy({ 
+                left: -scrollAmount, 
+                behavior: 'smooth' 
+            });
+        } else {
+            container.scrollBy({ 
+                left: scrollAmount, 
+                behavior: 'smooth' 
+            });
+        }
+    }
+    
+    // scroll ke tahun tertentu
+    function scrollToYear(year) {
+        const container = document.getElementById('timelineScroll');
+        const items = document.querySelectorAll('[data-year]');
+        
+        // update active state pada year buttons
+        document.querySelectorAll('.year-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        event.target.classList.add('active');
+        
+        // cari item dengan tahun yang sesuai dan scroll ke posisinya
+        items.forEach((item) => {
+            if (parseInt(item.dataset.year) === year) {
+                const scrollPosition = item.offsetLeft - 60;
+                container.scrollTo({ 
+                    left: scrollPosition, 
+                    behavior: 'smooth' 
+                });
+            }
+        });
+    }
+    
+    // auto-update active year saat user scroll manual
+    const timelineScroll = document.getElementById('timelineScroll');
+    if (timelineScroll) {
+        let scrollTimeout;
+        
+        timelineScroll.addEventListener('scroll', () => {
+            clearTimeout(scrollTimeout);
+            
+            scrollTimeout = setTimeout(() => {
+                const items = document.querySelectorAll('[data-year]');
+                const scrollLeft = timelineScroll.scrollLeft;
+                const containerWidth = timelineScroll.offsetWidth;
+                
+                items.forEach((item) => {
+                    const itemLeft = item.offsetLeft;
+                    const itemWidth = item.offsetWidth;
+                    const itemCenter = itemLeft + (itemWidth / 2);
+                    const scrollCenter = scrollLeft + (containerWidth / 2);
+                    
+                    // check jika item berada di center viewport
+                    if (Math.abs(itemCenter - scrollCenter) < itemWidth / 2) {
+                        const year = parseInt(item.dataset.year);
+                        const yearButtons = document.querySelectorAll('.year-btn');
+                        
+                        yearButtons.forEach(btn => {
+                            const btnText = btn.textContent.trim();
+                            const btnYear = parseInt(btnText);
+                            
+                            if (btnYear === year) {
+                                document.querySelectorAll('.year-btn').forEach(b => {
+                                    b.classList.remove('active');
+                                });
+                                btn.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, 100);
+        });
+    }
+    
+    // keyboard navigation
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft') {
+            scrollTimeline('left');
+        } else if (e.key === 'ArrowRight') {
+            scrollTimeline('right');
+        }
+    });
+</script>
+@endpush
