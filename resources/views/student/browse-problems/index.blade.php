@@ -1,221 +1,233 @@
 {{-- resources/views/student/browse-problems/index.blade.php --}}
 @extends('layouts.app')
 
-@section('title', 'Jelajahi Proyek KKN')
+@section('title', 'Browse Problems')
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/browse-problems.css') }}">
+<style>
+    .hero-browse-background {
+        position: relative;
+        background-image: url('/dashboard-student.jpg');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+    }
+    
+    .hero-browse-background::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        /* Gradient lebih transparan - opacity dikurangi dari 0.75-0.85 jadi 0.45-0.55 */
+        background: linear-gradient(
+            135deg, 
+            rgba(37, 99, 235, 0.50) 0%,     /* Biru lebih transparan */
+            rgba(59, 130, 246, 0.45) 35%,   /* Biru medium transparan */
+            rgba(16, 185, 129, 0.45) 65%,   /* Hijau medium transparan */
+            rgba(5, 150, 105, 0.50) 100%    /* Hijau transparan */
+        );
+        backdrop-filter: blur(1px);  /* Blur dikurangi dari 2px ke 1px */
+    }
+    
+    .stats-card-modern {
+        background: rgba(255, 255, 255, 0.20);  /* Sedikit lebih solid dari sebelumnya */
+        backdrop-filter: blur(16px);             /* Blur diperkuat untuk clarity */
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .stats-card-modern:hover {
+        background: rgba(255, 255, 255, 0.30);
+        transform: translateY(-4px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+    
+    .text-shadow-strong {
+        text-shadow: 
+            0 2px 4px rgba(0, 0, 0, 0.4),
+            0 4px 8px rgba(0, 0, 0, 0.3),
+            0 1px 2px rgba(0, 0, 0, 0.5);  /* Multiple layers untuk readability maksimal */
+    }
+    
+    .browse-fade-in {
+        animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
 @endpush
 
 @section('content')
-<div class="min-h-screen bg-gradient-to-b from-blue-50 to-white py-8">
-    <div class="container mx-auto px-4">
-        
-        {{-- header --}}
-        <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">Jelajahi Proyek KKN</h1>
-            <p class="text-gray-600">Temukan proyek KKN yang sesuai dengan minat dan keahlian Anda</p>
+<div class="min-h-screen bg-gray-50">
+    
+    {{-- header section dengan background image --}}
+    <div class="hero-browse-background text-white py-16 md:py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="browse-fade-in">
+                <h1 class="text-4xl md:text-5xl font-bold mb-4 text-shadow-strong">
+                    Jelajahi Proyek KKN
+                </h1>
+                <p class="text-xl md:text-2xl text-white text-shadow-strong max-w-3xl">
+                    Temukan proyek KKN yang sesuai dengan minat dan keahlian Anda
+                </p>
+            </div>
             
-            {{-- statistics --}}
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
-                    <div class="flex items-center">
-                        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
+            {{-- stats cards dengan modern glassmorphism effect --}}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mt-10 browse-fade-in" style="animation-delay: 0.2s;">
+                <div class="stats-card-modern rounded-xl p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-4xl md:text-5xl font-bold text-white text-shadow-strong">
+                                {{ $totalProblems ?? 0 }}
+                            </div>
+                            <div class="text-sm md:text-base text-white font-medium text-shadow-strong mt-2">
+                                Total Proyek
+                            </div>
                         </div>
-                        <div class="ml-4">
-                            <p class="text-2xl font-bold text-gray-900">{{ $totalProblems }}</p>
-                            <p class="text-sm text-gray-600">Total Proyek Terbuka</p>
+                        <div class="w-14 h-14 md:w-16 md:h-16 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                            <svg class="w-7 h-7 md:w-8 md:h-8 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
                         </div>
                     </div>
                 </div>
-
-                <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
-                    <div class="flex items-center">
-                        <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                            </svg>
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-2xl font-bold text-gray-900">{{ $totalInstitutions }}</p>
-                            <p class="text-sm text-gray-600">Instansi Aktif</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
-                    <div class="flex items-center">
-                        <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            </svg>
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-2xl font-bold text-gray-900">{{ $provinces->count() }}</p>
-                            <p class="text-sm text-gray-600">Provinsi Tersedia</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- filter toggle button (mobile) --}}
-        <div class="mb-4 lg:hidden">
-            <button id="toggle-filter" class="w-full bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-between hover:bg-gray-50 transition-colors">
-                <span class="text-gray-900 font-medium">Filter & Pencarian</span>
-                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                </svg>
-            </button>
-        </div>
-
-        {{-- filters section --}}
-        <div id="filter-section" class="bg-white rounded-xl shadow-sm p-6 mb-6 border border-gray-200">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 
-                {{-- search --}}
-                <div class="lg:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Cari Proyek</label>
-                    <div class="relative">
-                        <input type="text" 
-                               id="search" 
-                               name="search" 
-                               placeholder="Cari berdasarkan judul atau deskripsi..."
-                               value="{{ request('search') }}"
-                               class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <svg class="absolute left-3 top-3 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                        </svg>
+                <div class="stats-card-modern rounded-xl p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-4xl md:text-5xl font-bold text-white text-shadow-strong">
+                                {{ $openProblems ?? 0 }}
+                            </div>
+                            <div class="text-sm md:text-base text-white font-medium text-shadow-strong mt-2">
+                                Proyek Terbuka
+                            </div>
+                        </div>
+                        <div class="w-14 h-14 md:w-16 md:h-16 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                            <svg class="w-7 h-7 md:w-8 md:h-8 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                            </svg>
+                        </div>
                     </div>
                 </div>
-
-                {{-- province --}}
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Provinsi</label>
-                    <select id="province_id" 
-                            name="province_id" 
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="">Semua Provinsi</option>
-                        @foreach($provinces as $province)
-                            <option value="{{ $province->id }}" {{ request('province_id') == $province->id ? 'selected' : '' }}>
-                                {{ $province->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                {{-- regency --}}
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Kabupaten/Kota</label>
-                    <select id="regency_id" 
-                            name="regency_id" 
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            disabled>
-                        <option value="">Pilih Kabupaten/Kota</option>
-                        @foreach($regencies as $regency)
-                            <option value="{{ $regency->id }}" {{ request('regency_id') == $regency->id ? 'selected' : '' }}>
-                                {{ $regency->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                {{-- sdg category --}}
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Kategori SDG</label>
-                    <select id="sdg" 
-                            name="sdg" 
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="">Semua Kategori</option>
-                        <option value="1" {{ request('sdg') == '1' ? 'selected' : '' }}>1. Tanpa Kemiskinan</option>
-                        <option value="2" {{ request('sdg') == '2' ? 'selected' : '' }}>2. Tanpa Kelaparan</option>
-                        <option value="3" {{ request('sdg') == '3' ? 'selected' : '' }}>3. Kehidupan Sehat dan Sejahtera</option>
-                        <option value="4" {{ request('sdg') == '4' ? 'selected' : '' }}>4. Pendidikan Berkualitas</option>
-                        <option value="6" {{ request('sdg') == '6' ? 'selected' : '' }}>6. Air Bersih dan Sanitasi Layak</option>
-                        <option value="7" {{ request('sdg') == '7' ? 'selected' : '' }}>7. Energi Bersih dan Terjangkau</option>
-                        <option value="8" {{ request('sdg') == '8' ? 'selected' : '' }}>8. Pekerjaan Layak dan Pertumbuhan Ekonomi</option>
-                        <option value="10" {{ request('sdg') == '10' ? 'selected' : '' }}>10. Berkurangnya Kesenjangan</option>
-                        <option value="11" {{ request('sdg') == '11' ? 'selected' : '' }}>11. Kota dan Komunitas Berkelanjutan</option>
-                        <option value="13" {{ request('sdg') == '13' ? 'selected' : '' }}>13. Penanganan Perubahan Iklim</option>
-                    </select>
-                </div>
-
-                {{-- difficulty --}}
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Tingkat Kesulitan</label>
-                    <select id="difficulty" 
-                            name="difficulty" 
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="">Semua Tingkat</option>
-                        <option value="beginner" {{ request('difficulty') == 'beginner' ? 'selected' : '' }}>Beginner</option>
-                        <option value="intermediate" {{ request('difficulty') == 'intermediate' ? 'selected' : '' }}>Intermediate</option>
-                        <option value="advanced" {{ request('difficulty') == 'advanced' ? 'selected' : '' }}>Advanced</option>
-                    </select>
-                </div>
-
-                {{-- duration --}}
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Durasi</label>
-                    <select id="duration" 
-                            name="duration" 
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="">Semua Durasi</option>
-                        <option value="1-2" {{ request('duration') == '1-2' ? 'selected' : '' }}>1-2 Bulan</option>
-                        <option value="3-4" {{ request('duration') == '3-4' ? 'selected' : '' }}>3-4 Bulan</option>
-                        <option value="5-6" {{ request('duration') == '5-6' ? 'selected' : '' }}>5-6 Bulan</option>
-                    </select>
-                </div>
-
-                {{-- reset button --}}
-                <div class="flex items-end">
-                    <button id="reset-filters" 
-                            class="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-                        Reset Filter
-                    </button>
+                
+                <div class="stats-card-modern rounded-xl p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-4xl md:text-5xl font-bold text-white text-shadow-strong">
+                                {{ $totalInstitutions ?? 0 }}
+                            </div>
+                            <div class="text-sm md:text-base text-white font-medium text-shadow-strong mt-2">
+                                Instansi Partner
+                            </div>
+                        </div>
+                        <div class="w-14 h-14 md:w-16 md:h-16 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                            <svg class="w-7 h-7 md:w-8 md:h-8 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                            </svg>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        {{-- view controls --}}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        {{-- search & filter bar --}}
+        <div class="bg-white rounded-xl shadow-sm p-6 mb-6 border border-gray-100">
+            <form method="GET" action="{{ route('student.browse-problems.index') }}" class="space-y-4">
+                
+                {{-- search bar --}}
+                <div class="flex flex-col md:flex-row gap-4">
+                    <div class="flex-1">
+                        <div class="relative">
+                            <input type="text" 
+                                   name="search" 
+                                   value="{{ request('search') }}"
+                                   placeholder="Cari proyek berdasarkan judul, atau, deskripsi..."
+                                   class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                            <svg class="w-5 h-5 text-gray-400 absolute left-4 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        {{-- toggle view --}}
+                        <button type="button" 
+                                id="toggle-view"
+                                class="px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                                title="Toggle View">
+                            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                            </svg>
+                        </button>
+                        
+                        {{-- filter button --}}
+                        <button type="button" 
+                                id="toggle-filter"
+                                class="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                            </svg>
+                            <span class="hidden sm:inline">Filter</span>
+                        </button>
+                        
+                        {{-- submit button --}}
+                        <button type="submit" 
+                                class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+                            Cari
+                        </button>
+                    </div>
+                </div>
+
+                {{-- filter section (collapsible) --}}
+                <div id="filter-section" class="hidden">
+                    @include('student.browse-problems.components.filter-sidebar')
+                </div>
+            </form>
+        </div>
+
+        {{-- view mode toggle --}}
         <div class="flex items-center justify-between mb-6">
-            <p class="text-gray-600">
-                Menampilkan <span class="font-semibold">{{ $problems->firstItem() ?? 0 }}</span> 
-                dari <span class="font-semibold">{{ $problems->total() }}</span> proyek
-            </p>
-
+            <div>
+                <p class="text-gray-600">
+                    Menampilkan <span class="font-semibold text-gray-900">{{ $problems->count() }}</span> dari 
+                    <span class="font-semibold text-gray-900">{{ $problems->total() }}</span> proyek
+                </p>
+            </div>
+            
             <div class="flex items-center gap-2">
-                {{-- sort --}}
-                <select id="sort" 
-                        class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    <option value="latest">Terbaru</option>
-                    <option value="oldest">Terlama</option>
-                    <option value="deadline">Deadline Terdekat</option>
-                    <option value="popular">Paling Populer</option>
-                </select>
-
-                {{-- view buttons --}}
                 <button id="grid-view-btn" 
-                        onclick="switchView('grid')" 
-                        class="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 active-view bg-blue-50 border-blue-500">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+                        class="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors active-view"
+                        onclick="switchView('grid')">
+                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
                     </svg>
                 </button>
                 <button id="list-view-btn" 
-                        onclick="switchView('list')" 
-                        class="p-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        class="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+                        onclick="switchView('list')">
+                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
                     </svg>
                 </button>
                 <button id="map-view-btn" 
-                        onclick="switchView('map')" 
-                        class="p-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        class="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+                        onclick="switchView('map')">
+                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
                     </svg>
                 </button>
@@ -243,7 +255,6 @@
         </div>
     </div>
 </div>
-@endsection
 
 @push('scripts')
 <script src="{{ asset('js/pages/browse-problems.js') }}"></script>
@@ -256,67 +267,21 @@
 
     // view switcher
     function switchView(view) {
+        // hide semua view
         document.querySelectorAll('.view-content').forEach(el => el.classList.add('hidden'));
+        
+        // remove active class dari semua button
         document.querySelectorAll('[id$="-view-btn"]').forEach(btn => {
             btn.classList.remove('active-view', 'bg-blue-50', 'border-blue-500');
         });
+        
+        // tampilkan view yang dipilih
         document.getElementById(view + '-view').classList.remove('hidden');
+        
+        // add active class ke button yang dipilih
         const activeBtn = document.getElementById(view + '-view-btn');
         activeBtn.classList.add('active-view', 'bg-blue-50', 'border-blue-500');
     }
-
-    // FUNGSI WISHLIST: inilah yang ditambahkan untuk fix bug
-    async function toggleWishlist(problemId, button) {
-        button.disabled = true;
-        const originalHTML = button.innerHTML;
-        button.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
-        
-        try {
-            const response = await fetch(`/student/wishlist/${problemId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    'Accept': 'application/json'
-                }
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                button.innerHTML = originalHTML;
-                button.setAttribute('data-wishlisted', data.saved ? 'true' : 'false');
-                
-                const svg = button.querySelector('svg');
-                if (svg) {
-                    if (data.saved) {
-                        svg.setAttribute('fill', 'currentColor');
-                        svg.classList.add('fill-red-500', 'text-red-500');
-                        svg.classList.remove('text-gray-600');
-                    } else {
-                        svg.setAttribute('fill', 'none');
-                        svg.classList.remove('fill-red-500', 'text-red-500');
-                        svg.classList.add('text-gray-600');
-                    }
-                }
-                
-                button.style.transform = 'scale(1.2)';
-                setTimeout(() => { button.style.transform = 'scale(1)'; }, 200);
-                
-                // notifikasi
-                const notif = document.createElement('div');
-                notif.className = 'fixed top-20 right-4 bg-green-50 border-l-4 border-green-500 text-green-800 px-4 py-3 rounded shadow-lg z-50';
-                notif.innerHTML = `<div class="flex items-center"><svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg><span>${data.message || (data.saved ? 'Ditambahkan ke wishlist' : 'Dihapus dari wishlist')}</span></div>`;
-                document.body.appendChild(notif);
-                setTimeout(() => { notif.style.opacity='0'; notif.style.transition='all 0.3s'; setTimeout(() => notif.remove(), 300); }, 3000);
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            button.innerHTML = originalHTML;
-            alert('Terjadi kesalahan. Silakan coba lagi.');
-        } finally {
-            button.disabled = false;
-        }
-    }
 </script>
 @endpush
+@endsection
