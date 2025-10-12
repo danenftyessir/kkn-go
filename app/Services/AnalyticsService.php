@@ -30,6 +30,15 @@ class AnalyticsService
     }
 
     /**
+     * alias untuk getInstitutionStats()
+     * digunakan di DashboardController
+     */
+    public function getInstitutionAnalytics($institutionId)
+    {
+        return $this->getInstitutionStats($institutionId);
+    }
+
+    /**
      * statistik problems
      */
     private function getProblemStats($institutionId)
