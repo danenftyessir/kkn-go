@@ -30,13 +30,14 @@ class ValidationController extends Controller
         // tentukan field mana yang akan divalidasi untuk setiap langkah
         $rulesForStep = [];
         if ($step == 1) {
-            $fields = ['first_name', 'last_name', 'email', 'whatsapp_number', 'photo'];
+            // PERBAIKAN: ganti 'photo' menjadi 'profile_photo' agar konsisten
+            $fields = ['first_name', 'last_name', 'email', 'whatsapp_number', 'profile_photo'];
         } elseif ($step == 2) {
             $fields = ['university_id', 'major', 'nim', 'semester'];
         } elseif ($step == 3) {
             $fields = ['username', 'password', 'password_confirmation'];
         } else {
-            return response()->json(['message' => 'langkah tidak valid.'], 400);
+            return response()->json(['message' => 'Langkah tidak valid.'], 400);
         }
 
         // filter aturan validasi hanya untuk field di langkah saat ini
@@ -55,57 +56,49 @@ class ValidationController extends Controller
         }
 
         // jika validasi berhasil
-        return response()->json(['message' => 'validasi berhasil.']);
+        return response()->json(['message' => 'Validasi berhasil.'], 200);
     }
 
     /**
      * validasi step registrasi institution
-     * PERBAIKAN: sesuaikan dengan 4 steps di UI
      */
     public function validateInstitutionStep(Request $request)
     {
         $step = $request->input('step');
 
-        // buat instance dari form request hanya untuk mendapatkan aturannya
+        // buat instance dari form request
         $formRequest = new InstitutionRegisterRequest();
         $allRules = $formRequest->rules();
         $allMessages = $formRequest->messages();
         
-        // tentukan field mana yang akan divalidasi untuk setiap langkah
-        // PERBAIKAN: pisahkan menjadi 4 steps sesuai UI
+        // tentukan field untuk setiap step
         $rulesForStep = [];
         if ($step == 1) {
-            // step 1: data instansi
             $fields = ['institution_name', 'institution_type', 'official_email'];
         } elseif ($step == 2) {
-            // step 2: lokasi
             $fields = ['address', 'province_id', 'regency_id'];
         } elseif ($step == 3) {
-            // step 3: penanggung jawab
             $fields = ['pic_name', 'pic_position', 'phone_number', 'logo', 'verification_document', 'website', 'description'];
         } elseif ($step == 4) {
-            // step 4: akun & verifikasi
             $fields = ['username', 'password', 'password_confirmation'];
         } else {
-            return response()->json(['message' => 'langkah tidak valid.'], 400);
+            return response()->json(['message' => 'Langkah tidak valid.'], 400);
         }
 
-        // filter aturan validasi hanya untuk field di langkah saat ini
+        // filter rules
         foreach ($fields as $field) {
             if (isset($allRules[$field])) {
                 $rulesForStep[$field] = $allRules[$field];
             }
         }
         
-        // lakukan validasi secara manual menggunakan validator facade
+        // validasi
         $validator = Validator::make($request->all(), $rulesForStep, $allMessages);
 
         if ($validator->fails()) {
-            // jika validasi gagal, kembalikan error dalam format json
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // jika validasi berhasil
-        return response()->json(['message' => 'validasi berhasil.']);
+        return response()->json(['message' => 'Validasi berhasil.'], 200);
     }
 }
