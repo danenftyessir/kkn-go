@@ -213,9 +213,6 @@ projects.forEach(project => {
                 <p style="color: #6b7280; margin-bottom: 12px; font-size: 0.9em;">
                     <span style="font-weight: 500;">Oleh:</span> ${project.institution}
                 </p>
-                <a href="#" style="display: inline-block; background-color: #3b82f6; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 500; transition: background-color 0.2s;">
-                    Lihat Detail
-                </a>
             </div>
         `);
 });

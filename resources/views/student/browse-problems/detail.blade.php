@@ -544,7 +544,7 @@ html {
                             </div>
                         @else
                             <a href="{{ route('student.applications.create', $problem->id) }}" 
-                               class="apply-btn block w-full text-center px-4 py-3 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-colors">
+                               class="apply-btn block w-full text-center px-4 py-3 bg-white text-white font-semibold rounded-lg hover:bg-blue-50 transition-colors">
                                 Apply Sekarang
                             </a>
                             <p class="text-xs text-center mt-3 text-blue-100">

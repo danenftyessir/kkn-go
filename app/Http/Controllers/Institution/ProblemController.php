@@ -254,7 +254,7 @@ class ProblemController extends Controller
     {
         try {
             $problem = Problem::where('institution_id', auth()->user()->institution->id)
-                             ->findOrFail($id);
+                            ->findOrFail($id);
 
             // preprocessing sama seperti store
             $requestData = $request->all();
@@ -277,8 +277,15 @@ class ProblemController extends Controller
             
             $request->merge($requestData);
 
-            Log::info('Problem Update - Request Data', $requestData);
+            Log::info('Problem Update - Request Data', [
+                'problem_id' => $id,
+                'has_delete_images' => $request->filled('delete_images'),
+                'delete_images_count' => $request->filled('delete_images') ? count($request->delete_images) : 0,
+                'has_new_images' => $request->hasFile('images'),
+                'new_images_count' => $request->hasFile('images') ? count($request->file('images')) : 0,
+            ]);
 
+            // validasi yang lebih fleksibel
             $validated = $request->validate([
                 'title' => 'required|string|max:255',
                 'description' => 'required|string',
@@ -290,6 +297,7 @@ class ProblemController extends Controller
                 'village' => 'nullable|string|max:255',
                 'detailed_location' => 'nullable|string',
                 'sdg_categories' => 'required|array|min:1',
+                'sdg_categories.*' => 'integer|between:1,17',
                 'required_students' => 'required|integer|min:1',
                 'required_skills' => 'required|array|min:1',
                 'required_majors' => 'nullable|array',
@@ -302,67 +310,111 @@ class ProblemController extends Controller
                 'expected_outcomes' => 'nullable|string',
                 'deliverables' => 'nullable|array',
                 'facilities_provided' => 'nullable|array',
-                'delete_images' => 'nullable|array',
+                'delete_images' => 'nullable|array', 
+                'delete_images.*' => 'integer|exists:problem_images,id',
                 'images' => 'nullable|array|max:5',
                 'images.*' => 'image|mimes:jpeg,png,jpg|max:5120',
             ]);
 
             DB::beginTransaction();
             
-            // hapus gambar yang dipilih untuk dihapus dari supabase
-            if ($request->filled('delete_images')) {
+            if ($request->filled('delete_images') && is_array($request->delete_images)) {
                 foreach ($request->delete_images as $imageId) {
-                    $image = $problem->images()->find($imageId);
-                    if ($image) {
-                        // hapus dari supabase
-                        $this->supabaseStorage->delete($image->image_path);
-                        $image->delete();
-                        Log::info('Problem Update - Image Deleted', ['image_id' => $imageId, 'path' => $image->image_path]);
+                    try {
+                        $image = $problem->images()->find($imageId);
+                        if ($image) {
+                            // hapus dari storage (Supabase atau local)
+                            try {
+                                $this->supabaseStorage->delete($image->image_path);
+                                Log::info('Problem Update - Image Deleted Successfully', [
+                                    'image_id' => $imageId,
+                                    'path' => $image->image_path
+                                ]);
+                            } catch (\Exception $deleteException) {
+                                // jika gagal hapus dari storage, tetap lanjut hapus dari database
+                                Log::warning('Problem Update - Failed to Delete Image from Storage', [
+                                    'image_id' => $imageId,
+                                    'path' => $image->image_path,
+                                    'error' => $deleteException->getMessage()
+                                ]);
+                            }
+                            
+                            // hapus dari database
+                            $image->delete();
+                        }
+                    } catch (\Exception $e) {
+                        Log::error('Problem Update - Error Deleting Image', [
+                            'image_id' => $imageId,
+                            'error' => $e->getMessage()
+                        ]);
+                        // lanjutkan ke gambar berikutnya, jangan stop
                     }
                 }
             }
             
-            // upload gambar baru ke supabase
+            // upload gambar baru ke supabase jika ada
             if ($request->hasFile('images')) {
                 $currentImageCount = $problem->images()->count();
                 foreach ($request->file('images') as $index => $imageFile) {
-                    // upload ke supabase
-                    $path = $this->supabaseStorage->uploadProblemImage(
-                        $imageFile,
-                        $problem->id,
-                        $currentImageCount === 0 && $index === 0  // jadi cover jika belum ada gambar
-                    );
-                    
-                    if ($path) {
-                        $problem->images()->create([
-                            'image_path' => $path,
-                            'order' => $currentImageCount + $index + 1,
-                            'is_cover' => $currentImageCount === 0 && $index === 0,
-                        ]);
-                        Log::info('Problem Update - Image Uploaded to Supabase', [
-                            'path' => $path,
-                            'order' => $currentImageCount + $index + 1
-                        ]);
-                    } else {
-                        Log::error('Problem Update - Image Upload Failed', [
+                    try {
+                        // upload ke supabase
+                        $path = $this->supabaseStorage->uploadProblemImage(
+                            $imageFile,
+                            $problem->id,
+                            $currentImageCount === 0 && $index === 0  // jadi cover jika belum ada gambar
+                        );
+                        
+                        if ($path) {
+                            $problem->images()->create([
+                                'image_path' => $path,
+                                'order' => $currentImageCount + $index + 1,
+                                'is_cover' => $currentImageCount === 0 && $index === 0,
+                            ]);
+                            Log::info('Problem Update - Image Uploaded Successfully', [
+                                'path' => $path,
+                                'order' => $currentImageCount + $index + 1
+                            ]);
+                        } else {
+                            Log::error('Problem Update - Image Upload Failed', [
+                                'index' => $index,
+                                'filename' => $imageFile->getClientOriginalName()
+                            ]);
+                        }
+                    } catch (\Exception $e) {
+                        Log::error('Problem Update - Error Uploading Image', [
                             'index' => $index,
-                            'filename' => $imageFile->getClientOriginalName()
+                            'filename' => $imageFile->getClientOriginalName(),
+                            'error' => $e->getMessage()
                         ]);
+                        // lanjutkan ke gambar berikutnya
                     }
                 }
             }
             
+            // update problem data
             $problem->update($validated);
 
             DB::commit();
+            
+            Log::info('Problem Update - Success', ['problem_id' => $problem->id]);
             
             return redirect()
                 ->route('institution.problems.show', $problem->id)
                 ->with('success', 'Problem Berhasil Diperbarui!');
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+            Log::error('Problem Update - Validation Error', [
+                'problem_id' => $id,
+                'errors' => $e->errors(),
+                'message' => $e->getMessage()
+            ]);
+            return back()->withErrors($e->errors())->withInput();
+
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Problem Update - Exception', [
+                'problem_id' => $id,
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);

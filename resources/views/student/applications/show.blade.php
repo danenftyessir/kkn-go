@@ -208,7 +208,7 @@
                 <!-- motivasi -->
                 <div class="detail-card bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                     <h2 class="text-xl font-bold text-gray-900 mb-4">Motivasi</h2>
-                    <div class="prose prose-sm max-w-none text-gray-700">
+                    <div class="prose prose-sm max-w-none text-gray-700 break-all">
                         {!! nl2br(e($application->motivation)) !!}
                     </div>
                 </div>

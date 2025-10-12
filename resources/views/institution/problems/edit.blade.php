@@ -162,33 +162,107 @@
                         <div class="grid grid-cols-3 gap-4">
                             @foreach($problem->images as $image)
                             <div class="relative group">
-                                <img src="{{ Storage::url($image->image_path) }}" 
-                                     alt="Problem image" 
-                                     class="w-full h-32 object-cover rounded-lg">
-                                <label class="absolute top-2 right-2 cursor-pointer">
+                                {{-- ✅ PERBAIKAN: gunakan image_url accessor untuk support Supabase & local --}}
+                                <img src="{{ $image->image_url }}" 
+                                    alt="Problem image" 
+                                    onerror="this.onerror=null; this.src='https://via.placeholder.com/200?text=No+Image';"
+                                    class="w-full h-32 object-cover rounded-lg border-2 border-gray-200">
+                                
+                                {{-- badge cover --}}
+                                @if($image->is_cover)
+                                <div class="absolute top-2 left-2 bg-blue-600 text-white text-xs px-2 py-1 rounded">
+                                    Cover
+                                </div>
+                                @endif
+                                
+                                {{-- checkbox untuk hapus --}}
+                                <label class="absolute top-2 right-2 cursor-pointer bg-white rounded-lg shadow-md p-1 hover:bg-gray-100 transition-colors">
                                     <input type="checkbox" 
-                                           name="delete_images[]" 
-                                           value="{{ $image->id }}"
-                                           class="w-5 h-5">
-                                    <span class="ml-1 text-white bg-red-600 px-2 py-1 rounded text-xs">Hapus</span>
+                                        name="delete_images[]" 
+                                        value="{{ $image->id }}"
+                                        class="hidden peer"
+                                        onchange="this.parentElement.classList.toggle('bg-red-100', this.checked)">
+                                    <span class="text-red-600 font-semibold text-xs px-2 py-1 block peer-checked:bg-red-600 peer-checked:text-white rounded">
+                                        Hapus
+                                    </span>
                                 </label>
+                                
+                                {{-- overlay saat dipilih untuk dihapus --}}
+                                <div class="absolute inset-0 bg-red-500 bg-opacity-0 pointer-events-none transition-all rounded-lg"
+                                    style="display: none;">
+                                </div>
                             </div>
                             @endforeach
                         </div>
+                        <p class="text-xs text-gray-500 mt-2">Centang "Hapus" pada gambar yang ingin dihapus</p>
                     </div>
                     @endif
 
                     {{-- upload gambar baru --}}
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Tambah Gambar Baru (Maks 5)</label>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Tambah Gambar Baru 
+                            @if($problem->images->count() > 0)
+                                (Opsional - Maksimal {{ 5 - $problem->images->count() }} gambar lagi)
+                            @else
+                                (Maksimal 5 gambar)
+                            @endif
+                        </label>
                         <input type="file" 
-                               name="images[]" 
-                               multiple 
-                               accept="image/*"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            name="images[]" 
+                            multiple 
+                            accept="image/*"
+                            id="new-images-input"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <p class="text-xs text-gray-500 mt-1">Format: JPG, PNG. Maksimal 5MB per file</p>
+                        
+                        {{-- preview gambar baru --}}
+                        <div id="new-images-preview" class="mt-4 grid grid-cols-3 gap-4"></div>
                     </div>
-                </div>
-            </div>
+
+                    {{-- script untuk preview gambar baru --}}
+                    <script>
+                    document.getElementById('new-images-input').addEventListener('change', function(e) {
+                        const preview = document.getElementById('new-images-preview');
+                        preview.innerHTML = '';
+                        
+                        const files = Array.from(e.target.files);
+                        const maxFiles = 5 - {{ $problem->images->count() }};
+                        
+                        files.slice(0, maxFiles).forEach((file, index) => {
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                const div = document.createElement('div');
+                                div.className = 'relative';
+                                div.innerHTML = `
+                                    <img src="${e.target.result}" 
+                                        class="w-full h-32 object-cover rounded-lg border-2 border-green-300">
+                                    <div class="absolute top-2 left-2 bg-green-600 text-white text-xs px-2 py-1 rounded">
+                                        Baru ${index + 1}
+                                    </div>
+                                `;
+                                preview.appendChild(div);
+                            };
+                            reader.readAsDataURL(file);
+                        });
+                    });
+
+                    // visual feedback untuk gambar yang akan dihapus
+                    document.querySelectorAll('input[name="delete_images[]"]').forEach(checkbox => {
+                        checkbox.addEventListener('change', function() {
+                            const imageDiv = this.closest('.relative');
+                            const overlay = imageDiv.querySelector('.absolute.inset-0');
+                            
+                            if (this.checked) {
+                                imageDiv.querySelector('img').classList.add('opacity-50', 'grayscale');
+                                if (overlay) overlay.style.display = 'block';
+                            } else {
+                                imageDiv.querySelector('img').classList.remove('opacity-50', 'grayscale');
+                                if (overlay) overlay.style.display = 'none';
+                            }
+                        });
+                    });
+                    </script>
 
             {{-- requirements --}}
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
