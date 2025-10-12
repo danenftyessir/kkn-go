@@ -4,7 +4,7 @@
         <div class="flex justify-between h-16">
             {{-- logo dan nama aplikasi --}}
             <div class="flex items-center">
-                <a href="{{ Auth::check() ? (Auth::user()->isStudent() ? route('student.dashboard') : route('institution.dashboard')) : route('home') }}" 
+                <a href="{{ route('home') }}" 
                    class="flex items-center">
                     <img src="{{ asset('kkn-go-logo.png') }}" alt="KKN-GO" class="h-10 w-auto">
                     <span class="ml-2 text-xl font-bold text-gray-900">KKN-GO</span>

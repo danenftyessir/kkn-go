@@ -77,7 +77,6 @@ class ProblemController extends Controller
             'open' => Problem::where('institution_id', $institution->id)->where('status', 'open')->count(),
             'in_progress' => Problem::where('institution_id', $institution->id)->where('status', 'in_progress')->count(),
             'completed' => Problem::where('institution_id', $institution->id)->where('status', 'completed')->count(),
-            'closed' => Problem::where('institution_id', $institution->id)->where('status', 'closed')->count(),
         ];
 
         return view('institution.problems.index', compact('problems', 'stats'));
@@ -89,6 +88,7 @@ class ProblemController extends Controller
     public function create()
     {
         $provinces = Province::orderBy('name')->get();
+        
         return view('institution.problems.create', compact('provinces'));
     }
 
@@ -98,10 +98,9 @@ class ProblemController extends Controller
     public function store(Request $request)
     {
         try {
-            // preprocessing untuk array fields yang datang dari form
+            // preprocessing untuk array fields
             $requestData = $request->all();
             
-            // handle required_skills: jika datang sebagai string, split menjadi array
             if (isset($requestData['required_skills'])) {
                 if (is_string($requestData['required_skills'])) {
                     $requestData['required_skills'] = array_filter(
@@ -110,7 +109,6 @@ class ProblemController extends Controller
                 }
             }
             
-            // handle required_majors sama seperti required_skills
             if (isset($requestData['required_majors'])) {
                 if (is_string($requestData['required_majors'])) {
                     $requestData['required_majors'] = array_filter(
@@ -119,21 +117,16 @@ class ProblemController extends Controller
                 }
             }
             
-            // replace request data dengan data yang sudah diproses
             $request->merge($requestData);
-
-            Log::info('Problem Store - Request Data', $requestData);
 
             $validated = $request->validate([
                 'title' => 'required|string|max:255',
                 'description' => 'required|string',
-                'background' => 'nullable|string',
-                'objectives' => 'nullable|string',
-                'scope' => 'nullable|string',
-                'province_id' => 'required|exists:provinces,id',
-                'regency_id' => 'required|exists:regencies,id',
-                'village' => 'nullable|string|max:255',
-                'detailed_location' => 'nullable|string',
+                'province_id' => 'required|integer|exists:provinces,id',
+                'regency_id' => 'required|integer|exists:regencies,id',
+                'address' => 'required|string',
+                'latitude' => 'nullable|numeric|between:-90,90',
+                'longitude' => 'nullable|numeric|between:-180,180',
                 'sdg_categories' => 'required|array|min:1',
                 'sdg_categories.*' => 'integer|between:1,17',
                 'required_students' => 'required|integer|min:1',
@@ -201,20 +194,14 @@ class ProblemController extends Controller
                 ->with('success', 'Problem Berhasil Dibuat!');
 
         } catch (\Illuminate\Validation\ValidationException $e) {
-            DB::rollBack();
-            Log::error('Problem Store - Validation Error', [
-                'errors' => $e->errors(),
-                'message' => $e->getMessage()
-            ]);
-            return back()->withErrors($e->errors())->withInput();
-
+            return back()->withErrors($e->validator)->withInput();
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Problem Store - Exception', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            return back()->with('error', 'Terjadi kesalahan saat menyimpan problem: ' . $e->getMessage())->withInput();
+            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage())->withInput();
         }
     }
     
@@ -256,7 +243,7 @@ class ProblemController extends Controller
             $problem = Problem::where('institution_id', auth()->user()->institution->id)
                             ->findOrFail($id);
 
-            // preprocessing sama seperti store
+            // preprocessing untuk array fields sama seperti store
             $requestData = $request->all();
             
             if (isset($requestData['required_skills'])) {
@@ -285,17 +272,14 @@ class ProblemController extends Controller
                 'new_images_count' => $request->hasFile('images') ? count($request->file('images')) : 0,
             ]);
 
-            // validasi yang lebih fleksibel
             $validated = $request->validate([
                 'title' => 'required|string|max:255',
                 'description' => 'required|string',
-                'background' => 'nullable|string',
-                'objectives' => 'nullable|string',
-                'scope' => 'nullable|string',
-                'province_id' => 'required|exists:provinces,id',
-                'regency_id' => 'required|exists:regencies,id',
-                'village' => 'nullable|string|max:255',
-                'detailed_location' => 'nullable|string',
+                'province_id' => 'required|integer|exists:provinces,id',
+                'regency_id' => 'required|integer|exists:regencies,id',
+                'address' => 'required|string',
+                'latitude' => 'nullable|numeric|between:-90,90',
+                'longitude' => 'nullable|numeric|between:-180,180',
                 'sdg_categories' => 'required|array|min:1',
                 'sdg_categories.*' => 'integer|between:1,17',
                 'required_students' => 'required|integer|min:1',
@@ -306,11 +290,11 @@ class ProblemController extends Controller
                 'application_deadline' => 'required|date|before:start_date',
                 'duration_months' => 'required|integer|min:1',
                 'difficulty_level' => 'required|in:beginner,intermediate,advanced',
-                'status' => 'required|in:draft,open,in_progress,completed,closed',
+                'status' => 'required|in:draft,open,closed',
                 'expected_outcomes' => 'nullable|string',
                 'deliverables' => 'nullable|array',
                 'facilities_provided' => 'nullable|array',
-                'delete_images' => 'nullable|array', 
+                'delete_images' => 'nullable|array',
                 'delete_images.*' => 'integer|exists:problem_images,id',
                 'images' => 'nullable|array|max:5',
                 'images.*' => 'image|mimes:jpeg,png,jpg|max:5120',
@@ -318,12 +302,39 @@ class ProblemController extends Controller
 
             DB::beginTransaction();
             
+            // 1. update data problem terlebih dahulu
+            $problem->update([
+                'title' => $validated['title'],
+                'description' => $validated['description'],
+                'province_id' => $validated['province_id'],
+                'regency_id' => $validated['regency_id'],
+                'address' => $validated['address'],
+                'latitude' => $validated['latitude'] ?? null,
+                'longitude' => $validated['longitude'] ?? null,
+                'sdg_categories' => $validated['sdg_categories'],
+                'required_students' => $validated['required_students'],
+                'required_skills' => $validated['required_skills'],
+                'required_majors' => $validated['required_majors'] ?? null,
+                'start_date' => $validated['start_date'],
+                'end_date' => $validated['end_date'],
+                'application_deadline' => $validated['application_deadline'],
+                'duration_months' => $validated['duration_months'],
+                'difficulty_level' => $validated['difficulty_level'],
+                'status' => $validated['status'],
+                'expected_outcomes' => $validated['expected_outcomes'] ?? null,
+                'deliverables' => $validated['deliverables'] ?? null,
+                'facilities_provided' => $validated['facilities_provided'] ?? null,
+            ]);
+
+            Log::info('Problem Update - Data Updated', ['problem_id' => $problem->id]);
+            
+            // 2. handle delete images jika ada
             if ($request->filled('delete_images') && is_array($request->delete_images)) {
                 foreach ($request->delete_images as $imageId) {
                     try {
                         $image = $problem->images()->find($imageId);
                         if ($image) {
-                            // hapus dari storage (Supabase atau local)
+                            // hapus dari storage (supabase atau local)
                             try {
                                 $this->supabaseStorage->delete($image->image_path);
                                 Log::info('Problem Update - Image Deleted Successfully', [
@@ -352,9 +363,14 @@ class ProblemController extends Controller
                 }
             }
             
-            // upload gambar baru ke supabase jika ada
+            // 3. upload gambar baru ke supabase jika ada
             if ($request->hasFile('images')) {
+                // refresh data problem untuk get jumlah gambar terbaru setelah delete
+                $problem->refresh();
                 $currentImageCount = $problem->images()->count();
+                
+                Log::info('Problem Update - Current Image Count', ['count' => $currentImageCount]);
+                
                 foreach ($request->file('images') as $index => $imageFile) {
                     try {
                         // upload ke supabase
@@ -370,9 +386,11 @@ class ProblemController extends Controller
                                 'order' => $currentImageCount + $index + 1,
                                 'is_cover' => $currentImageCount === 0 && $index === 0,
                             ]);
+                            
                             Log::info('Problem Update - Image Uploaded Successfully', [
                                 'path' => $path,
-                                'order' => $currentImageCount + $index + 1
+                                'order' => $currentImageCount + $index + 1,
+                                'is_cover' => $currentImageCount === 0 && $index === 0
                             ]);
                         } else {
                             Log::error('Problem Update - Image Upload Failed', [
@@ -383,19 +401,15 @@ class ProblemController extends Controller
                     } catch (\Exception $e) {
                         Log::error('Problem Update - Error Uploading Image', [
                             'index' => $index,
-                            'filename' => $imageFile->getClientOriginalName(),
                             'error' => $e->getMessage()
                         ]);
-                        // lanjutkan ke gambar berikutnya
+                        // lanjutkan ke gambar berikutnya, jangan stop
                     }
                 }
             }
-            
-            // update problem data
-            $problem->update($validated);
 
             DB::commit();
-            
+
             Log::info('Problem Update - Success', ['problem_id' => $problem->id]);
             
             return redirect()
@@ -405,16 +419,12 @@ class ProblemController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             DB::rollBack();
             Log::error('Problem Update - Validation Error', [
-                'problem_id' => $id,
-                'errors' => $e->errors(),
-                'message' => $e->getMessage()
+                'errors' => $e->validator->errors()->toArray()
             ]);
-            return back()->withErrors($e->errors())->withInput();
-
+            return back()->withErrors($e->validator)->withInput();
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Problem Update - Exception', [
-                'problem_id' => $id,
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
