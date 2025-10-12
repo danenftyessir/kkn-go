@@ -1,4 +1,5 @@
 {{-- components/notification-dropdown.blade.php --}}
+{{-- FIXED: notification dropdown tanpa redirect, hanya mark as read --}}
 <div x-data="notificationDropdown()" x-init="init()" class="relative">
     {{-- notification bell button --}}
     <button @click="toggleDropdown()" 
@@ -111,7 +112,12 @@ function notificationDropdown() {
 
         async loadNotifications() {
             try {
-                const response = await fetch('{{ route("notifications.latest") }}');
+                const response = await fetch('{{ route("notifications.latest") }}', {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                });
                 const data = await response.json();
                 this.notifications = data.notifications;
                 this.unreadCount = data.unread_count;
@@ -120,41 +126,46 @@ function notificationDropdown() {
             }
         },
 
+        // FIXED: hanya mark as read tanpa redirect
         async handleNotificationClick(notification) {
-            // tandai sebagai dibaca
+            // tandai sebagai dibaca jika belum dibaca
             if (!notification.is_read) {
                 try {
                     await fetch(`/notifications/${notification.id}/read`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                         }
                     });
+                    
+                    // reload notifications untuk update status
                     await this.loadNotifications();
                 } catch (error) {
                     console.error('gagal mark as read:', error);
                 }
             }
-
-            // redirect ke action url
-            if (notification.action_url) {
-                window.location.href = notification.action_url;
-            }
             
+            // tutup dropdown setelah klik
+            // TIDAK ada redirect, notifikasi hanya ditandai sebagai dibaca
             this.open = false;
         },
 
         async markAllAsRead() {
             try {
-                await fetch('{{ route("notifications.read-all") }}', {
+                const response = await fetch('{{ route("notifications.read-all") }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     }
                 });
-                await this.loadNotifications();
+                
+                if (response.ok) {
+                    await this.loadNotifications();
+                }
             } catch (error) {
                 console.error('gagal mark all as read:', error);
             }
@@ -165,42 +176,36 @@ function notificationDropdown() {
                 'application_submitted': '📝',
                 'application_accepted': '✅',
                 'application_rejected': '❌',
-                'project_started': '🚀',
-                'project_milestone': '🎯',
                 'report_submitted': '📄',
-                'report_approved': '✔️',
-                'report_rejected': '✖️',
+                'project_update': '🔔',
+                'message': '💬',
                 'review_received': '⭐',
-                'problem_published': '📢',
-                'problem_closed': '🔒',
-                'message_received': '💬',
-                'deadline_reminder': '⏰',
-                'general': 'ℹ️',
+                'default': '🔔'
             };
-            return icons[type] || 'ℹ️';
+            return icons[type] || icons['default'];
         },
 
-        formatTime(timestamp) {
-            const date = new Date(timestamp);
+        formatTime(dateString) {
+            const date = new Date(dateString);
             const now = new Date();
             const diffInSeconds = Math.floor((now - date) / 1000);
 
             if (diffInSeconds < 60) {
-                return 'baru saja';
+                return 'Baru saja';
             } else if (diffInSeconds < 3600) {
                 const minutes = Math.floor(diffInSeconds / 60);
-                return `${minutes} menit lalu`;
+                return `${minutes} menit yang lalu`;
             } else if (diffInSeconds < 86400) {
                 const hours = Math.floor(diffInSeconds / 3600);
-                return `${hours} jam lalu`;
+                return `${hours} jam yang lalu`;
             } else if (diffInSeconds < 604800) {
                 const days = Math.floor(diffInSeconds / 86400);
-                return `${days} hari lalu`;
+                return `${days} hari yang lalu`;
             } else {
-                return date.toLocaleDateString('id-ID', { 
-                    day: 'numeric', 
+                return date.toLocaleDateString('id-ID', {
+                    day: 'numeric',
                     month: 'short',
-                    year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+                    year: 'numeric'
                 });
             }
         }
