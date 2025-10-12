@@ -4,6 +4,7 @@
     <div class="relative h-48 bg-gradient-to-br from-blue-500 to-green-500 overflow-hidden">
         @php
             $coverImage = $problem->images->where('is_cover', true)->first() ?? $problem->images->first();
+            $isWishlisted = $problem->isWishlisted ?? false;
         @endphp
         
         @if($coverImage)
@@ -24,9 +25,10 @@
             @if(Auth::user()->user_type === 'student')
             <button onclick="toggleWishlist({{ $problem->id }}, this)" 
                     class="absolute top-3 right-3 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-all duration-200 shadow-lg"
-                    data-wishlisted="{{ $problem->isWishlisted ?? false ? 'true' : 'false' }}">
-                <svg class="w-5 h-5 {{ $problem->isWishlisted ?? false ? 'fill-red-500 text-red-500' : 'text-gray-600' }}" 
-                     fill="{{ $problem->isWishlisted ?? false ? 'currentColor' : 'none' }}" 
+                    style="transform: scale(1); transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);"
+                    data-wishlisted="{{ $isWishlisted ? 'true' : 'false' }}">
+                <svg class="w-5 h-5 {{ $isWishlisted ? 'fill-red-500 text-red-500' : 'text-gray-600' }}" 
+                     fill="{{ $isWishlisted ? 'currentColor' : 'none' }}" 
                      stroke="currentColor" 
                      viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
@@ -45,7 +47,7 @@
     </div>
 
     {{-- content --}}
-    <div class="p-5">
+    <a href="{{ route('student.browse-problems.detail', $problem->id) }}" class="block p-5">
         {{-- institution --}}
         <div class="flex items-center gap-2 mb-3">
             @if($problem->institution && $problem->institution->logo_path)
@@ -60,40 +62,41 @@
                     </span>
                 </div>
             @endif
-            <div class="flex-1 min-w-0">
-                <p class="text-sm font-semibold text-gray-900 truncate">{{ $problem->institution->name ?? 'Instansi' }}</p>
-                <p class="text-xs text-gray-500">{{ ucfirst($problem->institution->type ?? '') }}</p>
-            </div>
+            <span class="text-sm font-medium text-gray-900 truncate">
+                {{ $problem->institution->name ?? 'Instansi' }}
+            </span>
         </div>
 
         {{-- title --}}
-        <h3 class="font-bold text-gray-900 text-lg mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
-            <a href="{{ route('student.browse-problems.detail', $problem->id) }}">
-                {{ $problem->title }}
-            </a>
+        <h3 class="text-lg font-bold text-gray-900 mb-2 line-clamp-2 hover:text-blue-600 transition-colors">
+            {{ $problem->title }}
         </h3>
 
         {{-- description --}}
-        <p class="text-gray-600 text-sm mb-4 line-clamp-2">
+        <p class="text-sm text-gray-600 mb-4 line-clamp-2">
             {{ Str::limit($problem->description, 100) }}
         </p>
 
         {{-- meta info --}}
-        <div class="flex flex-wrap gap-3 mb-4 text-sm text-gray-600">
+        <div class="flex flex-wrap gap-3 text-sm text-gray-600 mb-4">
+            {{-- location --}}
             <div class="flex items-center gap-1">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                 </svg>
-                <span>{{ $problem->province->name ?? '' }}</span>
+                <span>{{ $problem->regency->name ?? $problem->province->name ?? 'Lokasi tidak tersedia' }}</span>
             </div>
 
+            {{-- duration --}}
             <div class="flex items-center gap-1">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
                 <span>{{ $problem->duration_months }} bulan</span>
             </div>
 
+            {{-- students needed --}}
             <div class="flex items-center gap-1">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
@@ -105,16 +108,13 @@
         {{-- footer --}}
         <div class="flex items-center justify-between pt-4 border-t border-gray-100">
             <div class="text-xs text-gray-500">
-                Deadline: <span class="font-semibold text-gray-900">{{ \Carbon\Carbon::parse($problem->application_deadline)->format('d M Y') }}</span>
+                Deadline: <span class="font-semibold">
+                    {{ \Carbon\Carbon::parse($problem->application_deadline)->format('d M Y') }}
+                </span>
             </div>
-
-            <a href="{{ route('student.browse-problems.detail', $problem->id) }}" 
-               class="inline-flex items-center gap-1 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors">
-                Detail
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-            </a>
+            <span class="text-blue-600 text-sm font-semibold hover:text-blue-700">
+                Lihat Detail →
+            </span>
         </div>
-    </div>
+    </a>
 </div>
