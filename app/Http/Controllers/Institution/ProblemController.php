@@ -34,7 +34,9 @@ class ProblemController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Problem::where('institution_id', auth()->user()->institution->id)
+        $institution = auth()->user()->institution;
+        
+        $query = Problem::where('institution_id', $institution->id)
                        ->with(['province', 'regency', 'images'])
                        ->withCount('applications');
 
@@ -48,9 +50,37 @@ class ProblemController extends Controller
             $query->where('title', 'like', '%' . $request->search . '%');
         }
 
-        $problems = $query->orderBy('created_at', 'desc')->paginate(10);
+        // sorting
+        if ($request->filled('sort')) {
+            switch ($request->sort) {
+                case 'oldest':
+                    $query->orderBy('created_at', 'asc');
+                    break;
+                case 'most_applied':
+                    $query->orderBy('applications_count', 'desc');
+                    break;
+                case 'latest':
+                default:
+                    $query->orderBy('created_at', 'desc');
+                    break;
+            }
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
 
-        return view('institution.problems.index', compact('problems'));
+        $problems = $query->paginate(10);
+
+        // hitung statistik untuk cards
+        $stats = [
+            'total' => Problem::where('institution_id', $institution->id)->count(),
+            'draft' => Problem::where('institution_id', $institution->id)->where('status', 'draft')->count(),
+            'open' => Problem::where('institution_id', $institution->id)->where('status', 'open')->count(),
+            'in_progress' => Problem::where('institution_id', $institution->id)->where('status', 'in_progress')->count(),
+            'completed' => Problem::where('institution_id', $institution->id)->where('status', 'completed')->count(),
+            'closed' => Problem::where('institution_id', $institution->id)->where('status', 'closed')->count(),
+        ];
+
+        return view('institution.problems.index', compact('problems', 'stats'));
     }
 
     /**
