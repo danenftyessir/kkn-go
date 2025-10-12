@@ -104,15 +104,21 @@
             font-weight: 600;
         }
         
-        /* Step Track Line */
+        /* Step Track Line - Pas dengan lingkaran step */
         .step-track {
             position: absolute;
             top: 1.25rem;
-            left: 0;
-            right: 0;
+            left: 12.5%;
+            right: 12.5%;
             height: 2px;
             background: rgba(156, 163, 175, 0.2);
             z-index: 0;
+        }
+        
+        /* Perbaikan positioning step */
+        .step-indicator > div:last-child {
+            position: relative;
+            padding: 0 2rem;
         }
         
         /* GLASS MORPHISM CARD */
@@ -449,7 +455,8 @@
                                                     @change="loadRegencies()"
                                                     required>
                                                 <option value="">-- Pilih Provinsi --</option>
-                                                @foreach($provinces as $province)
+                                                {{-- HANYA 5 PROVINSI YANG PUNYA DATA KABUPATEN/KOTA --}}
+                                                @foreach($provinces->whereIn('id', [31, 32, 33, 34, 36]) as $province)
                                                     <option value="{{ $province->id }}">{{ $province->name }}</option>
                                                 @endforeach
                                             </select>
@@ -458,6 +465,12 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                             </svg>
                                         </div>
+                                        <p class="text-sm text-amber-600 mt-2 flex items-center gap-1">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            Saat ini tersedia: DKI Jakarta, Jawa Barat, Jawa Tengah, DI Yogyakarta, dan Banten
+                                        </p>
                                         @error('province_id')
                                             <p class="error-message">
                                                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -483,10 +496,7 @@
                                                 <template x-if="!loadingRegencies && !provinceId">
                                                     <option value="">-- Pilih Provinsi Terlebih Dahulu --</option>
                                                 </template>
-                                                <template x-if="!loadingRegencies && provinceId && regencies.length === 0">
-                                                    <option value="">Tidak Ada Data Kabupaten/Kota</option>
-                                                </template>
-                                                <template x-if="!loadingRegencies && provinceId && regencies.length > 0">
+                                                <template x-if="!loadingRegencies && provinceId">
                                                     <option value="">-- Pilih Kabupaten/Kota --</option>
                                                 </template>
                                                 <template x-for="regency in regencies" :key="regency.id">
@@ -506,13 +516,6 @@
                                                 {{ $message }}
                                             </p>
                                         @enderror
-                                        {{-- pesan jika data kabupaten tidak ada --}}
-                                        <p class="text-sm text-amber-600 mt-2" x-show="!loadingRegencies && provinceId && regencies.length === 0" style="display: none;">
-                                            <svg class="w-4 h-4 inline" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
-                                            </svg>
-                                            Data kabupaten/kota belum tersedia untuk provinsi ini. Silakan hubungi admin.
-                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -884,6 +887,7 @@
         }
     });
 
+    // CRITICAL FIX: Alpine.js component untuk handle dropdown dinamis provinsi-kabupaten
     function institutionForm(regenciesUrlTemplate) {
         return {
             provinceId: '{{ old("province_id") }}',
