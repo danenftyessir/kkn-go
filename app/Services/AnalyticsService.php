@@ -139,6 +139,17 @@ class AnalyticsService
         $review = (clone $projects)->where('status', 'review')->count();
         $completed = (clone $projects)->where('status', 'completed')->count();
 
+        // rata-rata progress dari semua project aktif
+        $activeProjects = Project::where('institution_id', $institutionId)
+                                 ->where('status', 'active')
+                                 ->get();
+        
+        $avgProgress = 0;
+        if ($activeProjects->count() > 0) {
+            $totalProgress = $activeProjects->sum('progress_percentage');
+            $avgProgress = $totalProgress / $activeProjects->count();
+        }
+
         // rata-rata completion time
         $completedProjects = Project::where('institution_id', $institutionId)
                                    ->where('status', 'completed')
@@ -149,9 +160,11 @@ class AnalyticsService
         if ($completedProjects->count() > 0) {
             $totalDays = 0;
             foreach ($completedProjects as $project) {
-                $totalDays += $project->start_date->diffInDays($project->completed_at);
+                if ($project->start_date && $project->completed_at) {
+                    $totalDays += $project->start_date->diffInDays($project->completed_at);
+                }
             }
-            $avgCompletionDays = $totalDays / $completedProjects->count();
+            $avgCompletionDays = $completedProjects->count() > 0 ? $totalDays / $completedProjects->count() : 0;
         }
 
         // completion rate
@@ -172,6 +185,7 @@ class AnalyticsService
             'active' => $active,
             'review' => $review,
             'completed' => $completed,
+            'avg_progress' => round($avgProgress, 1),
             'avg_completion_days' => round($avgCompletionDays, 1),
             'completion_rate' => round($completionRate, 1),
             'growth' => round($growth, 1),
