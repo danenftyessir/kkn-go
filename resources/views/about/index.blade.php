@@ -288,10 +288,6 @@
     </section>
 
 </div>
-{{-- ============================================ --}}
-{{-- HOW IT WORKS - GARIS DIPERBAIKI PRESISI    --}}
-{{-- TARUH DI PALING BAWAH SEBELUM @endsection --}}
-{{-- ============================================ --}}
 
 <section class="py-24 bg-gradient-to-br from-blue-50 to-white">
     <div class="container mx-auto px-6">
@@ -299,7 +295,7 @@
             
             {{-- header --}}
             <h2 class="text-4xl md:text-5xl font-bold text-blue-700 mb-12 text-center">
-                Bagaimana KKN-Go Bekerja
+                How It Works
             </h2>
 
             {{-- tab switcher --}}
@@ -335,7 +331,7 @@
                 <div class="relative overflow-x-auto pb-8" id="timelineMahasiswa">
                     <div class="flex min-w-max relative pt-12">
                         
-                        {{-- garis horizontal - PRESISI DIPERBAIKI --}}
+                        {{-- garis horizontal --}}
                         <div class="absolute left-0 right-0 bg-blue-600" style="top: 35px; height: 2px;"></div>
                         
                         {{-- langkah 1 --}}
