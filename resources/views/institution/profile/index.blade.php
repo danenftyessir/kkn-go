@@ -1,348 +1,323 @@
-{{-- resources/views/institution/profile/index.blade.php --}}
 @extends('layouts.app')
 
-@section('title', 'Profil Saya')
-
-@push('styles')
-<style>
-/* animasi smooth untuk transisi */
-.profile-transition {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.profile-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.1);
-}
-
-.profile-photo-wrapper {
-    transition: transform 0.3s ease;
-}
-
-.profile-photo-wrapper:hover {
-    transform: scale(1.05);
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.fade-in {
-    animation: fadeInUp 0.6s ease-out;
-}
-
-/* smooth scroll */
-html {
-    scroll-behavior: smooth;
-}
-</style>
-@endpush
+@section('title', 'Tentang Kami - KKN-Go')
 
 @section('content')
-<div class="min-h-screen bg-gray-50 py-8">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="min-h-screen bg-white">
+    
+    {{-- hero section - jakarta smart city style --}}
+    <section class="relative h-screen min-h-[600px] overflow-hidden">
+        {{-- background image --}}
+        <div class="absolute inset-0">
+            <img src="{{ asset('mahasiswa-about.jpeg') }}" 
+                 alt="Tentang Kami KKN-Go" 
+                 class="w-full h-full object-cover">
+            {{-- overlay gradient - lebih gelap di bawah --}}
+            <div class="absolute inset-0 bg-gradient-to-b from-black/30 via-black/40 to-black/70"></div>
+        </div>
         
-        <!-- breadcrumb -->
-        <nav class="mb-6 profile-transition" aria-label="breadcrumb">
-            <ol class="flex items-center space-x-2 text-sm">
-                <li>
-                    <a href="{{ route('institution.dashboard') }}" class="text-gray-500 hover:text-gray-700 transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-                        </svg>
-                    </a>
-                </li>
-                <li class="text-gray-400">/</li>
-                <li>
-                    <span class="text-gray-900 font-medium">Profil</span>
-                </li>
-            </ol>
-        </nav>
-
-        <!-- flash messages -->
-        @if(session('success'))
-            <div class="mb-6 bg-green-50 border border-green-200 text-green-800 rounded-lg p-4 flex items-center profile-transition fade-in">
-                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                </svg>
-                {{ session('success') }}
+        {{-- content - text di kiri bawah --}}
+        <div class="relative h-full">
+            <div class="container mx-auto px-6 h-full flex items-end pb-20">
+                <div class="max-w-4xl">
+                    <h1 class="text-6xl md:text-7xl lg:text-8xl font-black text-white leading-tight tracking-tight">
+                        Tentang Kami
+                    </h1>
+                </div>
             </div>
-        @endif
+        </div>
+    </section>
 
-        @if(session('error'))
-            <div class="mb-6 bg-red-50 border border-red-200 text-red-800 rounded-lg p-4 flex items-center profile-transition">
-                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
-                </svg>
-                {{ session('error') }}
-            </div>
-        @endif
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- sidebar kiri -->
-            <div class="lg:col-span-1">
-                <!-- kartu profil -->
-                <div class="bg-white rounded-lg shadow-sm p-6 text-center profile-card">
-                    <div class="inline-block relative profile-photo-wrapper">
-                        @if($institution->logo_path)
-                            <img src="{{ Storage::url($institution->logo_path) }}" 
-                                 alt="{{ $institution->name }}" 
-                                 class="w-32 h-32 rounded-lg object-cover border-4 border-blue-500 mx-auto">
-                        @else
-                            <div class="w-32 h-32 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-4xl font-bold border-4 border-blue-500 mx-auto">
-                                {{ strtoupper(substr($institution->name, 0, 1)) }}
-                            </div>
-                        @endif
+    {{-- layer 4: perkenalan kkn-go - light gray background --}}
+    <section class="py-24 bg-gray-50">
+        <div class="container mx-auto px-6">
+            {{-- header dengan logo --}}
+            <div class="text-center mb-16">
+                <div class="flex justify-center mb-8">
+                    <img src="{{ asset('kkn-go-logo.png') }}" alt="Logo KKN-Go" class="h-20 w-20">
+                </div>
+                <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
+                    Perkenalkan, KKN-Go
+                </h2>
+                <div class="max-w-4xl mx-auto">
+                    <p class="text-lg text-gray-700 leading-relaxed mb-4">
+                        Indonesia memiliki potensi intelektual yang luar biasa dengan <span class="font-bold text-blue-600">8,3 juta mahasiswa aktif</span> di 4.500 perguruan tinggi, dimana sekitar <span class="font-bold text-blue-600">520.000 mahasiswa melaksanakan KKN</span> setiap tahun menghasilkan lebih dari 100.000 laporan penelitian.
+                    </p>
+                    <p class="text-lg text-gray-700 leading-relaxed mb-6">
+                        Namun, data menunjukkan bahwa <span class="font-bold text-red-600">76% hasil penelitian mahasiswa hanya berakhir sebagai dokumen arsip</span> tanpa implementasi nyata, menciptakan pemborosan sumber daya senilai <span class="font-bold text-red-600">±Rp 1,2 triliun per tahun</span>.
+                    </p>
+                    <div class="inline-block bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-lg">
+                        <p class="text-xl font-bold">
+                            Kamilah Jawabannya! 🚀
+                        </p>
                     </div>
-                    
-                    <h2 class="mt-4 text-2xl font-bold text-gray-900">
-                        {{ $institution->name }}
+                </div>
+            </div>
+
+            {{-- 3 masalah yang diselesaikan kkn-go --}}
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-10">
+                    <h3 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+                        Tiga Masalah Krusial Yang Kami Selesaikan
+                    </h3>
+                    <p class="text-lg text-gray-600">
+                        KKN-Go hadir untuk mentransformasi ekosistem KKN Indonesia
+                    </p>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-8">
+                    {{-- solusi 1 --}}
+                    <div class="bg-white rounded-lg p-8 shadow-lg hover:shadow-xl transition-shadow border-t-4 border-red-500">
+                        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-6">
+                            <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-4">Marketplace Masalah</h3>
+                        <p class="text-gray-600 leading-relaxed mb-4">
+                            Platform yang menghubungkan mahasiswa dengan masalah nyata dari pemerintah daerah, meningkatkan relevansi program hingga <span class="font-bold text-blue-600">75%</span>.
+                        </p>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600 italic">
+                                "Mahasiswa dapat langsung fokus pada penyelesaian masalah tanpa menghabiskan waktu untuk identifikasi."
+                            </p>
+                        </div>
+                    </div>
+
+                    {{-- solusi 2 --}}
+                    <div class="bg-white rounded-lg p-8 shadow-lg hover:shadow-xl transition-shadow border-t-4 border-yellow-500">
+                        <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-6">
+                            <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-4">Impact Portfolio</h3>
+                        <p class="text-gray-600 leading-relaxed mb-4">
+                            Sistem validasi resmi dari pemerintah daerah yang menciptakan portofolio profesional terverifikasi untuk mahasiswa.
+                        </p>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600 italic">
+                                "94% mahasiswa menyatakan portofolio tervalidasi sangat berharga dalam proses rekrutmen."
+                            </p>
+                        </div>
+                    </div>
+
+                    {{-- solusi 3 --}}
+                    <div class="bg-white rounded-lg p-8 shadow-lg hover:shadow-xl transition-shadow border-t-4 border-blue-500">
+                        <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-6">
+                            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-4">Knowledge Repository</h3>
+                        <p class="text-gray-600 leading-relaxed mb-4">
+                            Perpustakaan digital nasional yang mengubah hasil KKN menjadi sumber pembelajaran kolektif yang dapat diakses seluruh masyarakat.
+                        </p>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600 italic">
+                                "Potensi penghematan hingga Rp 540 miliar per tahun dengan mencegah duplikasi program."
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {{-- layer 1: intro section - white background --}}
+    <section class="py-24 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="grid md:grid-cols-2 gap-16 items-start">
+                {{-- left: big title --}}
+                <div>
+                    <h2 class="text-5xl md:text-6xl font-bold text-gray-900 leading-tight">
+                        KKN-Go Dari Tahun Ke Tahun
                     </h2>
-                    
-                    <p class="text-sm text-gray-600 mt-1">{{ ucfirst($institution->type) }}</p>
-                    
-                    <div class="mt-2 flex items-center justify-center text-sm text-gray-500">
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                        </svg>
-                        {{ $user->email }}
-                    </div>
+                </div>
+                
+                {{-- right: description --}}
+                <div class="space-y-6">
+                    <p class="text-lg text-gray-700 leading-relaxed">
+                        KKN-Go berdiri sebagai katalisator dalam menciptakan ekosistem Kuliah Kerja Nyata 4.0 di Indonesia. Kami adalah laboratorium inovasi sekaligus wadah sinergi antara mahasiswa dan pemerintah daerah.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
 
-                    <!-- informasi detail -->
-                    <div class="mt-6 space-y-3 text-left">
-                        <div class="flex items-start">
-                            <svg class="w-5 h-5 text-gray-400 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+    {{-- layer 2: mission section - light gray background --}}
+    <section class="py-24 bg-gray-100">
+        <div class="container mx-auto px-6">
+            <div class="grid md:grid-cols-2 gap-16 items-center">
+                {{-- left: icon/visual element --}}
+                <div class="flex items-center justify-center">
+                    <div class="relative">
+                        {{-- decorative circle --}}
+                        <div class="w-64 h-64 md:w-80 md:h-80 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-2xl">
+                            <svg class="w-32 h-32 md:w-40 md:h-40 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
                             </svg>
-                            <div class="flex-1">
-                                <p class="text-xs text-gray-500 uppercase tracking-wide">Lokasi</p>
-                                <p class="text-sm font-medium text-gray-900">{{ $institution->regency->name ?? '-' }}, {{ $institution->province->name ?? '-' }}</p>
-                            </div>
                         </div>
-
-                        <div class="flex items-start">
-                            <svg class="w-5 h-5 text-gray-400 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
-                            </svg>
-                            <div class="flex-1">
-                                <p class="text-xs text-gray-500 uppercase tracking-wide">Telepon</p>
-                                <p class="text-sm font-medium text-gray-900">{{ $institution->phone ?? '-' }}</p>
-                            </div>
-                        </div>
-
-                        @if($institution->website)
-                        <div class="flex items-start">
-                            <svg class="w-5 h-5 text-gray-400 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
-                            </svg>
-                            <div class="flex-1">
-                                <p class="text-xs text-gray-500 uppercase tracking-wide">Website</p>
-                                <a href="{{ $institution->website }}" target="_blank" class="text-sm font-medium text-blue-600 hover:text-blue-700 break-all">
-                                    {{ $institution->website }}
-                                </a>
-                            </div>
-                        </div>
-                        @endif
-                    </div>
-
-                    <!-- tombol aksi -->
-                    <div class="mt-6 space-y-2">
-                        <a href="{{ route('institution.profile.edit') }}" 
-                           class="block w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
-                            Edit Profil
-                        </a>
-                        <a href="{{ route('institution.public', $institution->id) }}" 
-                           target="_blank"
-                           class="block w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors">
-                            Lihat Profil Publik
-                        </a>
+                        {{-- decorative dots --}}
+                        <div class="absolute -top-4 -right-4 w-24 h-24 bg-yellow-400 rounded-full opacity-20"></div>
+                        <div class="absolute -bottom-4 -left-4 w-32 h-32 bg-green-400 rounded-full opacity-20"></div>
                     </div>
                 </div>
-
-                <!-- statistik ringkas -->
-                <div class="mt-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-sm p-6 text-white">
-                    <h3 class="font-bold mb-4">Statistik</h3>
-                    <div class="space-y-3">
-                        <div class="flex items-center justify-between">
-                            <span class="text-blue-100">Total Masalah</span>
-                            <span class="text-2xl font-bold">{{ $stats['total_problems'] ?? 0 }}</span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-blue-100">Masalah Aktif</span>
-                            <span class="text-2xl font-bold">{{ $stats['active_problems'] ?? 0 }}</span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-blue-100">Total Proyek</span>
-                            <span class="text-2xl font-bold">{{ $stats['total_projects'] ?? 0 }}</span>
-                        </div>
+                
+                {{-- right: text content --}}
+                <div>
+                    <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
+                        Dari Mahasiswa
+                    </h2>
+                    <p class="text-lg text-gray-700 leading-relaxed mb-6">
+                        Menyongsong usia ke-2 tahun, KKN-Go terus tumbuh dan bertransformasi. Dari pelabuhan kecil di masa lalu hingga platform digital masa kini, KKN-Go telah menghadapi beragam tantangan dan membuka banyak peluang.
+                    </p>
+                    <p class="text-lg text-gray-700 leading-relaxed">
+                        Saatnya kita melangkah bersama untuk membentuk KKN-Go sebagai <span class="font-semibold italic">revolusi mahasiswa</span> yang lebih inklusif dan siap bersaing di pentas nasional.
+                    </p>
+                    <div class="mt-8">
+                        <p class="text-gray-900 font-bold text-xl">Tim AnakSoleh</p>
+                        <p class="text-gray-600">Institut Teknologi Bandung</p>
                     </div>
                 </div>
             </div>
+        </div>
+    </section>
 
-            <!-- konten utama -->
-            <div class="lg:col-span-2 space-y-6">
-                <!-- informasi instansi card -->
-                <div class="bg-white rounded-lg shadow-sm p-6 profile-card">
-                    <h3 class="text-lg font-bold text-gray-900 mb-4">Informasi Instansi</h3>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <p class="text-sm font-medium text-gray-500 mb-1">Nama Instansi</p>
-                            <p class="text-gray-900">{{ $institution->name }}</p>
-                        </div>
-
-                        <div>
-                            <p class="text-sm font-medium text-gray-500 mb-1">Jenis Instansi</p>
-                            <p class="text-gray-900">{{ ucfirst($institution->type) }}</p>
-                        </div>
-
-                        <div>
-                            <p class="text-sm font-medium text-gray-500 mb-1">Email</p>
-                            <p class="text-gray-900">{{ $user->email }}</p>
-                        </div>
-
-                        <div>
-                            <p class="text-sm font-medium text-gray-500 mb-1">Nomor Telepon</p>
-                            <p class="text-gray-900">{{ $institution->phone ?? '-' }}</p>
-                        </div>
-
-                        <div class="md:col-span-2">
-                            <p class="text-sm font-medium text-gray-500 mb-1">Alamat</p>
-                            <p class="text-gray-900">{{ $institution->address ?? '-' }}</p>
-                        </div>
+    {{-- layer 3: impact section - white background with image and icon list --}}
+    <section class="py-24 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                {{-- left: image --}}
+                <div class="order-2 md:order-1">
+                    <div class="relative">
+                        <img src="{{ asset('handprints-about.jpeg') }}" 
+                             alt="Aktivitas Mahasiswa KKN" 
+                             class="w-full h-auto rounded-lg shadow-xl">
                     </div>
                 </div>
-
-                <!-- person in charge card -->
-                <div class="bg-white rounded-lg shadow-sm p-6 profile-card">
-                    <h3 class="text-lg font-bold text-gray-900 mb-4">Penanggung Jawab</h3>
+                
+                {{-- right: content with icon list --}}
+                <div class="order-1 md:order-2">
+                    <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-8 leading-tight">
+                        Platform Terpadu Untuk Mahasiswa Dan Instansi
+                    </h2>
+                    <p class="text-lg text-gray-600 mb-10 leading-relaxed">
+                        Selalu up-to-date dengan informasi dan data program KKN yang terintegrasi, aktual, serta transparan dari seluruh perguruan tinggi dan pemerintah daerah.
+                    </p>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <p class="text-sm font-medium text-gray-500 mb-1">Nama PIC</p>
-                            <p class="text-gray-900">{{ $institution->pic_name ?? '-' }}</p>
+                    {{-- icon list --}}
+                    <div class="space-y-8">
+                        {{-- item 1 --}}
+                        <div class="flex items-start gap-4">
+                            <div class="flex-shrink-0">
+                                <div class="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div>
+                                <p class="text-gray-700 leading-relaxed">
+                                    Pembaruan data setiap hari oleh mahasiswa dan instansi mitra
+                                </p>
+                            </div>
                         </div>
-
-                        <div>
-                            <p class="text-sm font-medium text-gray-500 mb-1">Jabatan PIC</p>
-                            <p class="text-gray-900">{{ $institution->pic_position ?? '-' }}</p>
+                        
+                        {{-- item 2 --}}
+                        <div class="flex items-start gap-4">
+                            <div class="flex-shrink-0">
+                                <div class="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div>
+                                <p class="text-gray-700 leading-relaxed">
+                                    Dikelola oleh tim profesional dari perguruan tinggi terkemuka
+                                </p>
+                            </div>
+                        </div>
+                        
+                        {{-- item 3 --}}
+                        <div class="flex items-start gap-4">
+                            <div class="flex-shrink-0">
+                                <div class="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div>
+                                <p class="text-gray-700 leading-relaxed">
+                                    Hasil sinergi perguruan tinggi dan pemerintah daerah untuk pembangunan berkelanjutan
+                                </p>
+                            </div>
+                        </div>
+                        
+                        {{-- item 4 --}}
+                        <div class="flex items-start gap-4">
+                            <div class="flex-shrink-0">
+                                <div class="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div>
+                                <p class="text-gray-700 leading-relaxed">
+                                    Dikunjungi oleh lebih dari 520,000+ mahasiswa setiap tahun
+                                </p>
+                            </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- deskripsi card -->
-                @if($institution->description)
-                <div class="bg-white rounded-lg shadow-sm p-6 profile-card">
-                    <h3 class="text-lg font-bold text-gray-900 mb-4">Deskripsi</h3>
-                    <p class="text-gray-700 leading-relaxed">{{ $institution->description }}</p>
-                </div>
-                @endif
-
-                <!-- statistik detail -->
-                <div class="bg-white rounded-lg shadow-sm p-6 profile-card">
-                    <h3 class="text-lg font-bold text-gray-900 mb-4">Statistik Detail</h3>
                     
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <div class="text-center p-4 bg-blue-50 rounded-lg">
-                            <div class="text-3xl font-bold text-blue-600">{{ $stats['total_problems'] ?? 0 }}</div>
-                            <div class="text-sm text-gray-600 mt-1">Total Masalah</div>
-                        </div>
-
-                        <div class="text-center p-4 bg-green-50 rounded-lg">
-                            <div class="text-3xl font-bold text-green-600">{{ $stats['active_problems'] ?? 0 }}</div>
-                            <div class="text-sm text-gray-600 mt-1">Masalah Aktif</div>
-                        </div>
-
-                        <div class="text-center p-4 bg-purple-50 rounded-lg">
-                            <div class="text-3xl font-bold text-purple-600">{{ $stats['completed_problems'] ?? 0 }}</div>
-                            <div class="text-sm text-gray-600 mt-1">Masalah Selesai</div>
-                        </div>
-
-                        <div class="text-center p-4 bg-orange-50 rounded-lg">
-                            <div class="text-3xl font-bold text-orange-600">{{ $stats['total_projects'] ?? 0 }}</div>
-                            <div class="text-sm text-gray-600 mt-1">Total Proyek</div>
-                        </div>
-
-                        <div class="text-center p-4 bg-teal-50 rounded-lg">
-                            <div class="text-3xl font-bold text-teal-600">{{ $stats['active_projects'] ?? 0 }}</div>
-                            <div class="text-sm text-gray-600 mt-1">Proyek Aktif</div>
-                        </div>
-
-                        <div class="text-center p-4 bg-indigo-50 rounded-lg">
-                            <div class="text-3xl font-bold text-indigo-600">{{ $stats['completed_projects'] ?? 0 }}</div>
-                            <div class="text-sm text-gray-600 mt-1">Proyek Selesai</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- quick actions -->
-                <div class="bg-white rounded-lg shadow-sm p-6 profile-card">
-                    <h3 class="text-lg font-bold text-gray-900 mb-4">Aksi Cepat</h3>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <a href="{{ route('institution.problems.create') }}" 
-                           class="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all">
-                            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                                </svg>
-                            </div>
-                            <div>
-                                <p class="font-semibold text-gray-900">Buat Masalah Baru</p>
-                                <p class="text-sm text-gray-500">Publikasikan masalah baru</p>
-                            </div>
-                        </a>
-
-                        <a href="{{ route('institution.problems.index') }}" 
-                           class="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition-all">
-                            <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                </svg>
-                            </div>
-                            <div>
-                                <p class="font-semibold text-gray-900">Kelola Masalah</p>
-                                <p class="text-sm text-gray-500">Lihat dan edit masalah</p>
-                            </div>
-                        </a>
-
-                        <a href="{{ route('institution.applications.index') }}" 
-                           class="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all">
-                            <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                </svg>
-                            </div>
-                            <div>
-                                <p class="font-semibold text-gray-900">Review Aplikasi</p>
-                                <p class="text-sm text-gray-500">Tinjau aplikasi mahasiswa</p>
-                            </div>
-                        </a>
-
-                        <a href="{{ route('institution.projects.index') }}" 
-                           class="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-all">
-                            <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                                <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                                </svg>
-                            </div>
-                            <div>
-                                <p class="font-semibold text-gray-900">Kelola Proyek</p>
-                                <p class="text-sm text-gray-500">Pantau progress proyek</p>
-                            </div>
+                    {{-- cta link --}}
+                    <div class="mt-10">
+                        <a href="#" class="inline-flex items-center text-blue-600 font-semibold hover:text-blue-700 transition-colors group">
+                            Kunjungi Website
+                            <svg class="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                            </svg>
                         </a>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
+
 </div>
+
+<style>
+/* smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* optimized rendering */
+* {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* image optimization */
+img {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+}
+
+/* reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+    
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+</style>
 @endsection
