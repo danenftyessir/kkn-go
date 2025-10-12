@@ -91,7 +91,7 @@ class RegisterController extends Controller
 
     /**
      * proses registrasi student
-     * PERBAIKAN: return JSON response untuk AJAX request
+     * PERBAIKAN BUG: return JSON response untuk AJAX request dengan redirect URL
      */
     public function registerStudent(StudentRegisterRequest $request)
     {
@@ -140,15 +140,15 @@ class RegisterController extends Controller
                 'username' => $user->username
             ]);
 
-            // login user secara otomatis
+            // login user secara otomatis setelah registrasi berhasil
             Auth::login($user);
 
-            // PERBAIKAN: cek apakah request adalah AJAX
+            // PERBAIKAN UTAMA: cek apakah request adalah AJAX/JSON
             if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
                 // return JSON response dengan redirect URL untuk AJAX request
                 return response()->json([
                     'success' => true,
-                    'message' => 'Selamat Datang di KKN-GO! Akun Anda berhasil dibuat. Jangan lupa verifikasi email Anda.',
+                    'message' => 'Selamat Datang Di KKN-GO! Akun Anda Berhasil Dibuat. Jangan Lupa Verifikasi Email Anda.',
                     'redirect_url' => route('student.dashboard')
                 ], 200);
             }
@@ -156,7 +156,7 @@ class RegisterController extends Controller
             // redirect normal untuk non-AJAX request
             return redirect()
                 ->route('student.dashboard')
-                ->with('success', 'Selamat Datang di KKN-GO! Akun Anda berhasil dibuat. Jangan lupa verifikasi email Anda.');
+                ->with('success', 'Selamat Datang Di KKN-GO! Akun Anda Berhasil Dibuat. Jangan Lupa Verifikasi Email Anda.');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -227,12 +227,12 @@ class RegisterController extends Controller
                 'verification_document_path' => $verificationDocPath,
                 'website' => $request->website,
                 'description' => $request->description,
-                'is_verified' => false, // akan diverifikasi oleh admin
+                'is_verified' => false,
             ]);
             
             DB::commit();
             
-            // picu event bahwa user baru telah terdaftar (untuk kirim email verifikasi)
+            // picu event bahwa user baru telah terdaftar
             event(new Registered($user));
 
             // log successful registration
@@ -249,7 +249,7 @@ class RegisterController extends Controller
             // redirect ke dashboard institusi dengan pesan sukses
             return redirect()
                 ->route('institution.dashboard')
-                ->with('success', 'Selamat Datang di KKN-GO! Akun Anda berhasil dibuat. Silakan lengkapi profil dan mulai posting masalah. Dokumen verifikasi Anda akan ditinjau oleh admin.');
+                ->with('success', 'Selamat Datang Di KKN-GO! Akun Anda Berhasil Dibuat. Silakan Lengkapi Profil Dan Mulai Posting Masalah. Dokumen Verifikasi Anda Akan Ditinjau Oleh Admin.');
 
         } catch (\Exception $e) {
             DB::rollBack();

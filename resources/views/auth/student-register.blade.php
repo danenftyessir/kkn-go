@@ -10,6 +10,35 @@
     @vite(['resources/css/app.css'])
     <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
     <link rel="stylesheet" href="{{ asset('css/auth-student.css') }}">
+    
+    <style>
+        /* background image dengan opacity */
+        .register-container.student-register {
+            position: relative;
+            min-height: 100vh;
+        }
+        
+        .register-container.student-register::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('{{ asset('student-register-background.jpeg') }}');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.35;
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        .register-container.student-register > * {
+            position: relative;
+            z-index: 1;
+        }
+    </style>
 </head>
 <body class="font-sans antialiased bg-gray-50">
     {{-- navbar tetap --}}
@@ -38,7 +67,7 @@
                          alt="KKN-GO Logo" 
                          class="h-20 w-auto mx-auto mb-4">
                     <h1 class="text-3xl font-bold text-gray-900 mb-2">Daftar Sebagai Mahasiswa</h1>
-                    <p class="text-gray-600">Bergabunglah dengan platform KKN terbesar di Indonesia</p>
+                    <p class="text-gray-600">Bergabunglah Dengan Platform KKN Terbesar Di Indonesia</p>
                 </div>
 
                 {{-- card form --}}
@@ -84,7 +113,7 @@
                         <div id="step1-content" class="step-content">
                             <div class="mb-8">
                                 <h2 class="text-2xl font-bold text-gray-800 mb-2">Data Pribadi</h2>
-                                <p class="text-gray-600">Isi data diri kamu dengan lengkap ya!</p>
+                                <p class="text-gray-600">Isi Data Diri Kamu Dengan Lengkap Ya!</p>
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -122,7 +151,7 @@
                                                id="last_name" 
                                                name="last_name" 
                                                value="{{ old('last_name') }}"
-                                               placeholder="Contoh: Fauzi"
+                                               placeholder="Contoh: Hidayat"
                                                class="form-input"
                                                required>
                                         <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -139,9 +168,7 @@
                                         </p>
                                     @enderror
                                 </div>
-                            </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                                 {{-- email --}}
                                 <div class="form-field-group">
                                     <label for="email" class="form-label required">Email Universitas</label>
@@ -150,14 +177,13 @@
                                                id="email" 
                                                name="email" 
                                                value="{{ old('email') }}"
-                                               placeholder="nama@university.ac.id"
+                                               placeholder="Contoh: ahmad@student.university.ac.id"
                                                class="form-input"
                                                required>
                                         <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                                         </svg>
                                     </div>
-                                    <p class="text-xs text-gray-500 mt-1">Gunakan email resmi universitas (.ac.id atau .edu)</p>
                                     <p class="error-message hidden" id="error-email"></p>
                                     @error('email')
                                         <p class="error-message">
@@ -177,14 +203,13 @@
                                                id="whatsapp_number" 
                                                name="whatsapp_number" 
                                                value="{{ old('whatsapp_number') }}"
-                                               placeholder="08123456789"
+                                               placeholder="Contoh: 08123456789"
                                                class="form-input"
                                                required>
                                         <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
                                         </svg>
                                     </div>
-                                    <p class="text-xs text-gray-500 mt-1">Format: 08xxxxxxxxxx atau +62xxxxxxxxxx</p>
                                     <p class="error-message hidden" id="error-whatsapp_number"></p>
                                     @error('whatsapp_number')
                                         <p class="error-message">
@@ -200,24 +225,24 @@
                             {{-- foto profil --}}
                             <div class="mt-6">
                                 <label class="form-label">Foto Profil (Opsional)</label>
-                                <div class="file-upload-area">
+                                <div class="file-upload-area mt-2">
                                     <input type="file" 
                                            id="profile_photo" 
                                            name="profile_photo" 
-                                           accept="image/jpeg,image/jpg,image/png"
-                                           class="hidden"
-                                           onchange="previewImage(event)">
-                                    <label for="profile_photo" class="file-upload-label cursor-pointer">
+                                           accept="image/*"
+                                           onchange="previewImage(event)"
+                                           class="hidden">
+                                    <label for="profile_photo" class="cursor-pointer">
                                         <div class="file-upload-icon">
-                                            <svg class="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg class="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                             </svg>
                                         </div>
-                                        <p class="file-upload-text" id="fileLabel">Klik untuk unggah foto</p>
-                                        <p class="text-xs text-gray-500 mt-1">Format: JPG, JPEG, PNG (Maks. 2MB)</p>
+                                        <p class="text-sm font-medium text-gray-700 mt-2">Klik Untuk Upload Foto</p>
+                                        <p class="text-xs text-gray-500" id="fileLabel">Format: JPG, PNG (Maks. 2MB)</p>
                                     </label>
                                     <div id="imagePreview" class="mt-4 hidden">
-                                        <img src="" alt="preview" class="mx-auto h-32 w-32 rounded-full object-cover">
+                                        <img src="" alt="Preview" class="mx-auto h-32 w-32 rounded-full object-cover">
                                     </div>
                                 </div>
                                 <p class="error-message hidden" id="error-profile_photo"></p>
@@ -246,7 +271,7 @@
                         <div id="step2-content" class="step-content hidden">
                             <div class="mb-8">
                                 <h2 class="text-2xl font-bold text-gray-800 mb-2">Data Akademik</h2>
-                                <p class="text-gray-600">Informasi kampus dan perkuliahanmu</p>
+                                <p class="text-gray-600">Informasi Tentang Universitas Dan Studimu</p>
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -256,7 +281,7 @@
                                     <div class="form-input-wrapper">
                                         <select id="university_id" 
                                                 name="university_id" 
-                                                class="form-select"
+                                                class="form-input"
                                                 required>
                                             <option value="">Pilih Universitas</option>
                                             @foreach($universities as $university)
@@ -305,9 +330,7 @@
                                         </p>
                                     @enderror
                                 </div>
-                            </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                                 {{-- nim --}}
                                 <div class="form-field-group">
                                     <label for="nim" class="form-label required">NIM</label>
@@ -316,7 +339,7 @@
                                                id="nim" 
                                                name="nim" 
                                                value="{{ old('nim') }}"
-                                               placeholder="Contoh: 118012345"
+                                               placeholder="Contoh: 23051234567"
                                                class="form-input"
                                                required>
                                         <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -340,7 +363,7 @@
                                     <div class="form-input-wrapper">
                                         <select id="semester" 
                                                 name="semester" 
-                                                class="form-select"
+                                                class="form-input"
                                                 required>
                                             <option value="">Pilih Semester</option>
                                             @for($i = 1; $i <= 14; $i++)
@@ -384,7 +407,7 @@
                         <div id="step3-content" class="step-content hidden">
                             <div class="mb-8">
                                 <h2 class="text-2xl font-bold text-gray-800 mb-2">Buat Akun</h2>
-                                <p class="text-gray-600">Buat username dan password untuk akunmu</p>
+                                <p class="text-gray-600">Buat Username Dan Password Untuk Akunmu</p>
                             </div>
 
                             <div class="space-y-6">
@@ -400,10 +423,9 @@
                                                class="form-input"
                                                required>
                                         <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                                         </svg>
                                     </div>
-                                    <p class="text-xs text-gray-500 mt-1">Username harus unik, minimal 4 karakter, hanya huruf, angka, titik, garis bawah, dan strip</p>
                                     <p class="error-message hidden" id="error-username"></p>
                                     @error('username')
                                         <p class="error-message">
@@ -422,7 +444,7 @@
                                         <input type="password" 
                                                id="password" 
                                                name="password" 
-                                               placeholder="Min. 8 karakter"
+                                               placeholder="Minimal 8 Karakter"
                                                class="form-input"
                                                required>
                                         <button type="button" 
@@ -434,7 +456,6 @@
                                             </svg>
                                         </button>
                                     </div>
-                                    <p class="text-xs text-gray-500 mt-1">Password harus mengandung huruf besar, huruf kecil, angka, dan simbol</p>
                                     <p class="error-message hidden" id="error-password"></p>
                                     @error('password')
                                         <p class="error-message">
@@ -453,7 +474,7 @@
                                         <input type="password" 
                                                id="password_confirmation" 
                                                name="password_confirmation" 
-                                               placeholder="Ketik ulang password"
+                                               placeholder="Ketik Ulang Password"
                                                class="form-input"
                                                required>
                                         <button type="button" 
@@ -466,26 +487,17 @@
                                         </button>
                                     </div>
                                     <p class="error-message hidden" id="error-password_confirmation"></p>
-                                    @error('password_confirmation')
-                                        <p class="error-message">
-                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                                            </svg>
-                                            {{ $message }}
-                                        </p>
-                                    @enderror
                                 </div>
 
                                 {{-- terms --}}
-                                <div class="form-field-group">
-                                    <label class="flex items-start space-x-3">
-                                        <input type="checkbox" 
-                                               name="terms" 
-                                               class="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                               required>
-                                        <span class="text-sm text-gray-700">
-                                            Saya setuju dengan <a href="#" class="text-blue-600 hover:text-blue-700 font-medium">Syarat Dan Ketentuan</a> serta <a href="#" class="text-blue-600 hover:text-blue-700 font-medium">Kebijakan Privasi</a>
-                                        </span>
+                                <div class="flex items-start">
+                                    <input type="checkbox" 
+                                           id="terms" 
+                                           name="terms" 
+                                           class="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                           required>
+                                    <label for="terms" class="ml-3 text-sm text-gray-600">
+                                        Saya Setuju Dengan <a href="#" class="text-blue-600 hover:text-blue-700 font-semibold">Syarat Dan Ketentuan</a> Serta <a href="#" class="text-blue-600 hover:text-blue-700 font-semibold">Kebijakan Privasi</a> KKN-GO
                                     </label>
                                 </div>
                             </div>
@@ -508,94 +520,91 @@
                         </div>
                     </form>
 
-                    {{-- sudah punya akun --}}
-                    <div class="px-8 pb-8">
-                        <div class="text-center text-sm text-gray-600 mt-4">
-                            Sudah punya akun?
-                            <a href="{{ route('login') }}" class="text-blue-600 hover:text-blue-700 font-medium">
+                    {{-- login link --}}
+                    <div class="px-8 pb-8 text-center">
+                        <p class="text-gray-600">
+                            Sudah Punya Akun? 
+                            <a href="{{ route('login') }}" class="text-blue-600 hover:text-blue-700 font-semibold transition-colors">
                                 Login Di Sini
                             </a>
-                        </div>
+                        </p>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        {{-- loading overlay --}}
-        <div class="loading-overlay" id="loadingOverlay">
-            <div class="bg-white rounded-lg p-8 text-center">
-                <div class="spinner mx-auto mb-4" style="width: 3rem; height: 3rem;"></div>
-                <p class="text-gray-700 font-medium">Mendaftarkan akun kamu...</p>
-                <p class="text-sm text-gray-500 mt-1">Mohon tunggu sebentar</p>
-            </div>
+    {{-- loading overlay --}}
+    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
+        <div class="bg-white rounded-lg p-8 flex flex-col items-center">
+            <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
+            <p class="mt-4 text-gray-700 font-semibold">Mendaftarkan Akun Anda...</p>
         </div>
     </div>
 
     <script>
     let currentStep = 1;
 
-    // fungsi untuk menampilkan/menyembunyikan error secara dinamis
+    // fungsi untuk handle error validasi
     function handleValidationErrors(errors) {
-        // sembunyikan semua error lama terlebih dahulu
+        // bersihkan semua error sebelumnya
         document.querySelectorAll('.error-message').forEach(el => {
-            if (el.id.startsWith('error-')) {
-                el.textContent = '';
+            if (!el.classList.contains('hidden')) {
                 el.classList.add('hidden');
+                el.textContent = '';
             }
         });
-        document.querySelectorAll('.form-input, .form-select').forEach(el => el.classList.remove('error'));
+        document.querySelectorAll('.form-input').forEach(el => {
+            el.classList.remove('border-red-500');
+        });
 
-        // tampilkan error baru yang diterima dari backend
-        for (const field in errors) {
-            const errorElement = document.getElementById(`error-${field}`);
-            const inputElement = document.getElementById(field);
-
-            if (errorElement) {
-                errorElement.textContent = errors[field][0]; // tampilkan hanya pesan error pertama
-                errorElement.classList.remove('hidden');
+        // tampilkan error baru
+        Object.keys(errors).forEach(field => {
+            const errorEl = document.getElementById(`error-${field}`);
+            const inputEl = document.getElementById(field);
+            
+            if (errorEl) {
+                errorEl.classList.remove('hidden');
+                errorEl.textContent = errors[field][0];
             }
-            if (inputElement) {
-                inputElement.classList.add('error');
-                // scroll ke input pertama yang error
-                if (Object.keys(errors)[0] === field) {
-                    inputElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
+            if (inputEl) {
+                inputEl.classList.add('border-red-500');
             }
-        }
+        });
     }
 
-    // fungsi navigasi dengan validasi AJAX
+    // fungsi untuk pindah ke step selanjutnya dengan validasi
     async function nextStep(step) {
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        loadingOverlay.style.display = 'flex';
+
+        // ambil data form untuk validasi
         const form = document.getElementById('studentRegisterForm');
         const formData = new FormData(form);
-        formData.append('step', currentStep); // menambahkan informasi langkah saat ini ke request
-
-        const loadingOverlay = document.getElementById('loadingOverlay');
-        loadingOverlay.classList.add('active'); // tampilkan loading
+        formData.append('step', currentStep);
 
         try {
-            const response = await fetch("{{ route('api.public.validate.student.step') }}", {
+            // kirim request validasi ke backend
+            const response = await fetch("{{ route('validation.student.step') }}", {
                 method: 'POST',
-                headers: {
+                headers: { 
                     'Accept': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 },
                 body: formData
             });
 
-            if (!response.ok) {
-                if (response.status === 422) { // kode 422 berarti error validasi
-                    const data = await response.json();
-                    handleValidationErrors(data.errors);
-                } else {
-                    alert('Terjadi kesalahan pada server. Silakan coba lagi.');
-                }
-                loadingOverlay.classList.remove('active');
-                return; // hentikan fungsi jika validasi gagal
+            const data = await response.json();
+
+            // jika ada error validasi
+            if (response.status === 422) {
+                handleValidationErrors(data.errors);
+                loadingOverlay.style.display = 'none';
+                return;
             }
 
             // jika validasi berhasil, lanjutkan alur visual
-            handleValidationErrors({}); // bersihkan error lama
+            handleValidationErrors({});
             
             // logika visual untuk pindah step
             const currentCircle = document.getElementById(`step${currentStep}-circle`);
@@ -623,13 +632,13 @@
             console.error('Terjadi kesalahan saat validasi:', error);
             alert('Tidak dapat terhubung ke server. Periksa koneksi internet Anda.');
         } finally {
-            loadingOverlay.classList.remove('active'); // selalu sembunyikan loading
+            loadingOverlay.style.display = 'none';
         }
     }
 
     // fungsi untuk kembali ke step sebelumnya
     function prevStep(step) {
-        handleValidationErrors({}); // bersihkan error saat kembali
+        handleValidationErrors({});
         const currentCircle = document.getElementById(`step${currentStep}-circle`);
         const currentContent = document.getElementById(`step${currentStep}-content`);
         
@@ -674,12 +683,12 @@
         }
     }
 
-    // PERBAIKAN: event listener untuk submit form
+    // PERBAIKAN UTAMA: event listener untuk submit form
     document.getElementById('studentRegisterForm')?.addEventListener('submit', async function(e) {
-        e.preventDefault(); // selalu batalkan submit bawaan terlebih dahulu
+        e.preventDefault(); // batalkan submit bawaan
 
         const loadingOverlay = document.getElementById('loadingOverlay');
-        loadingOverlay.classList.add('active');
+        loadingOverlay.style.display = 'flex';
         
         const formData = new FormData(this);
         
@@ -728,24 +737,25 @@
                 }
 
                 handleValidationErrors(data.errors);
-                loadingOverlay.classList.remove('active');
+                loadingOverlay.style.display = 'none';
                 return;
             }
 
-            // PERBAIKAN: jika sukses (status 200), redirect ke URL yang diberikan backend
-            if (response.ok && data.success) {
+            // PERBAIKAN KRITIS: jika sukses (status 200 dan success = true), redirect
+            if (response.ok && data.success && data.redirect_url) {
                 // redirect ke dashboard student
                 window.location.href = data.redirect_url;
+                // jangan sembunyikan loading karena halaman akan redirect
             } else {
                 // handle error lainnya
                 alert(data.message || 'Terjadi kesalahan saat pendaftaran.');
-                loadingOverlay.classList.remove('active');
+                loadingOverlay.style.display = 'none';
             }
 
         } catch(error) {
             console.error('Submit error:', error);
             alert('Terjadi kesalahan saat mengirimkan formulir. Silakan coba lagi.');
-            loadingOverlay.classList.remove('active');
+            loadingOverlay.style.display = 'none';
         }
     });
     </script>

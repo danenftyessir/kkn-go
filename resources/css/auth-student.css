@@ -1,85 +1,31 @@
-/* ============================================
-   STUDENT REGISTER - THEME BIRU
-   resources/css/auth-student.css
-   ============================================ */
-
-/* background dengan gambar dan gradient overlay */
-.student-register .register-container {
-    min-height: 100vh;
-    background: linear-gradient(135deg, rgba(14, 165, 233, 0.85) 0%, rgba(6, 182, 212, 0.75) 50%, rgba(20, 184, 166, 0.85) 100%),
-                url('/student-register-background.jpeg');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    position: relative;
-    overflow: hidden;
-}
-
-/* pattern background dengan opacity lebih rendah */
-.student-register .register-container::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: 
-        radial-gradient(circle at 25% 40%, rgba(56, 189, 248, 0.05) 0%, transparent 50%), 
-        radial-gradient(circle at 75% 70%, rgba(14, 165, 233, 0.05) 0%, transparent 50%);
-    animation: bgPulse 15s ease-in-out infinite;
-}
-
-@keyframes bgPulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
-}
+/* resources/css/auth-student.css */
 
 /* ============================================
-   STEP INDICATOR - MINIMALIS & CLEAN
+   STEP INDICATOR CONTAINER
    ============================================ */
 
-/* step container dengan spacing yang lebih baik */
 .student-register .step-indicator-container {
     display: flex;
-    justify-content: space-between;
     align-items: flex-start;
-    width: 100%;
+    justify-content: space-between;
     max-width: 600px;
     margin: 0 auto;
-    position: relative;
-    padding: 0 1rem;
 }
 
-/* step item wrapper */
 .student-register .step-item {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.75rem;
-    position: relative;
-    z-index: 2;
-    flex-shrink: 0;
-    opacity: 0;
-    animation: fadeInStep 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    flex: 0 0 auto;
 }
 
-.student-register .step-item:nth-child(1) { animation-delay: 0.1s; }
-.student-register .step-item:nth-child(3) { animation-delay: 0.2s; }
-.student-register .step-item:nth-child(5) { animation-delay: 0.3s; }
+/* ============================================
+   STEP CIRCLE - MODERN DESIGN
+   ============================================ */
 
-@keyframes fadeInStep {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* step circle - design minimalis */
 .student-register .step-circle {
-    width: 52px;
-    height: 52px;
+    width: 3.5rem;
+    height: 3.5rem;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -88,51 +34,27 @@
     font-size: 1.25rem;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
-    background: white;
-    border: 3px solid #e5e7eb;
-    color: #9ca3af;
+    z-index: 2;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-/* state inactive - subtle */
+/* inactive state - abu-abu */
 .student-register .step-circle.inactive {
-    background: white;
-    border-color: #e5e7eb;
+    background: #f3f4f6;
+    border: 2px solid #d1d5db;
     color: #9ca3af;
 }
 
-/* state active - clean dengan gradient lembut */
+/* active state - biru gradient */
 .student-register .step-circle.active {
     background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
-    border-color: #0ea5e9;
+    border: 2px solid #0ea5e9;
     color: white;
-    transform: scale(1.08);
-    box-shadow: 
-        0 4px 12px rgba(14, 165, 233, 0.25),
-        0 2px 4px rgba(14, 165, 233, 0.15);
+    box-shadow: 0 6px 20px rgba(14, 165, 233, 0.4);
+    transform: scale(1.05);
 }
 
-/* ring effect saat active - lebih subtle */
-.student-register .step-circle.active::before {
-    content: '';
-    position: absolute;
-    inset: -6px;
-    border-radius: 50%;
-    background: rgba(14, 165, 233, 0.12);
-    animation: pulseRing 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes pulseRing {
-    0%, 100% {
-        transform: scale(1);
-        opacity: 0.5;
-    }
-    50% {
-        transform: scale(1.15);
-        opacity: 0.2;
-    }
-}
-
-/* state completed - gradient berbeda */
+/* completed state - biru solid dengan checkmark */
 .student-register .step-circle.completed {
     background: linear-gradient(135deg, #06b6d4 0%, #14b8a6 100%);
     border-color: #06b6d4;
@@ -162,6 +84,7 @@
     text-align: center;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     letter-spacing: 0.01em;
+    margin-top: 0.5rem;
 }
 
 /* label saat step active - hanya bold tanpa warna berlebih */
@@ -279,83 +202,25 @@
 }
 
 /* ============================================
-   LOADING SPINNER
+   RESPONSIVE ADJUSTMENTS
    ============================================ */
 
-.student-register .spinner {
-    border-top-color: #0ea5e9;
-}
-
-/* ============================================
-   LOADING OVERLAY
-   ============================================ */
-
-.student-register .loading-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.7);
-    z-index: 9999;
-    justify-content: center;
-    align-items: center;
-}
-
-.student-register .loading-overlay.active {
-    display: flex;
-}
-
-.student-register .spinner {
-    width: 3rem;
-    height: 3rem;
-    border: 4px solid rgba(255, 255, 255, 0.3);
-    border-top-color: #0ea5e9;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-/* ============================================
-   RESPONSIVE DESIGN
-   ============================================ */
-
-@media (max-width: 768px) {
+@media (max-width: 640px) {
     .student-register .step-indicator-container {
         max-width: 100%;
-        padding: 0 0.5rem;
     }
     
     .student-register .step-circle {
-        width: 44px;
-        height: 44px;
-        font-size: 1.125rem;
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 1rem;
     }
     
     .student-register .step-label {
-        font-size: 0.8125rem;
+        font-size: 0.75rem;
     }
     
     .student-register .step-connector {
-        margin: 0 1rem;
-        margin-top: 22px;
+        margin: 0 0.5rem;
     }
-}
-
-/* ============================================
-   ACCESSIBILITY - REDUCED MOTION
-   ============================================ */
-
-@media (prefers-reduced-motion: reduce) {
-    .student-register .step-item,
-    .student-register .step-circle,
-    .student-register .step-connector::before {
-        animation: none !important;
-        transition-duration: 0.05s !important;
-    }
-    
-    .student-register .register-container::before {
-        animation: none;
-    }
-}
+}   
