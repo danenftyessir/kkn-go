@@ -180,12 +180,14 @@ class AnalyticsService
 
     /**
      * get top problems berdasarkan jumlah aplikasi
+     * 
+     * PERBAIKAN: gunakan alias unik untuk menghindari konflik dengan accessor/attribute
      */
     public function getTopProblems($institutionId, $limit = 5)
     {
-        return Problem::where('institution_id', $institutionId)
-            ->withCount('applications')
-            ->orderBy('applications_count', 'desc')
+        return Problem::where('problems.institution_id', $institutionId)
+            ->selectRaw('problems.*, (SELECT COUNT(*) FROM applications WHERE applications.problem_id = problems.id AND applications.deleted_at IS NULL) as total_applications')
+            ->orderByDesc('total_applications')
             ->limit($limit)
             ->get();
     }
@@ -249,7 +251,7 @@ class AnalyticsService
             'accepted' => $accepted,
             'rejected' => $rejected,
             'pending_percentage' => $total > 0 ? round(($pending / $total) * 100, 1) : 0,
-            'under_review_percentage' => $total > 0 ? round(($underReview / $total) * 100, 1) : 0, 
+            'under_review_percentage' => $total > 0 ? round(($underReview / $total) * 100, 1) : 0, // PERBAIKAN
             'accepted_percentage' => $total > 0 ? round(($accepted / $total) * 100, 1) : 0,
             'rejected_percentage' => $total > 0 ? round(($rejected / $total) * 100, 1) : 0,
         ];
