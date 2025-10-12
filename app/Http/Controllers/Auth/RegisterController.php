@@ -78,18 +78,7 @@ class RegisterController extends Controller
                                ->get();
         }
 
-        // definisi tipe institusi
-        $institutionTypes = [
-            'pemerintah_desa' => 'Pemerintah Desa',
-            'dinas' => 'Dinas Pemerintahan',
-            'ngo' => 'NGO / Lembaga Swadaya Masyarakat',
-            'puskesmas' => 'Puskesmas',
-            'sekolah' => 'Sekolah',
-            'perguruan_tinggi' => 'Perguruan Tinggi',
-            'lainnya' => 'Lainnya'
-        ];
-        
-        return view('auth.institution-register', compact('provinces', 'regencies', 'institutionTypes'));
+        return view('auth.institution-register', compact('provinces', 'regencies'));
     }
 
     /**
@@ -119,10 +108,10 @@ class RegisterController extends Controller
                 'is_active' => true,
             ]);
             
-            // upload foto profil jika ada
+            // upload photo jika ada
             $photoPath = null;
-            if ($request->hasFile('profile_photo')) {
-                $photoPath = $request->file('profile_photo')->store('profiles/students', 'public');
+            if ($request->hasFile('photo')) {
+                $photoPath = $request->file('photo')->store('students/photos', 'public');
             }
             
             // buat student profile
@@ -134,8 +123,8 @@ class RegisterController extends Controller
                 'major' => $request->major,
                 'nim' => $request->nim,
                 'semester' => $request->semester,
-                'phone' => $request->whatsapp_number,
-                'profile_photo_path' => $photoPath,
+                'whatsapp_number' => $request->whatsapp_number,
+                'photo_path' => $photoPath,
             ]);
             
             DB::commit();
@@ -150,10 +139,13 @@ class RegisterController extends Controller
                 'username' => $user->username
             ]);
 
-            // PERBAIKAN: redirect ke login dengan notifikasi sukses
+            // login user secara otomatis
+            Auth::login($user);
+
+            // redirect ke dashboard dengan pesan sukses
             return redirect()
-                ->route('login')
-                ->with('success', 'Akun Berhasil Dibuat! Silakan cek email Anda untuk verifikasi, lalu login.');
+                ->route('student.dashboard')
+                ->with('success', 'Selamat Datang di KKN-GO! Akun Anda berhasil dibuat. Jangan lupa verifikasi email Anda.');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -168,6 +160,7 @@ class RegisterController extends Controller
 
     /**
      * proses registrasi institution
+     * PERBAIKAN: auto-login setelah registrasi berhasil seperti student registration
      */
     public function registerInstitution(InstitutionRegisterRequest $request)
     {
@@ -230,11 +223,14 @@ class RegisterController extends Controller
                 'institution_name' => $request->institution_name
             ]);
 
-            // PERBAIKAN: redirect ke login dengan notifikasi sukses
-            // jangan auto login karena perlu verifikasi email dulu
+            // PERBAIKAN: auto-login user setelah registrasi berhasil
+            // ini memberikan feedback langsung bahwa data sudah tersimpan
+            Auth::login($user);
+
+            // redirect ke dashboard institusi dengan pesan sukses
             return redirect()
-                ->route('login')
-                ->with('success', 'Akun Berhasil Dibuat! Silakan cek email Anda untuk verifikasi, lalu login. Dokumen verifikasi Anda akan ditinjau oleh admin.');
+                ->route('institution.dashboard')
+                ->with('success', 'Selamat Datang di KKN-GO! Akun Anda berhasil dibuat. Silakan lengkapi profil dan mulai posting masalah. Dokumen verifikasi Anda akan ditinjau oleh admin.');
 
         } catch (\Exception $e) {
             DB::rollBack();
