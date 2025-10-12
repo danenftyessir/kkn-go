@@ -332,7 +332,7 @@
                     <div class="flex min-w-max relative pt-12">
                         
                         {{-- garis horizontal --}}
-                        <div class="absolute left-0 right-0 bg-blue-600" style="top: 35px; height: 2px;"></div>
+                        <div class="absolute left-0 right-0 bg-blue-600" style="top: 14px; height: 2px;"></div>
                         
                         {{-- langkah 1 --}}
                         <div class="flex-shrink-0 px-4" style="width: 400px;">
