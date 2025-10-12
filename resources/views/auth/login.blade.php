@@ -140,21 +140,6 @@
                         @enderror
                     </div>
 
-                    <!-- remember me & forgot password -->
-                    <div class="flex items-center justify-between">
-                        <label class="flex items-center">
-                            <input type="checkbox" 
-                                   name="remember" 
-                                   {{ old('remember') ? 'checked' : '' }}
-                                   class="w-4 h-4 border-gray-300 rounded text-blue-600 focus:ring-blue-500">
-                            <span class="ml-2 text-sm text-gray-700">Remember me</span>
-                        </label>
-                        <a href="{{ route('password.request') }}" 
-                           class="text-sm text-blue-600 hover:text-blue-700 font-medium">
-                            Forgot password?
-                        </a>
-                    </div>
-
                     <!-- submit button -->
                     <button type="submit" 
                             class="w-full bg-blue-600 text-white py-3.5 rounded-lg font-semibold hover:bg-blue-700 transition-all flex items-center justify-center space-x-2 shadow-sm hover:shadow-md">
