@@ -196,6 +196,16 @@ class ProfileController extends Controller
             $q->where('status', 'open')->orWhere('status', 'completed');
         }])->findOrFail($id);
         
-        return view('institution.profile.public', compact('institution'));
+        // hitung statistik untuk profil publik
+        $stats = [
+            'total_problems' => $institution->problems()->count(),
+            'active_problems' => $institution->problems()->where('status', 'open')->count(),
+            'completed_problems' => $institution->problems()->where('status', 'completed')->count(),
+            'total_projects' => $institution->projects()->count(),
+            'active_projects' => $institution->projects()->where('status', 'active')->count(),
+            'completed_projects' => $institution->projects()->where('status', 'completed')->count(),
+        ];
+        
+        return view('institution.profile.public', compact('institution', 'stats'));
     }
 }
