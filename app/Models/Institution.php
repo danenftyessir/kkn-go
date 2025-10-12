@@ -117,7 +117,7 @@ class Institution extends Model
                 return $storageService->getPublicUrl($this->logo_path);
             }
             
-            // fallback ke local storage
+            // fallback ke local storage untuk backward compatibility
             return asset('storage/' . str_replace('public/', '', $this->logo_path));
         }
         
