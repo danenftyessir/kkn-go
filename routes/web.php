@@ -121,12 +121,12 @@ Route::middleware(['auth', 'check.user.type:student'])->prefix('student')->name(
     // dashboard
     Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
     
-    // browse problems dengan URL /student/browse-problems
+    // browse
     Route::prefix('browse-problems')->name('browse-problems.')->group(function () {
         Route::get('/', [BrowseProblemsController::class, 'index'])->name('index');
-        Route::get('/{id}', [BrowseProblemsController::class, 'show'])->name('detail');
+        Route::get('/{id}', [BrowseProblemsController::class, 'show'])->name('show'); 
     });
-    
+
     // browse problems alternatif dengan URL /student/problems (untuk backward compatibility)
     Route::prefix('problems')->name('problems.')->group(function () {
         Route::get('/', [BrowseProblemsController::class, 'index'])->name('index');

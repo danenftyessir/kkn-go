@@ -18,8 +18,6 @@ class BrowseProblemsController extends Controller
 {
     /**
      * tampilkan halaman browse problems
-     * ULTRA OPTIMIZED untuk performa maksimal
-     * FIX: PostgreSQL compatible queries
      */
     public function index(Request $request)
     {
@@ -80,34 +78,17 @@ class BrowseProblemsController extends Controller
         $problems->load([
             'institution:id,name,type,logo_path',
             'province:id,name',
-            'regency:id,name'
+            'regency:id,name',
+            'images' => function($query) {
+                $query->select('id', 'problem_id', 'image_path', 'is_cover', 'order', 'caption')
+                      ->orderBy('is_cover', 'desc')
+                      ->orderBy('order', 'asc');
+            }
         ]);
 
-        // load 1 cover image per problem (PostgreSQL compatible)
-        $problemIds = $problems->pluck('id')->toArray();
+        // accessor getCoverImageAttribute() dari Problem model akan otomatis bekerja
+        // saat kita akses $problem->coverImage di blade
         
-        if (!empty($problemIds)) {
-            // query yang compatible dengan PostgreSQL - tanpa GROUP BY
-            $coverImages = DB::table('problem_images')
-                ->select('id', 'problem_id', 'image_path', 'is_cover', 'order')
-                ->whereIn('problem_id', $problemIds)
-                ->where(function($q) {
-                    $q->where('is_cover', true)
-                      ->orWhere('order', 1);
-                })
-                ->orderBy('is_cover', 'desc')
-                ->orderBy('order', 'asc')
-                ->get()
-                ->unique('problem_id') // ambil yang pertama per problem_id
-                ->keyBy('problem_id');
-
-            // attach images to problems
-            $problems->getCollection()->transform(function($problem) use ($coverImages) {
-                $problem->cover_image = $coverImages->get($problem->id);
-                return $problem;
-            });
-        }
-
         // cek wishlist (hanya untuk user login)
         if (Auth::check() && Auth::user()->user_type === 'student') {
             $studentId = Auth::user()->student->id;
@@ -171,99 +152,29 @@ class BrowseProblemsController extends Controller
      */
     public function show($id)
     {
-        // query minimal
-        $problem = Problem::select([
-                'id',
-                'institution_id',
-                'province_id',
-                'regency_id',
-                'title',
-                'description',
-                'background',
-                'objectives',
-                'scope',
-                'status',
-                'application_deadline',
-                'start_date',
-                'end_date',
-                'required_students',
-                'required_skills',
-                'required_majors',
-                'difficulty_level',
-                'duration_months',
-                'expected_outcomes',
-                'deliverables',
-                'facilities_provided',
-                'sdg_categories',
-                'created_at'
+        // query minimal dengan eager loading
+        $problem = Problem::with([
+                'institution:id,name,type,email,phone,address,description,logo_path',
+                'province:id,name',
+                'regency:id,name',
+                'images' => function($query) {
+                    $query->select('id', 'problem_id', 'image_path', 'is_cover', 'order', 'caption')
+                          ->orderBy('is_cover', 'desc')
+                          ->orderBy('order', 'asc');
+                }
             ])
             ->findOrFail($id);
 
-        // load relasi setelah find (lebih efisien)
-        $problem->load([
-            'institution:id,name,type,address,phone,email,logo_path,description',
-            'province:id,name',
-            'regency:id,name',
-            'images'
-        ]);
-
-        // increment views (async, tidak block)
-        DB::table('problems')->where('id', $id)->increment('views_count');
-
-        // cek status
+        // cek apakah user sudah apply (jika login sebagai student)
         $hasApplied = false;
-        $isWishlisted = false;
-        
         if (Auth::check() && Auth::user()->user_type === 'student') {
-            $studentId = Auth::user()->student->id;
-            
+            $student = Auth::user()->student;
             $hasApplied = DB::table('applications')
-                ->where('student_id', $studentId)
-                ->where('problem_id', $id)
-                ->exists();
-            
-            $isWishlisted = DB::table('wishlists')
-                ->where('student_id', $studentId)
+                ->where('student_id', $student->id)
                 ->where('problem_id', $id)
                 ->exists();
         }
 
-        // similar problems - LIMIT KECIL (3 items)
-        $similarProblems = Problem::select(['id', 'institution_id', 'title', 'description', 'application_deadline'])
-            ->where('status', 'open')
-            ->where('id', '!=', $id)
-            ->where('application_deadline', '>=', now())
-            ->where('province_id', $problem->province_id)
-            ->limit(3)
-            ->get();
-
-        $similarProblems->load([
-            'institution:id,name,type,logo_path',
-            'images' => function($q) {
-                $q->where('is_cover', true)->orWhere('order', 1)->limit(1);
-            }
-        ]);
-
-        return view('student.browse-problems.detail', compact(
-            'problem',
-            'hasApplied',
-            'isWishlisted',
-            'similarProblems'
-        ));
-    }
-
-    /**
-     * get regencies by province (AJAX)
-     */
-    public function getRegencies($provinceId)
-    {
-        $regencies = Cache::remember('regencies_api_' . $provinceId, 3600, function() use ($provinceId) {
-            return Regency::select('id', 'name')
-                ->where('province_id', $provinceId)
-                ->orderBy('name')
-                ->get();
-        });
-        
-        return response()->json($regencies);
+        return view('student.browse-problems.detail', compact('problem', 'hasApplied'));
     }
 }
