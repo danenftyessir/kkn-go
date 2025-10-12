@@ -28,6 +28,135 @@
         </div>
     </section>
 
+    {{-- layer 5: how it works - timeline style --}}
+    <section class="py-24 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="max-w-7xl mx-auto">
+                {{-- header --}}
+                <div class="mb-16">
+                    <h2 class="text-4xl md:text-5xl font-bold text-blue-600 mb-4">
+                        How It Works
+                    </h2>
+                    <p class="text-xl text-gray-700 leading-relaxed max-w-3xl">
+                        Transformasi ekosistem KKN Indonesia melalui platform digital yang menghubungkan mahasiswa, instansi, dan masyarakat
+                    </p>
+                </div>
+
+                {{-- user type selector --}}
+                <div class="flex gap-4 mb-12 overflow-x-auto">
+                    <button class="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold whitespace-nowrap">
+                        Untuk Mahasiswa
+                    </button>
+                    <button class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition-colors whitespace-nowrap">
+                        Untuk Instansi
+                    </button>
+                    <button class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition-colors whitespace-nowrap">
+                        Untuk Masyarakat
+                    </button>
+                </div>
+
+                {{-- timeline --}}
+                <div class="relative">
+                    {{-- timeline line --}}
+                    <div class="absolute top-8 left-0 right-0 h-0.5 bg-blue-200 hidden md:block"></div>
+                    
+                    {{-- timeline steps --}}
+                    <div class="grid md:grid-cols-5 gap-8 relative">
+                        {{-- step 1 --}}
+                        <div class="text-center">
+                            <div class="relative mb-6">
+                                <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto relative z-10 shadow-lg">
+                                    <span class="text-white font-bold text-xl">1</span>
+                                </div>
+                            </div>
+                            <div class="bg-white p-6 rounded-lg border-2 border-gray-100 hover:border-blue-600 transition-colors h-full">
+                                <h3 class="font-bold text-gray-900 mb-3 text-lg">Registrasi</h3>
+                                <p class="text-sm text-gray-600 leading-relaxed">
+                                    Daftar sebagai mahasiswa dengan data universitas dan profil akademik
+                                </p>
+                            </div>
+                        </div>
+
+                        {{-- step 2 --}}
+                        <div class="text-center">
+                            <div class="relative mb-6">
+                                <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto relative z-10 shadow-lg">
+                                    <span class="text-white font-bold text-xl">2</span>
+                                </div>
+                            </div>
+                            <div class="bg-white p-6 rounded-lg border-2 border-gray-100 hover:border-blue-600 transition-colors h-full">
+                                <h3 class="font-bold text-gray-900 mb-3 text-lg">Browse Masalah</h3>
+                                <p class="text-sm text-gray-600 leading-relaxed">
+                                    Jelajahi marketplace masalah dari berbagai daerah sesuai minat dan kompetensi
+                                </p>
+                            </div>
+                        </div>
+
+                        {{-- step 3 --}}
+                        <div class="text-center">
+                            <div class="relative mb-6">
+                                <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto relative z-10 shadow-lg">
+                                    <span class="text-white font-bold text-xl">3</span>
+                                </div>
+                            </div>
+                            <div class="bg-white p-6 rounded-lg border-2 border-gray-100 hover:border-blue-600 transition-colors h-full">
+                                <h3 class="font-bold text-gray-900 mb-3 text-lg">Apply & Seleksi</h3>
+                                <p class="text-sm text-gray-600 leading-relaxed">
+                                    Ajukan proposal untuk masalah yang dipilih dan tunggu review dari instansi
+                                </p>
+                            </div>
+                        </div>
+
+                        {{-- step 4 --}}
+                        <div class="text-center">
+                            <div class="relative mb-6">
+                                <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto relative z-10 shadow-lg">
+                                    <span class="text-white font-bold text-xl">4</span>
+                                </div>
+                            </div>
+                            <div class="bg-white p-6 rounded-lg border-2 border-gray-100 hover:border-blue-600 transition-colors h-full">
+                                <h3 class="font-bold text-gray-900 mb-3 text-lg">Eksekusi Proyek</h3>
+                                <p class="text-sm text-gray-600 leading-relaxed">
+                                    Jalankan program KKN dengan monitoring progress dan dokumentasi berkala
+                                </p>
+                            </div>
+                        </div>
+
+                        {{-- step 5 --}}
+                        <div class="text-center">
+                            <div class="relative mb-6">
+                                <div class="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto relative z-10 shadow-lg">
+                                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="bg-white p-6 rounded-lg border-2 border-gray-100 hover:border-green-600 transition-colors h-full">
+                                <h3 class="font-bold text-gray-900 mb-3 text-lg">Portfolio Tervalidasi</h3>
+                                <p class="text-sm text-gray-600 leading-relaxed">
+                                    Dapatkan validasi resmi dan portofolio profesional untuk karir masa depan
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- cta bottom --}}
+                <div class="mt-16 text-center">
+                    <p class="text-lg text-gray-600 mb-6">
+                        Siap memulai perjalanan KKN yang bermakna?
+                    </p>
+                    <a href="{{ route('register.student') }}" class="inline-flex items-center px-8 py-4 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-colors shadow-lg">
+                        Daftar Sekarang
+                        <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
     {{-- layer 4: perkenalan kkn-go - light gray background --}}
     <section class="py-24 bg-gray-50">
         <div class="container mx-auto px-6">
