@@ -288,6 +288,11 @@
     </section>
 
 </div>
+{{-- ============================================ --}}
+{{-- HOW IT WORKS - GARIS DIPERBAIKI PRESISI    --}}
+{{-- TARUH DI PALING BAWAH SEBELUM @endsection --}}
+{{-- ============================================ --}}
+
 <section class="py-24 bg-gradient-to-br from-blue-50 to-white">
     <div class="container mx-auto px-6">
         <div class="max-w-7xl mx-auto">
@@ -328,17 +333,17 @@
             {{-- timeline container mahasiswa --}}
             <div id="contentMahasiswa" class="tab-content active">
                 <div class="relative overflow-x-auto pb-8" id="timelineMahasiswa">
-                    <div class="flex min-w-max relative" style="padding-top: 40px;">
+                    <div class="flex min-w-max relative pt-12">
                         
-                        {{-- garis horizontal - posisi & ketebalan diperbaiki --}}
-                        <div class="absolute left-0 right-0 bg-blue-600" style="top: 50px; height: 3px;"></div>
+                        {{-- garis horizontal - PRESISI DIPERBAIKI --}}
+                        <div class="absolute left-0 right-0 bg-blue-600" style="top: 35px; height: 2px;"></div>
                         
                         {{-- langkah 1 --}}
                         <div class="flex-shrink-0 px-4" style="width: 400px;">
                             <div class="flex flex-col items-start">
-                                <p class="text-sm text-gray-600 mb-3">Langkah 1</p>
+                                <p class="text-sm text-gray-600 mb-4">Langkah 1</p>
                                 <div class="relative flex items-center justify-start w-full mb-6">
-                                    <div class="w-4 h-4 bg-blue-600 rounded-full relative z-10"></div>
+                                    <div class="w-3 h-3 bg-blue-600 rounded-full relative z-10"></div>
                                 </div>
                                 <div class="flex items-center gap-3 mb-3">
                                     <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -346,7 +351,7 @@
                                     </svg>
                                     <h3 class="text-xl font-semibold text-gray-900">Daftar & Lengkapi Profil</h3>
                                 </div>
-                                <p class="text-sm text-gray-700">
+                                <p class="text-sm text-gray-700 leading-relaxed">
                                     Buat akun Anda sebagai mahasiswa dalam hitungan menit. Lengkapi profil Anda dengan keahlian, riwayat pendidikan, dan portofolio awal untuk menarik perhatian institusi.
                                 </p>
                             </div>
@@ -355,9 +360,9 @@
                         {{-- langkah 2 --}}
                         <div class="flex-shrink-0 px-4" style="width: 400px;">
                             <div class="flex flex-col items-start">
-                                <p class="text-sm text-gray-600 mb-3">Langkah 2</p>
+                                <p class="text-sm text-gray-600 mb-4">Langkah 2</p>
                                 <div class="relative flex items-center justify-start w-full mb-6">
-                                    <div class="w-4 h-4 bg-blue-600 rounded-full relative z-10"></div>
+                                    <div class="w-3 h-3 bg-blue-600 rounded-full relative z-10"></div>
                                 </div>
                                 <div class="flex items-center gap-3 mb-3">
                                     <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -365,7 +370,7 @@
                                     </svg>
                                     <h3 class="text-xl font-semibold text-gray-900">Jelajahi Masalah</h3>
                                 </div>
-                                <p class="text-sm text-gray-700">
+                                <p class="text-sm text-gray-700 leading-relaxed">
                                     Temukan ratusan masalah nyata dari berbagai institusi. Gunakan filter berdasarkan lokasi, kategori keilmuan, atau jenis institusi untuk menemukan tantangan yang paling relevan.
                                 </p>
                             </div>
@@ -374,9 +379,9 @@
                         {{-- langkah 3 --}}
                         <div class="flex-shrink-0 px-4" style="width: 400px;">
                             <div class="flex flex-col items-start">
-                                <p class="text-sm text-gray-600 mb-3">Langkah 3</p>
+                                <p class="text-sm text-gray-600 mb-4">Langkah 3</p>
                                 <div class="relative flex items-center justify-start w-full mb-6">
-                                    <div class="w-4 h-4 bg-blue-600 rounded-full relative z-10"></div>
+                                    <div class="w-3 h-3 bg-blue-600 rounded-full relative z-10"></div>
                                 </div>
                                 <div class="flex items-center gap-3 mb-3">
                                     <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -384,7 +389,7 @@
                                     </svg>
                                     <h3 class="text-xl font-semibold text-gray-900">Ajukan Proposal Solusi</h3>
                                 </div>
-                                <p class="text-sm text-gray-700">
+                                <p class="text-sm text-gray-700 leading-relaxed">
                                     Tulis dan kirimkan proposal solusi Anda yang paling inovatif. Jelaskan ide, metodologi, dan estimasi waktu pengerjaan proyek secara rinci.
                                 </p>
                             </div>
@@ -393,9 +398,9 @@
                         {{-- langkah 4 --}}
                         <div class="flex-shrink-0 px-4" style="width: 400px;">
                             <div class="flex flex-col items-start">
-                                <p class="text-sm text-gray-600 mb-3">Langkah 4</p>
+                                <p class="text-sm text-gray-600 mb-4">Langkah 4</p>
                                 <div class="relative flex items-center justify-start w-full mb-6">
-                                    <div class="w-4 h-4 bg-blue-600 rounded-full relative z-10"></div>
+                                    <div class="w-3 h-3 bg-blue-600 rounded-full relative z-10"></div>
                                 </div>
                                 <div class="flex items-center gap-3 mb-3">
                                     <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -403,7 +408,7 @@
                                     </svg>
                                     <h3 class="text-xl font-semibold text-gray-900">Tunggu Peninjauan</h3>
                                 </div>
-                                <p class="text-sm text-gray-700">
+                                <p class="text-sm text-gray-700 leading-relaxed">
                                     Institusi akan meninjau proposal Anda. Anda akan menerima notifikasi apakah proposal Anda diterima, ditolak, atau membutuhkan revisi.
                                 </p>
                             </div>
@@ -412,9 +417,9 @@
                         {{-- langkah 5 --}}
                         <div class="flex-shrink-0 px-4" style="width: 400px;">
                             <div class="flex flex-col items-start">
-                                <p class="text-sm text-gray-600 mb-3">Langkah 5</p>
+                                <p class="text-sm text-gray-600 mb-4">Langkah 5</p>
                                 <div class="relative flex items-center justify-start w-full mb-6">
-                                    <div class="w-4 h-4 bg-blue-600 rounded-full relative z-10"></div>
+                                    <div class="w-3 h-3 bg-blue-600 rounded-full relative z-10"></div>
                                 </div>
                                 <div class="flex items-center gap-3 mb-3">
                                     <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -423,7 +428,7 @@
                                     </svg>
                                     <h3 class="text-xl font-semibold text-gray-900">Kerjakan Proyek & Lapor</h3>
                                 </div>
-                                <p class="text-sm text-gray-700">
+                                <p class="text-sm text-gray-700 leading-relaxed">
                                     Setelah proposal disetujui, mulailah pengerjaan proyek. Laporkan kemajuan Anda secara berkala melalui dasbor proyek agar institusi dapat memantau perkembangan.
                                 </p>
                             </div>
@@ -432,9 +437,9 @@
                         {{-- langkah 6 --}}
                         <div class="flex-shrink-0 px-4" style="width: 400px;">
                             <div class="flex flex-col items-start">
-                                <p class="text-sm text-gray-600 mb-3">Langkah 6</p>
+                                <p class="text-sm text-gray-600 mb-4">Langkah 6</p>
                                 <div class="relative flex items-center justify-start w-full mb-6">
-                                    <div class="w-4 h-4 bg-blue-600 rounded-full relative z-10"></div>
+                                    <div class="w-3 h-3 bg-blue-600 rounded-full relative z-10"></div>
                                 </div>
                                 <div class="flex items-center gap-3 mb-3">
                                     <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -442,7 +447,7 @@
                                     </svg>
                                     <h3 class="text-xl font-semibold text-gray-900">Dapatkan Pengakuan</h3>
                                 </div>
-                                <p class="text-sm text-gray-700">
+                                <p class="text-sm text-gray-700 leading-relaxed">
                                     Selesaikan proyek dan dapatkan ulasan serta sertifikat digital. Proyek yang berhasil akan otomatis masuk ke portofolio online Anda, memperkuat reputasi profesional Anda.
                                 </p>
                             </div>
@@ -455,17 +460,17 @@
             {{-- timeline container institusi --}}
             <div id="contentInstitusi" class="tab-content">
                 <div class="relative overflow-x-auto pb-8" id="timelineInstitusi">
-                    <div class="flex min-w-max relative" style="padding-top: 40px;">
+                    <div class="flex min-w-max relative pt-12">
                         
-                        {{-- garis horizontal - posisi & ketebalan diperbaiki --}}
-                        <div class="absolute left-0 right-0 bg-blue-600" style="top: 50px; height: 3px;"></div>
+                        {{-- garis horizontal - PRESISI DIPERBAIKI --}}
+                        <div class="absolute left-0 right-0 bg-blue-600" style="top: 35px; height: 2px;"></div>
                         
                         {{-- langkah 1 --}}
                         <div class="flex-shrink-0 px-4" style="width: 400px;">
                             <div class="flex flex-col items-start">
-                                <p class="text-sm text-gray-600 mb-3">Langkah 1</p>
+                                <p class="text-sm text-gray-600 mb-4">Langkah 1</p>
                                 <div class="relative flex items-center justify-start w-full mb-6">
-                                    <div class="w-4 h-4 bg-blue-600 rounded-full relative z-10"></div>
+                                    <div class="w-3 h-3 bg-blue-600 rounded-full relative z-10"></div>
                                 </div>
                                 <div class="flex items-center gap-3 mb-3">
                                     <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -473,7 +478,7 @@
                                     </svg>
                                     <h3 class="text-xl font-semibold text-gray-900">Daftar & Verifikasi</h3>
                                 </div>
-                                <p class="text-sm text-gray-700">
+                                <p class="text-sm text-gray-700 leading-relaxed">
                                     Daftarkan institusi Anda (pemerintah desa, UKM, NGO, dll.) dan lengkapi profil. Tim kami akan melakukan verifikasi untuk memastikan kredibilitas platform.
                                 </p>
                             </div>
@@ -482,9 +487,9 @@
                         {{-- langkah 2 --}}
                         <div class="flex-shrink-0 px-4" style="width: 400px;">
                             <div class="flex flex-col items-start">
-                                <p class="text-sm text-gray-600 mb-3">Langkah 2</p>
+                                <p class="text-sm text-gray-600 mb-4">Langkah 2</p>
                                 <div class="relative flex items-center justify-start w-full mb-6">
-                                    <div class="w-4 h-4 bg-blue-600 rounded-full relative z-10"></div>
+                                    <div class="w-3 h-3 bg-blue-600 rounded-full relative z-10"></div>
                                 </div>
                                 <div class="flex items-center gap-3 mb-3">
                                     <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -492,7 +497,7 @@
                                     </svg>
                                     <h3 class="text-xl font-semibold text-gray-900">Publikasikan Masalah</h3>
                                 </div>
-                                <p class="text-sm text-gray-700">
+                                <p class="text-sm text-gray-700 leading-relaxed">
                                     Jabarkan masalah, tantangan, atau kebutuhan yang sedang dihadapi institusi Anda. Semakin detail Anda menjelaskannya, semakin relevan solusi yang akan Anda terima.
                                 </p>
                             </div>
@@ -501,9 +506,9 @@
                         {{-- langkah 3 --}}
                         <div class="flex-shrink-0 px-4" style="width: 400px;">
                             <div class="flex flex-col items-start">
-                                <p class="text-sm text-gray-600 mb-3">Langkah 3</p>
+                                <p class="text-sm text-gray-600 mb-4">Langkah 3</p>
                                 <div class="relative flex items-center justify-start w-full mb-6">
-                                    <div class="w-4 h-4 bg-blue-600 rounded-full relative z-10"></div>
+                                    <div class="w-3 h-3 bg-blue-600 rounded-full relative z-10"></div>
                                 </div>
                                 <div class="flex items-center gap-3 mb-3">
                                     <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -511,7 +516,7 @@
                                     </svg>
                                     <h3 class="text-xl font-semibold text-gray-900">Tinjau Proposal Masuk</h3>
                                 </div>
-                                <p class="text-sm text-gray-700">
+                                <p class="text-sm text-gray-700 leading-relaxed">
                                     Anda akan menerima beragam proposal solusi dari mahasiswa di seluruh Indonesia. Bandingkan setiap ide, kreativitas, dan kelayakan proposal yang diajukan.
                                 </p>
                             </div>
@@ -520,9 +525,9 @@
                         {{-- langkah 4 --}}
                         <div class="flex-shrink-0 px-4" style="width: 400px;">
                             <div class="flex flex-col items-start">
-                                <p class="text-sm text-gray-600 mb-3">Langkah 4</p>
+                                <p class="text-sm text-gray-600 mb-4">Langkah 4</p>
                                 <div class="relative flex items-center justify-start w-full mb-6">
-                                    <div class="w-4 h-4 bg-blue-600 rounded-full relative z-10"></div>
+                                    <div class="w-3 h-3 bg-blue-600 rounded-full relative z-10"></div>
                                 </div>
                                 <div class="flex items-center gap-3 mb-3">
                                     <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -530,7 +535,7 @@
                                     </svg>
                                     <h3 class="text-xl font-semibold text-gray-900">Pilih Mahasiswa Terbaik</h3>
                                 </div>
-                                <p class="text-sm text-gray-700">
+                                <p class="text-sm text-gray-700 leading-relaxed">
                                     Pilih mahasiswa atau tim dengan proposal terbaik. Anda dapat berkomunikasi langsung dengan mereka melalui platform untuk diskusi lebih lanjut sebelum membuat keputusan akhir.
                                 </p>
                             </div>
@@ -539,9 +544,9 @@
                         {{-- langkah 5 --}}
                         <div class="flex-shrink-0 px-4" style="width: 400px;">
                             <div class="flex flex-col items-start">
-                                <p class="text-sm text-gray-600 mb-3">Langkah 5</p>
+                                <p class="text-sm text-gray-600 mb-4">Langkah 5</p>
                                 <div class="relative flex items-center justify-start w-full mb-6">
-                                    <div class="w-4 h-4 bg-blue-600 rounded-full relative z-10"></div>
+                                    <div class="w-3 h-3 bg-blue-600 rounded-full relative z-10"></div>
                                 </div>
                                 <div class="flex items-center gap-3 mb-3">
                                     <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -549,7 +554,7 @@
                                     </svg>
                                     <h3 class="text-xl font-semibold text-gray-900">Bimbing & Pantau Proyek</h3>
                                 </div>
-                                <p class="text-sm text-gray-700">
+                                <p class="text-sm text-gray-700 leading-relaxed">
                                     Dampingi mahasiswa selama pengerjaan proyek. Pantau laporan kemajuan mereka melalui dasbor dan berikan masukan agar hasil akhir sesuai dengan ekspektasi.
                                 </p>
                             </div>
@@ -558,9 +563,9 @@
                         {{-- langkah 6 --}}
                         <div class="flex-shrink-0 px-4" style="width: 400px;">
                             <div class="flex flex-col items-start">
-                                <p class="text-sm text-gray-600 mb-3">Langkah 6</p>
+                                <p class="text-sm text-gray-600 mb-4">Langkah 6</p>
                                 <div class="relative flex items-center justify-start w-full mb-6">
-                                    <div class="w-4 h-4 bg-blue-600 rounded-full relative z-10"></div>
+                                    <div class="w-3 h-3 bg-blue-600 rounded-full relative z-10"></div>
                                 </div>
                                 <div class="flex items-center gap-3 mb-3">
                                     <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -568,7 +573,7 @@
                                     </svg>
                                     <h3 class="text-xl font-semibold text-gray-900">Beri Ulasan & Terima Hasil</h3>
                                 </div>
-                                <p class="text-sm text-gray-700">
+                                <p class="text-sm text-gray-700 leading-relaxed">
                                     Setelah proyek selesai, terima laporan akhir dan hasil kerja dari mahasiswa. Berikan ulasan yang membangun untuk membantu mereka di karir masa depan.
                                 </p>
                             </div>
