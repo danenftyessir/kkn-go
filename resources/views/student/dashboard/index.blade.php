@@ -367,18 +367,18 @@
                 </div>
                 @endif
                 
-                {{-- recommended problems --}}
                 @if($recommendedProblems->isNotEmpty())
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 fade-in-up content-card" style="animation-delay: {{ $profileCompletion['percentage'] < 100 ? '0.45s' : '0.35s' }};">
                     <h2 class="text-lg font-bold text-gray-900 mb-4">Rekomendasi Proyek</h2>
                     <div class="space-y-4">
                         @foreach($recommendedProblems->take(3) as $problem)
                         <div class="border border-gray-200 rounded-lg p-3 hover:border-blue-300 transition-colors duration-200">
-                            @if($problem->images->where('is_cover', true)->first())
+                            @if($problem->coverImage)
                                 <div class="w-full h-32 rounded-lg mb-3 overflow-hidden">
-                                    <img src="{{ $problem->images->where('is_cover', true)->first()->image_url }}" 
-                                         alt="{{ $problem->title }}"
-                                         class="w-full h-full object-cover">
+                                    <img src="{{ $problem->coverImage->image_url }}" 
+                                        alt="{{ $problem->title }}"
+                                        onerror="this.onerror=null; this.src='https://via.placeholder.com/400x150?text=No+Image';"
+                                        class="w-full h-full object-cover">
                                 </div>
                             @endif
                             <h3 class="font-semibold text-sm text-gray-900 mb-1 line-clamp-2">{{ $problem->title }}</h3>
@@ -392,7 +392,7 @@
                                     {{ $problem->regency->name ?? $problem->location_regency }}
                                 </span>
                                 <a href="{{ route('student.browse-problems.show', $problem->id) }}" 
-                                   class="text-xs text-blue-600 hover:text-blue-700 font-medium transition-colors">
+                                class="text-xs text-blue-600 hover:text-blue-700 font-medium transition-colors">
                                     Detail →
                                 </a>
                             </div>
@@ -400,7 +400,7 @@
                         @endforeach
                     </div>
                     <a href="{{ route('student.browse-problems.index') }}" 
-                       class="mt-4 block text-center text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors">
+                    class="mt-4 block text-center text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors">
                         Lihat Semua Proyek →
                     </a>
                 </div>

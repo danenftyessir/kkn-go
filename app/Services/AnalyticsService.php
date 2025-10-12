@@ -249,7 +249,7 @@ class AnalyticsService
             'accepted' => $accepted,
             'rejected' => $rejected,
             'pending_percentage' => $total > 0 ? round(($pending / $total) * 100, 1) : 0,
-            'under_review_percentage' => $total > 0 ? round(($underReview / $total) * 100, 1) : 0, // PERBAIKAN
+            'under_review_percentage' => $total > 0 ? round(($underReview / $total) * 100, 1) : 0, 
             'accepted_percentage' => $total > 0 ? round(($accepted / $total) * 100, 1) : 0,
             'rejected_percentage' => $total > 0 ? round(($rejected / $total) * 100, 1) : 0,
         ];

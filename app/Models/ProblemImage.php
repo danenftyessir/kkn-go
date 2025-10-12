@@ -13,6 +13,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * - Bucket: "kkn-go storage"
  * - Path: problems/FILENAME.jpg
  * - Akses: Public URL via supabase_url() helper
+ * 
+ * PERBAIKAN BUG:
+ * - tambahkan is_cover ke $fillable
+ * - pastikan accessor image_url selalu digunakan
  */
 class ProblemImage extends Model
 {
@@ -21,10 +25,12 @@ class ProblemImage extends Model
         'image_path',
         'caption',
         'order',
+        'is_cover', 
     ];
 
     protected $casts = [
         'order' => 'integer',
+        'is_cover' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
