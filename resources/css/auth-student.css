@@ -133,11 +133,47 @@
 }
 
 /* ============================================
+   CARD TRANSPARENCY - GLASS EFFECT
+   ============================================ */
+
+/* kotak putih form dengan glass morphism effect */
+.student-register .bg-white.rounded-2xl {
+    background: rgba(255, 255, 255, 0.75) !important;  /* 75% opacity - lebih transparan */
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.12),
+        0 2px 8px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+}
+
+/* step indicator header dengan glass effect */
+.student-register .bg-gradient-to-r {
+    background: rgba(239, 246, 255, 0.6) !important;  /* lebih transparan */
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+/* form content area */
+.student-register form > div {
+    background: transparent;
+}
+
+/* ============================================
    FORM ELEMENTS - KONSISTEN DENGAN STEP
    ============================================ */
 
+/* input dengan slight transparency untuk consistency */
+.student-register .form-input {
+    background: rgba(255, 255, 255, 0.9) !important;
+    backdrop-filter: blur(8px);
+    transition: all 0.3s ease;
+}
+
 /* input focus dengan warna theme */
 .student-register .form-input:focus {
+    background: rgba(255, 255, 255, 0.95) !important;
     border-color: #0ea5e9;
     box-shadow: 
         0 0 0 3px rgba(14, 165, 233, 0.1),
@@ -148,6 +184,13 @@
     color: #0ea5e9;
 }
 
+/* file upload area */
+.student-register .file-upload-area {
+    background: rgba(249, 250, 251, 0.8) !important;
+    backdrop-filter: blur(8px);
+    transition: all 0.3s ease;
+}
+
 /* ============================================
    BUTTONS - SMOOTH INTERACTIONS
    ============================================ */
@@ -155,20 +198,28 @@
 .student-register .btn-primary {
     background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
 }
 
 .student-register .btn-primary:hover:not(:disabled) {
     background: linear-gradient(135deg, #0284c7 0%, #0891b2 100%);
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(14, 165, 233, 0.3);
+    box-shadow: 0 6px 20px rgba(14, 165, 233, 0.4);
 }
 
 .student-register .btn-primary:active:not(:disabled) {
     transform: translateY(0);
 }
 
-/* button secondary */
+/* button secondary dengan glass effect */
+.student-register .btn-secondary {
+    background: rgba(255, 255, 255, 0.8) !important;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
 .student-register .btn-secondary:hover {
+    background: rgba(14, 165, 233, 0.1) !important;
     border-color: #0ea5e9;
     color: #0ea5e9;
 }
@@ -179,8 +230,8 @@
 
 .student-register .file-upload-area:hover {
     border-color: #0ea5e9;
-    background: rgba(14, 165, 233, 0.03);
-    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.08);
+    background: rgba(14, 165, 233, 0.08) !important;
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15);
 }
 
 .student-register .file-upload-area:hover .file-upload-icon {
@@ -199,6 +250,18 @@
 
 .student-register a.text-blue-600:hover {
     color: #0284c7;
+}
+
+/* ============================================
+   TEXT & TYPOGRAPHY ENHANCEMENT
+   ============================================ */
+
+/* enhance text readability on transparent background */
+.student-register h1,
+.student-register h2,
+.student-register .form-label,
+.student-register p {
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
 }
 
 /* ============================================
@@ -223,4 +286,9 @@
     .student-register .step-connector {
         margin: 0 0.5rem;
     }
-}   
+    
+    /* slightly less transparent on mobile for better readability */
+    .student-register .bg-white.rounded-2xl {
+        background: rgba(255, 255, 255, 0.85) !important;
+    }
+}
