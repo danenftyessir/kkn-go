@@ -15,7 +15,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
     
     <style>
-        /* perbaikan styling untuk visibility dengan background image */
+        /* background image dengan opacity yang lebih tinggi */
         .register-container.institution-register {
             position: relative;
             min-height: 100vh;
@@ -32,7 +32,7 @@
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            opacity: 0.12;
+            opacity: 0.35;
             z-index: 0;
             pointer-events: none;
         }
@@ -42,46 +42,167 @@
             z-index: 1;
         }
         
-        /* perbaikan untuk step indicator agar tetap visible */
+        /* MODERN STEP INDICATOR - Minimalist Glass Effect */
         .step-indicator {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 2rem 1.5rem;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 1.5rem 1.5rem;
             border-radius: 1rem 1rem 0 0;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
         }
         
-        /* perbaikan untuk register card */
-        .register-card {
-            background: rgba(255, 255, 255, 0.98) !important;
-            backdrop-filter: blur(20px);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important;
+        /* Modern Step Numbers */
+        .step-number-wrapper {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            border: 2px solid rgba(156, 163, 175, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
         }
         
-        /* perbaikan untuk buttons agar lebih visible */
-        .btn-primary {
-            background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%) !important;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4) !important;
-            position: relative;
-            z-index: 10;
+        .step.active .step-number-wrapper {
+            background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+            transform: scale(1.1);
         }
         
-        .btn-secondary {
-            background: white !important;
-            border: 2px solid #10b981 !important;
-            color: #10b981 !important;
-            position: relative;
-            z-index: 10;
+        .step.completed .step-number-wrapper {
+            background: #10b981;
+            border-color: transparent;
         }
         
-        /* perbaikan untuk step labels */
-        .step-label {
-            color: #374151 !important;
+        .step-number {
+            color: #6B7280;
             font-weight: 600;
+            font-size: 0.875rem;
+        }
+        
+        .step.active .step-number,
+        .step.completed .step-number {
+            color: white;
+        }
+        
+        /* Modern Step Labels */
+        .step-label {
+            color: #6B7280 !important;
+            font-weight: 500;
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
+            transition: all 0.3s ease;
         }
         
         .step.active .step-label {
             color: #10b981 !important;
+            font-weight: 600;
+        }
+        
+        /* Step Track Line */
+        .step-track {
+            position: absolute;
+            top: 1.25rem;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: rgba(156, 163, 175, 0.2);
+            z-index: 0;
+        }
+        
+        /* GLASS MORPHISM CARD */
+        .register-card {
+            background: rgba(255, 255, 255, 0.25) !important;
+            backdrop-filter: blur(30px) saturate(180%);
+            -webkit-backdrop-filter: blur(30px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
+        }
+        
+        /* Form content background */
+        .register-card .p-8 {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(10px);
+            border-radius: 0 0 1rem 1rem;
+        }
+        
+        /* MODERN BUTTONS */
+        .btn-primary {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+            border: none !important;
+            color: white !important;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem !important;
+            border-radius: 0.75rem !important;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3) !important;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4) !important;
+        }
+        
+        .btn-primary:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.3) !important;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(16, 185, 129, 0.5) !important;
+            color: #059669 !important;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem !important;
+            border-radius: 0.75rem !important;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            z-index: 10;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(16, 185, 129, 0.1) !important;
+            border-color: #10b981 !important;
+            color: #047857 !important;
+            transform: translateY(-2px);
+        }
+        
+        /* Form inputs dengan glass effect */
+        .form-input {
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(209, 213, 219, 0.5) !important;
+            transition: all 0.3s ease;
+        }
+        
+        .form-input:focus {
+            background: rgba(255, 255, 255, 0.9) !important;
+            border-color: #10b981 !important;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+        
+        /* Step content title */
+        .step-content h2 {
+            color: #1F2937;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .step-content p {
+            color: #4B5563;
         }
     </style>
 </head>
@@ -763,7 +884,6 @@
         }
     });
 
-    // CRITICAL FIX: Alpine.js component untuk handle dropdown dinamis provinsi-kabupaten
     function institutionForm(regenciesUrlTemplate) {
         return {
             provinceId: '{{ old("province_id") }}',
