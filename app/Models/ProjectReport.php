@@ -9,6 +9,10 @@ use Illuminate\Database\Eloquent\Model;
  * model untuk tabel project_reports
  * mengelola laporan progress proyek dari mahasiswa
  * 
+ * PERBAIKAN BUG:
+ * - tambahkan accessor untuk file_url yang support Supabase
+ * - tambahkan accessor document_url sebagai alias
+ * 
  * path: app/Models/ProjectReport.php
  */
 class ProjectReport extends Model
@@ -21,6 +25,7 @@ class ProjectReport extends Model
         'type',
         'title',
         'summary',
+        'content',
         'activities',
         'challenges',
         'next_plans',
@@ -54,6 +59,36 @@ class ProjectReport extends Model
     public function student()
     {
         return $this->belongsTo(Student::class);
+    }
+
+    /**
+     * PERBAIKAN: accessor untuk mendapatkan URL publik dokumen dari Supabase
+     * 
+     * usage di blade: {{ $report->file_url }}
+     * atau: {{ $report->document_url }}
+     * 
+     * @return string|null URL publik dokumen
+     */
+    public function getFileUrlAttribute(): ?string
+    {
+        if (!$this->document_path) {
+            return null;
+        }
+
+        // gunakan helper document_url untuk generate public URL dari Supabase
+        return document_url($this->document_path);
+    }
+
+    /**
+     * PERBAIKAN: alias untuk file_url
+     * 
+     * usage di blade: {{ $report->document_url }}
+     * 
+     * @return string|null URL publik dokumen
+     */
+    public function getDocumentUrlAttribute(): ?string
+    {
+        return $this->file_url;
     }
 
     /**
@@ -101,6 +136,7 @@ class ProjectReport extends Model
             'pending' => ['text' => 'Menunggu Review', 'color' => 'yellow'],
             'reviewed' => ['text' => 'Direview', 'color' => 'blue'],
             'approved' => ['text' => 'Disetujui', 'color' => 'green'],
+            'revision_required' => ['text' => 'Perlu Revisi', 'color' => 'red'],
             'revision_needed' => ['text' => 'Perlu Revisi', 'color' => 'red'],
             default => ['text' => 'Unknown', 'color' => 'gray'],
         };
@@ -124,6 +160,10 @@ class ProjectReport extends Model
      */
     public function getPeriodDurationAttribute()
     {
+        if (!$this->period_start || !$this->period_end) {
+            return 0;
+        }
+        
         return $this->period_start->diffInDays($this->period_end);
     }
 }
