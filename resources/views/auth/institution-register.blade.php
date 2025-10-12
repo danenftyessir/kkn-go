@@ -107,7 +107,7 @@
                     </div>
 
                     {{-- form content --}}
-                    <form method="POST" action="{{ route('institution.register') }}" 
+                    <form method="POST" action="{{ route('register.institution.submit') }}" 
                             enctype="multipart/form-data" 
                             id="institutionRegisterForm"
                             class="p-8"
@@ -180,20 +180,20 @@
 
                                 {{-- email instansi --}}
                                 <div class="form-field-group">
-                                    <label for="institution_email" class="form-label required">Email Resmi Instansi</label>
+                                    <label for="official_email" class="form-label required">Email Resmi Instansi</label>
                                     <div class="form-input-wrapper">
                                         <input type="email" 
-                                               id="institution_email" 
-                                               name="institution_email" 
-                                               value="{{ old('institution_email') }}"
+                                               id="official_email" 
+                                               name="official_email" 
+                                               value="{{ old('official_email') }}"
                                                placeholder="Contoh: info@desasukamaju.go.id"
-                                               class="form-input @error('institution_email') error @enderror"
+                                               class="form-input @error('official_email') error @enderror"
                                                required>
                                         <svg class="form-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                                         </svg>
                                     </div>
-                                    @error('institution_email')
+                                    @error('official_email')
                                         <p class="error-message">
                                             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
