@@ -1,59 +1,77 @@
 /* ============================================
-   STUDENT REGISTRATION - FULL STYLING
+   STUDENT REGISTER - THEME BIRU
+   resources/css/auth-student.css
    ============================================ */
 
-.student-register {
+/* background gradient yang lebih subtle */
+.student-register .register-container {
     min-height: 100vh;
-    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-    padding: 2rem 0;
-}
-
-/* ============================================
-   CONTAINER & LAYOUT
-   ============================================ */
-
-.student-register .container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 0 1rem;
-}
-
-.student-register .register-card {
-    background: #ffffff;
-    border-radius: 1rem;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f0f9ff 100%);
+    position: relative;
     overflow: hidden;
 }
 
+/* pattern background dengan opacity lebih rendah */
+.student-register .register-container::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: 
+        radial-gradient(circle at 25% 40%, rgba(56, 189, 248, 0.05) 0%, transparent 50%), 
+        radial-gradient(circle at 75% 70%, rgba(14, 165, 233, 0.05) 0%, transparent 50%);
+    animation: bgPulse 15s ease-in-out infinite;
+}
+
+@keyframes bgPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
 /* ============================================
-   STEP INDICATOR - MINIMAL & CLEAN
+   STEP INDICATOR - MINIMALIS & CLEAN
    ============================================ */
 
-.student-register .step-indicator {
-    margin-bottom: 3rem;
-    padding: 1.5rem 0;
-}
-
-.student-register .step-indicator-wrapper {
+/* step container dengan spacing yang lebih baik */
+.student-register .step-indicator-container {
     display: flex;
-    align-items: flex-start;
     justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
     position: relative;
+    padding: 0 1rem;
 }
 
+/* step item wrapper */
 .student-register .step-item {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 0.75rem;
     position: relative;
-    z-index: 10;
+    z-index: 2;
+    flex-shrink: 0;
+    opacity: 0;
+    animation: fadeInStep 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-/* ============================================
-   STEP CIRCLE - CLEAN & MODERN
-   ============================================ */
+.student-register .step-item:nth-child(1) { animation-delay: 0.1s; }
+.student-register .step-item:nth-child(3) { animation-delay: 0.2s; }
+.student-register .step-item:nth-child(5) { animation-delay: 0.3s; }
 
+@keyframes fadeInStep {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* step circle - design minimalis */
 .student-register .step-circle {
     width: 52px;
     height: 52px;
@@ -61,39 +79,63 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 600;
-    font-size: 1.125rem;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-weight: 700;
+    font-size: 1.25rem;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
-    background: #ffffff;
-    border: 2px solid #d1d5db;
+    background: white;
+    border: 3px solid #e5e7eb;
     color: #9ca3af;
 }
 
-/* step inactive - default state */
+/* state inactive - subtle */
 .student-register .step-circle.inactive {
-    border-color: #d1d5db;
+    background: white;
+    border-color: #e5e7eb;
     color: #9ca3af;
-    background: #ffffff;
 }
 
-/* step active - current step */
+/* state active - clean dengan gradient lembut */
 .student-register .step-circle.active {
-    border-color: #0ea5e9;
     background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
-    color: #ffffff;
-    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
-    transform: scale(1.05);
+    border-color: #0ea5e9;
+    color: white;
+    transform: scale(1.08);
+    box-shadow: 
+        0 4px 12px rgba(14, 165, 233, 0.25),
+        0 2px 4px rgba(14, 165, 233, 0.15);
 }
 
-/* step completed - previous steps */
+/* ring effect saat active - lebih subtle */
+.student-register .step-circle.active::before {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    background: rgba(14, 165, 233, 0.12);
+    animation: pulseRing 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulseRing {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.5;
+    }
+    50% {
+        transform: scale(1.15);
+        opacity: 0.2;
+    }
+}
+
+/* state completed - gradient berbeda */
 .student-register .step-circle.completed {
-    border-color: #0ea5e9;
-    background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
-    color: #ffffff;
+    background: linear-gradient(135deg, #06b6d4 0%, #14b8a6 100%);
+    border-color: #06b6d4;
+    color: white;
+    box-shadow: 0 2px 8px rgba(6, 182, 212, 0.2);
 }
 
-/* hide number pada completed step dan tampilkan checkmark */
+/* checkmark icon untuk completed */
 .student-register .step-circle.completed .step-number {
     display: none;
 }
@@ -131,7 +173,6 @@
 
 /* ============================================
    STEP CONNECTOR - LINE ANTAR STEP
-   PERBAIKAN: alignment dengan center circle
    ============================================ */
 
 .student-register .step-connector {
@@ -140,11 +181,7 @@
     background: #d1d5db;
     position: relative;
     margin: 0 1.5rem;
-    /* PERBAIKAN: gunakan transform untuk center alignment dengan circle */
-    /* circle height 52px, jadi center ada di 26px dari top */
-    /* tambahkan margin-top setengah dari height circle */
-    align-self: flex-start;
-    margin-top: 26px; /* 52px / 2 = 26px (center circle) */
+    margin-top: 26px;
     border-radius: 1px;
 }
 
@@ -171,64 +208,12 @@
    FORM ELEMENTS - KONSISTEN DENGAN STEP
    ============================================ */
 
-.student-register .form-field-group {
-    margin-bottom: 1.5rem;
-}
-
-.student-register .form-label {
-    display: block;
-    font-weight: 600;
-    color: #374151;
-    margin-bottom: 0.5rem;
-    font-size: 0.875rem;
-}
-
-.student-register .form-label.required::after {
-    content: ' *';
-    color: #ef4444;
-}
-
-.student-register .form-input-wrapper {
-    position: relative;
-}
-
-.student-register .form-input,
-.student-register .form-select,
-.student-register .form-textarea {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    border: 2px solid #e5e7eb;
-    border-radius: 0.5rem;
-    font-size: 1rem;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    background: #ffffff;
-}
-
-.student-register .form-input:focus,
-.student-register .form-select:focus,
-.student-register .form-textarea:focus {
-    outline: none;
+/* input focus dengan warna theme */
+.student-register .form-input:focus {
     border-color: #0ea5e9;
     box-shadow: 
         0 0 0 3px rgba(14, 165, 233, 0.1),
         0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.student-register .form-input.error,
-.student-register .form-select.error,
-.student-register .form-textarea.error {
-    border-color: #ef4444;
-}
-
-.student-register .form-input-icon {
-    position: absolute;
-    right: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 1.25rem;
-    height: 1.25rem;
-    color: #9ca3af;
-    transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .student-register .form-input:focus ~ .form-input-icon {
@@ -236,110 +221,12 @@
 }
 
 /* ============================================
-   ERROR MESSAGES
-   ============================================ */
-
-.student-register .error-message {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: #ef4444;
-    font-size: 0.875rem;
-    margin-top: 0.5rem;
-    padding: 0.5rem;
-    background: #fef2f2;
-    border-radius: 0.375rem;
-    border-left: 3px solid #ef4444;
-}
-
-.student-register .error-message svg {
-    flex-shrink: 0;
-}
-
-/* ============================================
-   FILE UPLOAD STYLING
-   ============================================ */
-
-.student-register .file-upload-wrapper {
-    position: relative;
-}
-
-.student-register .file-upload-label {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    padding: 2rem;
-    border: 2px dashed #d1d5db;
-    border-radius: 0.5rem;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    background: #f9fafb;
-}
-
-.student-register .file-upload-label:hover {
-    border-color: #0ea5e9;
-    background: #eff6ff;
-}
-
-.student-register .file-upload-input {
-    position: absolute;
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.student-register .file-upload-text {
-    text-align: center;
-}
-
-.student-register .file-upload-text p {
-    font-size: 0.875rem;
-    color: #6b7280;
-    margin: 0;
-}
-
-.student-register .file-upload-text .file-name {
-    font-weight: 600;
-    color: #0ea5e9;
-    margin-top: 0.5rem;
-}
-
-/* image preview */
-.student-register .image-preview {
-    margin-top: 1rem;
-    text-align: center;
-}
-
-.student-register .image-preview img {
-    max-width: 200px;
-    max-height: 200px;
-    border-radius: 0.5rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-/* ============================================
    BUTTONS - SMOOTH INTERACTIONS
    ============================================ */
 
-.student-register .btn-primary,
-.student-register .btn-secondary {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
-    font-weight: 600;
-    font-size: 1rem;
-    cursor: pointer;
-    border: none;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
 .student-register .btn-primary {
     background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
-    color: #ffffff;
-    box-shadow: 0 2px 8px rgba(14, 165, 233, 0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .student-register .btn-primary:hover:not(:disabled) {
@@ -352,199 +239,46 @@
     transform: translateY(0);
 }
 
-.student-register .btn-primary:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-.student-register .btn-secondary {
-    background: #f3f4f6;
-    color: #4b5563;
-}
-
+/* button secondary */
 .student-register .btn-secondary:hover {
-    background: #e5e7eb;
-    transform: translateY(-1px);
-}
-
-.student-register .btn-secondary:active {
-    transform: translateY(0);
-}
-
-/* ============================================
-   CHECKBOX & RADIO
-   ============================================ */
-
-.student-register .checkbox-wrapper {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-}
-
-.student-register .checkbox-input {
-    width: 1.25rem;
-    height: 1.25rem;
-    border: 2px solid #d1d5db;
-    border-radius: 0.25rem;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.student-register .checkbox-input:checked {
-    background-color: #0ea5e9;
     border-color: #0ea5e9;
-}
-
-.student-register .checkbox-label {
-    flex: 1;
-    font-size: 0.875rem;
-    color: #4b5563;
-    line-height: 1.5;
-}
-
-/* ============================================
-   LOADING OVERLAY
-   ============================================ */
-
-.student-register .loading-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.student-register .loading-overlay.active {
-    opacity: 1;
-    visibility: visible;
-}
-
-.student-register .loading-spinner {
-    width: 60px;
-    height: 60px;
-    border: 4px solid rgba(255, 255, 255, 0.3);
-    border-top-color: #0ea5e9;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-.student-register .loading-text {
-    color: #ffffff;
-    margin-top: 1.5rem;
-    font-size: 1.125rem;
-    font-weight: 500;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-/* ============================================
-   HEADER SECTION
-   ============================================ */
-
-.student-register .header-section {
-    text-align: center;
-    padding: 2rem 0 1rem;
-}
-
-.student-register .header-section h1 {
-    font-size: 2rem;
-    font-weight: 700;
-    color: #1f2937;
-    margin-bottom: 0.5rem;
-}
-
-.student-register .header-section p {
-    font-size: 1rem;
-    color: #6b7280;
-}
-
-.student-register .login-link {
-    text-align: center;
-    margin-top: 1rem;
-    padding: 1rem 0;
-}
-
-.student-register .login-link span {
-    color: #6b7280;
-    font-size: 0.875rem;
-}
-
-.student-register .login-link a {
     color: #0ea5e9;
-    font-weight: 600;
-    text-decoration: none;
-    transition: color 0.3s;
 }
 
-.student-register .login-link a:hover {
+/* ============================================
+   FILE UPLOAD - HOVER EFFECT
+   ============================================ */
+
+.student-register .file-upload-area:hover {
+    border-color: #0ea5e9;
+    background: rgba(14, 165, 233, 0.03);
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.08);
+}
+
+.student-register .file-upload-area:hover .file-upload-icon {
+    color: #0ea5e9;
+    transform: scale(1.05);
+}
+
+/* ============================================
+   LINKS & ACCENT COLORS
+   ============================================ */
+
+.student-register a.text-blue-600 {
+    color: #0ea5e9;
+    transition: color 0.2s ease;
+}
+
+.student-register a.text-blue-600:hover {
     color: #0284c7;
 }
 
 /* ============================================
-   STEP CONTENT SECTIONS
+   LOADING SPINNER
    ============================================ */
 
-.student-register .step-content {
-    padding: 2rem;
-}
-
-.student-register .step-content h2 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #1f2937;
-    margin-bottom: 0.5rem;
-}
-
-.student-register .step-content > p {
-    color: #6b7280;
-    margin-bottom: 2rem;
-}
-
-.student-register .space-y-6 > * + * {
-    margin-top: 1.5rem;
-}
-
-/* ============================================
-   GRID LAYOUTS
-   ============================================ */
-
-.student-register .grid {
-    display: grid;
-    gap: 1.5rem;
-}
-
-.student-register .grid-cols-2 {
-    grid-template-columns: repeat(2, 1fr);
-}
-
-/* ============================================
-   ANIMATIONS
-   ============================================ */
-
-.student-register .fade-in-up {
-    animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.student-register .spinner {
+    border-top-color: #0ea5e9;
 }
 
 /* ============================================
@@ -552,94 +286,40 @@
    ============================================ */
 
 @media (max-width: 768px) {
-    .student-register {
-        padding: 1rem 0;
+    .student-register .step-indicator-container {
+        max-width: 100%;
+        padding: 0 0.5rem;
     }
-
+    
     .student-register .step-circle {
         width: 44px;
         height: 44px;
-        font-size: 1rem;
+        font-size: 1.125rem;
+    }
+    
+    .student-register .step-label {
+        font-size: 0.8125rem;
     }
     
     .student-register .step-connector {
         margin: 0 1rem;
-        margin-top: 22px; /* 44px / 2 = 22px untuk mobile */
-    }
-    
-    .student-register .step-label {
-        font-size: 0.75rem;
-    }
-
-    .student-register .step-content {
-        padding: 1.5rem;
-    }
-
-    .student-register .grid-cols-2 {
-        grid-template-columns: 1fr;
-    }
-
-    .student-register .header-section h1 {
-        font-size: 1.5rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .student-register .step-connector {
-        margin: 0 0.5rem;
-    }
-
-    .student-register .step-label {
-        font-size: 0.7rem;
-    }
-
-    .student-register .btn-primary,
-    .student-register .btn-secondary {
-        width: 100%;
-        margin-top: 0.5rem;
-    }
-
-    .student-register .flex.justify-between {
-        flex-direction: column-reverse;
+        margin-top: 22px;
     }
 }
 
 /* ============================================
-   UTILITY CLASSES
+   ACCESSIBILITY - REDUCED MOTION
    ============================================ */
 
-.student-register .hidden {
-    display: none !important;
-}
-
-.student-register .text-center {
-    text-align: center;
-}
-
-.student-register .flex {
-    display: flex;
-}
-
-.student-register .justify-between {
-    justify-content: space-between;
-}
-
-.student-register .items-center {
-    align-items: center;
-}
-
-.student-register .gap-2 {
-    gap: 0.5rem;
-}
-
-.student-register .gap-4 {
-    gap: 1rem;
-}
-
-.student-register .mt-8 {
-    margin-top: 2rem;
-}
-
-.student-register .mb-8 {
-    margin-bottom: 2rem;
+@media (prefers-reduced-motion: reduce) {
+    .student-register .step-item,
+    .student-register .step-circle,
+    .student-register .step-connector::before {
+        animation: none !important;
+        transition-duration: 0.05s !important;
+    }
+    
+    .student-register .register-container::before {
+        animation: none;
+    }
 }
