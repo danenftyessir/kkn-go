@@ -22,6 +22,7 @@ use App\Http\Controllers\Institution\ProfileController as InstitutionProfileCont
 use App\Http\Controllers\Institution\ReviewController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\AboutController;
+use App\Http\Controllers\Auth\ValidationController;
 
 /*
 |--------------------------------------------------------------------------
