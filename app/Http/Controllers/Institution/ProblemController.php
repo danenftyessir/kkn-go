@@ -3,77 +3,56 @@
 namespace App\Http\Controllers\Institution;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Problem;
 use App\Models\Province;
 use App\Models\Regency;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log;
+use App\Services\SupabaseStorageService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 /**
- * controller untuk manajemen problems oleh institution
+ * controller untuk manage problems dari institusi
+ * 
+ * flow:
+ * 1. institusi create problem (draft/open)
+ * 2. problem bisa diedit/dihapus selama belum ada applications
+ * 3. gambar disimpan ke Supabase Storage
  */
 class ProblemController extends Controller
 {
+    protected $supabaseStorage;
+
+    public function __construct(SupabaseStorageService $supabaseStorage)
+    {
+        $this->supabaseStorage = $supabaseStorage;
+    }
+
     /**
-     * tampilkan daftar problems yang dibuat institution
+     * tampilkan daftar problems milik institusi
      */
     public function index(Request $request)
     {
-        $institution = auth()->user()->institution;
-        
-        $query = Problem::where('institution_id', $institution->id)
-                       ->with(['province', 'regency', 'images']);
-        
-        // filter by status
+        $query = Problem::where('institution_id', auth()->user()->institution->id)
+                       ->with(['province', 'regency', 'images'])
+                       ->withCount('applications');
+
+        // filter berdasarkan status jika ada
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
-        
-        // search
+
+        // search berdasarkan title
         if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
-            });
+            $query->where('title', 'like', '%' . $request->search . '%');
         }
-        
-        // sorting
-        $sort = $request->input('sort', 'latest');
-        switch ($sort) {
-            case 'oldest':
-                $query->oldest();
-                break;
-            case 'title':
-                $query->orderBy('title');
-                break;
-            case 'applications':
-                $query->orderBy('applications_count', 'desc');
-                break;
-            case 'views':
-                $query->orderBy('views_count', 'desc');
-                break;
-            default:
-                $query->latest();
-        }
-        
-        $problems = $query->paginate(12)->withQueryString();
-        
-        // statistik
-        $stats = [
-            'total' => Problem::where('institution_id', $institution->id)->count(),
-            'draft' => Problem::where('institution_id', $institution->id)->where('status', 'draft')->count(),
-            'open' => Problem::where('institution_id', $institution->id)->where('status', 'open')->count(),
-            'in_progress' => Problem::where('institution_id', $institution->id)->where('status', 'in_progress')->count(),
-            'completed' => Problem::where('institution_id', $institution->id)->where('status', 'completed')->count(),
-            'closed' => Problem::where('institution_id', $institution->id)->where('status', 'closed')->count(),
-        ];
-        
-        return view('institution.problems.index', compact('problems', 'stats'));
+
+        $problems = $query->orderBy('created_at', 'desc')->paginate(10);
+
+        return view('institution.problems.index', compact('problems'));
     }
-    
+
     /**
      * tampilkan form create problem
      */
@@ -82,70 +61,38 @@ class ProblemController extends Controller
         $provinces = Province::orderBy('name')->get();
         return view('institution.problems.create', compact('provinces'));
     }
-    
+
     /**
      * simpan problem baru
-     * FIX: handle array conversion untuk required_skills dan sdg_categories
      */
     public function store(Request $request)
     {
         try {
-            Log::info('Problem Store - Request Data', [
-                'all_data' => $request->except(['images']),
-                'has_images' => $request->hasFile('images')
-            ]);
-
-            // preprocessing: convert string ke array untuk required_skills jika perlu
+            // preprocessing untuk array fields yang datang dari form
             $requestData = $request->all();
             
-            // handle required_skills: jika string dengan koma, split jadi array
+            // handle required_skills: jika datang sebagai string, split menjadi array
             if (isset($requestData['required_skills'])) {
                 if (is_string($requestData['required_skills'])) {
                     $requestData['required_skills'] = array_filter(
                         array_map('trim', explode(',', $requestData['required_skills']))
                     );
-                } elseif (!is_array($requestData['required_skills'])) {
-                    $requestData['required_skills'] = [];
                 }
-                // remove empty values
-                $requestData['required_skills'] = array_values(array_filter($requestData['required_skills']));
             }
-
-            // handle required_majors: sama seperti required_skills
+            
+            // handle required_majors sama seperti required_skills
             if (isset($requestData['required_majors'])) {
-                if (is_string($requestData['required_majors']) && !empty($requestData['required_majors'])) {
+                if (is_string($requestData['required_majors'])) {
                     $requestData['required_majors'] = array_filter(
                         array_map('trim', explode(',', $requestData['required_majors']))
                     );
-                } elseif (!is_array($requestData['required_majors'])) {
-                    $requestData['required_majors'] = [];
                 }
-                $requestData['required_majors'] = array_values(array_filter($requestData['required_majors']));
             }
-
-            // handle deliverables: clean up array
-            if (isset($requestData['deliverables']) && is_array($requestData['deliverables'])) {
-                $requestData['deliverables'] = array_values(array_filter($requestData['deliverables']));
-            }
-
-            // handle facilities_provided: clean up array
-            if (isset($requestData['facilities_provided']) && is_array($requestData['facilities_provided'])) {
-                $requestData['facilities_provided'] = array_values(array_filter($requestData['facilities_provided']));
-            }
-
-            // handle sdg_categories: convert ke integer array
-            if (isset($requestData['sdg_categories']) && is_array($requestData['sdg_categories'])) {
-                $requestData['sdg_categories'] = array_values(array_map('intval', $requestData['sdg_categories']));
-            }
-
-            // replace request dengan data yang sudah diprocess
+            
+            // replace request data dengan data yang sudah diproses
             $request->merge($requestData);
 
-            Log::info('Problem Store - After Preprocessing', [
-                'required_skills' => $requestData['required_skills'] ?? null,
-                'required_majors' => $requestData['required_majors'] ?? null,
-                'sdg_categories' => $requestData['sdg_categories'] ?? null,
-            ]);
+            Log::info('Problem Store - Request Data', $requestData);
 
             $validated = $request->validate([
                 'title' => 'required|string|max:255',
@@ -185,16 +132,33 @@ class ProblemController extends Controller
 
             Log::info('Problem Store - Problem Created', ['problem_id' => $problem->id]);
             
-            // upload images jika ada
+            // upload images ke supabase jika ada
             if ($request->hasFile('images')) {
-                foreach ($request->file('images') as $index => $image) {
-                    $path = $image->store('problems', 'public');
-                    $problem->images()->create([
-                        'image_path' => $path,
-                        'order' => $index + 1,
-                        'is_cover' => $index === 0, // image pertama jadi cover
-                    ]);
-                    Log::info('Problem Store - Image Uploaded', ['path' => $path, 'order' => $index + 1]);
+                foreach ($request->file('images') as $index => $imageFile) {
+                    // upload ke supabase
+                    $path = $this->supabaseStorage->uploadProblemImage(
+                        $imageFile, 
+                        $problem->id,
+                        $index === 0  // image pertama jadi cover
+                    );
+                    
+                    if ($path) {
+                        $problem->images()->create([
+                            'image_path' => $path,
+                            'order' => $index + 1,
+                            'is_cover' => $index === 0,
+                        ]);
+                        Log::info('Problem Store - Image Uploaded to Supabase', [
+                            'path' => $path, 
+                            'order' => $index + 1,
+                            'is_cover' => $index === 0
+                        ]);
+                    } else {
+                        Log::error('Problem Store - Image Upload Failed', [
+                            'index' => $index,
+                            'filename' => $imageFile->getClientOriginalName()
+                        ]);
+                    }
                 }
             }
 
@@ -271,31 +235,19 @@ class ProblemController extends Controller
                         array_map('trim', explode(',', $requestData['required_skills']))
                     );
                 }
-                $requestData['required_skills'] = array_values(array_filter($requestData['required_skills']));
             }
-
+            
             if (isset($requestData['required_majors'])) {
-                if (is_string($requestData['required_majors']) && !empty($requestData['required_majors'])) {
+                if (is_string($requestData['required_majors'])) {
                     $requestData['required_majors'] = array_filter(
                         array_map('trim', explode(',', $requestData['required_majors']))
                     );
                 }
-                $requestData['required_majors'] = array_values(array_filter($requestData['required_majors']));
             }
-
-            if (isset($requestData['deliverables']) && is_array($requestData['deliverables'])) {
-                $requestData['deliverables'] = array_values(array_filter($requestData['deliverables']));
-            }
-
-            if (isset($requestData['facilities_provided']) && is_array($requestData['facilities_provided'])) {
-                $requestData['facilities_provided'] = array_values(array_filter($requestData['facilities_provided']));
-            }
-
-            if (isset($requestData['sdg_categories']) && is_array($requestData['sdg_categories'])) {
-                $requestData['sdg_categories'] = array_values(array_map('intval', $requestData['sdg_categories']));
-            }
-
+            
             $request->merge($requestData);
+
+            Log::info('Problem Update - Request Data', $requestData);
 
             $validated = $request->validate([
                 'title' => 'required|string|max:255',
@@ -327,27 +279,46 @@ class ProblemController extends Controller
 
             DB::beginTransaction();
             
-            // hapus gambar yang dipilih untuk dihapus
+            // hapus gambar yang dipilih untuk dihapus dari supabase
             if ($request->filled('delete_images')) {
                 foreach ($request->delete_images as $imageId) {
                     $image = $problem->images()->find($imageId);
                     if ($image) {
-                        Storage::disk('public')->delete($image->image_path);
+                        // hapus dari supabase
+                        $this->supabaseStorage->delete($image->image_path);
                         $image->delete();
+                        Log::info('Problem Update - Image Deleted', ['image_id' => $imageId, 'path' => $image->image_path]);
                     }
                 }
             }
             
-            // upload gambar baru
+            // upload gambar baru ke supabase
             if ($request->hasFile('images')) {
                 $currentImageCount = $problem->images()->count();
                 foreach ($request->file('images') as $index => $imageFile) {
-                    $path = $imageFile->store('problems', 'public');
-                    $problem->images()->create([
-                        'image_path' => $path,
-                        'order' => $currentImageCount + $index + 1,
-                        'is_cover' => $currentImageCount === 0 && $index === 0,
-                    ]);
+                    // upload ke supabase
+                    $path = $this->supabaseStorage->uploadProblemImage(
+                        $imageFile,
+                        $problem->id,
+                        $currentImageCount === 0 && $index === 0  // jadi cover jika belum ada gambar
+                    );
+                    
+                    if ($path) {
+                        $problem->images()->create([
+                            'image_path' => $path,
+                            'order' => $currentImageCount + $index + 1,
+                            'is_cover' => $currentImageCount === 0 && $index === 0,
+                        ]);
+                        Log::info('Problem Update - Image Uploaded to Supabase', [
+                            'path' => $path,
+                            'order' => $currentImageCount + $index + 1
+                        ]);
+                    } else {
+                        Log::error('Problem Update - Image Upload Failed', [
+                            'index' => $index,
+                            'filename' => $imageFile->getClientOriginalName()
+                        ]);
+                    }
                 }
             }
             
@@ -374,25 +345,40 @@ class ProblemController extends Controller
      */
     public function destroy($id)
     {
-        $problem = Problem::where('institution_id', auth()->user()->institution->id)
-                         ->findOrFail($id);
-        
-        // cek apakah ada aplikasi yang sudah diterima
-        if ($problem->applications()->where('status', 'accepted')->exists()) {
-            return back()->with('error', 'Tidak Dapat Menghapus Problem yang Sudah Memiliki Aplikasi Diterima!');
+        try {
+            $problem = Problem::where('institution_id', auth()->user()->institution->id)
+                             ->findOrFail($id);
+            
+            // cek apakah ada aplikasi yang sudah diterima
+            if ($problem->applications()->where('status', 'accepted')->exists()) {
+                return back()->with('error', 'Tidak Dapat Menghapus Problem yang Sudah Memiliki Aplikasi Diterima!');
+            }
+            
+            DB::beginTransaction();
+            
+            // hapus semua gambar dari supabase
+            foreach ($problem->images as $image) {
+                $this->supabaseStorage->delete($image->image_path);
+                $image->delete();
+                Log::info('Problem Delete - Image Deleted from Supabase', ['path' => $image->image_path]);
+            }
+            
+            $problem->delete();
+            
+            DB::commit();
+            
+            return redirect()
+                ->route('institution.problems.index')
+                ->with('success', 'Problem Berhasil Dihapus!');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Problem Delete - Exception', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
-        
-        // hapus semua gambar
-        foreach ($problem->images as $image) {
-            Storage::disk('public')->delete($image->image_path);
-            $image->delete();
-        }
-        
-        $problem->delete();
-        
-        return redirect()
-            ->route('institution.problems.index')
-            ->with('success', 'Problem Berhasil Dihapus!');
     }
 
     /**
