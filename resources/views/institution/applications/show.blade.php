@@ -110,26 +110,35 @@
         </div>
         @endif
 
-        {{-- proposal document --}}
-        @if($application->proposal_path)
-        <div class="bg-white rounded-xl shadow-sm p-6 mb-6 border border-gray-100">
-            <h2 class="text-xl font-bold text-gray-900 mb-4">Dokumen Proposal</h2>
-            <a href="{{ asset('storage/' . $application->proposal_path) }}" 
-               target="_blank"
-               class="flex items-center gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                    </svg>
-                </div>
-                <div>
-                    <p class="font-medium text-gray-900">Lihat Proposal</p>
-                    <p class="text-sm text-gray-500">Klik untuk membuka dokumen</p>
-                </div>
+    {{-- proposal document download --}}
+    @if($application->proposal_content)
+    <div class="bg-white rounded-xl shadow-sm p-6 mb-6 border border-gray-100">
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Proposal</h2>
+        <div class="flex items-center gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                </svg>
+            </div>
+            <div class="flex-1">
+                <p class="font-medium text-gray-900">{{ $application->proposal_filename ?? 'Proposal.pdf' }}</p>
+                <p class="text-sm text-gray-500">
+                    {{ $application->proposal_size_formatted ?? 'PDF Document' }} • 
+                    Diupload {{ $application->created_at->diffForHumans() }}
+                </p>
+            </div>
+            <a href="{{ route('student.applications.download-proposal', $application->id) }}" 
+            target="_blank"
+            download
+            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-semibold flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+                Download
             </a>
         </div>
-        @endif
-
+    </div>
+    @endif
         {{-- feedback dari instansi (jika ada) --}}
         @if($application->feedback)
         <div class="bg-white rounded-xl shadow-sm p-6 mb-6 border border-gray-100">
