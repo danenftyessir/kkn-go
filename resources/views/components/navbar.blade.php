@@ -36,10 +36,6 @@
                            class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('student.repository.*') ? 'text-blue-600' : '' }}">
                             Repository
                         </a>
-                        <a href="{{ route('about') }}" 
-                           class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('about') ? 'text-blue-600' : '' }}">
-                            About
-                        </a>
                     @elseif(Auth::user()->isInstitution())
                         {{-- menu untuk institution --}}
                         <a href="{{ route('institution.dashboard') }}" 
@@ -61,10 +57,6 @@
                         <a href="{{ route('institution.reviews.index') }}" 
                            class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('institution.reviews.*') ? 'text-blue-600' : '' }}">
                             Reviews
-                        </a>
-                        <a href="{{ route('about') }}" 
-                           class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('about') ? 'text-blue-600' : '' }}">
-                            About
                         </a>
                     @endif
                     
@@ -218,10 +210,6 @@
                        class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
                         Repository
                     </a>
-                    <a href="{{ route('about') }}" 
-                       class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
-                        About
-                    </a>
                     <a href="{{ route('student.profile.index') }}" 
                        class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
                         Profil & Portfolio
@@ -242,10 +230,6 @@
                     <a href="{{ route('institution.projects.index') }}" 
                        class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
                         Projects
-                    </a>
-                    <a href="{{ route('about') }}" 
-                       class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
-                        About
                     </a>
                     <a href="{{ route('institution.profile.index') }}" 
                        class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
