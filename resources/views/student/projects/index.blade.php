@@ -150,7 +150,7 @@
                             <p class="text-sm text-white opacity-90 mb-1">Total Proyek</p>
                             <p class="text-4xl md:text-5xl font-bold text-white text-shadow-projects">{{ $stats['total'] }}</p>
                         </div>
-                        <div class="w-14 h-14 md:w-16 md:h-16 bg-white bg-opacity-30 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-lg">
+                        <div class="w-14 h-14 md:w-16 md:h-16 bg-white/20 bg-opacity-30 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-lg">
                             <svg class="w-8 h-8 md:w-9 md:h-9 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
@@ -165,7 +165,7 @@
                             <p class="text-sm text-white opacity-90 mb-1">Proyek Aktif</p>
                             <p class="text-4xl md:text-5xl font-bold text-white text-shadow-projects">{{ $stats['active'] }}</p>
                         </div>
-                        <div class="w-14 h-14 md:w-16 md:h-16 bg-white bg-opacity-30 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-lg">
+                        <div class="w-14 h-14 md:w-16 md:h-16 bg-white/20 bg-opacity-30 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-lg">
                             <svg class="w-8 h-8 md:w-9 md:h-9 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                             </svg>
@@ -180,7 +180,7 @@
                             <p class="text-sm text-white opacity-90 mb-1">Proyek Selesai</p>
                             <p class="text-4xl md:text-5xl font-bold text-white text-shadow-projects">{{ $stats['completed'] }}</p>
                         </div>
-                        <div class="w-14 h-14 md:w-16 md:h-16 bg-white bg-opacity-30 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-lg">
+                        <div class="w-14 h-14 md:w-16 md:h-16 bg-white/20 bg-opacity-30 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-lg">
                             <svg class="w-8 h-8 md:w-9 md:h-9 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
@@ -195,7 +195,7 @@
                             <p class="text-sm text-white opacity-90 mb-1">Total Laporan</p>
                             <p class="text-4xl md:text-5xl font-bold text-white text-shadow-projects">{{ $stats['total_reports'] }}</p>
                         </div>
-                        <div class="w-14 h-14 md:w-16 md:h-16 bg-white bg-opacity-30 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-lg">
+                        <div class="w-14 h-14 md:w-16 md:h-16 bg-white/20 bg-opacity-30 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-lg">
                             <svg class="w-8 h-8 md:w-9 md:h-9 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
