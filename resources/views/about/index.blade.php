@@ -28,7 +28,7 @@
         </div>
     </section>
 
-    {{-- layer 4: perkenalan kkn-go - light gray background --}}
+    {{-- layer 4: perkenalan kkn-go --}}
     <section class="py-24 bg-gray-50">
         <div class="container mx-auto px-6">
             {{-- header dengan logo --}}
@@ -46,11 +46,6 @@
                     <p class="text-lg text-gray-700 leading-relaxed mb-6">
                         Namun, data menunjukkan bahwa <span class="font-bold text-red-600">76% hasil penelitian mahasiswa hanya berakhir sebagai dokumen arsip</span> tanpa implementasi nyata, menciptakan pemborosan sumber daya senilai <span class="font-bold text-red-600">±Rp 1,2 triliun per tahun</span>.
                     </p>
-                    <div class="inline-block bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-lg">
-                        <p class="text-xl font-bold">
-                            Kamilah Jawabannya! 🚀
-                        </p>
-                    </div>
                 </div>
             </div>
 
@@ -184,7 +179,7 @@
         </div>
     </section>
 
-    {{-- layer 3: impact section - white background with image and icon list --}}
+    {{-- layer 3: impact section --}}
     <section class="py-24 bg-white">
         <div class="container mx-auto px-6">
             <div class="grid md:grid-cols-2 gap-12 items-center">
@@ -287,7 +282,7 @@
         </div>
     </section>
 
-    {{-- layer SDGs - gray background dengan image di kanan --}}
+    {{-- layer SDGs --}}
     <section class="py-24 bg-gray-100">
         <div class="container mx-auto px-6">
             <div class="grid md:grid-cols-2 gap-12 items-center">
@@ -428,7 +423,7 @@
                         <div class="flex min-w-max relative pt-12">
                             
                             {{-- garis horizontal --}}
-                            <div class="absolute left-0 right-0 bg-blue-600" style="top: 60px; height: 2px;"></div>
+                            <div class="absolute left-0 right-0 bg-blue-600" style="top: 86px; height: 2px;"></div>
                             
                             {{-- langkah 1 --}}
                             <div class="flex-shrink-0 px-4" style="width: 400px;">
@@ -679,7 +674,7 @@
         </div>
     </section>
 
-    {{-- CTA Final - Minimalis --}}
+    {{-- CTA Final --}}
     <section class="py-20 bg-gradient-to-r from-blue-600 to-indigo-600">
         <div class="container mx-auto px-6">
             <div class="max-w-4xl mx-auto text-center">
