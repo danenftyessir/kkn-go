@@ -80,13 +80,13 @@ class RegisterController extends Controller
 
         // definisi tipe institusi
         $institutionTypes = [
-            'pemerintah_desa' => 'pemerintah desa',
-            'dinas' => 'dinas pemerintahan',
-            'ngo' => 'NGO / lembaga swadaya masyarakat',
-            'puskesmas' => 'puskesmas',
-            'sekolah' => 'sekolah',
-            'perguruan_tinggi' => 'perguruan tinggi',
-            'lainnya' => 'lainnya'
+            'pemerintah_desa' => 'Pemerintah Desa',
+            'dinas' => 'Dinas Pemerintahan',
+            'ngo' => 'NGO / Lembaga Swadaya Masyarakat',
+            'puskesmas' => 'Puskesmas',
+            'sekolah' => 'Sekolah',
+            'perguruan_tinggi' => 'Perguruan Tinggi',
+            'lainnya' => 'Lainnya'
         ];
         
         return view('auth.institution-register', compact('provinces', 'regencies', 'institutionTypes'));
@@ -140,14 +140,20 @@ class RegisterController extends Controller
             
             DB::commit();
             
-            // picu event bahwa user baru telah terdaftar
+            // picu event bahwa user baru telah terdaftar (untuk kirim email verifikasi)
             event(new Registered($user));
 
-            // auto login setelah registrasi
-            Auth::login($user);
+            // log successful registration
+            Log::info('Student registered successfully', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'username' => $user->username
+            ]);
 
-            // redirect ke halaman verifikasi email
-            return redirect()->route('verification.notice');
+            // PERBAIKAN: redirect ke login dengan notifikasi sukses
+            return redirect()
+                ->route('login')
+                ->with('success', 'Akun Berhasil Dibuat! Silakan cek email Anda untuk verifikasi, lalu login.');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -156,7 +162,7 @@ class RegisterController extends Controller
             
             return back()
                 ->withInput()
-                ->with('error', 'terjadi kesalahan saat registrasi. silakan coba lagi. Error: ' . $e->getMessage());
+                ->with('error', 'Terjadi kesalahan saat registrasi. Silakan coba lagi. Error: ' . $e->getMessage());
         }
     }
 
@@ -192,7 +198,7 @@ class RegisterController extends Controller
                                               ->store('institutions/verifications', 'public');
             }
             
-            // buat institution profile - PERBAIKAN: gunakan nama kolom yang sesuai dengan migration
+            // buat institution profile
             $institution = Institution::create([
                 'user_id' => $user->id,
                 'name' => $request->institution_name,
@@ -208,19 +214,27 @@ class RegisterController extends Controller
                 'verification_document_path' => $verificationDocPath,
                 'website' => $request->website,
                 'description' => $request->description,
-                'is_verified' => false,
+                'is_verified' => false, // akan diverifikasi oleh admin
             ]);
             
             DB::commit();
             
-            // picu event bahwa user baru telah terdaftar
+            // picu event bahwa user baru telah terdaftar (untuk kirim email verifikasi)
             event(new Registered($user));
 
-            // auto login setelah registrasi
-            Auth::login($user);
+            // log successful registration
+            Log::info('Institution registered successfully', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'username' => $user->username,
+                'institution_name' => $request->institution_name
+            ]);
 
-            // redirect ke halaman verifikasi email
-            return redirect()->route('verification.notice');
+            // PERBAIKAN: redirect ke login dengan notifikasi sukses
+            // jangan auto login karena perlu verifikasi email dulu
+            return redirect()
+                ->route('login')
+                ->with('success', 'Akun Berhasil Dibuat! Silakan cek email Anda untuk verifikasi, lalu login. Dokumen verifikasi Anda akan ditinjau oleh admin.');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -229,7 +243,7 @@ class RegisterController extends Controller
             
             return back()
                 ->withInput()
-                ->with('error', 'terjadi kesalahan saat registrasi. silakan coba lagi. Error: ' . $e->getMessage());
+                ->with('error', 'Terjadi kesalahan saat registrasi. Silakan coba lagi. Error: ' . $e->getMessage());
         }
     }
 }

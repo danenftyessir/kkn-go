@@ -15,10 +15,15 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
     
     <style>
-        /* tambahan style untuk background image */
+        /* perbaikan styling untuk visibility dengan background image */
+        .register-container.institution-register {
+            position: relative;
+            min-height: 100vh;
+        }
+        
         .register-container.institution-register::before {
             content: '';
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
             right: 0;
@@ -27,13 +32,56 @@
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            opacity: 0.15;
+            opacity: 0.12;
             z-index: 0;
+            pointer-events: none;
         }
         
         .register-container.institution-register > * {
             position: relative;
             z-index: 1;
+        }
+        
+        /* perbaikan untuk step indicator agar tetap visible */
+        .step-indicator {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 2rem 1.5rem;
+            border-radius: 1rem 1rem 0 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* perbaikan untuk register card */
+        .register-card {
+            background: rgba(255, 255, 255, 0.98) !important;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important;
+        }
+        
+        /* perbaikan untuk buttons agar lebih visible */
+        .btn-primary {
+            background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%) !important;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4) !important;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .btn-secondary {
+            background: white !important;
+            border: 2px solid #10b981 !important;
+            color: #10b981 !important;
+            position: relative;
+            z-index: 10;
+        }
+        
+        /* perbaikan untuk step labels */
+        .step-label {
+            color: #374151 !important;
+            font-weight: 600;
+        }
+        
+        .step.active .step-label {
+            color: #10b981 !important;
         }
     </style>
 </head>
@@ -273,7 +321,6 @@
                                     <div class="form-field-group">
                                         <label for="province_id" class="form-label required">Provinsi</label>
                                         <div class="form-input-wrapper">
-                                            {{-- CRITICAL FIX: tambahkan x-model dan @change untuk trigger loadRegencies --}}
                                             <select id="province_id" 
                                                     name="province_id" 
                                                     class="form-input form-select @error('province_id') error @enderror"
@@ -303,7 +350,6 @@
                                     <div class="form-field-group">
                                         <label for="regency_id" class="form-label required">Kabupaten/Kota</label>
                                         <div class="form-input-wrapper">
-                                            {{-- CRITICAL FIX: gunakan Alpine.js template untuk render options secara dinamis --}}
                                             <select id="regency_id" 
                                                     name="regency_id" 
                                                     class="form-input form-select @error('regency_id') error @enderror"
@@ -316,7 +362,10 @@
                                                 <template x-if="!loadingRegencies && !provinceId">
                                                     <option value="">-- Pilih Provinsi Terlebih Dahulu --</option>
                                                 </template>
-                                                <template x-if="!loadingRegencies && provinceId">
+                                                <template x-if="!loadingRegencies && provinceId && regencies.length === 0">
+                                                    <option value="">Tidak Ada Data Kabupaten/Kota</option>
+                                                </template>
+                                                <template x-if="!loadingRegencies && provinceId && regencies.length > 0">
                                                     <option value="">-- Pilih Kabupaten/Kota --</option>
                                                 </template>
                                                 <template x-for="regency in regencies" :key="regency.id">
@@ -336,6 +385,13 @@
                                                 {{ $message }}
                                             </p>
                                         @enderror
+                                        {{-- pesan jika data kabupaten tidak ada --}}
+                                        <p class="text-sm text-amber-600 mt-2" x-show="!loadingRegencies && provinceId && regencies.length === 0" style="display: none;">
+                                            <svg class="w-4 h-4 inline" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            Data kabupaten/kota belum tersedia untuk provinsi ini. Silakan hubungi admin.
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -753,10 +809,15 @@
                     }
                     
                     const data = await response.json();
-                    this.regencies = data;
+                    this.regencies = data || [];
+                    
+                    // log untuk debugging
+                    if (this.regencies.length === 0) {
+                        console.warn('Tidak ada data kabupaten/kota untuk provinsi ID:', this.provinceId);
+                    }
                 } catch (error) {
                     console.error('Error:', error);
-                    alert('Gagal memuat data kabupaten/kota. Silakan coba lagi.');
+                    alert('Gagal memuat data kabupaten/kota. Silakan coba lagi atau hubungi admin jika masalah berlanjut.');
                     this.regencies = [];
                 } finally {
                     this.loadingRegencies = false;
