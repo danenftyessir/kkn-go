@@ -1,47 +1,28 @@
+{{-- resources/views/institution/problems/show.blade.php --}}
 @extends('layouts.app')
 
+@section('title', $problem->title)
+
 @section('content')
-<div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 py-8">
+<div class="min-h-screen bg-gray-50 py-8">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {{-- header dengan tombol kembali --}}
-        <div class="mb-6">
-            <a href="{{ route('institution.problems.index') }}" 
-               class="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                </svg>
-                <span class="font-medium">Kembali ke Daftar Problems</span>
-            </a>
-        </div>
+        {{-- back button --}}
+        <a href="{{ route('institution.problems.index') }}" class="text-blue-600 hover:text-blue-700 flex items-center gap-2 mb-6">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Kembali Ke Daftar Masalah
+        </a>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
             {{-- main content --}}
             <div class="lg:col-span-2 space-y-6">
                 
-                {{-- header problem --}}
+                {{-- header --}}
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                     <div class="flex justify-between items-start mb-4">
                         <div class="flex-1">
-                            <div class="flex items-center gap-3 mb-3">
-                                <span class="px-3 py-1 bg-{{ $problem->status === 'published' ? 'green' : ($problem->status === 'draft' ? 'gray' : 'blue') }}-100 text-{{ $problem->status === 'published' ? 'green' : ($problem->status === 'draft' ? 'gray' : 'blue') }}-700 text-sm font-semibold rounded-full">
-                                    {{ ucfirst($problem->status) }}
-                                </span>
-                                @if($problem->is_urgent)
-                                <span class="px-3 py-1 bg-red-100 text-red-700 text-sm font-semibold rounded-full flex items-center gap-1">
-                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                    </svg>
-                                    Urgent
-                                </span>
-                                @endif
-                                @if($problem->is_featured)
-                                <span class="px-3 py-1 bg-yellow-100 text-yellow-700 text-sm font-semibold rounded-full">
-                                    Featured
-                                </span>
-                                @endif
-                            </div>
                             <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ $problem->title }}</h1>
                             <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600">
                                 <div class="flex items-center gap-1">
@@ -55,13 +36,13 @@
                                         <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
                                         <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>
                                     </svg>
-                                    <span>{{ $problem->views_count }} views</span>
+                                    <span>{{ $problem->views_count }} Views</span>
                                 </div>
                                 <div class="flex items-center gap-1">
                                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                         <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
                                     </svg>
-                                    <span>{{ $problem->applications_count }} aplikasi</span>
+                                    <span>{{ $problem->applications_count }} Aplikasi</span>
                                 </div>
                             </div>
                         </div>
@@ -72,7 +53,7 @@
                             </a>
                             <form action="{{ route('institution.problems.destroy', $problem) }}" 
                                   method="POST" 
-                                  onsubmit="return confirm('Apakah Anda yakin ingin menghapus masalah ini?')">
+                                  onsubmit="return confirm('Apakah Anda Yakin Ingin Menghapus Masalah Ini?')">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" 
@@ -91,7 +72,7 @@
                     <div class="flex flex-wrap gap-2">
                         @foreach($sdgCategories as $sdg)
                             <span class="px-3 py-1 bg-gradient-to-r from-blue-500 to-green-500 text-white text-sm font-semibold rounded-full">
-                                {{ $sdg }}
+                                SDG {{ $sdg }}
                             </span>
                         @endforeach
                     </div>
@@ -111,7 +92,8 @@
                     <div class="mb-4 rounded-lg overflow-hidden">
                         <img id="mainImage" 
                              src="{{ $coverImage->image_url }}" 
-                             alt="{{ $coverImage->caption }}"
+                             alt="{{ $coverImage->caption ?? 'Gambar Problem' }}"
+                             onerror="this.onerror=null; this.src='https://via.placeholder.com/800x400?text=Gambar+Tidak+Tersedia'; this.classList.add('opacity-50');"
                              class="w-full h-96 object-cover">
                     </div>
                     @endif
@@ -121,10 +103,11 @@
                     <div class="grid grid-cols-4 gap-4">
                         @foreach($problem->images as $image)
                         <button type="button" 
-                                onclick="document.getElementById('mainImage').src='{{ $image->image_url }}'"
+                                onclick="document.getElementById('mainImage').src='{{ $image->image_url }}'; document.getElementById('mainImage').onerror = function() { this.src='https://via.placeholder.com/800x400?text=Gambar+Tidak+Tersedia'; this.classList.add('opacity-50'); };"
                                 class="aspect-square rounded-lg overflow-hidden border-2 transition-all {{ $loop->first ? 'border-blue-500 ring-2 ring-blue-200' : 'border-transparent hover:border-blue-300' }}">
                             <img src="{{ $image->image_url }}" 
-                                 alt="{{ $image->caption }}"
+                                 alt="{{ $image->caption ?? 'Thumbnail' }}"
+                                 onerror="this.onerror=null; this.src='https://via.placeholder.com/200?text=No+Image'; this.classList.add('opacity-50');"
                                  class="w-full h-full object-cover"
                                  loading="lazy">
                         </button>
@@ -137,7 +120,7 @@
                 {{-- description section --}}
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                     <h2 class="text-xl font-bold text-gray-900 mb-4">Deskripsi Masalah</h2>
-                    <div class="prose prose-sm max-w-none text-gray-600">
+                    <div class="prose prose-sm max-w-none text-gray-700">
                         {!! nl2br(e($problem->description)) !!}
                     </div>
                 </div>
@@ -146,7 +129,7 @@
                 @if($problem->background)
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                     <h2 class="text-xl font-bold text-gray-900 mb-4">Latar Belakang</h2>
-                    <div class="prose prose-sm max-w-none text-gray-600">
+                    <div class="prose prose-sm max-w-none text-gray-700">
                         {!! nl2br(e($problem->background)) !!}
                     </div>
                 </div>
@@ -156,7 +139,7 @@
                 @if($problem->objectives)
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                     <h2 class="text-xl font-bold text-gray-900 mb-4">Tujuan</h2>
-                    <div class="prose prose-sm max-w-none text-gray-600">
+                    <div class="prose prose-sm max-w-none text-gray-700">
                         {!! nl2br(e($problem->objectives)) !!}
                     </div>
                 </div>
@@ -166,7 +149,7 @@
                 @if($problem->scope)
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                     <h2 class="text-xl font-bold text-gray-900 mb-4">Ruang Lingkup</h2>
-                    <div class="prose prose-sm max-w-none text-gray-600">
+                    <div class="prose prose-sm max-w-none text-gray-700">
                         {!! nl2br(e($problem->scope)) !!}
                     </div>
                 </div>
@@ -175,8 +158,8 @@
                 {{-- expected outcomes --}}
                 @if($problem->expected_outcomes)
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                    <h2 class="text-xl font-bold text-gray-900 mb-4">Output yang Diharapkan</h2>
-                    <div class="prose prose-sm max-w-none text-gray-600">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">Output Yang Diharapkan</h2>
+                    <div class="prose prose-sm max-w-none text-gray-700">
                         {!! nl2br(e($problem->expected_outcomes)) !!}
                     </div>
                 </div>
@@ -184,20 +167,14 @@
 
                 {{-- deliverables --}}
                 @php
-                    // pastikan deliverables adalah array sebelum digunakan
                     $deliverables = is_array($problem->deliverables) ? $problem->deliverables : json_decode($problem->deliverables, true) ?? [];
                 @endphp
                 @if(count($deliverables) > 0)
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                     <h2 class="text-xl font-bold text-gray-900 mb-4">Deliverables</h2>
-                    <ul class="space-y-2">
+                    <ul class="list-disc list-inside space-y-2 text-gray-700">
                         @foreach($deliverables as $deliverable)
-                            <li class="flex items-start gap-2">
-                                <svg class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                </svg>
-                                <span class="text-gray-700">{{ $deliverable }}</span>
-                            </li>
+                            <li>{{ $deliverable }}</li>
                         @endforeach
                     </ul>
                 </div>
@@ -205,20 +182,14 @@
 
                 {{-- facilities provided --}}
                 @php
-                    // pastikan facilities_provided adalah array sebelum digunakan
-                    $facilitiesProvided = is_array($problem->facilities_provided) ? $problem->facilities_provided : json_decode($problem->facilities_provided, true) ?? [];
+                    $facilities = is_array($problem->facilities_provided) ? $problem->facilities_provided : json_decode($problem->facilities_provided, true) ?? [];
                 @endphp
-                @if(count($facilitiesProvided) > 0)
+                @if(count($facilities) > 0)
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                    <h2 class="text-xl font-bold text-gray-900 mb-4">Fasilitas yang Disediakan</h2>
-                    <ul class="space-y-2">
-                        @foreach($facilitiesProvided as $facility)
-                            <li class="flex items-start gap-2">
-                                <svg class="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                </svg>
-                                <span class="text-gray-700">{{ $facility }}</span>
-                            </li>
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">Fasilitas Yang Disediakan</h2>
+                    <ul class="list-disc list-inside space-y-2 text-gray-700">
+                        @foreach($facilities as $facility)
+                            <li>{{ $facility }}</li>
                         @endforeach
                     </ul>
                 </div>
@@ -227,31 +198,55 @@
             </div>
 
             {{-- sidebar --}}
-            <div class="space-y-6">
+            <div class="lg:col-span-1 space-y-6">
                 
-                {{-- quick stats --}}
+                {{-- status & info card --}}
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                    <h3 class="text-lg font-bold text-gray-900 mb-4">Statistik</h3>
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Status & Informasi</h3>
+                    
                     <div class="space-y-4">
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-600">Total Aplikasi</span>
-                            <span class="text-xl font-bold text-gray-900">{{ $problem->applications_count }}</span>
+                        <div>
+                            <p class="text-sm text-gray-600 mb-1">Status</p>
+                            @if($problem->status == 'draft')
+                                <span class="inline-flex px-3 py-1 bg-gray-100 text-gray-700 text-sm font-semibold rounded-full">Draft</span>
+                            @elseif($problem->status == 'open')
+                                <span class="inline-flex px-3 py-1 bg-green-100 text-green-700 text-sm font-semibold rounded-full">Terbuka</span>
+                            @elseif($problem->status == 'in_progress')
+                                <span class="inline-flex px-3 py-1 bg-blue-100 text-blue-700 text-sm font-semibold rounded-full">Berjalan</span>
+                            @elseif($problem->status == 'completed')
+                                <span class="inline-flex px-3 py-1 bg-purple-100 text-purple-700 text-sm font-semibold rounded-full">Selesai</span>
+                            @else
+                                <span class="inline-flex px-3 py-1 bg-red-100 text-red-700 text-sm font-semibold rounded-full">Ditutup</span>
+                            @endif
                         </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-600">Diterima</span>
-                            <span class="text-xl font-bold text-green-600">{{ $problem->accepted_students }}</span>
+
+                        <div>
+                            <p class="text-sm text-gray-600 mb-1">Tingkat Kesulitan</p>
+                            <span class="inline-flex px-3 py-1 text-sm font-semibold rounded-full
+                                {{ $problem->difficulty_level == 'beginner' ? 'bg-green-100 text-green-700' : '' }}
+                                {{ $problem->difficulty_level == 'intermediate' ? 'bg-yellow-100 text-yellow-700' : '' }}
+                                {{ $problem->difficulty_level == 'advanced' ? 'bg-red-100 text-red-700' : '' }}">
+                                {{ ucfirst($problem->difficulty_level) }}
+                            </span>
                         </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-600">Slot Tersisa</span>
-                            <span class="text-xl font-bold text-blue-600">{{ max(0, $problem->required_students - $problem->accepted_students) }}</span>
+
+                        <div>
+                            <p class="text-sm text-gray-600 mb-1">Mahasiswa Dibutuhkan</p>
+                            <p class="font-semibold text-gray-900">{{ $problem->required_students }} Orang</p>
+                        </div>
+
+                        <div>
+                            <p class="text-sm text-gray-600 mb-1">Aplikasi Diterima</p>
+                            <p class="font-semibold text-gray-900">{{ $problem->accepted_students }}/{{ $problem->required_students }}</p>
                         </div>
                     </div>
                 </div>
 
-                {{-- timeline --}}
+                {{-- timeline card --}}
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                     <h3 class="text-lg font-bold text-gray-900 mb-4">Timeline</h3>
-                    <div class="space-y-3 text-sm">
+                    
+                    <div class="space-y-4 text-sm">
                         <div>
                             <p class="text-gray-600 mb-1">Deadline Aplikasi</p>
                             <p class="font-semibold text-gray-900">{{ $problem->application_deadline->format('d M Y') }}</p>
@@ -266,95 +261,70 @@
                         </div>
                         <div>
                             <p class="text-gray-600 mb-1">Durasi</p>
-                            <p class="font-semibold text-gray-900">{{ $problem->duration_months }} bulan</p>
+                            <p class="font-semibold text-gray-900">{{ $problem->duration_months }} Bulan</p>
                         </div>
                     </div>
                 </div>
 
-                {{-- requirements --}}
+                {{-- requirements card --}}
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                     <h3 class="text-lg font-bold text-gray-900 mb-4">Requirements</h3>
-                    <div class="space-y-3 text-sm">
-                        <div>
-                            <p class="text-gray-600 mb-1">Mahasiswa Dibutuhkan</p>
-                            <p class="font-semibold text-gray-900">{{ $problem->required_students }} orang</p>
+                    
+                    @php
+                        $requiredSkills = is_array($problem->required_skills) ? $problem->required_skills : json_decode($problem->required_skills, true) ?? [];
+                    @endphp
+                    @if(count($requiredSkills) > 0)
+                    <div class="mb-4">
+                        <p class="text-sm font-semibold text-gray-700 mb-2">Skill Yang Dibutuhkan:</p>
+                        <div class="flex flex-wrap gap-2">
+                            @foreach($requiredSkills as $skill)
+                                <span class="inline-flex px-3 py-1 bg-blue-100 text-blue-700 text-sm font-semibold rounded-full">
+                                    {{ $skill }}
+                                </span>
+                            @endforeach
                         </div>
-                        <div>
-                            <p class="text-gray-600 mb-1">Tingkat Kesulitan</p>
-                            <p class="font-semibold text-gray-900">{{ ucfirst($problem->difficulty_level) }}</p>
-                        </div>
-                        
-                        @php
-                            // pastikan required_skills adalah array sebelum digunakan
-                            $requiredSkills = is_array($problem->required_skills) ? $problem->required_skills : json_decode($problem->required_skills, true) ?? [];
-                        @endphp
-                        @if(count($requiredSkills) > 0)
-                        <div>
-                            <p class="text-gray-600 mb-2">Skills yang Dibutuhkan</p>
-                            <div class="flex flex-wrap gap-2">
-                                @foreach($requiredSkills as $skill)
-                                    <span class="inline-flex px-2 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded">
-                                        {{ $skill }}
-                                    </span>
-                                @endforeach
-                            </div>
-                        </div>
-                        @endif
-
-                        @php
-                            // pastikan required_majors adalah array sebelum digunakan
-                            $requiredMajors = is_array($problem->required_majors) ? $problem->required_majors : json_decode($problem->required_majors, true) ?? [];
-                        @endphp
-                        @if(count($requiredMajors) > 0)
-                        <div>
-                            <p class="text-gray-600 mb-2">Jurusan yang Dibutuhkan</p>
-                            <div class="flex flex-wrap gap-2">
-                                @foreach($requiredMajors as $major)
-                                    <span class="inline-flex px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded">
-                                        {{ $major }}
-                                    </span>
-                                @endforeach
-                            </div>
-                        </div>
-                        @endif
                     </div>
+                    @endif
+
+                    @php
+                        $requiredMajors = is_array($problem->required_majors) ? $problem->required_majors : json_decode($problem->required_majors, true) ?? [];
+                    @endphp
+                    @if(count($requiredMajors) > 0)
+                    <div>
+                        <p class="text-sm font-semibold text-gray-700 mb-2">Jurusan Yang Dibutuhkan:</p>
+                        <div class="flex flex-wrap gap-2">
+                            @foreach($requiredMajors as $major)
+                                <span class="inline-flex px-3 py-1 bg-green-100 text-green-700 text-sm font-semibold rounded-full">
+                                    {{ $major }}
+                                </span>
+                            @endforeach
+                        </div>
+                    </div>
+                    @endif
                 </div>
 
-                {{-- quick actions --}}
-                <div class="bg-gradient-to-br from-blue-600 to-green-600 rounded-xl shadow-sm p-6 text-white">
-                    <h3 class="text-lg font-bold mb-4">Quick Actions</h3>
+                {{-- statistik card --}}
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Statistik</h3>
+                    
                     <div class="space-y-3">
-                        <a href="{{ route('institution.applications.index', ['problem_id' => $problem->id]) }}" 
-                           class="block w-full py-2 px-4 bg-white/20 hover:bg-white/30 rounded-lg text-center font-medium transition-colors">
-                            Lihat Aplikasi
-                        </a>
-                        @if($problem->status === 'draft')
-                        <form action="{{ route('institution.problems.publish', $problem) }}" method="POST">
-                            @csrf
-                            @method('PATCH')
-                            <button type="submit" 
-                                    class="block w-full py-2 px-4 bg-white/20 hover:bg-white/30 rounded-lg text-center font-medium transition-colors">
-                                Publikasikan
-                            </button>
-                        </form>
-                        @endif
-                        @if($problem->status === 'published')
-                        <form action="{{ route('institution.problems.close', $problem) }}" method="POST">
-                            @csrf
-                            @method('PATCH')
-                            <button type="submit" 
-                                    class="block w-full py-2 px-4 bg-white/20 hover:bg-white/30 rounded-lg text-center font-medium transition-colors">
-                                Tutup Aplikasi
-                            </button>
-                        </form>
-                        @endif
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Total Views</span>
+                            <span class="font-semibold text-gray-900">{{ $problem->views_count }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Total Aplikasi</span>
+                            <span class="font-semibold text-gray-900">{{ $problem->applications_count }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Diterima</span>
+                            <span class="font-semibold text-green-600">{{ $problem->accepted_students }}</span>
+                        </div>
                     </div>
                 </div>
 
             </div>
-
         </div>
-
     </div>
 </div>
 @endsection
