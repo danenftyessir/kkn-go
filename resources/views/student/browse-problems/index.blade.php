@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="{{ asset('css/browse-problems.css') }}">
 @endpush
 
+@section('content')
 <div class="min-h-screen bg-gradient-to-b from-blue-50 to-white py-8">
     <div class="container mx-auto px-4">
         
@@ -242,7 +243,6 @@
         </div>
     </div>
 </div>
-
 @endsection
 
 @push('scripts')
@@ -265,7 +265,7 @@
         activeBtn.classList.add('active-view', 'bg-blue-50', 'border-blue-500');
     }
 
-    // INI YANG DITAMBAHKAN: fungsi toggle wishlist untuk browse page
+    // FUNGSI WISHLIST: inilah yang ditambahkan untuk fix bug
     async function toggleWishlist(problemId, button) {
         button.disabled = true;
         const originalHTML = button.innerHTML;
