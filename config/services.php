@@ -7,10 +7,10 @@ return [
     | Third Party Services
     |--------------------------------------------------------------------------
     |
-    | This file is for storing the credentials for third party services such
-    | as Mailgun, Postmark, AWS and more. This file provides the de facto
-    | location for this type of information, allowing packages to have
-    | a conventional file to locate the various service credentials.
+    | File ini untuk menyimpan kredensial untuk third party services seperti
+    | Mailgun, Postmark, AWS, dan lainnya. File ini menyediakan lokasi default
+    | untuk tipe informasi ini, memungkinkan packages untuk memiliki file
+    | konvensional untuk mencari berbagai kredensial service.
     |
     */
 
@@ -37,22 +37,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Supabase Storage Configuration
+    | Supabase Configuration
     |--------------------------------------------------------------------------
     |
-    | Konfigurasi untuk Supabase Storage yang digunakan untuk menyimpan
-    | gambar, dokumen, dan file lainnya.
+    | Konfigurasi untuk Supabase Storage
+    | Digunakan untuk menyimpan file seperti gambar problems, dokumen, dll
     |
     */
 
     'supabase' => [
-        // project ID (tanpa https:// dan .supabase.co)
-        'project_id' => env('SUPABASE_PROJECT_ID', ''),
-        
-        // service role key (secret key, JANGAN di-commit ke git!)
-        'service_key' => env('SUPABASE_SERVICE_KEY', ''),
-        
-        // nama bucket storage (harus sudah dibuat di Supabase)
+        'project_id' => env('SUPABASE_PROJECT_ID', 'zgpykwjzmiqxhweifmrn'),
+        'url' => env('SUPABASE_URL', 'https://zgpykwjzmiqxhweifmrn.supabase.co'),
+        'anon_key' => env('SUPABASE_ANON_KEY'),
+        'service_key' => env('SUPABASE_SERVICE_KEY'),
         'bucket' => env('SUPABASE_BUCKET', 'kkn-go storage'),
     ],
 
