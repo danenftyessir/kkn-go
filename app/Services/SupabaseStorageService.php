@@ -153,15 +153,12 @@ class SupabaseStorageService
 
             $exists = $response->successful();
             
-            Log::info($exists ? "✅ File EXISTS" : "❌ File NOT FOUND", [
-                'path' => $path,
-                'status' => $response->status(),
-            ]);
+            Log::info($exists ? "✅ File exists" : "❌ File tidak ditemukan", ['path' => $path]);
             
             return $exists;
 
         } catch (\Exception $e) {
-            Log::error("❌ exists() check EXCEPTION", [
+            Log::error("❌ Check file EXCEPTION", [
                 'path' => $path,
                 'error' => $e->getMessage(),
             ]);
@@ -171,7 +168,7 @@ class SupabaseStorageService
     }
 
     /**
-     * delete file dari supabase storage
+     * hapus file dari supabase storage
      * 
      * @param string $path path file yang akan dihapus
      * @return bool true jika berhasil, false jika gagal
@@ -179,6 +176,11 @@ class SupabaseStorageService
     public function delete(string $path): bool
     {
         try {
+            if (!$this->projectId || !$this->serviceKey) {
+                Log::error("❌ Supabase config tidak lengkap - tidak bisa delete");
+                return false;
+            }
+
             Log::info("🗑️ Deleting file from Supabase", ['path' => $path]);
 
             $response = Http::timeout(10)
@@ -192,9 +194,10 @@ class SupabaseStorageService
                 return true;
             }
 
-            Log::warning("⚠️ Delete FAILED (file mungkin tidak ada)", [
+            Log::error("❌ Delete FAILED", [
                 'path' => $path,
                 'status' => $response->status(),
+                'body' => $response->body(),
             ]);
             
             return false;
@@ -210,31 +213,36 @@ class SupabaseStorageService
     }
 
     /**
-     * list files dalam folder tertentu di bucket
+     * list files di folder tertentu
      * 
-     * @param string $folder path folder (contoh: proposals)
-     * @return array daftar file paths
+     * @param string $folder folder path (contoh: proposals/)
+     * @return array list file paths
      */
     public function listFiles(string $folder = ''): array
     {
         try {
+            Log::info("📂 Listing files in folder", ['folder' => $folder]);
+
             $response = Http::timeout(10)
                 ->withHeaders([
                     'Authorization' => 'Bearer ' . $this->serviceKey,
                 ])
                 ->post("{$this->baseUrl}/object/list/{$this->bucketName}", [
                     'prefix' => $folder,
-                    'limit' => 1000,
-                    'offset' => 0,
                 ]);
 
             if ($response->successful()) {
                 $files = $response->json();
                 
-                // ekstrak path dari response
+                Log::info("✅ List files SUCCESS", [
+                    'folder' => $folder,
+                    'count' => count($files),
+                ]);
+                
+                // ambil hanya name dari setiap file
                 $filePaths = [];
                 foreach ($files as $file) {
-                    if (isset($file['name']) && !empty($file['name'])) {
+                    if (isset($file['name'])) {
                         $filePath = $folder ? $folder . '/' . $file['name'] : $file['name'];
                         $filePaths[] = $filePath;
                     }
@@ -258,6 +266,38 @@ class SupabaseStorageService
             
             return [];
         }
+    }
+
+    /**
+     * upload foto profil mahasiswa ke supabase
+     * 
+     * @param UploadedFile $file file foto
+     * @param int $studentId ID mahasiswa
+     * @return string|false path file yang berhasil diupload atau false jika gagal
+     */
+    public function uploadProfilePhoto(UploadedFile $file, int $studentId)
+    {
+        $extension = $file->getClientOriginalExtension();
+        $filename = "student-{$studentId}-profile-" . time() . '.' . $extension;
+        $path = 'students/profiles/' . $filename;
+
+        return $this->uploadFile($file, $path);
+    }
+
+    /**
+     * upload logo institusi ke supabase
+     * 
+     * @param UploadedFile $file file logo
+     * @param int $institutionId ID institusi
+     * @return string|false path file yang berhasil diupload atau false jika gagal
+     */
+    public function uploadInstitutionLogo(UploadedFile $file, int $institutionId)
+    {
+        $extension = $file->getClientOriginalExtension();
+        $filename = "institution-{$institutionId}-logo-" . time() . '.' . $extension;
+        $path = 'institutions/logos/' . $filename;
+
+        return $this->uploadFile($file, $path);
     }
 
     /**
@@ -291,6 +331,39 @@ class SupabaseStorageService
         $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
         $filename = $originalName . '-' . time() . '.' . $extension;
         $path = $category . '/' . $filename;
+
+        return $this->uploadFile($file, $path);
+    }
+
+    /**
+     * upload proposal application ke supabase
+     * 
+     * @param UploadedFile $file file proposal
+     * @param int $applicationId ID aplikasi
+     * @return string|false path file yang berhasil diupload atau false jika gagal
+     */
+    public function uploadProposal(UploadedFile $file, int $applicationId)
+    {
+        $extension = $file->getClientOriginalExtension();
+        $filename = "application-{$applicationId}-proposal-" . time() . '.' . $extension;
+        $path = 'proposals/' . $filename;
+
+        return $this->uploadFile($file, $path);
+    }
+
+    /**
+     * upload project report ke supabase
+     * 
+     * @param UploadedFile $file file report
+     * @param int $projectId ID project
+     * @param string $reportType tipe report (progress, final)
+     * @return string|false path file yang berhasil diupload atau false jika gagal
+     */
+    public function uploadProjectReport(UploadedFile $file, int $projectId, string $reportType = 'progress')
+    {
+        $extension = $file->getClientOriginalExtension();
+        $filename = "project-{$projectId}-{$reportType}-report-" . time() . '.' . $extension;
+        $path = 'reports/' . $filename;
 
         return $this->uploadFile($file, $path);
     }
