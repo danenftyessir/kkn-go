@@ -249,27 +249,74 @@
 <script src="{{ asset('js/pages/browse-problems.js') }}"></script>
 <script>
     // toggle filter section
-    document.getElementById('toggle-filter')?.addEventListener('click', function() {
+    document.getElementById('toggle-filter').addEventListener('click', function() {
         const filterSection = document.getElementById('filter-section');
         filterSection.classList.toggle('hidden');
     });
 
     // view switcher
     function switchView(view) {
-        // hide semua view
         document.querySelectorAll('.view-content').forEach(el => el.classList.add('hidden'));
-        
-        // remove active class dari semua button
         document.querySelectorAll('[id$="-view-btn"]').forEach(btn => {
             btn.classList.remove('active-view', 'bg-blue-50', 'border-blue-500');
         });
-        
-        // tampilkan view yang dipilih
         document.getElementById(view + '-view').classList.remove('hidden');
-        
-        // add active class ke button yang dipilih
         const activeBtn = document.getElementById(view + '-view-btn');
         activeBtn.classList.add('active-view', 'bg-blue-50', 'border-blue-500');
+    }
+
+    // INI YANG DITAMBAHKAN: fungsi toggle wishlist untuk browse page
+    async function toggleWishlist(problemId, button) {
+        button.disabled = true;
+        const originalHTML = button.innerHTML;
+        button.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+        
+        try {
+            const response = await fetch(`/student/wishlist/${problemId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json'
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                button.innerHTML = originalHTML;
+                button.setAttribute('data-wishlisted', data.saved ? 'true' : 'false');
+                
+                const svg = button.querySelector('svg');
+                if (svg) {
+                    if (data.saved) {
+                        svg.setAttribute('fill', 'currentColor');
+                        svg.classList.add('fill-red-500', 'text-red-500');
+                        svg.classList.remove('text-gray-600');
+                    } else {
+                        svg.setAttribute('fill', 'none');
+                        svg.classList.remove('fill-red-500', 'text-red-500');
+                        svg.classList.add('text-gray-600');
+                    }
+                }
+                
+                button.style.transform = 'scale(1.2)';
+                setTimeout(() => { button.style.transform = 'scale(1)'; }, 200);
+                
+                // notifikasi
+                const notif = document.createElement('div');
+                notif.className = 'fixed top-20 right-4 bg-green-50 border-l-4 border-green-500 text-green-800 px-4 py-3 rounded shadow-lg z-50';
+                notif.innerHTML = `<div class="flex items-center"><svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg><span>${data.message || (data.saved ? 'Ditambahkan ke wishlist' : 'Dihapus dari wishlist')}</span></div>`;
+                document.body.appendChild(notif);
+                setTimeout(() => { notif.style.opacity='0'; notif.style.transition='all 0.3s'; setTimeout(() => notif.remove(), 300); }, 3000);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            button.innerHTML = originalHTML;
+            alert('Terjadi kesalahan. Silakan coba lagi.');
+        } finally {
+            button.disabled = false;
+        }
     }
 </script>
 @endpush

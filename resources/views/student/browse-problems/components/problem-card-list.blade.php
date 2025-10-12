@@ -1,12 +1,4 @@
-{{-- 
-    resources/views/student/browse-problems/components/problem-card-list.blade.php
-    
-    komponen list view untuk problem
-    digunakan di halaman browse problems (list view)
-    
-    props: $problem (Problem model)
---}}
-
+{{-- resources/views/student/browse-problems/components/problem-card-list.blade.php --}}
 <div class="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group mb-4">
     <div class="flex flex-col md:flex-row">
         
@@ -14,6 +6,7 @@
         <div class="relative md:w-80 h-48 md:h-auto overflow-hidden bg-gray-100 flex-shrink-0">
             @php
                 $coverImage = $problem->images->where('is_cover', true)->first() ?? $problem->images->first();
+                // FIX: tambahkan default value untuk isWishlisted
                 $isWishlisted = $problem->isWishlisted ?? false;
             @endphp
             
@@ -50,7 +43,6 @@
                 @if(Auth::user()->user_type === 'student')
                 <button onclick="toggleWishlist({{ $problem->id }}, this)" 
                         class="absolute top-3 right-3 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-all duration-200 shadow-lg"
-                        style="transform: scale(1); transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);"
                         data-wishlisted="{{ $isWishlisted ? 'true' : 'false' }}">
                     <svg class="w-5 h-5 {{ $isWishlisted ? 'fill-red-500 text-red-500' : 'text-gray-600' }}" 
                          fill="{{ $isWishlisted ? 'currentColor' : 'none' }}" 
