@@ -122,9 +122,13 @@ class ProblemController extends Controller
             $validated = $request->validate([
                 'title' => 'required|string|max:255',
                 'description' => 'required|string',
+                'background' => 'nullable|string',
+                'objectives' => 'nullable|string',
+                'scope' => 'nullable|string',
                 'province_id' => 'required|integer|exists:provinces,id',
                 'regency_id' => 'required|integer|exists:regencies,id',
-                'address' => 'required|string',
+                'village' => 'nullable|string|max:255',
+                'detailed_location' => 'nullable|string',
                 'latitude' => 'nullable|numeric|between:-90,90',
                 'longitude' => 'nullable|numeric|between:-180,180',
                 'sdg_categories' => 'required|array|min:1',
@@ -266,18 +270,24 @@ class ProblemController extends Controller
 
             Log::info('Problem Update - Request Data', [
                 'problem_id' => $id,
+                'title' => $request->title,
                 'has_delete_images' => $request->filled('delete_images'),
                 'delete_images_count' => $request->filled('delete_images') ? count($request->delete_images) : 0,
                 'has_new_images' => $request->hasFile('images'),
                 'new_images_count' => $request->hasFile('images') ? count($request->file('images')) : 0,
             ]);
 
+            // PENTING: validasi harus include SEMUA field yang ada di database
             $validated = $request->validate([
                 'title' => 'required|string|max:255',
                 'description' => 'required|string',
+                'background' => 'nullable|string',
+                'objectives' => 'nullable|string',
+                'scope' => 'nullable|string',
                 'province_id' => 'required|integer|exists:provinces,id',
                 'regency_id' => 'required|integer|exists:regencies,id',
-                'address' => 'required|string',
+                'village' => 'nullable|string|max:255',
+                'detailed_location' => 'nullable|string',
                 'latitude' => 'nullable|numeric|between:-90,90',
                 'longitude' => 'nullable|numeric|between:-180,180',
                 'sdg_categories' => 'required|array|min:1',
@@ -290,7 +300,7 @@ class ProblemController extends Controller
                 'application_deadline' => 'required|date|before:start_date',
                 'duration_months' => 'required|integer|min:1',
                 'difficulty_level' => 'required|in:beginner,intermediate,advanced',
-                'status' => 'required|in:draft,open,closed',
+                'status' => 'required|in:draft,open,in_progress,completed,closed',
                 'expected_outcomes' => 'nullable|string',
                 'deliverables' => 'nullable|array',
                 'facilities_provided' => 'nullable|array',
@@ -302,13 +312,17 @@ class ProblemController extends Controller
 
             DB::beginTransaction();
             
-            // 1. update data problem terlebih dahulu
-            $problem->update([
+            // 1. KRUSIAL: update data problem terlebih dahulu dengan SEMUA field
+            $updateData = [
                 'title' => $validated['title'],
                 'description' => $validated['description'],
+                'background' => $validated['background'] ?? null,
+                'objectives' => $validated['objectives'] ?? null,
+                'scope' => $validated['scope'] ?? null,
                 'province_id' => $validated['province_id'],
                 'regency_id' => $validated['regency_id'],
-                'address' => $validated['address'],
+                'village' => $validated['village'] ?? null,
+                'detailed_location' => $validated['detailed_location'] ?? null,
                 'latitude' => $validated['latitude'] ?? null,
                 'longitude' => $validated['longitude'] ?? null,
                 'sdg_categories' => $validated['sdg_categories'],
@@ -324,12 +338,23 @@ class ProblemController extends Controller
                 'expected_outcomes' => $validated['expected_outcomes'] ?? null,
                 'deliverables' => $validated['deliverables'] ?? null,
                 'facilities_provided' => $validated['facilities_provided'] ?? null,
-            ]);
+            ];
+            
+            $problem->update($updateData);
 
-            Log::info('Problem Update - Data Updated', ['problem_id' => $problem->id]);
+            Log::info('Problem Update - Data Updated Successfully', [
+                'problem_id' => $problem->id,
+                'title' => $problem->title,
+                'status' => $problem->status
+            ]);
             
             // 2. handle delete images jika ada
             if ($request->filled('delete_images') && is_array($request->delete_images)) {
+                Log::info('Problem Update - Starting Image Deletion', [
+                    'count' => count($request->delete_images),
+                    'ids' => $request->delete_images
+                ]);
+                
                 foreach ($request->delete_images as $imageId) {
                     try {
                         $image = $problem->images()->find($imageId);
@@ -337,7 +362,7 @@ class ProblemController extends Controller
                             // hapus dari storage (supabase atau local)
                             try {
                                 $this->supabaseStorage->delete($image->image_path);
-                                Log::info('Problem Update - Image Deleted Successfully', [
+                                Log::info('Problem Update - Image Deleted from Storage', [
                                     'image_id' => $imageId,
                                     'path' => $image->image_path
                                 ]);
@@ -352,6 +377,7 @@ class ProblemController extends Controller
                             
                             // hapus dari database
                             $image->delete();
+                            Log::info('Problem Update - Image Deleted from Database', ['image_id' => $imageId]);
                         }
                     } catch (\Exception $e) {
                         Log::error('Problem Update - Error Deleting Image', [
@@ -365,11 +391,14 @@ class ProblemController extends Controller
             
             // 3. upload gambar baru ke supabase jika ada
             if ($request->hasFile('images')) {
-                // refresh data problem untuk get jumlah gambar terbaru setelah delete
+                // PENTING: refresh data problem untuk get jumlah gambar terbaru setelah delete
                 $problem->refresh();
                 $currentImageCount = $problem->images()->count();
                 
-                Log::info('Problem Update - Current Image Count', ['count' => $currentImageCount]);
+                Log::info('Problem Update - Starting New Image Upload', [
+                    'current_count' => $currentImageCount,
+                    'new_images' => count($request->file('images'))
+                ]);
                 
                 foreach ($request->file('images') as $index => $imageFile) {
                     try {
@@ -381,16 +410,18 @@ class ProblemController extends Controller
                         );
                         
                         if ($path) {
-                            $problem->images()->create([
+                            $newImage = $problem->images()->create([
                                 'image_path' => $path,
                                 'order' => $currentImageCount + $index + 1,
                                 'is_cover' => $currentImageCount === 0 && $index === 0,
                             ]);
                             
-                            Log::info('Problem Update - Image Uploaded Successfully', [
+                            Log::info('Problem Update - New Image Uploaded Successfully', [
+                                'image_id' => $newImage->id,
                                 'path' => $path,
                                 'order' => $currentImageCount + $index + 1,
-                                'is_cover' => $currentImageCount === 0 && $index === 0
+                                'is_cover' => $currentImageCount === 0 && $index === 0,
+                                'public_url' => $this->supabaseStorage->getPublicUrl($path)
                             ]);
                         } else {
                             Log::error('Problem Update - Image Upload Failed', [
@@ -399,18 +430,23 @@ class ProblemController extends Controller
                             ]);
                         }
                     } catch (\Exception $e) {
-                        Log::error('Problem Update - Error Uploading Image', [
+                        Log::error('Problem Update - Exception During Image Upload', [
                             'index' => $index,
-                            'error' => $e->getMessage()
+                            'error' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString()
                         ]);
                         // lanjutkan ke gambar berikutnya, jangan stop
                     }
                 }
             }
 
+            // KRUSIAL: commit transaction
             DB::commit();
 
-            Log::info('Problem Update - Success', ['problem_id' => $problem->id]);
+            Log::info('Problem Update - Complete Success', [
+                'problem_id' => $problem->id,
+                'final_image_count' => $problem->images()->count()
+            ]);
             
             return redirect()
                 ->route('institution.problems.show', $problem->id)
@@ -425,6 +461,7 @@ class ProblemController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Problem Update - Exception', [
+                'problem_id' => $id,
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
