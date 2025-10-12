@@ -5,7 +5,6 @@
 @section('content')
 <div class="min-h-screen bg-white">
     
-    {{-- hero section - jakarta smart city style --}}
     <section class="relative h-screen min-h-[600px] overflow-hidden">
         {{-- background image --}}
         <div class="absolute inset-0">
