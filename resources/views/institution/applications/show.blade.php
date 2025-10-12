@@ -100,16 +100,6 @@
         </div>
         @endif
 
-        {{-- proposal content --}}
-        @if($application->proposal_content)
-        <div class="bg-white rounded-xl shadow-sm p-6 mb-6 border border-gray-100">
-            <h2 class="text-xl font-bold text-gray-900 mb-4">Proposal</h2>
-            <div class="bg-gray-50 rounded-lg p-4">
-                <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">{{ $application->proposal_content }}</p>
-            </div>
-        </div>
-        @endif
-
     {{-- proposal document download --}}
     @if($application->proposal_content)
     <div class="bg-white rounded-xl shadow-sm p-6 mb-6 border border-gray-100">
@@ -139,6 +129,7 @@
         </div>
     </div>
     @endif
+    
         {{-- feedback dari instansi (jika ada) --}}
         @if($application->feedback)
         <div class="bg-white rounded-xl shadow-sm p-6 mb-6 border border-gray-100">
