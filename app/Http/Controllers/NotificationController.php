@@ -52,9 +52,15 @@ class NotificationController extends Controller
 
     /**
      * dapatkan notifikasi terbaru (untuk dropdown)
+     * FIXED: tambah check untuk ajax request only
      */
-    public function getLatest()
+    public function getLatest(Request $request)
     {
+        // pastikan hanya bisa diakses via ajax
+        if (!$request->ajax() && !$request->wantsJson()) {
+            abort(403, 'Akses tidak diizinkan');
+        }
+
         $notifications = $this->notificationService->getLatest(auth()->id(), 5);
         $unreadCount = $this->notificationService->getUnreadCount(auth()->id());
 
@@ -66,14 +72,24 @@ class NotificationController extends Controller
 
     /**
      * tandai notifikasi sebagai sudah dibaca
+     * FIXED: support ajax request tanpa redirect
      */
-    public function markAsRead($id)
+    public function markAsRead(Request $request, $id)
     {
         $notification = Notification::where('user_id', auth()->id())
             ->findOrFail($id);
 
         $notification->markAsRead();
 
+        // jika request dari ajax (dropdown), return json tanpa redirect
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Notifikasi ditandai sebagai sudah dibaca'
+            ]);
+        }
+
+        // jika dari halaman notifications index dengan tombol "Lihat Detail"
         // redirect ke action url jika ada
         if ($notification->action_url) {
             return redirect($notification->action_url);
@@ -84,10 +100,20 @@ class NotificationController extends Controller
 
     /**
      * tandai semua notifikasi sebagai sudah dibaca
+     * FIXED: support ajax request
      */
-    public function markAllAsRead()
+    public function markAllAsRead(Request $request)
     {
         $count = $this->notificationService->markAllAsRead(auth()->id());
+
+        // jika request dari ajax (dropdown), return json
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "{$count} notifikasi ditandai sebagai sudah dibaca",
+                'count' => $count
+            ]);
+        }
 
         return back()->with('success', "{$count} notifikasi ditandai sebagai sudah dibaca");
     }

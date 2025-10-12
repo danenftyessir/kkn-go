@@ -93,6 +93,39 @@ class Notification extends Model
     }
 
     /**
+     * FIXED: accessor untuk action_url dengan validasi
+     * pastikan action_url tidak mengarah ke endpoint yang invalid
+     */
+    public function getActionUrlAttribute($value)
+    {
+        // jika null, return null
+        if (!$value) {
+            return null;
+        }
+        
+        // list invalid paths yang tidak boleh dijadikan action_url
+        $invalidPaths = [
+            '/notifications/latest',
+            '/notifications/getLatest',
+            '/api/notifications',
+        ];
+        
+        // cek apakah value mengandung invalid path
+        foreach ($invalidPaths as $invalid) {
+            if (str_contains($value, $invalid)) {
+                return null; // return null jika invalid
+            }
+        }
+        
+        // cek jika hanya '#' atau kosong
+        if (in_array($value, ['#', '', ' '])) {
+            return null;
+        }
+        
+        return $value;
+    }
+
+    /**
      * dapatkan icon berdasarkan tipe notifikasi
      */
     public function getIconAttribute()
