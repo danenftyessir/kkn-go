@@ -149,6 +149,7 @@ class BrowseProblemsController extends Controller
 
     /**
      * tampilkan detail problem
+     * FIX: tambahkan variabel $isWishlisted
      */
     public function show($id)
     {
@@ -167,14 +168,25 @@ class BrowseProblemsController extends Controller
 
         // cek apakah user sudah apply (jika login sebagai student)
         $hasApplied = false;
+        $isWishlisted = false; // inisialisasi default
+        
         if (Auth::check() && Auth::user()->user_type === 'student') {
             $student = Auth::user()->student;
+            
+            // cek apakah sudah apply
             $hasApplied = DB::table('applications')
+                ->where('student_id', $student->id)
+                ->where('problem_id', $id)
+                ->exists();
+            
+            // cek apakah sudah wishlist
+            $isWishlisted = DB::table('wishlists')
                 ->where('student_id', $student->id)
                 ->where('problem_id', $id)
                 ->exists();
         }
 
-        return view('student.browse-problems.detail', compact('problem', 'hasApplied'));
+        // pass variabel $isWishlisted ke view
+        return view('student.browse-problems.detail', compact('problem', 'hasApplied', 'isWishlisted'));
     }
 }
