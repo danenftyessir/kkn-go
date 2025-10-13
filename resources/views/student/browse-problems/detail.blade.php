@@ -446,22 +446,36 @@ html {
                 @endif
 
                 {{-- deliverables --}}
-                @if($problem->deliverables)
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                @php
+                    $deliverables = is_array($problem->deliverables) 
+                        ? $problem->deliverables 
+                        : (json_decode($problem->deliverables, true) ?? []);
+                @endphp
+                @if(count($deliverables) > 0)
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 fade-in fade-in-delay-2">
                     <h2 class="text-xl font-bold text-gray-900 mb-4">Deliverables</h2>
-                    <div class="prose max-w-none text-gray-700">
-                        <p class="whitespace-pre-line">{{ $problem->deliverables }}</p>
-                    </div>
+                    <ul class="list-disc list-inside space-y-2 text-gray-700">
+                        @foreach($deliverables as $deliverable)
+                            <li class="pl-2">{{ $deliverable }}</li>
+                        @endforeach
+                    </ul>
                 </div>
                 @endif
 
-                {{-- facilities --}}
-                @if($problem->facilities_provided)
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                    <h2 class="text-xl font-bold text-gray-900 mb-4">Fasilitas yang Disediakan</h2>
-                    <div class="prose max-w-none text-gray-700">
-                        <p class="whitespace-pre-line">{{ $problem->facilities_provided }}</p>
-                    </div>
+                {{-- facilities provided --}}
+                @php
+                    $facilities = is_array($problem->facilities_provided) 
+                        ? $problem->facilities_provided 
+                        : (json_decode($problem->facilities_provided, true) ?? []);
+                @endphp
+                @if(count($facilities) > 0)
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 fade-in fade-in-delay-2">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">Fasilitas Yang Disediakan</h2>
+                    <ul class="list-disc list-inside space-y-2 text-gray-700">
+                        @foreach($facilities as $facility)
+                            <li class="pl-2">{{ $facility }}</li>
+                        @endforeach
+                    </ul>
                 </div>
                 @endif
             </div>
