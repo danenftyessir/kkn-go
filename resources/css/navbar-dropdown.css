@@ -70,10 +70,111 @@ nav button[type="submit"]:hover {
     background-color: rgba(0, 0, 0, 0.04);
 }
 
-/* mobile menu optimization */
+/* MOBILE MENU STYLING */
 @media (max-width: 768px) {
+    /* mobile menu container */
     nav .md\:hidden {
         will-change: transform, opacity;
+        background-color: white !important;
+        position: relative;
+        z-index: 40;
+    }
+    
+    /* mobile menu links styling */
+    nav .md\:hidden a {
+        display: block;
+        font-size: 1rem;
+        font-weight: 500;
+        color: #374151 !important;
+        background-color: white !important;
+        padding: 0.75rem 1rem !important;
+        margin: 0.25rem 0.5rem !important;
+        border-radius: 0.5rem;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        border: none;
+    }
+    
+    /* mobile menu link hover */
+    nav .md\:hidden a:hover {
+        background-color: #EFF6FF !important;
+        color: #2563EB !important;
+        transform: translateX(4px);
+    }
+    
+    /* mobile menu active link */
+    nav .md\:hidden a.text-blue-600,
+    nav .md\:hidden a.bg-blue-50 {
+        background-color: #EFF6FF !important;
+        color: #2563EB !important;
+        font-weight: 600;
+    }
+    
+    /* mobile menu register button */
+    nav .md\:hidden a.bg-blue-600 {
+        background-color: #2563EB !important;
+        color: white !important;
+        font-weight: 600;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+    }
+    
+    nav .md\:hidden a.bg-blue-600:hover {
+        background-color: #1D4ED8 !important;
+        transform: translateX(0) scale(1.02);
+    }
+    
+    /* mobile menu logout button */
+    nav .md\:hidden button[type="submit"] {
+        background-color: white !important;
+        color: #DC2626 !important;
+        font-weight: 500;
+        padding: 0.75rem 1rem !important;
+        margin: 0.25rem 0.5rem !important;
+        border-radius: 0.5rem;
+        transition: all 0.2s ease;
+        width: calc(100% - 1rem);
+    }
+    
+    nav .md\:hidden button[type="submit"]:hover {
+        background-color: #FEF2F2 !important;
+        transform: translateX(4px);
+    }
+    
+    /* mobile menu divider */
+    nav .md\:hidden .border-t {
+        border-color: #E5E7EB !important;
+        margin: 0.5rem 0.5rem !important;
+    }
+    
+    /* mobile menu backdrop blur */
+    nav .md\:hidden::before {
+        content: '';
+        position: fixed;
+        top: 64px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(2px);
+        z-index: -1;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+    }
+    
+    /* smooth scrolling untuk mobile menu */
+    nav .md\:hidden > div {
+        max-height: calc(100vh - 64px);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 1rem;
+    }
+    
+    /* hide scrollbar tapi tetap bisa scroll */
+    nav .md\:hidden > div::-webkit-scrollbar {
+        width: 0px;
+        background: transparent;
     }
 }
 
@@ -94,4 +195,22 @@ nav div[x-show] .border-b {
 
 nav div[x-show] .border-t {
     margin-top: 0 !important;
+}
+
+/* mobile menu button animation */
+@media (max-width: 768px) {
+    nav button svg {
+        transition: transform 0.2s ease;
+    }
+    
+    nav button:active svg {
+        transform: scale(0.95);
+    }
+}
+
+/* prevent body scroll ketika mobile menu terbuka */
+@media (max-width: 768px) {
+    body:has(nav [x-data] [x-show]:not([style*="display: none"])) {
+        overflow: hidden;
+    }
 }

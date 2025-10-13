@@ -173,7 +173,8 @@
             <div class="md:hidden flex items-center">
                 <button @click="mobileMenuOpen = !mobileMenuOpen" 
                         type="button" 
-                        class="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-gray-100 transition-colors">
+                        class="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 transition-colors">
+                    <span class="sr-only">Open main menu</span>
                     <svg class="h-6 w-6" :class="{'hidden': mobileMenuOpen, 'block': !mobileMenuOpen}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
@@ -185,88 +186,107 @@
         </div>
     </div>
 
-    {{-- mobile menu --}}
-    <div class="md:hidden" x-show="mobileMenuOpen" style="display: none;">
-        <div class="px-2 pt-2 pb-3 space-y-1">
+    {{-- mobile menu dengan styling yang diperbaiki --}}
+    <div class="md:hidden bg-white border-t border-gray-200 shadow-lg" 
+         x-show="mobileMenuOpen" 
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 -translate-y-2"
+         x-transition:enter-end="opacity-100 translate-y-0"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100 translate-y-0"
+         x-transition:leave-end="opacity-0 -translate-y-2"
+         style="display: none;">
+        <div class="px-2 pt-2 pb-3 space-y-1 bg-white">
             @auth
                 @if(Auth::user()->isStudent())
                     <a href="{{ route('student.dashboard') }}" 
-                       class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+                       class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors {{ request()->routeIs('student.dashboard') ? 'text-blue-600 bg-blue-50' : '' }}">
                         Dashboard
                     </a>
                     <a href="{{ route('student.browse-problems.index') }}" 
-                       class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+                       class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors {{ request()->routeIs('student.browse-problems.*') ? 'text-blue-600 bg-blue-50' : '' }}">
                         Browse
                     </a>
                     <a href="{{ route('student.applications.index') }}" 
-                       class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+                       class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors {{ request()->routeIs('student.applications.*') ? 'text-blue-600 bg-blue-50' : '' }}">
                         Applications
                     </a>
                     <a href="{{ route('student.projects.index') }}" 
-                       class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+                       class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors {{ request()->routeIs('student.projects.*') ? 'text-blue-600 bg-blue-50' : '' }}">
                         Projects
                     </a>
                     <a href="{{ route('student.repository.index') }}" 
-                       class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+                       class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors {{ request()->routeIs('student.repository.*') ? 'text-blue-600 bg-blue-50' : '' }}">
                         Repository
                     </a>
+                    
+                    <div class="border-t border-gray-200 my-2"></div>
+                    
                     <a href="{{ route('student.profile.index') }}" 
-                       class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+                       class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors">
                         Profile
                     </a>
                     <a href="{{ route('student.settings') }}" 
-                       class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+                       class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors">
                         Settings
                     </a>
                 @elseif(Auth::user()->isInstitution())
                     <a href="{{ route('institution.dashboard') }}" 
-                       class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+                       class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors {{ request()->routeIs('institution.dashboard') ? 'text-blue-600 bg-blue-50' : '' }}">
                         Dashboard
                     </a>
                     <a href="{{ route('institution.problems.index') }}" 
-                       class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+                       class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors {{ request()->routeIs('institution.problems.*') ? 'text-blue-600 bg-blue-50' : '' }}">
                         Problems
                     </a>
                     <a href="{{ route('institution.applications.index') }}" 
-                       class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+                       class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors {{ request()->routeIs('institution.applications.*') ? 'text-blue-600 bg-blue-50' : '' }}">
                         Applications
                     </a>
                     <a href="{{ route('institution.projects.index') }}" 
-                       class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+                       class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors {{ request()->routeIs('institution.projects.*') ? 'text-blue-600 bg-blue-50' : '' }}">
                         Projects
                     </a>
                     <a href="{{ route('institution.reviews.index') }}" 
-                       class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+                       class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors {{ request()->routeIs('institution.reviews.*') ? 'text-blue-600 bg-blue-50' : '' }}">
                         Reviews
                     </a>
+                    
+                    <div class="border-t border-gray-200 my-2"></div>
+                    
                     <a href="{{ route('institution.profile.index') }}" 
-                       class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+                       class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors">
                         Profil Instansi
                     </a>
                 @endif
                 
-                <form method="POST" action="{{ route('logout') }}" class="mt-4">
+                <div class="border-t border-gray-200 my-2"></div>
+                
+                <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button type="submit" 
-                            class="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-red-50">
+                            class="block w-full text-left px-4 py-3 rounded-md text-base font-medium text-red-600 hover:bg-red-50 transition-colors">
                         Logout
                     </button>
                 </form>
             @else
                 <a href="{{ route('home') }}" 
-                   class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+                   class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors {{ request()->routeIs('home') ? 'text-blue-600 bg-blue-50' : '' }}">
                     Home
                 </a>
                 <a href="{{ route('about') }}" 
-                   class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+                   class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors {{ request()->routeIs('about') ? 'text-blue-600 bg-blue-50' : '' }}">
                     About Us
                 </a>
+                
+                <div class="border-t border-gray-200 my-2"></div>
+                
                 <a href="{{ route('login') }}" 
-                   class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+                   class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors">
                     Login
                 </a>
                 <a href="{{ route('register') }}" 
-                   class="block px-3 py-2 rounded-md text-base font-medium bg-blue-600 text-white hover:bg-blue-700">
+                   class="block px-4 py-3 rounded-md text-base font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors">
                     Register
                 </a>
             @endauth
