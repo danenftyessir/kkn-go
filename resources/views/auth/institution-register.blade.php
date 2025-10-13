@@ -142,71 +142,7 @@
             border-radius: 0 0 1rem 1rem;
         }
         
-        /* MODERN BUTTONS */
-        .btn-primary {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
-            border: none !important;
-            color: white !important;
-            font-weight: 600;
-            padding: 0.75rem 1.5rem !important;
-            border-radius: 0.75rem !important;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3) !important;
-            position: relative;
-            z-index: 10;
-        }
-        
-        .btn-primary:hover:not(:disabled) {
-            background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4) !important;
-        }
-        
-        .btn-primary:active:not(:disabled) {
-            transform: translateY(0);
-        }
-        
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.3) !important;
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(16, 185, 129, 0.5) !important;
-            color: #059669 !important;
-            font-weight: 600;
-            padding: 0.75rem 1.5rem !important;
-            border-radius: 0.75rem !important;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            z-index: 10;
-        }
-        
-        .btn-secondary:hover {
-            background: rgba(16, 185, 129, 0.1) !important;
-            border-color: #10b981 !important;
-            color: #047857 !important;
-            transform: translateY(-2px);
-        }
-        
-        /* Form inputs dengan glass effect */
-        .form-input {
-            background: rgba(255, 255, 255, 0.7) !important;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(209, 213, 219, 0.5) !important;
-            transition: all 0.3s ease;
-        }
-        
-        .form-input:focus {
-            background: rgba(255, 255, 255, 0.9) !important;
-            border-color: #10b981 !important;
-            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
-        }
-        
-        /* Step content title */
+        /* step content title */
         .step-content h2 {
             color: #1F2937;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
@@ -218,19 +154,19 @@
     </style>
 </head>
 <body class="font-sans antialiased bg-gray-50">
-    {{-- navbar tetap --}}
+    {{-- PERBAIKAN 1: navbar tetap - BAHASA INGGRIS --}}
     <nav class="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50">
         <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
             <a href="{{ route('home') }}" class="inline-flex items-center text-gray-700 hover:text-gray-900 transition-colors font-semibold">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                 </svg>
-                <span class="font-medium">kembali ke beranda</span>
+                <span class="font-medium">Back</span>
             </a>
             
             <div class="flex items-center space-x-6">
-                <a href="#" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">tentang</a>
-                <a href="#" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">kontak</a>
+                <a href="{{ route('home') }}#about" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">About Us</a>
+                <a href="{{ route('home') }}#contact" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">Contact</a>
             </div>
         </div>
     </nav>
@@ -242,40 +178,48 @@
                 <div class="text-center mb-8">
                     <img src="{{ asset('kkn-go-logo.png') }}" alt="KKN-GO Logo" class="h-24 mx-auto mb-6">
                     <h1 class="text-4xl font-bold text-gray-900 mb-3">Daftar Sebagai Instansi</h1>
-                    <p class="text-gray-600 mb-4">Mulai posting masalah dan temukan mahasiswa KKN terbaik</p>
+                    <p class="text-gray-600 mb-4">Mulai Posting Masalah Dan Temukan Mahasiswa KKN Terbaik</p>
                     <div class="inline-flex items-center gap-2 text-sm">
-                        <span class="text-gray-600">Sudah punya akun?</span>
-                        <a href="{{ route('login') }}" class="text-green-600 hover:text-green-700 font-semibold transition-colors">Masuk di sini</a>
+                        <span class="text-gray-600">Sudah Punya Akun?</span>
+                        <a href="{{ route('login') }}" class="text-green-600 hover:text-green-700 font-semibold transition-colors">Masuk Di Sini</a>
                     </div>
                 </div>
 
                 {{-- main form card --}}
                 <div class="register-card fade-in-up">
-                    {{-- step indicator --}}
-                    <div class="step-indicator">
-                        <div class="step-track"></div>
-                        <div class="flex justify-between relative z-10">
-                            <div class="step active" data-step="1">
-                                <div class="step-number-wrapper">
-                                    <div class="step-number">1</div>
+                    {{-- PERBAIKAN 2: step indicator - STRUKTUR KONSISTEN DENGAN STUDENT --}}
+                    <div class="bg-gradient-to-r from-green-50 to-emerald-50 p-8 pb-6 border-b border-gray-100">
+                        <div class="step-indicator-container">
+                            <div class="step-item" id="step1-item">
+                                <div class="step-circle active" id="step1-circle">
+                                    <span class="step-number">1</span>
                                 </div>
                                 <span class="step-label">Data Instansi</span>
                             </div>
-                            <div class="step" data-step="2">
-                                <div class="step-number-wrapper">
-                                    <div class="step-number">2</div>
+                            
+                            <div class="step-connector" id="connector1"></div>
+                            
+                            <div class="step-item" id="step2-item">
+                                <div class="step-circle inactive" id="step2-circle">
+                                    <span class="step-number">2</span>
                                 </div>
                                 <span class="step-label">Lokasi</span>
                             </div>
-                            <div class="step" data-step="3">
-                                <div class="step-number-wrapper">
-                                    <div class="step-number">3</div>
+                            
+                            <div class="step-connector" id="connector2"></div>
+                            
+                            <div class="step-item" id="step3-item">
+                                <div class="step-circle inactive" id="step3-circle">
+                                    <span class="step-number">3</span>
                                 </div>
                                 <span class="step-label">Penanggung Jawab</span>
                             </div>
-                            <div class="step" data-step="4">
-                                <div class="step-number-wrapper">
-                                    <div class="step-number">4</div>
+                            
+                            <div class="step-connector" id="connector3"></div>
+                            
+                            <div class="step-item" id="step4-item">
+                                <div class="step-circle inactive" id="step4-circle">
+                                    <span class="step-number">4</span>
                                 </div>
                                 <span class="step-label">Akun & Verifikasi</span>
                             </div>
@@ -295,7 +239,7 @@
                         <div id="step1-content" class="step-content">
                             <div class="mb-8">
                                 <h2 class="text-2xl font-bold text-gray-800 mb-2">Data Instansi</h2>
-                                <p class="text-gray-600">Informasi lengkap tentang instansi Anda</p>
+                                <p class="text-gray-600">Informasi Lengkap Tentang Instansi Anda</p>
                             </div>
 
                             <div class="space-y-6">
@@ -371,7 +315,7 @@
                         <div id="step2-content" class="step-content" style="display: none;">
                             <div class="mb-8">
                                 <h2 class="text-2xl font-bold text-gray-800 mb-2">Lokasi</h2>
-                                <p class="text-gray-600">Informasi lokasi instansi Anda</p>
+                                <p class="text-gray-600">Informasi Lokasi Instansi Anda</p>
                             </div>
 
                             <div class="space-y-6">
@@ -383,7 +327,7 @@
                                     <textarea id="address" 
                                               name="address" 
                                               rows="3"
-                                              placeholder="Contoh: Jl. Raya Sukamaju No. 123"
+                                              placeholder="Contoh: Jl. Raya Sukamaju No. 123, RT 02/RW 05"
                                               class="form-input w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition @error('address') border-red-500 @enderror"
                                               required>{{ old('address') }}</textarea>
                                     @error('address')
@@ -396,14 +340,32 @@
                                     <label for="province_id" class="block text-sm font-semibold text-gray-700 mb-2">
                                         Provinsi <span class="text-red-500">*</span>
                                     </label>
+                                    
+                                    {{-- peringatan pembatasan wilayah --}}
+                                    <div class="mb-3 bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-2">
+                                        <svg class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        <p class="text-sm text-blue-800">
+                                            <span class="font-semibold">Informasi:</span> Saat ini layanan kami hanya tersedia untuk wilayah Jawa (Banten, DKI Jakarta, Jawa Barat, Jawa Tengah, dan DI Yogyakarta).
+                                        </p>
+                                    </div>
+                                    
                                     <select id="province_id" 
-                                            name="province_id" 
-                                            class="form-input w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition @error('province_id') border-red-500 @enderror"
+                                            name="province_id"
                                             x-model="selectedProvince"
                                             @change="loadRegencies()"
+                                            class="form-input w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition @error('province_id') border-red-500 @enderror"
                                             required>
                                         <option value="">Pilih Provinsi</option>
-                                        @foreach($provinces as $province)
+                                        @php
+                                            // filter hanya 5 provinsi yang diizinkan
+                                            $allowedProvinces = ['Banten', 'DI Yogyakarta', 'DKI Jakarta', 'Jawa Barat', 'Jawa Tengah'];
+                                            $filteredProvinces = $provinces->filter(function($province) use ($allowedProvinces) {
+                                                return in_array($province->name, $allowedProvinces);
+                                            });
+                                        @endphp
+                                        @foreach($filteredProvinces as $province)
                                             <option value="{{ $province->id }}" {{ old('province_id') == $province->id ? 'selected' : '' }}>
                                                 {{ $province->name }}
                                             </option>
@@ -420,11 +382,11 @@
                                         Kabupaten/Kota <span class="text-red-500">*</span>
                                     </label>
                                     <select id="regency_id" 
-                                            name="regency_id" 
-                                            class="form-input w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition @error('regency_id') border-red-500 @enderror"
+                                            name="regency_id"
                                             x-model="selectedRegency"
-                                            :disabled="!selectedProvince"
-                                            required>
+                                            class="form-input w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition @error('regency_id') border-red-500 @enderror"
+                                            required
+                                            :disabled="!selectedProvince">
                                         <option value="">Pilih Kabupaten/Kota</option>
                                         <template x-for="regency in regencies" :key="regency.id">
                                             <option :value="regency.id" x-text="regency.name"></option>
@@ -452,17 +414,17 @@
                             </div>
                         </div>
 
-                        {{-- STEP 3: Penanggung Jawab (disingkat untuk brevity, lengkap di kode asli) --}}
+                        {{-- STEP 3: Penanggung Jawab --}}
                         <div id="step3-content" class="step-content" style="display: none;">
-                            {{-- Content lengkap seperti file asli --}}
                             <div class="mb-8">
                                 <h2 class="text-2xl font-bold text-gray-800 mb-2">Penanggung Jawab</h2>
-                                <p class="text-gray-600">Informasi person in charge (PIC) instansi</p>
+                                <p class="text-gray-600">Informasi Kontak Dan Dokumen Pendukung</p>
                             </div>
-                            <div class="space-y-6">
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label for="pic_name" class="block text-sm font-semibold text-gray-700 mb-2">
-                                        Nama Lengkap PIC <span class="text-red-500">*</span>
+                                        Nama PIC <span class="text-red-500">*</span>
                                     </label>
                                     <input type="text" id="pic_name" name="pic_name" value="{{ old('pic_name') }}" placeholder="Contoh: Budi Santoso" class="form-input w-full px-4 py-3 border border-gray-300 rounded-lg" required>
                                     @error('pic_name')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
@@ -471,7 +433,7 @@
                                     <label for="pic_position" class="block text-sm font-semibold text-gray-700 mb-2">
                                         Jabatan PIC <span class="text-red-500">*</span>
                                     </label>
-                                    <input type="text" id="pic_position" name="pic_position" value="{{ old('pic_position') }}" placeholder="Contoh: Kepala Desa" class="form-input w-full px-4 py-3 border border-gray-300 rounded-lg" required>
+                                    <input type="text" id="pic_position" name="pic_position" value="{{ old('pic_position') }}" placeholder="Contoh: Sekretaris Desa" class="form-input w-full px-4 py-3 border border-gray-300 rounded-lg" required>
                                     @error('pic_position')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                                 </div>
                                 <div>
@@ -495,9 +457,9 @@
                                     <label for="website" class="block text-sm font-semibold text-gray-700 mb-2">Website (Opsional)</label>
                                     <input type="url" id="website" name="website" value="{{ old('website') }}" placeholder="https://www.contoh.go.id" class="form-input w-full px-4 py-3 border border-gray-300 rounded-lg">
                                 </div>
-                                <div>
+                                <div class="md:col-span-2">
                                     <label for="description" class="block text-sm font-semibold text-gray-700 mb-2">Deskripsi Instansi (Opsional)</label>
-                                    <textarea id="description" name="description" rows="4" placeholder="Ceritakan singkat tentang instansi Anda..." class="form-input w-full px-4 py-3 border border-gray-300 rounded-lg">{{ old('description') }}</textarea>
+                                    <textarea id="description" name="description" rows="4" placeholder="Ceritakan Tentang Instansi Anda..." class="form-input w-full px-4 py-3 border border-gray-300 rounded-lg">{{ old('description') }}</textarea>
                                 </div>
                             </div>
 
@@ -521,8 +483,9 @@
                         <div id="step4-content" class="step-content" style="display: none;">
                             <div class="mb-8">
                                 <h2 class="text-2xl font-bold text-gray-800 mb-2">Akun & Verifikasi</h2>
-                                <p class="text-gray-600">Buat akun untuk login ke sistem</p>
+                                <p class="text-gray-600">Buat Username Dan Password Untuk Akun Anda</p>
                             </div>
+
                             <div class="space-y-6">
                                 <div>
                                     <label for="username" class="block text-sm font-semibold text-gray-700 mb-2">
@@ -535,20 +498,14 @@
                                     <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">
                                         Password <span class="text-red-500">*</span>
                                     </label>
-                                    <input type="password" id="password" name="password" placeholder="Minimal 8 karakter" class="form-input w-full px-4 py-3 border border-gray-300 rounded-lg" required>
+                                    <input type="password" id="password" name="password" placeholder="Minimal 8 Karakter" class="form-input w-full px-4 py-3 border border-gray-300 rounded-lg" required>
                                     @error('password')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                                 </div>
                                 <div>
                                     <label for="password_confirmation" class="block text-sm font-semibold text-gray-700 mb-2">
                                         Konfirmasi Password <span class="text-red-500">*</span>
                                     </label>
-                                    <input type="password" id="password_confirmation" name="password_confirmation" placeholder="Ulangi password" class="form-input w-full px-4 py-3 border border-gray-300 rounded-lg" required>
-                                </div>
-                                <div class="flex items-start">
-                                    <input type="checkbox" id="terms" name="terms" class="mt-1 mr-3" required>
-                                    <label for="terms" class="text-sm text-gray-700">
-                                        Saya setuju dengan <a href="#" class="text-green-600 hover:text-green-700 font-semibold">syarat dan ketentuan</a> serta <a href="#" class="text-green-600 hover:text-green-700 font-semibold">kebijakan privasi</a> KKN-GO
-                                    </label>
+                                    <input type="password" id="password_confirmation" name="password_confirmation" placeholder="Ketik Ulang Password" class="form-input w-full px-4 py-3 border border-gray-300 rounded-lg" required>
                                 </div>
                             </div>
 
@@ -560,10 +517,10 @@
                                     Kembali
                                 </button>
                                 <button type="submit" class="btn-primary">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
                                     Daftar Sekarang
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
                                 </button>
                             </div>
                         </div>
@@ -574,41 +531,48 @@
     </div>
 
     {{-- loading overlay --}}
-    <div id="loadingOverlay" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; flex-direction: column;">
-        <div style="width: 60px; height: 60px; border: 4px solid rgba(255,255,255,0.3); border-top-color: #10b981; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-        <p style="color: white; margin-top: 1rem; font-size: 1.125rem;">Sedang memproses pendaftaran...</p>
+    <div id="loadingOverlay" style="display: none;" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-8 flex flex-col items-center">
+            <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-green-500 mb-4"></div>
+            <p class="text-gray-700 font-semibold">Mendaftarkan Akun Anda...</p>
+        </div>
     </div>
-    <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
 
     <script>
-    // multi-step navigation dengan validasi AJAX
+    // current step tracker
     let currentStep = 1;
 
-    // PERBAIKAN: handle 4 steps dengan validasi AJAX per-step
+    // validasi per step sebelum lanjut
     async function nextStep(step) {
-        const form = document.getElementById('institutionRegisterForm');
-        const formData = new FormData(form);
-        formData.append('step', currentStep);
-
         const loadingOverlay = document.getElementById('loadingOverlay');
+        
+        // validasi step sekarang sebelum lanjut
+        const formData = new FormData(document.getElementById('institutionRegisterForm'));
+        formData.append('step', currentStep);
+        
         loadingOverlay.style.display = 'flex';
 
         try {
-            const response = await fetch("{{ route('api.public.validate.institution.step') }}", {
+            const response = await fetch('/api/public/validate/institution/step', {
                 method: 'POST',
+                body: formData,
                 headers: {
-                    'Accept': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: formData
+                }
             });
 
+            const data = await response.json();
+
             if (!response.ok) {
-                if (response.status === 422) {
-                    const data = await response.json();
-                    alert('Harap lengkapi semua field yang wajib diisi');
+                // tampilkan error
+                if (data.errors) {
+                    let errorMessages = [];
+                    Object.keys(data.errors).forEach(key => {
+                        errorMessages.push(...data.errors[key]);
+                    });
+                    alert('Mohon Lengkapi Data Berikut:\n\n' + errorMessages.join('\n'));
                 } else {
-                    alert('Terjadi kesalahan pada server. Silakan coba lagi.');
+                    alert('Terjadi Kesalahan Saat Validasi. Silakan Coba Lagi.');
                 }
                 loadingOverlay.style.display = 'none';
                 return;
@@ -622,7 +586,7 @@
 
         } catch (error) {
             console.error('Validation error:', error);
-            alert('Tidak dapat terhubung ke server. Periksa koneksi internet Anda.');
+            alert('Tidak Dapat Terhubung Ke Server. Periksa Koneksi Internet Anda.');
             loadingOverlay.style.display = 'none';
         }
     }
@@ -633,7 +597,7 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // PERBAIKAN: showStep untuk handle 4 steps
+    // PERBAIKAN: showStep untuk handle 4 steps dengan step-circle
     function showStep(step) {
         // hide semua step content
         for (let i = 1; i <= 4; i++) {
@@ -645,19 +609,33 @@
         const currentContent = document.getElementById(`step${step}-content`);
         if (currentContent) currentContent.style.display = 'block';
 
-        // update step indicators
-        const steps = document.querySelectorAll('.step');
-        steps.forEach((stepEl, index) => {
-            const stepNumber = index + 1;
+        // update step circle indicators
+        for (let i = 1; i <= 4; i++) {
+            const circle = document.getElementById(`step${i}-circle`);
+            if (!circle) continue;
             
-            stepEl.classList.remove('active', 'completed');
+            circle.classList.remove('active', 'completed', 'inactive');
             
-            if (stepNumber < step) {
-                stepEl.classList.add('completed');
-            } else if (stepNumber === step) {
-                stepEl.classList.add('active');
+            if (i < step) {
+                circle.classList.add('completed');
+            } else if (i === step) {
+                circle.classList.add('active');
+            } else {
+                circle.classList.add('inactive');
             }
-        });
+            
+            // update connector
+            if (i < 4) {
+                const connector = document.getElementById(`connector${i}`);
+                if (connector) {
+                    if (i < step) {
+                        connector.classList.add('completed');
+                    } else {
+                        connector.classList.remove('completed');
+                    }
+                }
+            }
+        }
     }
 
     // Alpine.js untuk dynamic province-regency dropdown
@@ -681,7 +659,7 @@
                     }
                 } catch (error) {
                     console.error('Failed to load regencies:', error);
-                    alert('Gagal memuat data kabupaten/kota. Silakan coba lagi.');
+                    alert('Gagal Memuat Data Kabupaten/Kota. Silakan Coba Lagi.');
                 }
             }
         }
