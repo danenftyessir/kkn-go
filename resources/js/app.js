@@ -45,13 +45,13 @@ class NotificationManager {
             warning: '<svg class="w-5 h-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>'
         };
 
-        notification.className = `${colors[type]} border-l-4 p-4 rounded-lg shadow-lg flex items-start space-x-3 animate-slideInRight`;
+        notification.className = `${colors[type]} px-4 py-3 rounded-lg border shadow-lg flex items-start space-x-3 animate-slideInRight`;
         notification.innerHTML = `
             ${icons[type]}
             <div class="flex-1">
-                <p class="font-medium">${message}</p>
+                <p class="text-sm font-medium">${message}</p>
             </div>
-            <button onclick="this.parentElement.remove()" class="text-gray-500 hover:text-gray-700 transition-colors">
+            <button onclick="this.parentElement.remove()" class="text-gray-400 hover:text-gray-600">
                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
                 </svg>
@@ -60,35 +60,38 @@ class NotificationManager {
 
         this.container.appendChild(notification);
 
+        // auto remove setelah duration
         if (duration > 0) {
             setTimeout(() => {
-                notification.classList.add('animate-slideOutRight');
+                notification.style.animation = 'slideOutRight 0.3s ease-in forwards';
                 setTimeout(() => notification.remove(), 300);
             }, duration);
         }
     }
 
     showFlashMessages() {
-        const messages = [
-            { selector: '[data-success-message]', type: 'success' },
-            { selector: '[data-error-message]', type: 'error' },
-            { selector: '[data-info-message]', type: 'info' },
-            { selector: '[data-warning-message]', type: 'warning' }
-        ];
+        // cek data attributes dari blade template
+        const successMsg = document.querySelector('[data-success-message]');
+        const errorMsg = document.querySelector('[data-error-message]');
+        const infoMsg = document.querySelector('[data-info-message]');
+        const warningMsg = document.querySelector('[data-warning-message]');
 
-        messages.forEach(({ selector, type }) => {
-            const element = document.querySelector(selector);
-            if (element) {
-                const message = element.getAttribute(`data-${type}-message`);
-                if (message) {
-                    this.show(message, type);
-                }
-            }
-        });
+        if (successMsg) {
+            this.show(successMsg.dataset.successMessage, 'success');
+        }
+        if (errorMsg) {
+            this.show(errorMsg.dataset.errorMessage, 'error');
+        }
+        if (infoMsg) {
+            this.show(infoMsg.dataset.infoMessage, 'info');
+        }
+        if (warningMsg) {
+            this.show(warningMsg.dataset.warningMessage, 'warning');
+        }
     }
 }
 
-// inisialisasi notification manager
+// init notification manager
 const notificationManager = new NotificationManager();
 
 // export untuk digunakan di tempat lain
@@ -97,7 +100,7 @@ window.showNotification = (message, type, duration) => {
 };
 
 /**
- * page transition effect (IMPROVED)
+ * page transition effect
  */
 document.addEventListener('DOMContentLoaded', () => {
     // fade in saat load
@@ -107,27 +110,14 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.style.opacity = '1';
     }, 10);
 
-    // fade out sebelum navigate (DENGAN VALIDASI LEBIH KETAT)
+    // fade out sebelum navigate
     document.querySelectorAll('a:not([target="_blank"])').forEach(link => {
-        // skip kalau link invalid atau hash only
-        if (!link.href || link.href === '#' || link.href.endsWith('#')) {
-            return;
-        }
-
-        // hanya intercept link internal yang valid
         if (link.hostname === window.location.hostname && !link.href.includes('#')) {
             link.addEventListener('click', function(e) {
-                // skip kalau ctrl/cmd click (buka tab baru)
                 if (e.ctrlKey || e.metaKey) return;
                 
-                const destination = this.href;
-                
-                // validasi destination sebelum preventDefault
-                if (!destination || destination === '#' || destination.endsWith('#')) {
-                    return; // biarkan browser handle
-                }
-                
                 e.preventDefault();
+                const destination = this.href;
                 
                 document.body.style.transition = 'opacity 0.2s ease-out';
                 document.body.style.opacity = '0';
@@ -236,10 +226,6 @@ style.textContent = `
     
     .animate-slideInRight {
         animation: slideInRight 0.3s ease-out;
-    }
-    
-    .animate-slideOutRight {
-        animation: slideOutRight 0.3s ease-out;
     }
 `;
 document.head.appendChild(style);
