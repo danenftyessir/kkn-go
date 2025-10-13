@@ -200,7 +200,7 @@
 
                         <!-- actions -->
                         <div class="flex items-center gap-2 pt-4 border-t border-gray-100">
-                            <a href="{{ route('student.browse-problems.detail', $wishlist->problem->id) }}" 
+                            <a href="{{ route('student.browse-problems.show', $wishlist->problem->id) }}" 
                                class="flex-1 text-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-all duration-200 hover:shadow-md">
                                 Lihat Detail
                             </a>
