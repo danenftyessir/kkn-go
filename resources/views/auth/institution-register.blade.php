@@ -135,9 +135,9 @@
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
         }
         
-        /* Form content background */
+        /* Form content background - opacity lebih rendah */
         .register-card .p-8 {
-            background: rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.25);
             backdrop-filter: blur(10px);
             border-radius: 0 0 1rem 1rem;
         }
@@ -150,6 +150,59 @@
         
         .step-content p {
             color: #4B5563;
+        }
+        
+        /* styling tombol navigasi */
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 2rem;
+            background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);
+            color: white;
+            font-weight: 600;
+            font-size: 0.9375rem;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            background: linear-gradient(135deg, #059669 0%, #0d9488 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+        
+        .btn-primary:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 2rem;
+            background: white;
+            color: #6B7280;
+            font-weight: 600;
+            font-size: 0.9375rem;
+            border-radius: 0.5rem;
+            border: 2px solid #E5E7EB;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .btn-secondary:hover {
+            background: #F9FAFB;
+            border-color: #10b981;
+            color: #10b981;
         }
     </style>
 </head>
@@ -165,7 +218,7 @@
             </a>
             
             <div class="flex items-center space-x-6">
-                <a href="{{ route('home') }}#about" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">About Us</a>
+                <a href="{{ route('about') }}" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">About Us</a>
                 <a href="{{ route('home') }}#contact" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">Contact</a>
             </div>
         </div>
