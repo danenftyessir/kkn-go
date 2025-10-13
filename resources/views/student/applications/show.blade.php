@@ -146,7 +146,7 @@
                     </div>
                     
                     <!-- project link -->
-                    <a href="{{ route('student.browse-problems.detail', $application->problem->id) }}" 
+                    <a href="{{ route('student.browse-problems.show', $application->problem->id) }}" 
                        class="inline-flex items-center text-sm text-blue-600 hover:text-blue-700 font-medium">
                         Lihat Detail Proyek
                         <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
