@@ -73,7 +73,7 @@ class ApplicationController extends Controller
         // validasi deadline belum lewat
         if ($problem->application_deadline < now()) {
             return redirect()
-                ->route('student.browse-problems.detail', $problem->id)
+                ->route('student.browse-problems.show', $problem->id)
                 ->with('error', 'Maaf, deadline aplikasi sudah berakhir');
         }
         
@@ -85,7 +85,7 @@ class ApplicationController extends Controller
         
         if ($hasApplied) {
             return redirect()
-                ->route('student.browse-problems.detail', $problem->id)
+                ->route('student.browse-problems.show', $problem->id)
                 ->with('info', 'Anda sudah mengajukan aplikasi untuk proyek ini');
         }
         
