@@ -222,6 +222,9 @@ Route::middleware(['auth', 'check.user.type:institution'])->prefix('institution'
         Route::get('/{id}/manage', [ProjectManagementController::class, 'manage'])->name('manage');
         Route::post('/{id}/milestone', [ProjectManagementController::class, 'addMilestone'])->name('add-milestone');
         Route::put('/{id}/milestone/{milestoneId}', [ProjectManagementController::class, 'updateMilestone'])->name('update-milestone');
+        Route::post('/{id}/status', [ProjectManagementController::class, 'updateStatus'])->name('update-status');    
+        Route::post('/{id}/reports/{reportId}/approve', [ProjectManagementController::class, 'approveReport'])->name('approve-report');
+        Route::post('/{id}/reports/{reportId}/reject', [ProjectManagementController::class, 'rejectReport'])->name('reject-report');
     });
 
     // reviews

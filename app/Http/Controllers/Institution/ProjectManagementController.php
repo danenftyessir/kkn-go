@@ -310,4 +310,53 @@ class ProjectManagementController extends Controller
             'message' => 'laporan akhir berhasil disetujui',
         ]);
     }
+    /**
+     * approve report dari mahasiswa
+     */
+    public function approveReport(Request $request, $id, $reportId)
+    {
+        $institution = auth()->user()->institution;
+
+        $project = Project::where('institution_id', $institution->id)->findOrFail($id);
+        $report = $project->reports()->findOrFail($reportId);
+
+        $validated = $request->validate([
+            'feedback' => 'nullable|string|max:1000',
+        ]);
+
+        $report->update([
+            'status' => 'approved',
+            'institution_feedback' => $validated['feedback'] ?? 'Laporan disetujui',
+            'reviewed_at' => now(),
+        ]);
+
+        return redirect()
+            ->route('institution.projects.manage', $project->id)
+            ->with('success', 'Laporan berhasil disetujui');
+    }
+
+    /**
+     * reject report / minta revisi dari mahasiswa
+     */
+    public function rejectReport(Request $request, $id, $reportId)
+    {
+        $institution = auth()->user()->institution;
+
+        $project = Project::where('institution_id', $institution->id)->findOrFail($id);
+        $report = $project->reports()->findOrFail($reportId);
+
+        $validated = $request->validate([
+            'feedback' => 'required|string|max:1000',
+        ]);
+
+        $report->update([
+            'status' => 'revision_required',
+            'institution_feedback' => $validated['feedback'],
+            'reviewed_at' => now(),
+        ]);
+
+        return redirect()
+            ->route('institution.projects.manage', $project->id)
+            ->with('success', 'Feedback revisi berhasil dikirim');
+    }
 }
