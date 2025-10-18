@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Kontak Kami - ' . config('app.name'))
+@section('title', 'Contact Us - ' . config('app.name'))
 
 @push('styles')
 <style>
@@ -9,50 +9,45 @@
         scroll-behavior: smooth;
     }
 
-    /* hero section dengan parallax effect */
-    .hero-section {
+    /* hero section dengan style konsisten seperti about us */
+    .contact-hero-background {
         position: relative;
-        height: 60vh;
-        min-height: 500px;
         background-image: url('{{ asset('contact.jpg') }}');
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
-        overflow: hidden;
+        min-height: 400px;
     }
-
-    .hero-overlay {
+    
+    .contact-hero-background::before {
+        content: '';
         position: absolute;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
-        background: linear-gradient(135deg, rgba(37, 99, 235, 0.85) 0%, rgba(16, 185, 129, 0.75) 100%);
+        background: linear-gradient(
+            135deg, 
+            rgba(37, 99, 235, 0.75) 0%,
+            rgba(59, 130, 246, 0.72) 35%,
+            rgba(16, 185, 129, 0.70) 65%,
+            rgba(5, 150, 105, 0.75) 100%
+        );
         backdrop-filter: blur(2px);
     }
 
-    .hero-content {
-        position: relative;
-        z-index: 10;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        padding: 2rem;
-        animation: fadeInUp 1s cubic-bezier(0.4, 0, 0.2, 1);
+    /* text shadow untuk hero */
+    .text-shadow-contact {
+        text-shadow: 
+            0 2px 4px rgba(0, 0, 0, 0.5),
+            0 4px 8px rgba(0, 0, 0, 0.4),
+            0 8px 16px rgba(0, 0, 0, 0.3);
     }
 
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+    .text-shadow-subtitle {
+        text-shadow: 
+            0 2px 4px rgba(0, 0, 0, 0.4),
+            0 4px 8px rgba(0, 0, 0, 0.3);
     }
 
     /* team member cards */
@@ -141,6 +136,17 @@
         animation-delay: 0.3s;
     }
 
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
     /* section header animation */
     .section-header {
         opacity: 0;
@@ -158,7 +164,7 @@
             scroll-behavior: auto !important;
         }
 
-        .hero-section {
+        .contact-hero-background {
             background-attachment: scroll;
         }
 
@@ -173,9 +179,7 @@
 
     /* responsive adjustments */
     @media (max-width: 768px) {
-        .hero-section {
-            height: 50vh;
-            min-height: 400px;
+        .contact-hero-background {
             background-attachment: scroll;
         }
 
@@ -193,14 +197,17 @@
 @section('content')
 <div class="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
     
-    {{-- hero section --}}
-    <div class="hero-section">
-        <div class="hero-overlay"></div>
-        <div class="hero-content">
-            <h1 class="text-5xl md:text-6xl font-bold text-white mb-4">Kontak Kami</h1>
-            <p class="text-xl md:text-2xl text-white/90 max-w-2xl">
-                Ingin Berkolaborasi Dengan Jakarta Smart City? Hubungi Kami Di Sini.
-            </p>
+    {{-- hero section dengan style konsisten --}}
+    <div class="contact-hero-background">
+        <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+            <div class="max-w-4xl">
+                <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 text-white text-shadow-contact leading-tight">
+                    Contact Us
+                </h1>
+                <p class="text-xl md:text-2xl text-white/95 text-shadow-subtitle max-w-2xl leading-relaxed">
+                    Ingin Berkolaborasi Dengan KKN-Go? Hubungi Kami Di Sini.
+                </p>
+            </div>
         </div>
     </div>
 

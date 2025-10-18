@@ -118,7 +118,6 @@ Program KKN di Indonesia saat ini menghadapi beberapa tantangan:
 - 🔍 Pencarian full-text dengan filter advanced
 - 📄 PDF viewer terintegrasi
 - 📥 Download tracking
-- 📷 Galeri foto dokumentasi
 - 🔖 Highlight & bookmark
 - 🔗 Visualisasi koneksi antar dokumen
 - 📊 Usage statistics
