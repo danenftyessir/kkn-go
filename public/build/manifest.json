@@ -1,0 +1,40 @@
+{
+  "resources/css/app.css": {
+    "file": "assets/app-BlC8qgZs.css",
+    "src": "resources/css/app.css",
+    "isEntry": true,
+    "names": [
+      "app.css"
+    ]
+  },
+  "resources/css/auth-institution.css": {
+    "file": "assets/auth-institution-DqKCl9WY.css",
+    "src": "resources/css/auth-institution.css",
+    "isEntry": true,
+    "names": [
+      "auth-institution.css"
+    ]
+  },
+  "resources/css/auth-student.css": {
+    "file": "assets/auth-student-C2RPsGhj.css",
+    "src": "resources/css/auth-student.css",
+    "isEntry": true,
+    "names": [
+      "auth-student.css"
+    ]
+  },
+  "resources/css/auth.css": {
+    "file": "assets/auth-xKqSpthD.css",
+    "src": "resources/css/auth.css",
+    "isEntry": true,
+    "names": [
+      "auth.css"
+    ]
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-qJLXkPXm.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true
+  }
+}
