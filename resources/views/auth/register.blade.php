@@ -11,15 +11,15 @@
 <body class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
     <!-- navigation -->
     <div class="absolute top-6 left-6 right-6 flex items-center justify-between z-10">
-        <a href="{{ route('home') }}" class="inline-flex items-center text-gray-700 hover:text-gray-900 transition-colors group">
+        <a href="{{ route('home') }}" class="inline-flex items-center text-gray-800 hover:text-gray-900 transition-colors group">
             <svg class="w-5 h-5 mr-2 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
             </svg>
             <span class="font-medium">Back to Home</span>
         </a>
         <div class="flex items-center space-x-6">
-            <a href="{{ route('contact') }}" class="text-white hover:text-gray-200 ...">Contact</a>
-            <a href="{{ route('about') }}" class="text-white hover:text-gray-200 ...">About</a>
+            <a href="{{ route('contact') }}" class="text-gray-800 hover:text-gray-900 font-medium transition-colors">Contact</a>
+            <a href="{{ route('about') }}" class="text-gray-800 hover:text-gray-900 font-medium transition-colors">About</a>
         </div>
     </div>
 

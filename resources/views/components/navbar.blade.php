@@ -256,17 +256,13 @@
                     </button>
                 </form>
             @else
-                <a href="{{ route('home') }}" 
-                   class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors {{ request()->routeIs('home') ? 'text-blue-600 bg-blue-50' : '' }}">
-                    Home
-                </a>
                 <a href="{{ route('about') }}" 
                    class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors {{ request()->routeIs('about') ? 'text-blue-600 bg-blue-50' : '' }}">
                     About Us
                 </a>
                 <a href="{{ route('contact') }}" 
                    class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors {{ request()->routeIs('contact') ? 'text-blue-600 bg-blue-50' : '' }}">
-                    Kontak
+                    Contact
                 </a>
                 
                 <div class="border-t border-gray-200 my-2"></div>
