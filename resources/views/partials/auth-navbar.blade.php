@@ -9,13 +9,12 @@
             Back To Home
         </a>
 
-        <!-- right links -->
         <div style="display: flex; gap: 2rem;">
+            <a href="{{ route('contact') }}" style="color: #6b7280; text-decoration: none; font-weight: 500; font-size: 0.9375rem; transition: color 0.2s;">
+                Contact
+            </a>
             <a href="{{ route('about') }}" style="color: #6b7280; text-decoration: none; font-weight: 500; font-size: 0.9375rem; transition: color 0.2s;">
                 About
-            </a>
-            <a href="{{ route('contact') }}" style="color: #6b7280; text-decoration: none; font-weight: 500; font-size: 0.9375rem; transition: color 0.2s;">
-                Kontak
             </a>
         </div>
     </div>

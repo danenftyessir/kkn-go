@@ -52,8 +52,8 @@
             </a>
             
             <div class="flex items-center space-x-6">
-                <a href="#" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">Tentang</a>
-                <a href="#" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">Kontak</a>
+                <a href="{{ route('contact') }}" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">Contact</a>
+                <a href="{{ route('about') }}" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">About</a>
             </div>
         </div>
     </nav>
