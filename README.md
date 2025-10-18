@@ -14,9 +14,9 @@
 
 ### 🏆 Submission
 
-- **Lomba**: SwitchFest 2025 - Web Development
+- **Lomba**: Soedirman Technophoria
 - **Kategori**: Full-Stack Web Application
-- **Tim**: AnakSoleh
+- **Tim**: PHP Artisan Serve
 - **Institusi**: Institut Teknologi Bandung (ITB)
 
 ---
@@ -118,7 +118,6 @@ Program KKN di Indonesia saat ini menghadapi beberapa tantangan:
 - 🔍 Pencarian full-text dengan filter advanced
 - 📄 PDF viewer terintegrasi
 - 📥 Download tracking
-- 📚 Sistem sitasi otomatis (APA, MLA)
 - 📷 Galeri foto dokumentasi
 - 🔖 Highlight & bookmark
 - 🔗 Visualisasi koneksi antar dokumen
@@ -221,7 +220,7 @@ KKN-Go dibangun menggunakan **arsitektur monolitik** dengan pola **Model-View-Co
 
 ## 👥 Tim Pengembang
 
-### Tim AnakSoleh
+### Tim PHP Artisan Serve
 
 | Nama | Role | NIM | Kontak |
 |------|------|-----|--------|
@@ -237,18 +236,6 @@ Jl. Ganesha 10, Bandung 40132
 
 ---
 
-## 🙏 Acknowledgments
-
-Terima kasih kepada:
-
-- **SwitchFest 2025** untuk menyelenggarakan lomba ini
-- **Institut Teknologi Bandung** untuk dukungan dan fasilitasnya
-- **Laravel Community** untuk framework yang luar biasa
-- **Open Source Contributors** untuk berbagai library yang digunakan
-- **Kementerian Pendidikan** untuk program KKN di Indonesia
-
----
-
 ## 📚 Referensi
 
 1. Badan Pusat Statistik. (2023). Statistik Pendidikan Tinggi Indonesia 2023.
@@ -258,8 +245,6 @@ Terima kasih kepada:
 ---
 
 <div align="center">
-
-**Dibuat dengan ❤️ oleh Tim AnakSoleh**
 
 **Institut Teknologi Bandung - 2025**
 
