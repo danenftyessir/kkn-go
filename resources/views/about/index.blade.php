@@ -34,16 +34,16 @@
             {{-- header dengan logo --}}
             <div class="text-center mb-16">
                 <div class="flex justify-center mb-8">
-                    <img src="{{ asset('kkn-go-logo.png') }}" alt="Logo KKN-Go" class="h-20 w-20">
+                    <img src="{{ asset('kkn-go-logo.png') }}" alt="Logo KKN-Go" class="h-24 w-auto">
                 </div>
                 <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
                     Perkenalkan, KKN-Go
                 </h2>
                 <div class="max-w-4xl mx-auto">
-                    <p class="text-lg text-gray-700 leading-relaxed mb-4">
+                    <p class="text-lg text-gray-700 leading-relaxed mb-4 text-justify">
                         Indonesia memiliki potensi intelektual yang luar biasa dengan <span class="font-bold text-blue-600">8,3 juta mahasiswa aktif</span> di 4.500 perguruan tinggi, dimana sekitar <span class="font-bold text-blue-600">520.000 mahasiswa melaksanakan KKN</span> setiap tahun menghasilkan lebih dari 100.000 laporan penelitian.
                     </p>
-                    <p class="text-lg text-gray-700 leading-relaxed mb-6">
+                    <p class="text-lg text-gray-700 leading-relaxed mb-6 text-justify">
                         Namun, data menunjukkan bahwa <span class="font-bold text-red-600">76% hasil penelitian mahasiswa hanya berakhir sebagai dokumen arsip</span> tanpa implementasi nyata, menciptakan pemborosan sumber daya senilai <span class="font-bold text-red-600">±Rp 1,2 triliun per tahun</span>.
                     </p>
                 </div>
