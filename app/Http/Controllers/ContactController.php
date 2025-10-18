@@ -18,24 +18,24 @@ class ContactController extends Controller
                 'role' => 'Project Manager',
                 'description' => 'Mengkoordinasi keseluruhan proyek dan memastikan semua berjalan sesuai rencana.',
                 'photo' => 'profile_18223127.jpg',
-                'email' => 'kenzie.raffa@example.com',
-                'whatsapp' => '+62 812-3456-7890'
+                'email' => 'kenzieraffa0709@gmail.com',
+                'whatsapp' => '+62 878-8533-1404'
             ],
             [
                 'name' => 'Danendra Shafi Athallah',
                 'role' => 'Full Stack Developer',
                 'description' => 'Mengembangkan frontend dan backend untuk memastikan sistem berjalan optimal.',
                 'photo' => 'profile_13523136.jpg',
-                'email' => 'danendra.shafi@example.com',
-                'whatsapp' => '+62 812-3456-7891'
+                'email' => 'danendra1967@gmail.com',
+                'whatsapp' => '+62 812-2027-7660'
             ],
             [
                 'name' => 'M. Abizzar Gamadrian',
                 'role' => 'Backend Developer & Technical Support',
                 'description' => 'Mengembangkan sistem backend dan memberikan dukungan teknis untuk pengguna.',
                 'photo' => 'profile_13523155.jpg',
-                'email' => 'abizzar.gamadrian@example.com',
-                'whatsapp' => '+62 812-3456-7892'
+                'email' => '13523155@std.stei.itb.ac.id',
+                'whatsapp' => '+62 822-8930-9848'
             ],
         ];
 
