@@ -33,7 +33,7 @@
                            class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('student.projects.*') ? 'text-blue-600' : '' }}">
                             Proyek Saya
                         </a>
-                        <a href="{{ route('repository.index') }}" 
+                        <a href="{{ route('student.repository.index') }}" 
                            class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('repository.*') ? 'text-blue-600' : '' }}">
                             Repositori
                         </a>
