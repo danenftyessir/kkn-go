@@ -21,15 +21,15 @@
 <body class="min-h-screen bg-gray-50">
     <!-- back to home -->
     <div class="absolute top-6 left-6 right-6 flex items-center justify-between z-10">
-        <a href="{{ route('home') }}" class="inline-flex items-center text-gray-700 hover:text-gray-900 transition-colors group bg-white/90 backdrop-blur-sm px-4 py-2 rounded-lg shadow-sm">
+        <a href="{{ route('home') }}" class="inline-flex items-center text-gray-800 hover:text-gray-900 transition-colors group" style="text-shadow: 0 1px 3px rgba(255,255,255,0.8);">
             <svg class="w-5 h-5 mr-2 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
             </svg>
             <span class="font-medium">Back to Home</span>
         </a>
-        <div class="flex items-center space-x-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-lg shadow-sm">
-            <a href="{{ route('contact') }}" class="text-gray-700 hover:text-gray-900 font-medium transition-colors">Contact</a>
-            <a href="{{ route('about') }}" class="text-gray-700 hover:text-gray-900 font-medium transition-colors">About</a>
+        <div class="flex items-center space-x-6">
+            <a href="{{ route('contact') }}" class="text-gray-800 hover:text-gray-900 font-medium transition-colors" style="text-shadow: 0 1px 3px rgba(255,255,255,0.8);">Contact</a>
+            <a href="{{ route('about') }}" class="text-gray-800 hover:text-gray-900 font-medium transition-colors" style="text-shadow: 0 1px 3px rgba(255,255,255,0.8);">About</a>
         </div>
     </div>
 
