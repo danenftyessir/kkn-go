@@ -207,7 +207,6 @@
     </style>
 </head>
 <body class="font-sans antialiased bg-gray-50">
-    {{-- PERBAIKAN 1: navbar tetap - BAHASA INGGRIS --}}
     <nav class="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50">
         <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
             <a href="{{ route('home') }}" class="inline-flex items-center text-gray-700 hover:text-gray-900 transition-colors font-semibold">
@@ -218,8 +217,8 @@
             </a>
             
             <div class="flex items-center space-x-6">
-                <a href="{{ route('about') }}" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">About Us</a>
-                <a href="{{ route('home') }}#contact" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">Contact</a>
+                <a href="{{ route('contact') }}" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">Contact</a>
+                <a href="{{ route('about') }}" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">About</a>
             </div>
         </div>
     </nav>
