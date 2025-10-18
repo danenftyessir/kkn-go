@@ -1,62 +1,62 @@
-{{-- components/navbar.blade.php --}}
-<nav class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm" x-data="{ mobileMenuOpen: false }">
+{{-- navbar component dengan alpine.js --}}
+<nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50" x-data="{ mobileMenuOpen: false }">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-            {{-- logo dan nama aplikasi --}}
-            <div class="flex items-center">
-                <a href="{{ route('home') }}" 
-                   class="flex items-center">
-                    <img src="{{ asset('kkn-go-logo.png') }}" alt="KKN-GO" class="h-10 w-auto">
-                    <span class="ml-2 text-xl font-bold text-gray-900">KKN-GO</span>
+        <div class="flex justify-between h-16 items-center">
+            
+            {{-- logo --}}
+            <div class="flex-shrink-0 flex items-center">
+                <a href="{{ route('home') }}" class="flex items-center space-x-3">
+                    <img src="{{ asset('kkn-go-logo.png') }}" alt="KKN-GO Logo" class="h-10 w-auto">
+                    <span class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
+                        KKN-GO
+                    </span>
                 </a>
             </div>
 
-            {{-- navigasi menu --}}
-            <div class="hidden md:flex md:items-center md:space-x-8">
+            {{-- menu desktop --}}
+            <div class="hidden md:flex items-center space-x-1">
                 @auth
                     @if(Auth::user()->isStudent())
-                        {{-- menu untuk student --}}
                         <a href="{{ route('student.dashboard') }}" 
                            class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('student.dashboard') ? 'text-blue-600' : '' }}">
                             Dashboard
                         </a>
                         <a href="{{ route('student.browse-problems.index') }}" 
-                           class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('student.browse-problems.*') || request()->routeIs('student.problems.*') ? 'text-blue-600' : '' }}">
-                            Browse
+                           class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('student.browse-problems.*') ? 'text-blue-600' : '' }}">
+                            Telusuri Masalah
                         </a>
                         <a href="{{ route('student.applications.index') }}" 
                            class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('student.applications.*') ? 'text-blue-600' : '' }}">
-                            Applications
+                            Aplikasi Saya
                         </a>
                         <a href="{{ route('student.projects.index') }}" 
                            class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('student.projects.*') ? 'text-blue-600' : '' }}">
-                            Projects
+                            Proyek Saya
                         </a>
-                        <a href="{{ route('student.repository.index') }}" 
-                           class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('student.repository.*') ? 'text-blue-600' : '' }}">
-                            Repository
+                        <a href="{{ route('repository.index') }}" 
+                           class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('repository.*') ? 'text-blue-600' : '' }}">
+                            Repositori
                         </a>
                     @elseif(Auth::user()->isInstitution())
-                        {{-- menu untuk institution --}}
                         <a href="{{ route('institution.dashboard') }}" 
                            class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('institution.dashboard') ? 'text-blue-600' : '' }}">
                             Dashboard
                         </a>
                         <a href="{{ route('institution.problems.index') }}" 
                            class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('institution.problems.*') ? 'text-blue-600' : '' }}">
-                            Problems
+                            Masalah
                         </a>
                         <a href="{{ route('institution.applications.index') }}" 
                            class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('institution.applications.*') ? 'text-blue-600' : '' }}">
-                            Applications
+                            Aplikasi
                         </a>
                         <a href="{{ route('institution.projects.index') }}" 
                            class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('institution.projects.*') ? 'text-blue-600' : '' }}">
-                            Projects
+                            Proyek
                         </a>
                         <a href="{{ route('institution.reviews.index') }}" 
                            class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('institution.reviews.*') ? 'text-blue-600' : '' }}">
-                            Reviews
+                            Ulasan
                         </a>
                     @endif
                     
@@ -112,15 +112,7 @@
                                         <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                                         </svg>
-                                        Profile
-                                    </a>
-                                    <a href="{{ route('student.profile.edit') }}" 
-                                       class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                                        <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                        </svg>
-                                        Settings
+                                        Profil Mahasiswa
                                     </a>
                                 @elseif(Auth::user()->isInstitution())
                                     <a href="{{ route('institution.profile.index') }}" 
@@ -151,12 +143,16 @@
                 @else
                     {{-- menu untuk guest --}}
                     <a href="{{ route('home') }}" 
-                       class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">
+                       class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('home') ? 'text-blue-600' : '' }}">
                         Home
                     </a>
                     <a href="{{ route('about') }}" 
                        class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('about') ? 'text-blue-600' : '' }}">
                         About Us
+                    </a>
+                    <a href="{{ route('contact') }}" 
+                       class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('contact') ? 'text-blue-600' : '' }}">
+                        Kontak
                     </a>
                     <a href="{{ route('login') }}" 
                        class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">
@@ -205,30 +201,23 @@
                     </a>
                     <a href="{{ route('student.browse-problems.index') }}" 
                        class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors {{ request()->routeIs('student.browse-problems.*') ? 'text-blue-600 bg-blue-50' : '' }}">
-                        Browse
+                        Telusuri Masalah
                     </a>
                     <a href="{{ route('student.applications.index') }}" 
                        class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors {{ request()->routeIs('student.applications.*') ? 'text-blue-600 bg-blue-50' : '' }}">
-                        Applications
+                        Aplikasi Saya
                     </a>
                     <a href="{{ route('student.projects.index') }}" 
                        class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors {{ request()->routeIs('student.projects.*') ? 'text-blue-600 bg-blue-50' : '' }}">
-                        Projects
+                        Proyek Saya
                     </a>
-                    <a href="{{ route('student.repository.index') }}" 
-                       class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors {{ request()->routeIs('student.repository.*') ? 'text-blue-600 bg-blue-50' : '' }}">
-                        Repository
+                    <a href="{{ route('repository.index') }}" 
+                       class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors {{ request()->routeIs('repository.*') ? 'text-blue-600 bg-blue-50' : '' }}">
+                        Repositori
                     </a>
-                    
-                    <div class="border-t border-gray-200 my-2"></div>
-                    
                     <a href="{{ route('student.profile.index') }}" 
                        class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors">
-                        Profile
-                    </a>
-                    <a href="{{ route('student.profile.edit') }}" 
-                       class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors">
-                        Settings
+                        Profil Mahasiswa
                     </a>
                 @elseif(Auth::user()->isInstitution())
                     <a href="{{ route('institution.dashboard') }}" 
@@ -237,23 +226,20 @@
                     </a>
                     <a href="{{ route('institution.problems.index') }}" 
                        class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors {{ request()->routeIs('institution.problems.*') ? 'text-blue-600 bg-blue-50' : '' }}">
-                        Problems
+                        Masalah
                     </a>
                     <a href="{{ route('institution.applications.index') }}" 
                        class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors {{ request()->routeIs('institution.applications.*') ? 'text-blue-600 bg-blue-50' : '' }}">
-                        Applications
+                        Aplikasi
                     </a>
                     <a href="{{ route('institution.projects.index') }}" 
                        class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors {{ request()->routeIs('institution.projects.*') ? 'text-blue-600 bg-blue-50' : '' }}">
-                        Projects
+                        Proyek
                     </a>
                     <a href="{{ route('institution.reviews.index') }}" 
                        class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors {{ request()->routeIs('institution.reviews.*') ? 'text-blue-600 bg-blue-50' : '' }}">
-                        Reviews
+                        Ulasan
                     </a>
-                    
-                    <div class="border-t border-gray-200 my-2"></div>
-                    
                     <a href="{{ route('institution.profile.index') }}" 
                        class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors">
                         Profil Instansi
@@ -277,6 +263,10 @@
                 <a href="{{ route('about') }}" 
                    class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors {{ request()->routeIs('about') ? 'text-blue-600 bg-blue-50' : '' }}">
                     About Us
+                </a>
+                <a href="{{ route('contact') }}" 
+                   class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors {{ request()->routeIs('contact') ? 'text-blue-600 bg-blue-50' : '' }}">
+                    Kontak
                 </a>
                 
                 <div class="border-t border-gray-200 my-2"></div>

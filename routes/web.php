@@ -23,6 +23,7 @@ use App\Http\Controllers\Institution\ReviewController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\AboutController;
 use App\Http\Controllers\Auth\ValidationController;
+use App\Http\Controllers\ContactController;
 
 /*
 |--------------------------------------------------------------------------
@@ -44,6 +45,9 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // about us page
 Route::get('/about', [AboutController::class, 'index'])->name('about'); 
+
+// contact page
+Route::get('/contact', [ContactController::class, 'index'])->name('contact');
 
 // public student profile/portfolio (dapat diakses tanpa login)
 Route::get('/profile/{username}', [StudentProfileController::class, 'publicView'])->name('profile.public');

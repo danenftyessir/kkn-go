@@ -171,7 +171,7 @@
                         Saatnya kita melangkah bersama untuk membentuk KKN-Go sebagai <span class="font-semibold italic">revolusi mahasiswa</span> yang lebih inklusif dan siap bersaing di pentas nasional.
                     </p>
                     <div class="mt-8">
-                        <p class="text-gray-900 font-bold text-xl">Tim AnakSoleh</p>
+                        <p class="text-gray-900 font-bold text-xl">Tim PHP Artisan Serve</p>
                         <p class="text-gray-600">Institut Teknologi Bandung</p>
                     </div>
                 </div>
