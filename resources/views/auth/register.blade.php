@@ -18,8 +18,8 @@
             <span class="font-medium">Back to Home</span>
         </a>
         <div class="flex items-center space-x-6">
-            <a href="{{ route('contact') }}" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">Contact</a>
-            <a href="{{ route('about') }}" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">About</a>
+            <a href="{{ route('contact') }}" class="text-white hover:text-gray-200 ...">Contact</a>
+            <a href="{{ route('about') }}" class="text-white hover:text-gray-200 ...">About</a>
         </div>
     </div>
 
