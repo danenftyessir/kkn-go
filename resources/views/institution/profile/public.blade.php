@@ -1,3 +1,4 @@
+{{-- resources/views/institution/profile/public.blade.php --}}
 @extends('layouts.app')
 
 @section('title', $institution->name . ' - Profil Publik')
@@ -10,7 +11,6 @@
         <div class="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl shadow-lg p-8 mb-8 text-white">
             <div class="flex items-start gap-6">
                 @if($institution->logo_path)
-                    {{-- PERBAIKAN BUG: gunakan getLogoUrl() untuk support Supabase --}}
                     <img src="{{ $institution->getLogoUrl() }}" 
                          alt="{{ $institution->name }}" 
                          class="w-32 h-32 rounded-xl object-cover border-4 border-white shadow-lg">
@@ -60,33 +60,33 @@
         <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
                 <div class="text-3xl font-bold text-blue-600">{{ $stats['total_problems'] }}</div>
-                <div class="text-sm text-gray-600 mt-1">Masalah Dipublikasi</div>
+                <div class="text-sm text-gray-600 mt-2">Total Masalah</div>
             </div>
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
-                <div class="text-3xl font-bold text-green-600">{{ $stats['active_projects'] }}</div>
-                <div class="text-sm text-gray-600 mt-1">Proyek Berjalan</div>
+                <div class="text-3xl font-bold text-green-600">{{ $stats['active_problems'] }}</div>
+                <div class="text-sm text-gray-600 mt-2">Masalah Aktif</div>
             </div>
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
-                <div class="text-3xl font-bold text-purple-600">{{ $stats['completed_projects'] }}</div>
-                <div class="text-sm text-gray-600 mt-1">Proyek Selesai</div>
+                <div class="text-3xl font-bold text-purple-600">{{ $stats['completed_problems'] }}</div>
+                <div class="text-sm text-gray-600 mt-2">Masalah Selesai</div>
             </div>
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
-                <div class="text-3xl font-bold text-orange-600">{{ $stats['active_problems'] }}</div>
-                <div class="text-sm text-gray-600 mt-1">Masalah Aktif</div>
+                <div class="text-3xl font-bold text-orange-600">{{ $stats['active_projects'] }}</div>
+                <div class="text-sm text-gray-600 mt-2">Proyek Berjalan</div>
             </div>
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
-                <div class="text-3xl font-bold text-teal-600">{{ $stats['total_projects'] }}</div>
-                <div class="text-sm text-gray-600 mt-1">Total Proyek</div>
+                <div class="text-3xl font-bold text-indigo-600">{{ $stats['completed_projects'] }}</div>
+                <div class="text-sm text-gray-600 mt-2">Proyek Selesai</div>
             </div>
         </div>
 
-        {{-- masalah yang dipublikasi --}}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
-            <h2 class="text-2xl font-bold text-gray-900 mb-6">Masalah Yang Dipublikasi</h2>
-
+        {{-- masalah yang dipublikasikan --}}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Masalah Yang Dipublikasikan</h2>
+            
             @if($institution->problems->isEmpty())
                 <div class="text-center py-12">
-                    <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-24 h-24 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
                     <p class="text-gray-500">Belum Ada Masalah Yang Dipublikasi</p>
@@ -94,8 +94,7 @@
             @else
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     @foreach($institution->problems as $problem)
-                    <a href="{{ route('student.browse-problems.detail', $problem->id) }}" class="block bg-gray-50 rounded-lg p-4 hover:shadow-md transition-shadow border border-gray-100">
-                        {{-- ✅ PERBAIKAN: gunakan accessor coverImage --}}
+                    <a href="{{ route('student.browse-problems.show', $problem->id) }}" class="block bg-gray-50 rounded-lg p-4 hover:shadow-md transition-shadow border border-gray-100">
                         @if($problem->coverImage)
                             <img src="{{ $problem->coverImage->image_url }}" 
                                 alt="{{ $problem->title }}"
@@ -121,45 +120,13 @@
                             </span>
                             
                             <span class="text-sm text-gray-500">
-                                {{ $problem->applications_count ?? 0 }} Aplikasi
+                                {{ $problem->applications_count ?? 0 }} aplikasi
                             </span>
                         </div>
                     </a>
                     @endforeach
                 </div>
             @endif
-        </div>
-
-        {{-- informasi kontak --}}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h2 class="text-2xl font-bold text-gray-900 mb-6">Informasi Kontak</h2>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label class="text-sm font-semibold text-gray-600">Alamat</label>
-                    <p class="text-gray-900 mt-1">{{ $institution->address }}</p>
-                </div>
-
-                <div>
-                    <label class="text-sm font-semibold text-gray-600">Telepon</label>
-                    <p class="text-gray-900 mt-1">{{ $institution->phone }}</p>
-                </div>
-
-                <div>
-                    <label class="text-sm font-semibold text-gray-600">Penanggung Jawab</label>
-                    <p class="text-gray-900 mt-1">{{ $institution->pic_name }}</p>
-                    <p class="text-sm text-gray-600">{{ $institution->pic_position }}</p>
-                </div>
-
-                @if($institution->website)
-                <div>
-                    <label class="text-sm font-semibold text-gray-600">Website</label>
-                    <a href="{{ $institution->website }}" target="_blank" class="text-blue-600 hover:text-blue-700 mt-1 block">
-                        {{ $institution->website }}
-                    </a>
-                </div>
-                @endif
-            </div>
         </div>
     </div>
 </div>
