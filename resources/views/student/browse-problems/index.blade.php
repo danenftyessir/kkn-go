@@ -174,7 +174,15 @@
                 <div class="bg-white rounded-lg shadow-sm p-4 mb-6 border border-gray-200">
                     <form action="{{ route('student.browse-problems.index') }}" method="GET" class="flex gap-3">
                         @foreach(request()->except(['search', 'page']) as $key => $value)
-                            <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                            @if(is_array($value))
+                                {{-- jika value adalah array (contoh: sdg_categories), buat multiple hidden inputs --}}
+                                @foreach($value as $item)
+                                    <input type="hidden" name="{{ $key }}[]" value="{{ $item }}">
+                                @endforeach
+                            @else
+                                {{-- jika value bukan array, buat single hidden input --}}
+                                <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                            @endif
                         @endforeach
                         
                         <div class="flex-1">

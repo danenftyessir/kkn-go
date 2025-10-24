@@ -155,7 +155,7 @@
                     </a>
                     <a href="{{ route('contact') }}" 
                        class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('contact') ? 'text-blue-600' : '' }}">
-                        Kontak
+                        Contact
                     </a>
                     <a href="{{ route('login') }}" 
                        class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">
@@ -185,7 +185,7 @@
         </div>
     </div>
 
-    {{-- mobile menu dengan styling yang diperbaiki --}}
+    {{-- mobile menu dengan styling --}}
     <div class="md:hidden bg-white border-t border-gray-200 shadow-lg" 
          x-show="mobileMenuOpen" 
          x-transition:enter="transition ease-out duration-200"
