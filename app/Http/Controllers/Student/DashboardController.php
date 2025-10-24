@@ -9,6 +9,7 @@ use App\Models\Application;
 use App\Models\Problem;
 use App\Models\Notification;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 /**
@@ -66,6 +67,7 @@ class DashboardController extends Controller
                                         ->get();
 
         // rekomendasi proyek berdasarkan jurusan dan skills untuk sidebar
+        // fix: gunakan whereRaw untuk comparison dengan subquery
         $recommendedProblems = Problem::where('status', 'open')
                                      ->where('application_deadline', '>=', Carbon::now())
                                      ->with([
@@ -95,11 +97,8 @@ class DashboardController extends Controller
                                          }
                                      })
                                      ->withCount('applications')
-                                     ->having('applications_count', '<', function($query) {
-                                         $query->selectRaw('students_needed')
-                                               ->from('problems as p2')
-                                               ->whereColumn('p2.id', 'problems.id');
-                                     })
+                                     // fix: gunakan whereRaw untuk compare applications_count dengan students_needed
+                                     ->whereRaw('(SELECT COUNT(*) FROM applications WHERE applications.problem_id = problems.id) < problems.students_needed')
                                      ->inRandomOrder()
                                      ->take(4)
                                      ->get();
