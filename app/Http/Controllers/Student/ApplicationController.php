@@ -36,12 +36,37 @@ class ApplicationController extends Controller
         $query = Application::with(['problem.institution', 'problem.province', 'problem.regency'])
                             ->where('student_id', $student->id);
         
+        // filter berdasarkan search (judul proyek atau nama instansi)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->whereHas('problem', function($q) use ($search) {
+                    $q->where('title', 'like', "%{$search}%")
+                    ->orWhereHas('institution', function($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    });
+                });
+            });
+        }
+        
         // filter berdasarkan status
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
         
-        $applications = $query->orderBy('applied_at', 'desc')->paginate(10);
+        // sorting
+        $sort = $request->input('sort', 'latest');
+        switch ($sort) {
+            case 'oldest':
+                $query->orderBy('applied_at', 'asc');
+                break;
+            case 'latest':
+            default:
+                $query->orderBy('applied_at', 'desc');
+                break;
+        }
+        
+        $applications = $query->paginate(10)->withQueryString();
         
         // statistik untuk summary
         $stats = [
@@ -54,7 +79,7 @@ class ApplicationController extends Controller
         
         return view('student.applications.index', compact('applications', 'stats'));
     }
-    
+        
     /**
      * tampilkan form untuk apply ke problem
      */
