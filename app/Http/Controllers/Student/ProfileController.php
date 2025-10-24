@@ -159,9 +159,7 @@ class ProfileController extends Controller
     public function updatePassword(UpdateStudentPasswordRequest $request)
     {
         try {
-            $user = Auth::user();
-            
-            // pastikan password di-hash dan save
+            $user = Auth::user();            
             $user->password = Hash::make($request->password);
             $user->save();
             
@@ -177,6 +175,7 @@ class ProfileController extends Controller
                 
         } catch (\Exception $e) {
             Log::error("Error saat update password: " . $e->getMessage());
+            Log::error("Stack trace: " . $e->getTraceAsString());
             
             return back()->with('error', 'Terjadi Kesalahan Saat Memperbarui Password. Silakan Coba Lagi.');
         }
