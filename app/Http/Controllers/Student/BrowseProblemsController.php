@@ -35,7 +35,7 @@ class BrowseProblemsController extends Controller
                 'required_students',
                 'difficulty_level',
                 'duration_months',
-                'sdg_categories', // penting: harus di-select agar casting model ter-apply
+                'sdg_categories',
                 'is_featured',
                 'is_urgent',
                 'created_at'
@@ -114,7 +114,7 @@ class BrowseProblemsController extends Controller
 
         // eager load relationships - optimized
         $query->with([
-            'institution:id,name,institution_type,logo_path',
+            'institution:id,name,type,logo_path',
             'province:id,name',
             'regency:id,name,province_id',
             'images' => function($query) {
@@ -176,7 +176,6 @@ class BrowseProblemsController extends Controller
         }
 
         // similar problems berdasarkan lokasi dan kategori SDG
-        // ✅ PERBAIKAN: tambahkan safety check untuk sdg_categories
         $similarProblems = Problem::where('id', '!=', $problem->id)
             ->where('status', 'open')
             ->where(function($query) use ($problem) {
