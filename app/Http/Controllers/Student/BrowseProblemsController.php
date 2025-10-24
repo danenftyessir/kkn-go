@@ -191,24 +191,18 @@ class BrowseProblemsController extends Controller
 
         // cek apakah user sudah apply
         $hasApplied = false;
-        $application = null;
         
-        if (Auth::check() && Auth::user()->role === 'student') {
-            $application = Auth::user()->applications()
-                ->where('problem_id', $problem->id)
-                ->first();
-            $hasApplied = $application !== null;
+        if (Auth::check() && Auth::user()->isStudent() && Auth::user()->student) {
+            $hasApplied = Auth::user()->student->hasApplied($problem->id);
         }
 
         // cek wishlist
         $isWishlisted = false;
-        if (Auth::check() && Auth::user()->role === 'student') {
-            $isWishlisted = Wishlist::where('student_id', Auth::id())
-                ->where('problem_id', $problem->id)
-                ->exists();
+        if (Auth::check() && Auth::user()->isStudent() && Auth::user()->student) {
+            $isWishlisted = Auth::user()->student->hasWishlisted($problem->id);
         }
 
-        // similar problems
+        // similar problems berdasarkan lokasi dan kategori SDG
         $similarProblems = Problem::where('id', '!=', $problem->id)
             ->where('status', 'open')
             ->where(function($query) use ($problem) {
@@ -228,10 +222,9 @@ class BrowseProblemsController extends Controller
             ->limit(3)
             ->get();
 
-        return view('student.browse-problems.show', compact(
+        return view('student.browse-problems.detail', compact(
             'problem',
             'hasApplied',
-            'application',
             'isWishlisted',
             'similarProblems'
         ));
