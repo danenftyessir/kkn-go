@@ -35,7 +35,9 @@ class BrowseProblemsController extends Controller
                 'required_students',
                 'difficulty_level',
                 'duration_months',
-                'sdg_categories',
+                'sdg_categories', // penting: harus di-select agar casting model ter-apply
+                'is_featured',
+                'is_urgent',
                 'created_at'
             ])
             ->where('status', 'open')
@@ -65,6 +67,7 @@ class BrowseProblemsController extends Controller
             $query->where('difficulty_level', $request->difficulty);
         }
 
+        // filter by SDG categories
         // jika user memilih satu atau lebih kategori SDG, tampilkan problem yang memiliki minimal salah satu kategori tersebut
         if ($request->filled('sdg_categories')) {
             $sdgCategories = $request->sdg_categories;
@@ -78,6 +81,8 @@ class BrowseProblemsController extends Controller
             // problem akan muncul jika memiliki MINIMAL SATU dari kategori yang dipilih
             $query->where(function($q) use ($sdgCategories) {
                 foreach ($sdgCategories as $category) {
+                    // convert ke integer jika masih string
+                    $category = is_numeric($category) ? (int)$category : $category;
                     $q->orWhereJsonContains('sdg_categories', $category);
                 }
             });
@@ -103,8 +108,7 @@ class BrowseProblemsController extends Controller
             }
         }
 
-        // filter by status (NEW)
-        // karena default query sudah where('status', 'open'), kita perlu modify query jika user pilih status lain
+        // filter by status
         if ($request->filled('status')) {
             $statusFilter = $request->status;
             
@@ -114,15 +118,9 @@ class BrowseProblemsController extends Controller
             }
             
             // replace default status filter dengan yang user pilih
-            // hapus where status = 'open' yang sudah ada dengan whereIn
             $query->where(function($q) use ($statusFilter) {
                 $q->whereIn('status', $statusFilter);
             });
-            
-            // jika user tidak pilih 'open', maka hapus filter deadline
-            if (!in_array('open', $statusFilter)) {
-                // tidak perlu filter deadline jika status bukan open
-            }
         }
 
         // sorting
@@ -178,65 +176,82 @@ class BrowseProblemsController extends Controller
      */
     public function show($id)
     {
+        // ambil problem dengan relasi yang dibutuhkan
         $problem = Problem::with([
             'institution',
             'province',
             'regency',
             'images' => function($query) {
                 $query->orderBy('order');
-            },
-            'applications' => function($query) {
-                $query->where('status', 'accepted');
             }
         ])->findOrFail($id);
 
         // increment views count
-        $problem->incrementViews();
+        $problem->increment('views_count');
 
         // cek apakah user sudah apply
         $hasApplied = false;
-        if (Auth::check() && Auth::user()->student) {
-            $hasApplied = $problem->applications()
-                ->where('student_id', Auth::user()->student->id)
-                ->exists();
+        $application = null;
+        
+        if (Auth::check() && Auth::user()->role === 'student') {
+            $application = Auth::user()->applications()
+                ->where('problem_id', $problem->id)
+                ->first();
+            $hasApplied = $application !== null;
         }
 
-        // cek apakah ada di wishlist
+        // cek wishlist
         $isWishlisted = false;
-        if (Auth::check() && Auth::user()->student) {
-            $isWishlisted = Wishlist::where('student_id', Auth::user()->student->id)
+        if (Auth::check() && Auth::user()->role === 'student') {
+            $isWishlisted = Wishlist::where('student_id', Auth::id())
                 ->where('problem_id', $problem->id)
                 ->exists();
         }
 
-        // similar problems berdasarkan lokasi dan kategori SDG
+        // similar problems
         $similarProblems = Problem::where('id', '!=', $problem->id)
             ->where('status', 'open')
             ->where(function($query) use ($problem) {
+                // cari problem dengan province yang sama atau SDG category yang sama
                 $query->where('province_id', $problem->province_id)
-                      ->orWhere('regency_id', $problem->regency_id);
+                      ->orWhere(function($q) use ($problem) {
+                          if ($problem->sdg_categories && count($problem->sdg_categories) > 0) {
+                              foreach ($problem->sdg_categories as $sdg) {
+                                  $q->orWhereJsonContains('sdg_categories', $sdg);
+                              }
+                          }
+                      });
             })
-            ->with(['institution', 'province', 'regency', 'images'])
+            ->with(['institution', 'province', 'regency', 'images' => function($query) {
+                $query->orderBy('order')->limit(1);
+            }])
             ->limit(3)
             ->get();
 
-        return view('student.browse-problems.detail', compact(
+        return view('student.browse-problems.show', compact(
             'problem',
             'hasApplied',
+            'application',
             'isWishlisted',
             'similarProblems'
         ));
     }
 
     /**
-     * get regencies by province (AJAX)
+     * get regencies by province (untuk filter dinamis)
      */
-    public function getRegencies($provinceId)
+    public function getRegencies(Request $request)
     {
+        $provinceId = $request->province_id;
+        
+        if (!$provinceId) {
+            return response()->json([]);
+        }
+
         $regencies = Regency::where('province_id', $provinceId)
             ->orderBy('name')
             ->get(['id', 'name']);
-        
+
         return response()->json($regencies);
     }
 }
