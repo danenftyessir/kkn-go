@@ -522,7 +522,7 @@ html {
                         Tentang Instansi
                     </h3>
                     
-                    <a href="{{ route('institution.profile.public', $problem->institution->id) }}" 
+                    <a href="{{ route('institution.public', $problem->institution->id) }}" 
                        class="institution-card block">
                         <div class="flex items-start gap-3 mb-4">
                             @if($problem->institution->logo_path)
@@ -585,7 +585,7 @@ html {
                         @endif
                     </div>
 
-                    <a href="{{ route('institution.profile.public', $problem->institution->id) }}" 
+                    <a href="{{ route('institution.public', $problem->institution->id) }}" 
                        class="block w-full text-center px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors mt-4">
                         Lihat Profil Lengkap
                     </a>
