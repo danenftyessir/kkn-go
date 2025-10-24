@@ -53,13 +53,6 @@
             0 1px 2px rgba(0, 0, 0, 0.5);
     }
     
-    .text-shadow-dashboard {
-        text-shadow: 
-            0 2px 4px rgba(0, 0, 0, 0.4),
-            0 4px 8px rgba(0, 0, 0, 0.3),
-            0 1px 2px rgba(0, 0, 0, 0.5);
-    }
-    
     .fade-in-up {
         animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         opacity: 0;
@@ -109,7 +102,7 @@
         
         {{-- header --}}
         <div class="mb-10 fade-in-up">
-            <h1 class="text-4xl md:text-5xl font-bold mb-4 text-white text-shadow-repository">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4 text-white text-shadow-strong">
                 Dashboard
             </h1>
             <p class="text-xl md:text-2xl text-white text-shadow-strong max-w-3xl">
