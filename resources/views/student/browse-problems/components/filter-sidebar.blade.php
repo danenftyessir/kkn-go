@@ -51,21 +51,21 @@
                         $sdgCategories = [
                             'no_poverty' => 'Tanpa Kemiskinan',
                             'zero_hunger' => 'Tanpa Kelaparan',
-                            'good_health' => 'Kehidupan Sehat dan Sejahtera',
+                            'good_health' => 'Kehidupan Sehat Dan Sejahtera',
                             'quality_education' => 'Pendidikan Berkualitas',
                             'gender_equality' => 'Kesetaraan Gender',
-                            'clean_water' => 'Air Bersih dan Sanitasi',
-                            'affordable_energy' => 'Energi Bersih dan Terjangkau',
-                            'decent_work' => 'Pekerjaan Layak dan Pertumbuhan Ekonomi',
-                            'industry_innovation' => 'Industri, Inovasi dan Infrastruktur',
+                            'clean_water' => 'Air Bersih Dan Sanitasi',
+                            'affordable_energy' => 'Energi Bersih Dan Terjangkau',
+                            'decent_work' => 'Pekerjaan Layak Dan Pertumbuhan Ekonomi',
+                            'industry_innovation' => 'Industri, Inovasi Dan Infrastruktur',
                             'reduced_inequality' => 'Berkurangnya Kesenjangan',
-                            'sustainable_cities' => 'Kota dan Komunitas Berkelanjutan',
-                            'responsible_consumption' => 'Konsumsi dan Produksi Bertanggung Jawab',
+                            'sustainable_cities' => 'Kota Dan Komunitas Berkelanjutan',
+                            'responsible_consumption' => 'Konsumsi Dan Produksi Bertanggung Jawab',
                             'climate_action' => 'Penanganan Perubahan Iklim',
                             'life_below_water' => 'Ekosistem Laut',
                             'life_on_land' => 'Ekosistem Daratan',
-                            'peace_justice' => 'Perdamaian, Keadilan dan Kelembagaan yang Kuat',
-                            'partnerships' => 'Kemitraan untuk Mencapai Tujuan'
+                            'peace_justice' => 'Perdamaian, Keadilan Dan Kelembagaan Yang Kuat',
+                            'partnerships' => 'Kemitraan Untuk Mencapai Tujuan'
                         ];
                     @endphp
                     @foreach($sdgCategories as $value => $label)
@@ -74,7 +74,7 @@
                                name="sdg_categories[]" 
                                value="{{ $value }}"
                                {{ in_array($value, request('sdg_categories', [])) ? 'checked' : '' }}
-                               class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-0.5 flex-shrink-0">
+                               class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-0.5">
                         <span class="ml-2 text-sm text-gray-700">{{ $label }}</span>
                     </label>
                     @endforeach
@@ -85,25 +85,38 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Tingkat Kesulitan</label>
                 <div class="space-y-2">
-                    @foreach(['beginner' => 'Pemula', 'intermediate' => 'Menengah', 'advanced' => 'Lanjutan'] as $value => $label)
-                    <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors">
-                        <input type="radio" 
-                               name="difficulty" 
-                               value="{{ $value }}"
-                               {{ request('difficulty') === $value ? 'checked' : '' }}
-                               class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500">
-                        <span class="ml-2 text-sm text-gray-700">{{ $label }}</span>
-                    </label>
-                    @endforeach
-                    @if(request('difficulty'))
                     <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors">
                         <input type="radio" 
                                name="difficulty" 
                                value=""
+                               {{ !request('difficulty') ? 'checked' : '' }}
                                class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500">
-                        <span class="ml-2 text-sm text-gray-500 italic">Semua Tingkat</span>
+                        <span class="ml-2 text-sm text-gray-700">Semua Tingkat</span>
                     </label>
-                    @endif
+                    <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors">
+                        <input type="radio" 
+                               name="difficulty" 
+                               value="beginner"
+                               {{ request('difficulty') == 'beginner' ? 'checked' : '' }}
+                               class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                        <span class="ml-2 text-sm text-gray-700">Pemula</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors">
+                        <input type="radio" 
+                               name="difficulty" 
+                               value="intermediate"
+                               {{ request('difficulty') == 'intermediate' ? 'checked' : '' }}
+                               class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                        <span class="ml-2 text-sm text-gray-700">Menengah</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors">
+                        <input type="radio" 
+                               name="difficulty" 
+                               value="advanced"
+                               {{ request('difficulty') == 'advanced' ? 'checked' : '' }}
+                               class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                        <span class="ml-2 text-sm text-gray-700">Lanjutan</span>
+                    </label>
                 </div>
             </div>
 
@@ -111,25 +124,46 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Durasi Proyek</label>
                 <div class="space-y-2">
-                    @foreach(['1-2' => '1-2 Bulan', '3-4' => '3-4 Bulan', '5-6' => '5-6 Bulan'] as $value => $label)
-                    <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors">
-                        <input type="radio" 
-                               name="duration" 
-                               value="{{ $value }}"
-                               {{ request('duration') === $value ? 'checked' : '' }}
-                               class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500">
-                        <span class="ml-2 text-sm text-gray-700">{{ $label }}</span>
-                    </label>
-                    @endforeach
-                    @if(request('duration'))
                     <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors">
                         <input type="radio" 
                                name="duration" 
                                value=""
+                               {{ !request('duration') ? 'checked' : '' }}
                                class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500">
-                        <span class="ml-2 text-sm text-gray-500 italic">Semua Durasi</span>
+                        <span class="ml-2 text-sm text-gray-700">Semua Durasi</span>
                     </label>
-                    @endif
+                    <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors">
+                        <input type="radio" 
+                               name="duration" 
+                               value="1-2"
+                               {{ request('duration') == '1-2' ? 'checked' : '' }}
+                               class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                        <span class="ml-2 text-sm text-gray-700">1-2 Bulan</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors">
+                        <input type="radio" 
+                               name="duration" 
+                               value="3-4"
+                               {{ request('duration') == '3-4' ? 'checked' : '' }}
+                               class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                        <span class="ml-2 text-sm text-gray-700">3-4 Bulan</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors">
+                        <input type="radio" 
+                               name="duration" 
+                               value="5-6"
+                               {{ request('duration') == '5-6' ? 'checked' : '' }}
+                               class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                        <span class="ml-2 text-sm text-gray-700">5-6 Bulan</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors">
+                        <input type="radio" 
+                               name="duration" 
+                               value="7+"
+                               {{ request('duration') == '7+' ? 'checked' : '' }}
+                               class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                        <span class="ml-2 text-sm text-gray-700">7+ Bulan</span>
+                    </label>
                 </div>
             </div>
 
@@ -137,17 +171,41 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Status Proyek</label>
                 <div class="space-y-2">
-                    @foreach(['open' => 'Terbuka', 'in_progress' => 'Sedang Berjalan', 'completed' => 'Selesai'] as $value => $label)
                     <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors">
                         <input type="checkbox" 
                                name="status[]" 
-                               value="{{ $value }}"
-                               {{ in_array($value, request('status', [])) ? 'checked' : '' }}
+                               value="open"
+                               {{ in_array('open', request('status', [])) ? 'checked' : '' }}
                                class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                        <span class="ml-2 text-sm text-gray-700">{{ $label }}</span>
+                        <span class="ml-2 text-sm text-gray-700">Terbuka</span>
                     </label>
-                    @endforeach
+                    <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors">
+                        <input type="checkbox" 
+                               name="status[]" 
+                               value="in_progress"
+                               {{ in_array('in_progress', request('status', [])) ? 'checked' : '' }}
+                               class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                        <span class="ml-2 text-sm text-gray-700">Sedang Berjalan</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors">
+                        <input type="checkbox" 
+                               name="status[]" 
+                               value="completed"
+                               {{ in_array('completed', request('status', [])) ? 'checked' : '' }}
+                               class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                        <span class="ml-2 text-sm text-gray-700">Selesai</span>
+                    </label>
                 </div>
+            </div>
+
+            {{-- sorting --}}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Urutkan Berdasarkan</label>
+                <select name="sort" 
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                    <option value="latest" {{ request('sort') == 'latest' ? 'selected' : '' }}>Terbaru</option>
+                    <option value="deadline" {{ request('sort') == 'deadline' ? 'selected' : '' }}>Deadline Terdekat</option>
+                </select>
             </div>
 
             {{-- action buttons --}}
