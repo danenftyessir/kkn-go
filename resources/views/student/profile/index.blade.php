@@ -293,7 +293,7 @@ html {
 <script>
 // fungsi copy link portfolio
 function copyPortfolioLink() {
-    const url = '{{ route("profile.public", $student->user->username) }}';
+    const url = '{{ route("profile.public", $user->username) }}';
     
     // gunakan clipboard API
     if (navigator.clipboard && window.isSecureContext) {
