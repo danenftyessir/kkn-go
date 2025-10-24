@@ -68,20 +68,15 @@ class BrowseProblemsController extends Controller
         }
 
         // filter by SDG categories
-        // jika user memilih satu atau lebih kategori SDG, tampilkan problem yang memiliki minimal salah satu kategori tersebut
         if ($request->filled('sdg_categories')) {
             $sdgCategories = $request->sdg_categories;
             
-            // pastikan sdg_categories adalah array
             if (!is_array($sdgCategories)) {
                 $sdgCategories = [$sdgCategories];
             }
             
-            // filter menggunakan whereJsonContains untuk setiap kategori yang dipilih
-            // problem akan muncul jika memiliki MINIMAL SATU dari kategori yang dipilih
             $query->where(function($q) use ($sdgCategories) {
                 foreach ($sdgCategories as $category) {
-                    // convert ke integer jika masih string
                     $category = is_numeric($category) ? (int)$category : $category;
                     $q->orWhereJsonContains('sdg_categories', $category);
                 }
@@ -92,82 +87,60 @@ class BrowseProblemsController extends Controller
         if ($request->filled('duration')) {
             $duration = $request->duration;
             
-            switch($duration) {
-                case '1-2':
-                    $query->whereBetween('duration_months', [1, 2]);
-                    break;
-                case '3-4':
-                    $query->whereBetween('duration_months', [3, 4]);
-                    break;
-                case '5-6':
-                    $query->whereBetween('duration_months', [5, 6]);
-                    break;
-                case '7+':
-                    $query->where('duration_months', '>=', 7);
-                    break;
+            if ($duration === '1-2') {
+                $query->whereBetween('duration_months', [1, 2]);
+            } elseif ($duration === '3-4') {
+                $query->whereBetween('duration_months', [3, 4]);
+            } elseif ($duration === '5-6') {
+                $query->whereBetween('duration_months', [5, 6]);
             }
-        }
-
-        // filter by status
-        if ($request->filled('status')) {
-            $statusFilter = $request->status;
-            
-            // pastikan adalah array
-            if (!is_array($statusFilter)) {
-                $statusFilter = [$statusFilter];
-            }
-            
-            // replace default status filter dengan yang user pilih
-            $query->where(function($q) use ($statusFilter) {
-                $q->whereIn('status', $statusFilter);
-            });
         }
 
         // sorting
-        $sort = $request->input('sort', 'latest');
-        if ($sort === 'deadline') {
-            $query->orderBy('application_deadline', 'asc');
-        } else {
-            $query->latest();
+        $sortBy = $request->get('sort', 'latest');
+        
+        switch ($sortBy) {
+            case 'deadline':
+                $query->orderBy('application_deadline', 'asc');
+                break;
+            case 'popular':
+                $query->orderBy('views_count', 'desc');
+                break;
+            case 'latest':
+            default:
+                $query->orderBy('created_at', 'desc');
+                break;
         }
 
-        // PAGINATION KECIL untuk performa (6 items per page)
-        $problems = $query->paginate(6)->withQueryString();
-
-        // eager load relasi SETELAH pagination (hanya 6 items)
-        $problems->load([
-            'institution:id,name,type,logo_path',
+        // eager load relationships - optimized
+        $query->with([
+            'institution:id,name,institution_type,logo_path',
             'province:id,name',
-            'regency:id,name',
+            'regency:id,name,province_id',
             'images' => function($query) {
-                $query->select('id', 'problem_id', 'image_path')
+                $query->select('id', 'problem_id', 'image_path', 'order')
                       ->orderBy('order')
                       ->limit(1);
             }
         ]);
 
-        // data untuk filter sidebar
-        $provinces = Province::orderBy('name')->get();
+        // paginate 12 items per page
+        $problems = $query->paginate(12)->withQueryString();
+
+        // data untuk filter dropdowns
+        $provinces = Province::orderBy('name')->get(['id', 'name']);
+        $regencies = [];
         
-        // statistics untuk hero section
-        $totalProblems = Problem::where('status', 'open')
-            ->where('application_deadline', '>=', now())
-            ->count();
-        
-        // hitung unique SDG categories dari semua problem yang open
-        $totalCategories = Problem::where('status', 'open')
-            ->where('application_deadline', '>=', now())
-            ->get()
-            ->pluck('sdg_categories')
-            ->flatten()
-            ->unique()
-            ->count();
+        if ($request->filled('province_id')) {
+            $regencies = Regency::where('province_id', $request->province_id)
+                ->orderBy('name')
+                ->get(['id', 'name']);
+        }
 
         return view('student.browse-problems.index', compact(
-            'problems', 
+            'problems',
             'provinces',
-            'totalProblems',
-            'totalCategories'
+            'regencies'
         ));
     }
 
@@ -176,7 +149,6 @@ class BrowseProblemsController extends Controller
      */
     public function show($id)
     {
-        // ambil problem dengan relasi yang dibutuhkan
         $problem = Problem::with([
             'institution',
             'province',
@@ -186,31 +158,42 @@ class BrowseProblemsController extends Controller
             }
         ])->findOrFail($id);
 
-        // increment views count
+        // increment views
         $problem->increment('views_count');
 
         // cek apakah user sudah apply
         $hasApplied = false;
-        
         if (Auth::check() && Auth::user()->isStudent() && Auth::user()->student) {
-            $hasApplied = Auth::user()->student->hasApplied($problem->id);
+            $hasApplied = Auth::user()->student->applications()
+                ->where('problem_id', $problem->id)
+                ->exists();
         }
 
-        // cek wishlist
+        // cek apakah user sudah wishlist
         $isWishlisted = false;
         if (Auth::check() && Auth::user()->isStudent() && Auth::user()->student) {
             $isWishlisted = Auth::user()->student->hasWishlisted($problem->id);
         }
 
         // similar problems berdasarkan lokasi dan kategori SDG
+        // ✅ PERBAIKAN: tambahkan safety check untuk sdg_categories
         $similarProblems = Problem::where('id', '!=', $problem->id)
             ->where('status', 'open')
             ->where(function($query) use ($problem) {
                 // cari problem dengan province yang sama atau SDG category yang sama
                 $query->where('province_id', $problem->province_id)
                       ->orWhere(function($q) use ($problem) {
-                          if ($problem->sdg_categories && count($problem->sdg_categories) > 0) {
-                              foreach ($problem->sdg_categories as $sdg) {
+                          // pastikan sdg_categories adalah array dan tidak kosong
+                          $sdgCategories = $problem->sdg_categories;
+                          
+                          // konversi ke array jika string
+                          if (is_string($sdgCategories)) {
+                              $sdgCategories = json_decode($sdgCategories, true) ?? [];
+                          }
+                          
+                          // pastikan array dan tidak kosong
+                          if (is_array($sdgCategories) && count($sdgCategories) > 0) {
+                              foreach ($sdgCategories as $sdg) {
                                   $q->orWhereJsonContains('sdg_categories', $sdg);
                               }
                           }

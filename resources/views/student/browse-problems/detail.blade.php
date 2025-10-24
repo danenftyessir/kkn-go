@@ -28,6 +28,8 @@ html {
 .fade-in-delay-1 { animation-delay: 0.1s; }
 .fade-in-delay-2 { animation-delay: 0.2s; }
 .fade-in-delay-3 { animation-delay: 0.3s; }
+.fade-in-delay-4 { animation-delay: 0.4s; }
+.fade-in-delay-5 { animation-delay: 0.5s; }
 
 /* image gallery */
 .gallery-container {
@@ -123,28 +125,12 @@ html {
 .apply-btn {
     position: relative;
     overflow: hidden;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.apply-btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 100%);
-    transition: left 0.5s ease;
-}
-
-.apply-btn:hover::before {
-    left: 100%;
 }
 
 .apply-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 25px -5px rgba(102, 126, 234, 0.5);
+    box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.5);
 }
 
 /* institution card animation */
@@ -209,51 +195,24 @@ html {
                                 <div class="flex items-center gap-1">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                                     </svg>
-                                    <span>{{ $problem->regency->name }}, {{ $problem->province->name }}</span>
-                                </div>
-                                <div class="flex items-center gap-1">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                    </svg>
-                                    <span>{{ $problem->duration_months }} bulan</span>
+                                    <span>{{ $problem->regency->name ?? '-' }}, {{ $problem->province->name ?? '-' }}</span>
                                 </div>
                                 <div class="flex items-center gap-1">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                     </svg>
-                                    <span>{{ number_format($problem->views_count ?? 0) }} views</span>
+                                    <span>{{ $problem->views_count }} Views</span>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                    <span>{{ \Carbon\Carbon::parse($problem->created_at)->format('d M Y') }}</span>
                                 </div>
                             </div>
-                        </div>
-
-                        {{-- action buttons --}}
-                        <div class="flex items-center gap-2">
-                            {{-- wishlist button --}}
-                            @auth
-                                @if(Auth::user()->user_type === 'student')
-                                <button onclick="toggleWishlist({{ $problem->id }})" 
-                                        id="wishlist-btn"
-                                        class="wishlist-btn w-10 h-10 bg-white border-2 rounded-full flex items-center justify-center hover:bg-gray-50 transition-all duration-200 {{ $isWishlisted ? 'border-red-500' : 'border-gray-300' }}"
-                                        data-wishlisted="{{ $isWishlisted ? 'true' : 'false' }}">
-                                    <svg class="w-5 h-5 {{ $isWishlisted ? 'fill-red-500 text-red-500' : 'text-gray-600' }}" 
-                                         fill="{{ $isWishlisted ? 'currentColor' : 'none' }}" 
-                                         stroke="currentColor" 
-                                         viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                                    </svg>
-                                </button>
-                                @endif
-                            @endauth
-
-                            {{-- share button --}}
-                            <button onclick="shareProject()" 
-                                    class="share-btn w-10 h-10 bg-white border-2 border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-50 transition-all duration-200">
-                                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
-                                </svg>
-                            </button>
                         </div>
                     </div>
 
@@ -261,8 +220,8 @@ html {
                     <div class="flex flex-wrap gap-2">
                         <span class="badge inline-flex px-3 py-1 text-sm font-semibold rounded-full
                             {{ $problem->status === 'open' ? 'bg-green-100 text-green-700' : '' }}
-                            {{ $problem->status === 'in_progress' ? 'bg-blue-100 text-blue-700' : '' }}
-                            {{ $problem->status === 'closed' ? 'bg-gray-100 text-gray-700' : '' }}
+                            {{ $problem->status === 'closed' ? 'bg-red-100 text-red-700' : '' }}
+                            {{ $problem->status === 'in_progress' ? 'bg-yellow-100 text-yellow-700' : '' }}
                             {{ $problem->status === 'completed' ? 'bg-purple-100 text-purple-700' : '' }}">
                             {{ ucfirst($problem->status) }}
                         </span>
@@ -287,7 +246,7 @@ html {
                                 @endforeach
                                 @if(count($sdgs) > 3)
                                     <span class="badge inline-flex px-3 py-1 text-xs font-semibold bg-gray-100 text-gray-700 rounded-full">
-                                        +{{ count($sdgs) - 3 }} lainnya
+                                        +{{ count($sdgs) - 3 }} Lainnya
                                     </span>
                                 @endif
                             @endif
@@ -329,279 +288,253 @@ html {
 
                 {{-- description --}}
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 fade-in fade-in-delay-2">
-                    <h2 class="text-xl font-bold text-gray-900 mb-4">Deskripsi Proyek</h2>
-                    <div class="prose max-w-none text-gray-700">
-                        <p class="whitespace-pre-line">{{ $problem->description }}</p>
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">Deskripsi</h2>
+                    <div class="prose prose-blue max-w-none text-gray-700 leading-relaxed">
+                        {!! nl2br(e($problem->description)) !!}
                     </div>
                 </div>
 
                 {{-- background --}}
                 @if($problem->background)
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 fade-in fade-in-delay-2">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 fade-in fade-in-delay-3">
                     <h2 class="text-xl font-bold text-gray-900 mb-4">Latar Belakang</h2>
-                    <div class="prose max-w-none text-gray-700">
-                        <p class="whitespace-pre-line">{{ $problem->background }}</p>
+                    <div class="prose prose-blue max-w-none text-gray-700 leading-relaxed">
+                        {!! nl2br(e($problem->background)) !!}
                     </div>
                 </div>
                 @endif
 
                 {{-- objectives --}}
                 @if($problem->objectives)
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 fade-in fade-in-delay-3">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 fade-in fade-in-delay-4">
                     <h2 class="text-xl font-bold text-gray-900 mb-4">Tujuan</h2>
-                    <div class="prose max-w-none text-gray-700">
-                        <p class="whitespace-pre-line">{{ $problem->objectives }}</p>
-                    </div>
-                </div>
-                @endif
-
-                {{-- scope --}}
-                @if($problem->scope)
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 fade-in fade-in-delay-3">
-                    <h2 class="text-xl font-bold text-gray-900 mb-4">Ruang Lingkup</h2>
-                    <div class="prose max-w-none text-gray-700">
-                        <p class="whitespace-pre-line">{{ $problem->scope }}</p>
+                    <div class="prose prose-blue max-w-none text-gray-700 leading-relaxed">
+                        {!! nl2br(e($problem->objectives)) !!}
                     </div>
                 </div>
                 @endif
 
                 {{-- requirements --}}
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 fade-in fade-in-delay-3">
-                    <h2 class="text-xl font-bold text-gray-900 mb-4">Persyaratan</h2>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 fade-in fade-in-delay-5">
+                    <h2 class="text-xl font-bold text-gray-900 mb-6">Requirements</h2>
                     
-                    <div class="space-y-4">
-                        {{-- required students --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {{-- mahasiswa dibutuhkan --}}
                         <div class="flex items-start gap-3">
-                            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <div class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                                 <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
                                 </svg>
                             </div>
                             <div>
-                                <h3 class="font-semibold text-gray-900 mb-1">Jumlah Mahasiswa</h3>
-                                <p class="text-gray-600">{{ $problem->required_students }} mahasiswa dibutuhkan</p>
+                                <p class="text-sm text-gray-600">Mahasiswa Dibutuhkan</p>
+                                <p class="text-lg font-bold text-gray-900">{{ $problem->required_students }} Orang</p>
                             </div>
                         </div>
 
-                        {{-- required skills --}}
-                        @if($problem->required_skills)
+                        {{-- durasi --}}
                         <div class="flex items-start gap-3">
-                            <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <div class="flex-shrink-0 w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                                 <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
                             </div>
                             <div>
-                                <h3 class="font-semibold text-gray-900 mb-2">Keahlian yang Dibutuhkan</h3>
-                                <div class="flex flex-wrap gap-2">
-                                    @php
-                                        $skills = is_array($problem->required_skills) ? $problem->required_skills : json_decode($problem->required_skills, true);
-                                    @endphp
-                                    @if($skills)
-                                        @foreach($skills as $skill)
-                                            <span class="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">{{ $skill }}</span>
-                                        @endforeach
-                                    @endif
-                                </div>
+                                <p class="text-sm text-gray-600">Durasi Proyek</p>
+                                <p class="text-lg font-bold text-gray-900">{{ $problem->duration_months }} Bulan</p>
                             </div>
                         </div>
-                        @endif
 
-                        {{-- required majors --}}
-                        @if($problem->required_majors)
+                        {{-- deadline --}}
                         <div class="flex items-start gap-3">
-                            <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path d="M12 14l9-5-9-5-9 5 9 5z"/>
-                                    <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222"/>
+                            <div class="flex-shrink-0 w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                                <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                 </svg>
                             </div>
                             <div>
-                                <h3 class="font-semibold text-gray-900 mb-2">Jurusan yang Dibutuhkan</h3>
-                                <div class="flex flex-wrap gap-2">
-                                    @php
-                                        $majors = is_array($problem->required_majors) ? $problem->required_majors : json_decode($problem->required_majors, true);
-                                    @endphp
-                                    @if($majors)
-                                        @foreach($majors as $major)
-                                            <span class="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">{{ $major }}</span>
-                                        @endforeach
-                                    @endif
-                                </div>
+                                <p class="text-sm text-gray-600">Deadline Aplikasi</p>
+                                <p class="text-lg font-bold text-gray-900">{{ \Carbon\Carbon::parse($problem->application_deadline)->format('d M Y') }}</p>
                             </div>
                         </div>
-                        @endif
-                    </div>
-                </div>
 
-                {{-- expected outcomes --}}
-                @if($problem->expected_outcomes)
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                    <h2 class="text-xl font-bold text-gray-900 mb-4">Hasil yang Diharapkan</h2>
-                    <div class="prose max-w-none text-gray-700">
-                        <p class="whitespace-pre-line">{{ $problem->expected_outcomes }}</p>
-                    </div>
-                </div>
-                @endif
-
-                {{-- deliverables --}}
-                @php
-                    $deliverables = is_array($problem->deliverables) 
-                        ? $problem->deliverables 
-                        : (json_decode($problem->deliverables, true) ?? []);
-                @endphp
-                @if(count($deliverables) > 0)
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 fade-in fade-in-delay-2">
-                    <h2 class="text-xl font-bold text-gray-900 mb-4">Deliverables</h2>
-                    <ul class="list-disc list-inside space-y-2 text-gray-700">
-                        @foreach($deliverables as $deliverable)
-                            <li class="pl-2">{{ $deliverable }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-                @endif
-
-                {{-- facilities provided --}}
-                @php
-                    $facilities = is_array($problem->facilities_provided) 
-                        ? $problem->facilities_provided 
-                        : (json_decode($problem->facilities_provided, true) ?? []);
-                @endphp
-                @if(count($facilities) > 0)
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 fade-in fade-in-delay-2">
-                    <h2 class="text-xl font-bold text-gray-900 mb-4">Fasilitas Yang Disediakan</h2>
-                    <ul class="list-disc list-inside space-y-2 text-gray-700">
-                        @foreach($facilities as $facility)
-                            <li class="pl-2">{{ $facility }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-                @endif
-            </div>
-
-            {{-- sidebar --}}
-            <div class="space-y-6">
-                {{-- institution card --}}
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 institution-card fade-in fade-in-delay-1">
-                    <h3 class="font-bold text-gray-900 mb-4">Informasi Instansi</h3>
-                    
-                    <div class="flex items-center gap-3 mb-4">
-                        @if($problem->institution->logo_path)
-                            <img src="{{ supabase_url($problem->institution->logo_path) }}" 
-                                 alt="{{ $problem->institution->name }}"
-                                 class="w-16 h-16 rounded-full object-cover border-2 border-gray-100"
-                                 loading="lazy">
-                        @else
-                            <div class="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center">
-                                <span class="text-white text-xl font-bold">
-                                    {{ substr($problem->institution->name, 0, 1) }}
-                                </span>
+                        {{-- difficulty --}}
+                        <div class="flex items-start gap-3">
+                            <div class="flex-shrink-0 w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                                <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                </svg>
                             </div>
-                        @endif
-                        <div>
-                            <h4 class="font-semibold text-gray-900">{{ $problem->institution->name }}</h4>
-                            <p class="text-sm text-gray-600">{{ ucfirst($problem->institution->type) }}</p>
+                            <div>
+                                <p class="text-sm text-gray-600">Tingkat Kesulitan</p>
+                                <p class="text-lg font-bold text-gray-900">{{ ucfirst($problem->difficulty_level) }}</p>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="space-y-2 mb-4 text-sm">
-                        @if($problem->institution->email)
-                        <div class="flex items-start gap-2">
-                            <svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                            </svg>
-                            <span class="break-all">{{ $problem->institution->email }}</span>
+                    {{-- skills --}}
+                    @if($problem->required_skills && count($problem->required_skills) > 0)
+                    <div class="mt-6">
+                        <p class="text-sm font-semibold text-gray-700 mb-2">Skills Yang Dibutuhkan:</p>
+                        <div class="flex flex-wrap gap-2">
+                            @foreach($problem->required_skills as $skill)
+                                <span class="px-3 py-1 bg-blue-50 text-blue-700 text-sm rounded-full">{{ $skill }}</span>
+                            @endforeach
                         </div>
-                        @endif
-                        
-                        @if($problem->institution->address)
-                        <div class="flex items-start gap-2">
-                            <svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                            </svg>
-                            <span>{{ $problem->institution->address }}</span>
-                        </div>
-                        @endif
-                        
-                        @if($problem->institution->phone)
-                        <div class="flex items-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-                            </svg>
-                            <span>{{ $problem->institution->phone }}</span>
-                        </div>
-                        @endif
-                    </div>
-
-                    {{-- ✅ FIX: ganti institution.profile.public menjadi institution.public --}}
-                    <a href="{{ route('institution.public', $problem->institution->id) }}" 
-                       class="block w-full text-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-lg transition-colors">
-                        Lihat Profile
-                    </a>
-                </div>
-
-                {{-- apply card --}}
-                @auth
-                    @if(Auth::user()->user_type === 'student' && $problem->status === 'open')
-                    <div class="bg-gradient-to-br from-blue-500 to-green-500 rounded-xl shadow-sm p-6 text-white fade-in fade-in-delay-2">
-                        <h3 class="font-bold text-lg mb-2">Tertarik dengan proyek ini?</h3>
-                        <p class="text-sm mb-4 text-blue-50">Aplikasikan dirimu sekarang dan mulai berkontribusi!</p>
-                        
-                        @if($hasApplied)
-                            <div class="bg-white/20 backdrop-blur-sm rounded-lg p-3 text-center">
-                                <p class="text-sm font-medium">Anda sudah mengajukan aplikasi</p>
-                            </div>
-                        @elseif(\Carbon\Carbon::parse($problem->application_deadline) < now())
-                            <div class="bg-white/20 backdrop-blur-sm rounded-lg p-3 text-center">
-                                <p class="text-sm font-medium">Deadline aplikasi telah berakhir</p>
-                            </div>
-                        @else
-                            <a href="{{ route('student.applications.create', $problem->id) }}" 
-                               class="apply-btn block w-full text-center px-4 py-3 bg-white text-white font-semibold rounded-lg hover:bg-blue-50 transition-colors">
-                                Apply Sekarang
-                            </a>
-                            <p class="text-xs text-center mt-3 text-blue-100">
-                                Deadline: {{ \Carbon\Carbon::parse($problem->application_deadline)->format('d M Y') }}
-                            </p>
-                        @endif
                     </div>
                     @endif
-                @else
-                    <div class="bg-gradient-to-br from-blue-500 to-green-500 rounded-xl shadow-sm p-6 text-white fade-in fade-in-delay-2">
-                        <h3 class="font-bold text-lg mb-2">Tertarik dengan proyek ini?</h3>
-                        <p class="text-sm mb-4 text-blue-50">Login atau daftar untuk mengajukan aplikasi</p>
-                        <a href="{{ route('login') }}" 
-                           class="block w-full text-center px-4 py-3 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-colors">
-                            Login / Register
-                        </a>
-                    </div>
-                @endauth
 
-                {{-- similar problems --}}
-                @if(isset($similarProblems) && $similarProblems->isNotEmpty())
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 fade-in fade-in-delay-3">
-                    <h3 class="font-bold text-gray-900 mb-4">Proyek Serupa</h3>
-                    <div class="space-y-4">
-                        @foreach($similarProblems as $similar)
-                        <a href="{{ route('student.browse-problems.show', $similar->id) }}"
-                           class="block group similar-project">
-                            <div class="border border-gray-200 rounded-lg p-3 hover:border-blue-500 transition-all duration-200">
-                                <h4 class="font-semibold text-gray-900 text-sm mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
-                                    {{ $similar->title }}
-                                </h4>
-                                <div class="flex items-center gap-2 text-xs text-gray-600">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                                    </svg>
-                                    <span>{{ $similar->regency->name ?? '-' }}</span>
-                                </div>
+                    {{-- expected outcomes --}}
+                    @if($problem->expected_outcomes)
+                    <div class="mt-6">
+                        <p class="text-sm font-semibold text-gray-700 mb-2">Expected Outcomes:</p>
+                        <p class="text-gray-600 text-sm">{{ $problem->expected_outcomes }}</p>
+                    </div>
+                    @endif
+                </div>
+
+            </div>
+
+            {{-- SIDEBAR --}}
+            <div class="lg:col-span-1 space-y-6">
+                
+                {{-- combined card: CTA + similar problems --}}
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 fade-in fade-in-delay-2">
+                    
+                    {{-- CTA section --}}
+                    @auth
+                        @if(!$hasApplied)
+                            <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-6 text-white mb-6">
+                                <h3 class="font-bold text-lg mb-2">Tertarik Dengan Proyek Ini?</h3>
+                                <p class="text-sm mb-4 text-blue-50">Aplikasikan dirimu sekarang dan mulai berkontribusi!</p>
+                                <a href="{{ route('student.applications.create', ['problem_id' => $problem->id]) }}" 
+                                   class="apply-btn block w-full text-center px-4 py-3 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-colors">
+                                    Apply Sekarang
+                                </a>
+                                <p class="text-xs mt-3 text-blue-100 text-center">
+                                    Deadline: {{ \Carbon\Carbon::parse($problem->application_deadline)->format('d M Y') }}
+                                </p>
                             </div>
-                        </a>
-                        @endforeach
+                        @else
+                            <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-lg p-6 text-white mb-6">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <h3 class="font-bold text-lg">Aplikasi Terkirim</h3>
+                                </div>
+                                <p class="text-sm text-green-50">Anda sudah mengajukan aplikasi untuk proyek ini</p>
+                                <a href="{{ route('student.applications.index') }}" 
+                                   class="block w-full text-center px-4 py-3 bg-white text-green-600 font-semibold rounded-lg hover:bg-green-50 transition-colors mt-4">
+                                    Lihat Status Aplikasi
+                                </a>
+                            </div>
+                        @endif
+                    @else
+                        <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-6 text-white mb-6">
+                            <h3 class="font-bold text-lg mb-2">Tertarik Dengan Proyek Ini?</h3>
+                            <p class="text-sm mb-4 text-blue-50">Login atau daftar untuk mengajukan aplikasi</p>
+                            <a href="{{ route('login') }}" 
+                               class="block w-full text-center px-4 py-3 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-colors">
+                                Login / Register
+                            </a>
+                        </div>
+                    @endauth
+
+                    {{-- similar problems section --}}
+                    @if(isset($similarProblems) && $similarProblems->isNotEmpty())
+                        <div class="border-t border-gray-200 pt-6">
+                            <h3 class="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                </svg>
+                                Proyek Serupa
+                            </h3>
+                            <div class="space-y-3">
+                                @foreach($similarProblems as $similar)
+                                <a href="{{ route('student.browse-problems.show', $similar->id) }}"
+                                   class="block group similar-project">
+                                    <div class="border border-gray-200 rounded-lg p-3 hover:border-blue-400 hover:bg-blue-50 transition-all duration-200">
+                                        <h4 class="font-semibold text-gray-900 text-sm mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                                            {{ $similar->title }}
+                                        </h4>
+                                        <div class="flex items-center gap-2 text-xs text-gray-600 mb-2">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                            </svg>
+                                            <span>{{ $similar->regency->name ?? 'N/A' }}, {{ $similar->province->name ?? 'N/A' }}</span>
+                                        </div>
+                                        <div class="flex items-center justify-between text-xs">
+                                            <span class="text-gray-600">{{ $similar->institution->name ?? 'Instansi' }}</span>
+                                            <span class="text-blue-600 font-medium group-hover:underline">Lihat Detail →</span>
+                                        </div>
+                                    </div>
+                                </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                </div>
+
+                {{-- info card instansi --}}
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 fade-in fade-in-delay-3">
+                    <h3 class="font-bold text-gray-900 mb-4">Informasi Instansi</h3>
+                    <div class="flex items-start gap-3 institution-card">
+                        <div class="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                            @if($problem->institution && $problem->institution->logo_path)
+                                <img src="{{ supabase_url($problem->institution->logo_path) }}" 
+                                     alt="{{ $problem->institution->name }}"
+                                     class="w-full h-full object-cover">
+                            @else
+                                <div class="w-full h-full flex items-center justify-center bg-blue-100 text-blue-600 font-bold text-lg">
+                                    {{ substr($problem->institution->name ?? 'I', 0, 1) }}
+                                </div>
+                            @endif
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-semibold text-gray-900 mb-1">{{ $problem->institution->name ?? 'Instansi' }}</h4>
+                            <p class="text-sm text-gray-600 mb-2">{{ $problem->institution->institution_type ?? 'Instansi' }}</p>
+                            @if($problem->institution)
+                            <a href="{{ route('institution.profile', $problem->institution->id) }}" 
+                               class="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                                Lihat Profil Lengkap →
+                            </a>
+                            @endif
+                        </div>
                     </div>
                 </div>
-                @endif
+
+                {{-- wishlist button (jika authenticated) --}}
+                @auth
+                    @if(Auth::user()->isStudent() && Auth::user()->student)
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 fade-in fade-in-delay-4">
+                        <button id="wishlist-btn"
+                                data-problem-id="{{ $problem->id }}"
+                                data-wishlisted="{{ $isWishlisted ? 'true' : 'false' }}"
+                                class="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-all duration-300
+                                       {{ $isWishlisted ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-gray-50 text-gray-700 hover:bg-gray-100' }}">
+                            <svg class="w-5 h-5 {{ $isWishlisted ? 'fill-current' : '' }}" 
+                                 fill="{{ $isWishlisted ? 'currentColor' : 'none' }}" 
+                                 stroke="currentColor" 
+                                 viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                            </svg>
+                            <span class="wishlist-text">{{ $isWishlisted ? 'Hapus Dari Wishlist' : 'Tambah Ke Wishlist' }}</span>
+                        </button>
+                    </div>
+                    @endif
+                @endauth
+
+                {{-- share button --}}
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 fade-in fade-in-delay-5">
+                    <button id="share-btn" class="share-btn w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 font-medium transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
+                        </svg>
+                        Bagikan Proyek
+                    </button>
+                </div>
+
             </div>
         </div>
     </div>
@@ -627,109 +560,94 @@ function changeMainImage(imageSrc, element) {
     element.classList.add('active');
 }
 
-// fungsi untuk toggle wishlist
-async function toggleWishlist(problemId) {
-    const btn = document.getElementById('wishlist-btn');
-    const isWishlisted = btn.getAttribute('data-wishlisted') === 'true';
+// wishlist functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const wishlistBtn = document.getElementById('wishlist-btn');
     
-    try {
-        const response = await fetch(`/student/wishlist/${problemId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                'Accept': 'application/json'
+    if (wishlistBtn) {
+        wishlistBtn.addEventListener('click', async function() {
+            const problemId = this.dataset.problemId;
+            const isWishlisted = this.dataset.wishlisted === 'true';
+            
+            try {
+                const response = await fetch(`/student/wishlist/${problemId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // update button state
+                    this.dataset.wishlisted = data.saved ? 'true' : 'false';
+                    
+                    if (data.saved) {
+                        this.classList.remove('bg-gray-50', 'text-gray-700', 'hover:bg-gray-100');
+                        this.classList.add('bg-red-50', 'text-red-600', 'hover:bg-red-100');
+                        this.querySelector('.wishlist-text').textContent = 'Hapus Dari Wishlist';
+                        this.querySelector('svg').setAttribute('fill', 'currentColor');
+                    } else {
+                        this.classList.remove('bg-red-50', 'text-red-600', 'hover:bg-red-100');
+                        this.classList.add('bg-gray-50', 'text-gray-700', 'hover:bg-gray-100');
+                        this.querySelector('.wishlist-text').textContent = 'Tambah Ke Wishlist';
+                        this.querySelector('svg').setAttribute('fill', 'none');
+                    }
+                    
+                    // show notification (optional)
+                    showNotification(data.message, 'success');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Terjadi kesalahan. Silakan coba lagi.', 'error');
             }
         });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            // toggle ui
-            btn.setAttribute('data-wishlisted', data.saved ? 'true' : 'false');
-            btn.classList.toggle('border-red-500', data.saved);
-            btn.classList.toggle('border-gray-300', !data.saved);
-            
-            const svg = btn.querySelector('svg');
-            svg.classList.toggle('fill-red-500', data.saved);
-            svg.classList.toggle('text-red-500', data.saved);
-            svg.classList.toggle('text-gray-600', !data.saved);
-            svg.setAttribute('fill', data.saved ? 'currentColor' : 'none');
-            
-            // tambahkan animasi
-            btn.classList.add('wishlisted');
-            setTimeout(() => btn.classList.remove('wishlisted'), 600);
-            
-            // tampilkan notifikasi
-            showNotification(data.message, 'success');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        showNotification('Terjadi kesalahan, coba lagi', 'error');
     }
-}
-
-// fungsi untuk share proyek
-async function shareProject() {
-    const url = window.location.href;
-    const title = document.querySelector('h1').textContent;
     
-    if (navigator.share) {
-        try {
-            await navigator.share({
-                title: title,
-                url: url
-            });
-        } catch (error) {
-            if (error.name !== 'AbortError') {
-                copyToClipboard(url);
+    // share functionality
+    const shareBtn = document.getElementById('share-btn');
+    
+    if (shareBtn) {
+        shareBtn.addEventListener('click', async function() {
+            const shareData = {
+                title: '{{ $problem->title }}',
+                text: '{{ Str::limit($problem->description, 100) }}',
+                url: window.location.href
+            };
+            
+            try {
+                if (navigator.share) {
+                    await navigator.share(shareData);
+                    showNotification('Berhasil membagikan proyek!', 'success');
+                } else {
+                    // fallback: copy to clipboard
+                    await navigator.clipboard.writeText(window.location.href);
+                    showNotification('Link proyek berhasil disalin!', 'success');
+                }
+            } catch (error) {
+                console.error('Error sharing:', error);
             }
-        }
-    } else {
-        copyToClipboard(url);
+        });
     }
-}
+});
 
-// fungsi untuk copy ke clipboard
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => {
-        showNotification('Link berhasil disalin!', 'success');
-    }).catch(() => {
-        showNotification('Gagal menyalin link', 'error');
-    });
-}
-
-// fungsi untuk menampilkan notifikasi
-function showNotification(message, type = 'success') {
+// helper function untuk notification (optional)
+function showNotification(message, type = 'info') {
+    // implementasi simple notification
     const notification = document.createElement('div');
-    notification.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white z-50 transform transition-all duration-300 ${
-        type === 'success' ? 'bg-green-500' : 'bg-red-500'
-    }`;
+    notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${
+        type === 'success' ? 'bg-green-500' : 
+        type === 'error' ? 'bg-red-500' : 
+        'bg-blue-500'
+    } text-white`;
     notification.textContent = message;
-    notification.style.opacity = '0';
-    notification.style.transform = 'translateY(20px)';
-    
     document.body.appendChild(notification);
     
     setTimeout(() => {
-        notification.style.opacity = '1';
-        notification.style.transform = 'translateY(0)';
-    }, 10);
-    
-    setTimeout(() => {
-        notification.style.opacity = '0';
-        notification.style.transform = 'translateY(20px)';
-        setTimeout(() => notification.remove(), 300);
+        notification.remove();
     }, 3000);
 }
-
-// preload images untuk smooth gallery transition
-document.addEventListener('DOMContentLoaded', () => {
-    const thumbnails = document.querySelectorAll('.gallery-thumbnail img');
-    thumbnails.forEach(img => {
-        const preload = new Image();
-        preload.src = img.src;
-    });
-});
 </script>
 @endpush
