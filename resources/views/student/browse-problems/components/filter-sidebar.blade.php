@@ -81,6 +81,7 @@
             </div>
         </div>
 
+        {{-- kategori SDG - ✅ PERBAIKAN: gunakan integer 1-17 sesuai database --}}
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Kategori SDG</label>
             <div class="space-y-2 max-h-64 overflow-y-auto pr-2">
