@@ -8,6 +8,7 @@ use App\Models\Province;
 use App\Models\Institution;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 /**
  * controller untuk knowledge repository
@@ -24,20 +25,22 @@ class KnowledgeRepositoryController extends Controller
             ->where('is_public', true)
             ->where('status', 'approved');
 
-        // filter by search keyword
+        // filter by search keyword - case insensitive dengan ILIKE
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%")
-                    ->orWhere('author_name', 'like', "%{$search}%")
-                    ->orWhere('tags', 'like', "%{$search}%");
+                // gunakan ILIKE untuk case insensitive di PostgreSQL
+                $q->where('title', 'ILIKE', "%{$search}%")
+                    ->orWhere('description', 'ILIKE', "%{$search}%")
+                    ->orWhere('author_name', 'ILIKE', "%{$search}%")
+                    ->orWhere('tags', 'ILIKE', "%{$search}%");
             });
         }
 
-        // filter by kategori SDG
+        // filter by kategori SDG - gunakan integer value
         if ($request->filled('category')) {
-            $query->whereJsonContains('categories', $request->category);
+            $category = (int) $request->category;
+            $query->whereJsonContains('categories', $category);
         }
 
         // filter by province
@@ -55,48 +58,43 @@ class KnowledgeRepositoryController extends Controller
             $query->where('year', $request->year);
         }
 
-        // filter by university
-        if ($request->filled('university')) {
-            $query->where('university_name', 'like', "%{$request->university}%");
-        }
-
         // sorting
-        $sortBy = $request->get('sort', 'latest');
-        switch ($sortBy) {
+        switch ($request->sort) {
             case 'popular':
                 $query->orderBy('download_count', 'desc');
-                break;
-            case 'most_cited':
-                $query->orderBy('citation_count', 'desc');
                 break;
             case 'most_viewed':
                 $query->orderBy('view_count', 'desc');
                 break;
+            case 'most_cited':
+                $query->orderBy('citation_count', 'desc');
+                break;
+            case 'latest':
             default:
-                $query->orderBy('created_at', 'desc');
+                $query->latest();
+                break;
         }
 
-        $documents = $query->paginate(12);
+        // pagination
+        $documents = $query->paginate(12)->withQueryString();
 
-        // featured documents
-        $featuredDocuments = Document::where('is_public', true)
+        // ambil featured documents untuk carousel
+        $featuredDocuments = Document::with(['uploader.student', 'province'])
+            ->where('is_public', true)
             ->where('status', 'approved')
             ->where('is_featured', true)
-            ->orderBy('created_at', 'desc')
-            ->limit(3)
+            ->latest()
+            ->limit(5)
             ->get();
 
-        // ✅ PERBAIKAN: tambahkan total_institutions ke stats
+        // statistik untuk hero section
         $stats = [
             'total_documents' => Document::where('is_public', true)
-                                        ->where('status', 'approved')
-                                        ->count(),
+                                         ->where('status', 'approved')
+                                         ->count(),
             'total_downloads' => Document::where('is_public', true)
-                                        ->where('status', 'approved')
-                                        ->sum('download_count'),
-            'total_views' => Document::where('is_public', true)
-                                    ->where('status', 'approved')
-                                    ->sum('view_count'),
+                                         ->where('status', 'approved')
+                                         ->sum('download_count'),
             'total_institutions' => Document::where('is_public', true)
                                            ->where('status', 'approved')
                                            ->distinct('institution_name')
@@ -145,45 +143,32 @@ class KnowledgeRepositoryController extends Controller
                 $categories = is_array($document->categories)
                     ? $document->categories
                     : json_decode($document->categories, true) ?? [];
-
-                foreach ($categories as $category) {
-                    $query->orWhereJsonContains('categories', $category);
+                
+                if (!empty($categories)) {
+                    foreach ($categories as $category) {
+                        $query->orWhereJsonContains('categories', $category);
+                    }
                 }
             })
-            ->limit(4)
+            ->limit(3)
             ->get();
 
         return view('student.repository.show', compact('document', 'relatedDocuments'));
     }
 
     /**
-     * download dokumen dari supabase (redirect ke public URL)
+     * download dokumen
      */
     public function download($id)
     {
-        try {
-            $document = Document::findOrFail($id);
+        $document = Document::where('is_public', true)
+            ->where('status', 'approved')
+            ->findOrFail($id);
 
-            // cek akses
-            if (!$document->is_public || $document->status !== 'approved') {
-                return back()->with('error', 'Anda tidak memiliki akses ke dokumen ini');
-            }
+        // increment download count
+        $document->increment('download_count');
 
-            // increment download count
-            $document->increment('download_count');
-
-            // redirect ke supabase public URL
-            $publicUrl = document_url($document->file_path);
-            
-            return redirect($publicUrl);
-
-        } catch (\Exception $e) {
-            \Log::error('Document download error', [
-                'document_id' => $id,
-                'error_message' => $e->getMessage(),
-            ]);
-
-            return back()->with('error', 'Terjadi kesalahan saat mengunduh file.');
-        }
+        // redirect ke storage file
+        return Storage::disk('public')->download($document->file_path, $document->title . '.pdf');
     }
 }

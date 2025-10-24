@@ -279,34 +279,34 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Cari Dokumen</label>
                             <input type="text" 
-                                   name="search" 
-                                   value="{{ request('search') }}" 
-                                   placeholder="Judul, deskripsi, tags..."
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                name="search" 
+                                value="{{ request('search') }}" 
+                                placeholder="Judul, deskripsi, tags..."
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         </div>
 
-                        {{-- category --}}
+                        {{-- kategori SDG menggunakan integer value 1-17 --}}
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Kategori SDG</label>
                             <select name="category" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                 <option value="">Semua Kategori</option>
-                                <option value="no_poverty" {{ request('category') == 'no_poverty' ? 'selected' : '' }}>Tanpa Kemiskinan</option>
-                                <option value="zero_hunger" {{ request('category') == 'zero_hunger' ? 'selected' : '' }}>Tanpa Kelaparan</option>
-                                <option value="good_health" {{ request('category') == 'good_health' ? 'selected' : '' }}>Kehidupan Sehat</option>
-                                <option value="quality_education" {{ request('category') == 'quality_education' ? 'selected' : '' }}>Pendidikan Berkualitas</option>
-                                <option value="gender_equality" {{ request('category') == 'gender_equality' ? 'selected' : '' }}>Kesetaraan Gender</option>
-                                <option value="clean_water" {{ request('category') == 'clean_water' ? 'selected' : '' }}>Air Bersih</option>
-                                <option value="affordable_energy" {{ request('category') == 'affordable_energy' ? 'selected' : '' }}>Energi Bersih</option>
-                                <option value="decent_work" {{ request('category') == 'decent_work' ? 'selected' : '' }}>Pekerjaan Layak</option>
-                                <option value="industry_innovation" {{ request('category') == 'industry_innovation' ? 'selected' : '' }}>Industri & Inovasi</option>
-                                <option value="reduced_inequalities" {{ request('category') == 'reduced_inequalities' ? 'selected' : '' }}>Berkurangnya Kesenjangan</option>
-                                <option value="sustainable_cities" {{ request('category') == 'sustainable_cities' ? 'selected' : '' }}>Kota Berkelanjutan</option>
-                                <option value="responsible_consumption" {{ request('category') == 'responsible_consumption' ? 'selected' : '' }}>Konsumsi Bertanggung Jawab</option>
-                                <option value="climate_action" {{ request('category') == 'climate_action' ? 'selected' : '' }}>Aksi Iklim</option>
-                                <option value="life_below_water" {{ request('category') == 'life_below_water' ? 'selected' : '' }}>Kehidupan Bawah Air</option>
-                                <option value="life_on_land" {{ request('category') == 'life_on_land' ? 'selected' : '' }}>Kehidupan Di Darat</option>
-                                <option value="peace_justice" {{ request('category') == 'peace_justice' ? 'selected' : '' }}>Perdamaian & Keadilan</option>
-                                <option value="partnerships" {{ request('category') == 'partnerships' ? 'selected' : '' }}>Kemitraan</option>
+                                <option value="1" {{ request('category') == '1' ? 'selected' : '' }}>1. Tanpa Kemiskinan</option>
+                                <option value="2" {{ request('category') == '2' ? 'selected' : '' }}>2. Tanpa Kelaparan</option>
+                                <option value="3" {{ request('category') == '3' ? 'selected' : '' }}>3. Kehidupan Sehat Dan Sejahtera</option>
+                                <option value="4" {{ request('category') == '4' ? 'selected' : '' }}>4. Pendidikan Berkualitas</option>
+                                <option value="5" {{ request('category') == '5' ? 'selected' : '' }}>5. Kesetaraan Gender</option>
+                                <option value="6" {{ request('category') == '6' ? 'selected' : '' }}>6. Air Bersih Dan Sanitasi</option>
+                                <option value="7" {{ request('category') == '7' ? 'selected' : '' }}>7. Energi Bersih Dan Terjangkau</option>
+                                <option value="8" {{ request('category') == '8' ? 'selected' : '' }}>8. Pekerjaan Layak Dan Pertumbuhan Ekonomi</option>
+                                <option value="9" {{ request('category') == '9' ? 'selected' : '' }}>9. Industri, Inovasi Dan Infrastruktur</option>
+                                <option value="10" {{ request('category') == '10' ? 'selected' : '' }}>10. Berkurangnya Kesenjangan</option>
+                                <option value="11" {{ request('category') == '11' ? 'selected' : '' }}>11. Kota Dan Komunitas Berkelanjutan</option>
+                                <option value="12" {{ request('category') == '12' ? 'selected' : '' }}>12. Konsumsi Dan Produksi Bertanggung Jawab</option>
+                                <option value="13" {{ request('category') == '13' ? 'selected' : '' }}>13. Penanganan Perubahan Iklim</option>
+                                <option value="14" {{ request('category') == '14' ? 'selected' : '' }}>14. Ekosistem Laut</option>
+                                <option value="15" {{ request('category') == '15' ? 'selected' : '' }}>15. Ekosistem Daratan</option>
+                                <option value="16" {{ request('category') == '16' ? 'selected' : '' }}>16. Perdamaian, Keadilan Dan Kelembagaan Yang Kuat</option>
+                                <option value="17" {{ request('category') == '17' ? 'selected' : '' }}>17. Kemitraan Untuk Mencapai Tujuan</option>
                             </select>
                         </div>
 
@@ -351,7 +351,7 @@
                         
                         @if(request()->hasAny(['search', 'category', 'province_id', 'year', 'sort']))
                         <a href="{{ route('student.repository.index') }}" 
-                           class="block w-full text-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                        class="block w-full text-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
                             Reset Filter
                         </a>
                         @endif
