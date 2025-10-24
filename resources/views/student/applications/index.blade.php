@@ -282,11 +282,12 @@
                                 Lihat Detail
                             </a>
                             
-                            @if($application->status === 'pending')
-                            <form action="{{ route('student.applications.withdraw', $application->id) }}" method="POST" 
-                                  onsubmit="return confirm('Apakah Anda yakin ingin membatalkan aplikasi ini?')">
-                                @csrf
-                                <button type="submit" 
+                                @if($application->status === 'pending')
+                                <form action="{{ route('student.applications.withdraw', $application->id) }}" method="POST" 
+                                    onsubmit="return confirm('Apakah Anda yakin ingin membatalkan aplikasi ini?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit"
                                         class="inline-flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
