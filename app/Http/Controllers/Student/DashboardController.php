@@ -20,13 +20,13 @@ use Carbon\Carbon;
 class DashboardController extends Controller
 {
     /**
-     * tampilkan dashboard mahasiswa
+     * tampilkan dashboard mahasiswa dengan data lengkap
      */
     public function index()
     {
         $student = Auth::user()->student;
 
-        // statistik utama
+        // statistik utama untuk cards di atas
         $stats = [
             'active_projects' => Project::where('student_id', $student->id)
                                        ->where('status', 'active')
@@ -40,26 +40,42 @@ class DashboardController extends Controller
                                           ->count(),
         ];
 
-        // active projects dengan progress
-        // FIX: lengkapi query yang terputus
+        // proyek aktif dengan progress dan milestone untuk section "Proyek Aktif"
         $activeProjects = Project::where('student_id', $student->id)
                                 ->where('status', 'active')
-                                ->with(['problem', 'institution', 'milestones'])
+                                ->with([
+                                    'problem',
+                                    'institution',
+                                    'milestones' => function($query) {
+                                        $query->orderBy('target_date');
+                                    }
+                                ])
                                 ->latest()
                                 ->take(3)
                                 ->get();
 
-        // recent applications
+        // aplikasi terbaru untuk section "Aplikasi Terbaru"
         $recentApplications = Application::where('student_id', $student->id)
-                                        ->with(['problem.institution', 'problem.province', 'problem.regency'])
+                                        ->with([
+                                            'problem.institution',
+                                            'problem.province',
+                                            'problem.regency'
+                                        ])
                                         ->latest()
                                         ->take(5)
                                         ->get();
 
-        // recommended problems berdasarkan jurusan dan skills
+        // rekomendasi proyek berdasarkan jurusan dan skills untuk sidebar
         $recommendedProblems = Problem::where('status', 'open')
                                      ->where('application_deadline', '>=', Carbon::now())
-                                     ->with(['institution', 'province', 'regency', 'images'])
+                                     ->with([
+                                         'institution',
+                                         'province',
+                                         'regency',
+                                         'images' => function($query) {
+                                             $query->where('is_primary', true);
+                                         }
+                                     ])
                                      ->when($student->major, function($query) use ($student) {
                                          // filter berdasarkan jurusan jika ada
                                          $query->where(function($q) use ($student) {
@@ -67,19 +83,35 @@ class DashboardController extends Controller
                                                ->orWhereNull('required_majors');
                                          });
                                      })
+                                     ->when($student->skills, function($query) use ($student) {
+                                         // filter berdasarkan skills jika ada
+                                         $skills = json_decode($student->skills, true);
+                                         if ($skills && count($skills) > 0) {
+                                             $query->where(function($q) use ($skills) {
+                                                 foreach($skills as $skill) {
+                                                     $q->orWhereJsonContains('required_skills', $skill);
+                                                 }
+                                             });
+                                         }
+                                     })
                                      ->withCount('applications')
-                                     ->latest()
+                                     ->having('applications_count', '<', function($query) {
+                                         $query->selectRaw('students_needed')
+                                               ->from('problems as p2')
+                                               ->whereColumn('p2.id', 'problems.id');
+                                     })
+                                     ->inRandomOrder()
                                      ->take(4)
                                      ->get();
 
-        // unread notifications
+        // notifikasi yang belum dibaca
         $unreadNotifications = Notification::where('user_id', Auth::id())
                                           ->whereNull('read_at')
                                           ->latest()
                                           ->take(5)
                                           ->get();
 
-        // upcoming milestones dari active projects
+        // milestone yang akan datang dari active projects
         $upcomingMilestones = collect();
         foreach ($activeProjects as $project) {
             $milestones = $project->milestones()
@@ -92,7 +124,7 @@ class DashboardController extends Controller
         }
         $upcomingMilestones = $upcomingMilestones->sortBy('target_date')->take(5);
 
-        // profile completion check
+        // kelengkapan profil untuk mengingatkan user melengkapi data
         $profileCompletion = $this->calculateProfileCompletion($student);
 
         return view('student.dashboard.index', compact(
@@ -107,10 +139,14 @@ class DashboardController extends Controller
     }
 
     /**
-     * hitung persentase kelengkapan profil
+     * hitung persentase kelengkapan profil mahasiswa
+     * 
+     * @param \App\Models\Student $student
+     * @return array
      */
     private function calculateProfileCompletion($student)
     {
+        // field-field yang dicek untuk kelengkapan profil
         $fields = [
             'profile_photo' => $student->profile_photo_path ? 1 : 0,
             'bio' => $student->bio ? 1 : 0,
@@ -127,6 +163,7 @@ class DashboardController extends Controller
             'percentage' => round($percentage),
             'fields' => $fields,
             'is_complete' => $percentage == 100,
+            'missing_fields' => array_keys(array_filter($fields, fn($val) => $val === 0))
         ];
     }
 }
