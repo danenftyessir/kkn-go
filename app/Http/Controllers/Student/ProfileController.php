@@ -126,7 +126,6 @@ class ProfileController extends Controller
                 }
             }
             
-            // ✅ PERBAIKAN: gunakan field 'phone' untuk menyimpan whatsapp_number dari request
             $student->update([
                 'first_name' => $request->first_name,
                 'last_name' => $request->last_name,
@@ -169,13 +168,21 @@ class ProfileController extends Controller
             
             Log::info("Password berhasil diupdate untuk user ID {$user->id}");
             
-            return redirect()->route('student.profile.index')
-                ->with('success', 'Password berhasil diperbarui!');
+            // logout user setelah ganti password
+            Auth::logout();
+            
+            // invalidate session
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            
+            // redirect ke login dengan pesan sukses
+            return redirect()->route('login')
+                ->with('success', 'Password Berhasil Diperbarui! Silakan Login Dengan Password Baru Anda.');
                 
         } catch (\Exception $e) {
             Log::error("Error saat update password: " . $e->getMessage());
             
-            return back()->with('error', 'Terjadi kesalahan saat memperbarui password. Silakan coba lagi.');
+            return back()->with('error', 'Terjadi Kesalahan Saat Memperbarui Password. Silakan Coba Lagi.');
         }
     }
 

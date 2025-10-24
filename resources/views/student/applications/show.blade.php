@@ -290,7 +290,7 @@
                             <dd class="text-sm font-semibold text-red-600 mt-1">
                                 {{ $application->problem->application_deadline->format('d M Y') }}
                                 @php
-                                    $daysLeft = now()->diffInDays($application->problem->application_deadline, false);
+                                    $daysLeft = floor(now()->diffInDays($application->problem->application_deadline, false));
                                 @endphp
                                 @if($daysLeft > 0)
                                 <span class="text-xs text-gray-500">({{ $daysLeft }} Hari Lagi)</span>

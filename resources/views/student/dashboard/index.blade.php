@@ -90,7 +90,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 py-12">
         <div class="mb-8 fade-in-up">
             <h1 class="text-4xl md:text-5xl font-bold mb-3 text-shadow-strong">
-                Selamat Datang, {{ Auth::user()->first_name }}!
+                Selamat Datang, {{ $student->first_name }} {{ $student->last_name }}!
             </h1>
             <p class="text-xl md:text-2xl text-white text-shadow-strong">
                 Pantau Progress Dan Jelajahi Peluang KKN Terbaru
