@@ -97,8 +97,8 @@ class DashboardController extends Controller
                                          }
                                      })
                                      ->withCount('applications')
-                                     // fix: gunakan whereRaw untuk compare applications_count dengan students_needed
-                                     ->whereRaw('(SELECT COUNT(*) FROM applications WHERE applications.problem_id = problems.id) < problems.students_needed')
+                                     // fix: filter problems yang masih punya slot kosong
+                                     ->whereRaw('(SELECT COUNT(*) FROM applications WHERE applications.problem_id = problems.id) < problems.required_students')
                                      ->inRandomOrder()
                                      ->take(4)
                                      ->get();
