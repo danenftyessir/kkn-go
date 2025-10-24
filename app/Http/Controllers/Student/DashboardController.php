@@ -127,6 +127,7 @@ class DashboardController extends Controller
         $profileCompletion = $this->calculateProfileCompletion($student);
 
         return view('student.dashboard.index', compact(
+            'student',
             'stats',
             'activeProjects',
             'recentApplications',

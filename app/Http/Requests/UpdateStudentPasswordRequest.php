@@ -3,13 +3,18 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Hash; // <-- PENTING: Tambahkan ini
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 
+/**
+ * request validation untuk update password mahasiswa
+ * 
+ * path: app/Http/Requests/UpdateStudentPasswordRequest.php
+ */
 class UpdateStudentPasswordRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * tentukan apakah user ter-autorisasi untuk request ini
      */
     public function authorize(): bool
     {
@@ -17,43 +22,56 @@ class UpdateStudentPasswordRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * aturan validasi untuk request
      */
     public function rules(): array
     {
         return [
-            // PERBAIKAN: Gunakan closure untuk validasi manual
+            // validasi password lama dengan custom closure
             'current_password' => [
                 'required',
                 function ($attribute, $value, $fail) {
                     if (!Hash::check($value, auth()->user()->password)) {
-                        $fail('Password saat ini yang Anda masukkan salah.');
+                        $fail('Password Lama Yang Anda Masukkan Salah.');
                     }
                 },
             ],
-            // Pastikan aturan password baru yang kuat tetap ada
+            // validasi password baru
             'password' => [
                 'required', 
-                'confirmed', 
-                Password::min(8)->mixedCase()->numbers()->symbols()
+                'confirmed',
+                'min:8',
+                'different:current_password', // pastikan berbeda dengan password lama
             ],
+            // konfirmasi password (otomatis divalidasi oleh 'confirmed')
+            'password_confirmation' => 'required',
         ];
     }
 
     /**
-     * Get the custom error messages for validator errors.
-     *
-     * @return array<string, string>
+     * pesan error kustom untuk validasi
      */
     public function messages(): array
     {
         return [
-            'current_password.required' => 'Password saat ini wajib diisi.',
-            'password.required' => 'Password baru wajib diisi.',
-            'password.confirmed' => 'Konfirmasi password tidak cocok.',
-            // Pesan untuk aturan Password::class akan di-generate otomatis dan sudah bagus
+            'current_password.required' => 'Password Lama Wajib Diisi.',
+            'password.required' => 'Password Baru Wajib Diisi.',
+            'password.confirmed' => 'Konfirmasi Password Tidak Cocok.',
+            'password.min' => 'Password Baru Minimal 8 Karakter.',
+            'password.different' => 'Password Baru Harus Berbeda Dengan Password Lama.',
+            'password_confirmation.required' => 'Konfirmasi Password Wajib Diisi.',
+        ];
+    }
+
+    /**
+     * custom attribute names untuk pesan error
+     */
+    public function attributes(): array
+    {
+        return [
+            'current_password' => 'password lama',
+            'password' => 'password baru',
+            'password_confirmation' => 'konfirmasi password',
         ];
     }
 }

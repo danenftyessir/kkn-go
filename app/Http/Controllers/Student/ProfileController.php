@@ -161,21 +161,17 @@ class ProfileController extends Controller
         try {
             $user = Auth::user();
             
-            // update password
-            $user->update([
-                'password' => Hash::make($request->new_password)
-            ]);
+            // pastikan password di-hash dan save
+            $user->password = Hash::make($request->password);
+            $user->save();
             
             Log::info("Password berhasil diupdate untuk user ID {$user->id}");
             
             // logout user setelah ganti password
             Auth::logout();
-            
-            // invalidate session
             $request->session()->invalidate();
             $request->session()->regenerateToken();
             
-            // redirect ke login dengan pesan sukses
             return redirect()->route('login')
                 ->with('success', 'Password Berhasil Diperbarui! Silakan Login Dengan Password Baru Anda.');
                 
