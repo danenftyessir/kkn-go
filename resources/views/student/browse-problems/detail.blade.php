@@ -584,7 +584,7 @@ html {
                     <h3 class="font-bold text-gray-900 mb-4">Proyek Serupa</h3>
                     <div class="space-y-4">
                         @foreach($similarProblems as $similar)
-                        <a href="{{ route('student.browse-problems.detail', $similar->id) }}" 
+                        <a href="{{ route('student.browse-problems.show', $similar->id) }}"
                            class="block group similar-project">
                             <div class="border border-gray-200 rounded-lg p-3 hover:border-blue-500 transition-all duration-200">
                                 <h4 class="font-semibold text-gray-900 text-sm mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
