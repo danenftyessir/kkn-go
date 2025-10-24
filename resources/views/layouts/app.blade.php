@@ -101,7 +101,8 @@
 
             this.container = document.createElement('div');
             this.container.id = 'notification-container';
-            this.container.className = 'fixed top-4 right-4 z-50 space-y-2';
+            // PERBAIKAN: ubah z-50 menjadi z-[1100]
+            this.container.className = 'fixed top-20 right-4 z-[1100] space-y-2 max-w-sm';
             document.body.appendChild(this.container);
         }
 
@@ -133,98 +134,58 @@
 
             notification.innerHTML = `
                 ${icons[type]}
-                <p class="flex-1 text-sm font-medium">${message}</p>
+                <div class="flex-1">
+                    <p class="text-sm font-medium">${message}</p>
+                </div>
                 <button onclick="this.parentElement.remove()" class="text-gray-400 hover:text-gray-600">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
                     </svg>
                 </button>
             `;
 
             this.container.appendChild(notification);
 
-            // auto dismiss
             if (duration > 0) {
                 setTimeout(() => {
-                    notification.style.animation = 'slideOutRight 0.3s ease-out';
-                    setTimeout(() => notification.remove(), 300);
+                    notification.style.opacity = '0';
+                    notification.style.transform = 'translateX(100px)';
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            notification.remove();
+                        }
+                    }, 300);
                 }, duration);
             }
         }
 
         showExistingNotifications() {
-            // cek flash messages dari server
-            const successMsg = document.querySelector('[data-success-message]');
-            const errorMsg = document.querySelector('[data-error-message]');
-            const infoMsg = document.querySelector('[data-info-message]');
-            const warningMsg = document.querySelector('[data-warning-message]');
+            // tampilkan flash messages dari session
+            @if(session('success'))
+                this.show('{{ session('success') }}', 'success');
+            @endif
 
-            if (successMsg) {
-                this.show(successMsg.dataset.successMessage, 'success');
-            }
-            if (errorMsg) {
-                this.show(errorMsg.dataset.errorMessage, 'error');
-            }
-            if (infoMsg) {
-                this.show(infoMsg.dataset.infoMessage, 'info');
-            }
-            if (warningMsg) {
-                this.show(warningMsg.dataset.warningMessage, 'warning');
-            }
+            @if(session('error'))
+                this.show('{{ session('error') }}', 'error');
+            @endif
+
+            @if(session('info'))
+                this.show('{{ session('info') }}', 'info');
+            @endif
+
+            @if(session('warning'))
+                this.show('{{ session('warning') }}', 'warning');
+            @endif
         }
     }
 
     // initialize notification manager
     const notificationManager = new NotificationManager();
 
-    // expose untuk digunakan di tempat lain
+    // export untuk digunakan di tempat lain
     window.showNotification = (message, type, duration) => {
         notificationManager.show(message, type, duration);
     };
-
-    // custom animations
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes slideInRight {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-        
-        @keyframes slideOutRight {
-            from {
-                transform: translateX(0);
-                opacity: 1;
-            }
-            to {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-        }
-
-        .animate-slideInRight {
-            animation: slideInRight 0.3s ease-out;
-        }
-
-        .page-transition {
-            animation: fadeIn 0.3s ease-in-out;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
-    `;
-    document.head.appendChild(style);
     </script>
 </body>
 </html>

@@ -4,79 +4,45 @@
 /**
  * toggle wishlist dengan smooth animation (vanilla JS approach)
  */
-async function toggleWishlist(problemId, button) {
-    // disable button sementara
-    button.disabled = true;
-    
-    // add loading state
-    const originalHTML = button.innerHTML;
-    button.innerHTML = `
-        <svg class="animate-spin w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-    `;
-    
-    try {
-        const response = await fetch(`/student/wishlist/${problemId}/toggle`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                'Accept': 'application/json'
+export function toggleWishlist(problemId, button) {
+    // gunakan axios yang sudah ter-configure dengan CSRF token
+    const url = `/student/wishlist/${problemId}/toggle`;
+
+    axios.post(url)
+        .then(response => {
+            if (response.data.success) {
+                // update UI
+                updateWishlistButton(button, response.data.is_saved);
+                
+                // tampilkan notification
+                showNotification(
+                    response.data.message,
+                    response.data.is_saved ? 'success' : 'info'
+                );
+            }
+        })
+        .catch(error => {
+            console.error('Error toggling wishlist:', error);
+            
+            // handle error
+            if (error.response && error.response.status === 401) {
+                showNotification('Silakan login terlebih dahulu', 'warning');
+                setTimeout(() => {
+                    window.location.href = '/login';
+                }, 1500);
+            } else {
+                showNotification('Terjadi kesalahan. Silakan coba lagi.', 'error');
             }
         });
-        
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            // update button state dengan animation
-            updateButtonState(button, data.saved);
-            
-            // tampilkan notification
-            showNotification(data.message || (data.saved ? 'Ditambahkan ke wishlist' : 'Dihapus dari wishlist'));
-            
-            // trigger custom event untuk update UI lain
-            const event = new CustomEvent('wishlistUpdated', {
-                detail: { problemId, saved: data.saved }
-            });
-            window.dispatchEvent(event);
-        }
-        
-    } catch (error) {
-        console.error('Error toggling wishlist:', error);
-        showNotification('Terjadi kesalahan. Silakan coba lagi.', 'error');
-        
-        // restore original state
-        button.innerHTML = originalHTML;
-    } finally {
-        button.disabled = false;
-    }
 }
 
 /**
- * update button state dengan smooth animation
+ * update tampilan wishlist button
  */
-function updateButtonState(button, isSaved) {
-    // scale down animation
-    button.style.transform = 'scale(0.8)';
+function updateWishlistButton(button, isSaved) {
+    const icon = button.querySelector('svg');
     
     setTimeout(() => {
-        // update classes
-        if (isSaved) {
-            button.classList.add('bg-red-50', 'border-red-300');
-            button.classList.remove('bg-white', 'border-gray-300');
-        } else {
-            button.classList.add('bg-white', 'border-gray-300');
-            button.classList.remove('bg-red-50', 'border-red-300');
-        }
-        
-        // update icon
-        const icon = button.querySelector('svg');
         if (icon) {
             icon.setAttribute('fill', isSaved ? 'currentColor' : 'none');
             icon.classList.toggle('text-red-600', isSaved);
@@ -104,7 +70,8 @@ function showNotification(message, type = 'success') {
     
     // buat notification element
     const notification = document.createElement('div');
-    notification.className = `wishlist-notification fixed bottom-4 right-4 z-50 flex items-center space-x-3 px-4 py-3 rounded-lg shadow-lg transition-all duration-300 ${
+    // PERBAIKAN: ubah z-50 menjadi z-[1100]
+    notification.className = `wishlist-notification fixed bottom-4 right-4 z-[1100] flex items-center space-x-3 px-4 py-3 rounded-lg shadow-lg transition-all duration-300 ${
         type === 'success' ? 'bg-gray-900 text-white' : 'bg-red-600 text-white'
     }`;
     
@@ -118,21 +85,26 @@ function showNotification(message, type = 'success') {
         <span class="text-sm font-medium">${message}</span>
     `;
     
+    notification.style.opacity = '0';
+    notification.style.transform = 'translateY(20px)';
+    
     document.body.appendChild(notification);
     
-    // slide in animation
-    setTimeout(() => {
-        notification.style.transform = 'translateX(0)';
+    // trigger animation
+    requestAnimationFrame(() => {
         notification.style.opacity = '1';
-    }, 10);
+        notification.style.transform = 'translateY(0)';
+    });
     
-    // auto hide setelah 3 detik
+    // auto remove setelah 3 detik
     setTimeout(() => {
-        notification.style.transform = 'translateX(100%)';
         notification.style.opacity = '0';
+        notification.style.transform = 'translateY(20px)';
         
         setTimeout(() => {
-            notification.remove();
+            if (notification.parentNode) {
+                notification.remove();
+            }
         }, 300);
     }, 3000);
 }

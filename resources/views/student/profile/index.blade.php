@@ -3,110 +3,27 @@
 
 @section('title', 'Profil Saya')
 
-@push('styles')
-<style>
-/* animasi smooth untuk transisi */
-.profile-transition {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.profile-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.1);
-}
-
-.profile-photo-wrapper {
-    transition: transform 0.3s ease;
-}
-
-.profile-photo-wrapper:hover {
-    transform: scale(1.05);
-}
-
-.profile-photo {
-    transition: all 0.3s ease;
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.fade-in {
-    animation: fadeInUp 0.6s ease-out;
-}
-
-/* smooth scroll */
-html {
-    scroll-behavior: smooth;
-}
-</style>
-@endpush
-
 @section('content')
-<div class="min-h-screen bg-gray-50 py-8">
+<div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 py-8">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        <!-- breadcrumb -->
-        <nav class="mb-6 profile-transition" aria-label="breadcrumb">
-            <ol class="flex items-center space-x-2 text-sm">
-                <li>
-                    <a href="{{ route('student.dashboard') }}" class="text-gray-500 hover:text-gray-700 transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-                        </svg>
-                    </a>
-                </li>
-                <li class="text-gray-400">/</li>
-                <li>
-                    <span class="text-gray-900 font-medium">Profil</span>
-                </li>
-            </ol>
-        </nav>
-
-        <!-- flash messages -->
-        @if(session('success'))
-            <div class="mb-6 bg-green-50 border border-green-200 text-green-800 rounded-lg p-4 flex items-center profile-transition fade-in">
-                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                </svg>
-                {{ session('success') }}
-            </div>
-        @endif
-
-        @if(session('error'))
-            <div class="mb-6 bg-red-50 border border-red-200 text-red-800 rounded-lg p-4 flex items-center profile-transition fade-in">
-                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
-                </svg>
-                {{ session('error') }}
-            </div>
-        @endif
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- main profile section -->
-            <div class="lg:col-span-2 space-y-6">
-                <!-- profile card -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {{-- kolom kiri: profile info --}}
+            <div class="lg:col-span-1 space-y-6">
+                {{-- profile card --}}
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden profile-transition fade-in">
                     <div class="h-32 bg-gradient-to-r from-blue-600 to-green-600"></div>
-                    <div class="px-6 pb-6">
-                        <div class="flex flex-col items-center -mt-16 mb-4">
+                    <div class="px-6 -mt-16 relative">
+                        <div class="flex flex-col items-center text-center">
                             @if($student->profile_photo_path)
                                 <img src="{{ $student->profile_photo_url }}" 
-                                     alt="{{ $student->first_name }}" 
-                                     class="w-32 h-32 rounded-xl border-4 border-white shadow-lg object-cover profile-photo">
+                                     alt="{{ $student->first_name }}"
+                                     class="w-32 h-32 rounded-xl border-4 border-white shadow-lg object-cover">
                             @else
                                 <div class="w-32 h-32 rounded-xl border-4 border-white shadow-lg bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center">
                                     <span class="text-white text-4xl font-bold">{{ strtoupper(substr($student->first_name, 0, 1)) }}</span>
                                 </div>
                             @endif
-                            <div class="mt-4 text-center">
+                            <div class="mt-4 mb-4">
                                 <h2 class="text-2xl font-bold text-gray-900 mb-1">{{ $student->first_name }} {{ $student->last_name }}</h2>
                                 <p class="text-gray-600">{{ $student->university->name }}</p>
                                 <p class="text-sm text-gray-500">{{ $student->major }} • Semester {{ $student->semester }}</p>
@@ -133,26 +50,26 @@ html {
                     @endif
                 </div>
 
-                <!-- statistics grid -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 fade-in" style="animation-delay: 0.1s;">
+                {{-- statistics grid --}}
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-2 gap-4 fade-in" style="animation-delay: 0.1s;">
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 text-center profile-card hover:border-blue-500 transition-all">
                         <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 mb-3">
                             <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                         </div>
-                        <p class="text-3xl font-bold text-gray-900">{{ $stats['total_projects'] }}</p>
-                        <p class="text-sm text-gray-600 mt-1">Total Proyek</p>
+                        <p class="text-3xl font-bold text-gray-900 mb-1">{{ $stats['completed_projects'] }}</p>
+                        <p class="text-sm text-gray-600">Proyek Selesai</p>
                     </div>
 
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 text-center profile-card hover:border-green-500 transition-all">
                         <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-100 mb-3">
                             <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                             </svg>
                         </div>
-                        <p class="text-3xl font-bold text-gray-900">{{ $stats['completed_projects'] }}</p>
-                        <p class="text-sm text-gray-600 mt-1">Proyek Selesai</p>
+                        <p class="text-3xl font-bold text-gray-900 mb-1">{{ $stats['active_projects'] }}</p>
+                        <p class="text-sm text-gray-600">Proyek Aktif</p>
                     </div>
 
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 text-center profile-card hover:border-yellow-500 transition-all">
@@ -161,111 +78,33 @@ html {
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                         </div>
-                        <p class="text-3xl font-bold text-gray-900">{{ $stats['active_projects'] }}</p>
-                        <p class="text-sm text-gray-600 mt-1">Proyek Aktif</p>
+                        <p class="text-3xl font-bold text-gray-900 mb-1">{{ $stats['pending_applications'] }}</p>
+                        <p class="text-sm text-gray-600">Aplikasi Pending</p>
                     </div>
 
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 text-center profile-card hover:border-purple-500 transition-all">
                         <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-purple-100 mb-3">
                             <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
                         </div>
-                        <p class="text-3xl font-bold text-gray-900">{{ $stats['total_applications'] }}</p>
-                        <p class="text-sm text-gray-600 mt-1">Total Aplikasi</p>
+                        <p class="text-3xl font-bold text-gray-900 mb-1">{{ $stats['total_applications'] }}</p>
+                        <p class="text-sm text-gray-600">Total Aplikasi</p>
                     </div>
                 </div>
 
-                <!-- completed projects showcase -->
-                @if($completedProjects && $completedProjects->count() > 0)
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 profile-transition fade-in" style="animation-delay: 0.2s;">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Proyek Yang Sudah Diselesaikan</h3>
-                        <div class="space-y-4">
-                            @foreach($completedProjects as $project)
-                                <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-500 profile-transition">
-                                    <div class="flex items-start justify-between">
-                                        <div class="flex-1">
-                                            <h4 class="font-semibold text-gray-900 mb-1">{{ $project->problem->title }}</h4>
-                                            <p class="text-sm text-gray-600 mb-2">
-                                                {{ $project->problem->institution->name }} • 
-                                                {{ $project->problem->regency->name ?? '' }}
-                                            </p>
-                                            @if($project->role_in_team)
-                                                <span class="inline-block px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded">
-                                                    {{ $project->role_in_team }}
-                                                </span>
-                                            @endif
-                                        </div>
-                                        @if($project->problem->review)
-                                            <div class="flex items-center gap-1 text-yellow-500">
-                                                <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20">
-                                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                                                </svg>
-                                                <span class="font-semibold">{{ $project->problem->review->rating }}</span>
-                                            </div>
-                                        @endif
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                        @if($completedProjects->count() >= 5)
-                            <div class="mt-4 text-center">
-                                <a href="{{ route('student.projects.index') }}" class="text-blue-600 hover:text-blue-700 font-medium transition-colors">
-                                    Lihat Semua Proyek →
-                                </a>
-                            </div>
-                        @endif
-                    </div>
-                @endif
-            </div>
-
-            <!-- sidebar kanan -->
-            <div class="lg:col-span-1 space-y-6">
-                <!-- informasi kontak -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 profile-transition fade-in" style="animation-delay: 0.1s;">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Informasi Kontak</h3>
-                    <div class="space-y-4">
-                        <div class="flex items-start gap-3">
-                            <svg class="w-5 h-5 text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                            </svg>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm text-gray-500">Email</p>
-                                <p class="text-sm text-gray-900 break-all">{{ $student->user->email }}</p>
-                            </div>
-                        </div>
-
-                        @if($student->phone)
-                            <div class="flex items-start gap-3">
-                                <svg class="w-5 h-5 text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
-                                </svg>
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-sm text-gray-500">WhatsApp</p>
-                                    <p class="text-sm text-gray-900">{{ $student->phone }}</p>
-                                </div>
-                            </div>
-                        @endif
-
-                        <div class="flex items-start gap-3">
-                            <svg class="w-5 h-5 text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path>
-                            </svg>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm text-gray-500">NIM</p>
-                                <p class="text-sm text-gray-900">{{ $student->nim }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- skills jika ada -->
+                {{-- skills card --}}
                 @if($skills && count($skills) > 0)
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 profile-transition fade-in" style="animation-delay: 0.2s;">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Skills</h3>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                            </svg>
+                            Skills & Keahlian
+                        </h3>
                         <div class="flex flex-wrap gap-2">
                             @foreach($skills as $skill)
-                                <span class="px-3 py-1 bg-blue-50 text-blue-700 text-sm rounded-full hover:bg-blue-100 transition-colors">
+                                <span class="inline-flex items-center px-3 py-1 bg-blue-50 text-blue-700 text-sm rounded-full hover:bg-blue-100 transition-colors">
                                     {{ $skill }}
                                 </span>
                             @endforeach
@@ -273,7 +112,7 @@ html {
                     </div>
                 @endif
 
-                <!-- share portfolio -->
+                {{-- share portfolio --}}
                 <div class="bg-gradient-to-br from-blue-600 to-green-600 rounded-xl shadow-sm p-6 text-white profile-transition fade-in" style="animation-delay: 0.3s;">
                     <h3 class="text-lg font-semibold mb-2">Bagikan Portfolio</h3>
                     <p class="text-sm mb-4 opacity-90">Bagikan profil publik Anda dengan calon rekruter atau mitra</p>
@@ -285,20 +124,117 @@ html {
                     </button>
                 </div>
             </div>
+
+            {{-- kolom kanan: projects --}}
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 fade-in" style="animation-delay: 0.4s;">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Proyek Saya</h2>
+                    
+                    @if($completedProjects && $completedProjects->count() > 0)
+                        <div class="space-y-4">
+                            @foreach($completedProjects as $project)
+                                <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-500 transition-all">
+                                    <div class="flex items-start justify-between">
+                                        <div class="flex-1">
+                                            <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ $project->problem->title }}</h3>
+                                            <p class="text-gray-600 text-sm mb-2 line-clamp-2">{{ $project->problem->description }}</p>
+                                            <div class="flex items-center gap-4 text-xs text-gray-500">
+                                                <span class="flex items-center">
+                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                                    </svg>
+                                                    {{ $project->problem->institution->name }}
+                                                </span>
+                                                <span class="flex items-center">
+                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                    </svg>
+                                                    {{ $project->problem->regency->name }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        @if($project->institutionReview)
+                                            <div class="ml-4">
+                                                <div class="flex items-center text-yellow-500">
+                                                    <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20">
+                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                                                    </svg>
+                                                    <span class="ml-1 font-bold">{{ number_format($project->institutionReview->rating, 1) }}</span>
+                                                </div>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="text-center py-12">
+                            <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <p class="text-gray-500 text-lg">Belum ada proyek yang diselesaikan</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
         </div>
     </div>
 </div>
+
+@push('styles')
+<style>
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.profile-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.profile-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.15);
+}
+
+.profile-transition {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+</style>
+@endpush
 
 @push('scripts')
 <script>
 // fungsi copy link portfolio
 function copyPortfolioLink() {
-    const url = '{{ route("profile.public", $user->username) }}';
+    // PERBAIKAN: pastikan username valid dan route berfungsi
+    @php
+        $username = $student->user->username ?? $user->username ?? '';
+    @endphp
+    
+    const url = '{{ route("profile.public", $username) }}';
+    
+    // validasi url
+    if (!url || url.includes('undefined')) {
+        showToast('Gagal membuat link portfolio. Username tidak valid.', 'error');
+        return;
+    }
     
     // gunakan clipboard API
     if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(url).then(() => {
-            showToast('Link portfolio berhasil disalin!', 'success');
+            showToast('Link Portfolio Berhasil Disalin!', 'success');
         }).catch(err => {
             console.error('Gagal menyalin link:', err);
             fallbackCopy(url);
@@ -314,45 +250,59 @@ function fallbackCopy(text) {
     textArea.value = text;
     textArea.style.position = 'fixed';
     textArea.style.left = '-999999px';
+    textArea.style.top = '0';
     document.body.appendChild(textArea);
     textArea.focus();
     textArea.select();
     
     try {
-        document.execCommand('copy');
-        showToast('Link portfolio berhasil disalin!', 'success');
+        const successful = document.execCommand('copy');
+        if (successful) {
+            showToast('Link Portfolio Berhasil Disalin!', 'success');
+        } else {
+            showToast('Gagal Menyalin Link', 'error');
+        }
     } catch (err) {
         console.error('Gagal menyalin link:', err);
-        showToast('Gagal menyalin link', 'error');
+        showToast('Gagal Menyalin Link', 'error');
     }
     
     document.body.removeChild(textArea);
 }
 
-// fungsi show toast notification
+// PERBAIKAN: fungsi show toast notification dengan z-index yang lebih tinggi
 function showToast(message, type = 'success') {
+    // hapus toast yang sudah ada
+    const existingToast = document.querySelector('.custom-toast');
+    if (existingToast) {
+        existingToast.remove();
+    }
+    
     const toast = document.createElement('div');
-    toast.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white transform transition-all duration-300 z-50 ${
+    // PERBAIKAN: z-[1100] lebih tinggi dari navbar (z-1000)
+    toast.className = `custom-toast fixed top-20 right-4 px-6 py-3 rounded-lg shadow-lg text-white transform transition-all duration-300 z-[1100] ${
         type === 'success' ? 'bg-green-600' : 'bg-red-600'
     }`;
     toast.textContent = message;
     toast.style.opacity = '0';
-    toast.style.transform = 'translateY(-20px)';
+    toast.style.transform = 'translateX(100px)';
     
     document.body.appendChild(toast);
     
     // trigger animation
-    setTimeout(() => {
+    requestAnimationFrame(() => {
         toast.style.opacity = '1';
-        toast.style.transform = 'translateY(0)';
-    }, 10);
+        toast.style.transform = 'translateX(0)';
+    });
     
     // auto remove
     setTimeout(() => {
         toast.style.opacity = '0';
-        toast.style.transform = 'translateY(-20px)';
+        toast.style.transform = 'translateX(100px)';
         setTimeout(() => {
-            document.body.removeChild(toast);
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
         }, 300);
     }, 3000);
 }

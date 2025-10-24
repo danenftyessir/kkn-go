@@ -13,7 +13,7 @@
         background-position: center;
         background-attachment: fixed;
         min-height: 450px;
-        padding-top: 40px; /* PERBAIKAN: padding-top untuk menurunkan konten */
+        padding-top: 40px;
     }
     
     .dashboard-hero-background::before {
@@ -77,7 +77,6 @@
         }
     }
 
-    /* smooth transitions untuk cards */
     .content-card {
         will-change: transform, box-shadow;
         transform: translate3d(0, 0, 0);
@@ -91,7 +90,6 @@
         box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
     }
 
-    /* accessibility - prefers reduced motion */
     @media (prefers-reduced-motion: reduce) {
         *,
         *::before,
@@ -233,7 +231,6 @@
             <div class="lg:col-span-2 space-y-6">
                 
                 {{-- active projects --}}
-                @if($activeProjects->isNotEmpty())
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 fade-in-up content-card" style="animation-delay: 0.3s;">
                     <div class="flex items-center justify-between mb-4">
                         <h2 class="text-xl font-bold text-gray-900">Proyek Aktif</h2>
@@ -241,6 +238,8 @@
                             Lihat Semua →
                         </a>
                     </div>
+                    
+                    @if($activeProjects->isNotEmpty())
                     <div class="space-y-4">
                         @foreach($activeProjects as $project)
                         <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors duration-200">
@@ -283,11 +282,28 @@
                         </div>
                         @endforeach
                     </div>
+                    @else
+                    {{-- empty state untuk proyek aktif --}}
+                    <div class="text-center py-12">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
+                            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Belum Ada Proyek Aktif</h3>
+                        <p class="text-gray-600 mb-4">Proyek yang sedang Anda kerjakan akan muncul di sini</p>
+                        <a href="{{ route('student.browse-problems.index') }}" 
+                           class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                            Cari Proyek
+                        </a>
+                    </div>
+                    @endif
                 </div>
-                @endif
 
                 {{-- recent applications --}}
-                @if($recentApplications->isNotEmpty())
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 fade-in-up content-card" style="animation-delay: 0.35s;">
                     <div class="flex items-center justify-between mb-4">
                         <h2 class="text-xl font-bold text-gray-900">Aplikasi Terbaru</h2>
@@ -295,6 +311,8 @@
                             Lihat Semua →
                         </a>
                     </div>
+                    
+                    @if($recentApplications->isNotEmpty())
                     <div class="space-y-3">
                         @foreach($recentApplications as $application)
                         <div class="flex items-start justify-between border-b border-gray-100 pb-3 last:border-0">
@@ -307,17 +325,7 @@
                                         {{ $application->status === 'under_review' ? 'bg-blue-100 text-blue-800' : '' }}
                                         {{ $application->status === 'accepted' ? 'bg-green-100 text-green-800' : '' }}
                                         {{ $application->status === 'rejected' ? 'bg-red-100 text-red-800' : '' }}">
-                                        @if($application->status === 'pending')
-                                            Pending
-                                        @elseif($application->status === 'under_review')
-                                            Under Review
-                                        @elseif($application->status === 'accepted')
-                                            Accepted
-                                        @elseif($application->status === 'rejected')
-                                            Rejected
-                                        @else
-                                            {{ ucfirst($application->status) }}
-                                        @endif
+                                        {{ ucfirst(str_replace('_', ' ', $application->status)) }}
                                     </span>
                                     <span class="text-xs text-gray-500">{{ $application->created_at->diffForHumans() }}</span>
                                 </div>
@@ -331,123 +339,74 @@
                         </div>
                         @endforeach
                     </div>
+                    @else
+                    {{-- empty state untuk aplikasi --}}
+                    <div class="text-center py-12">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+                            <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Belum Ada Aplikasi</h3>
+                        <p class="text-gray-600 mb-4">Status aplikasi yang Anda kirim akan muncul di sini</p>
+                        <a href="{{ route('student.browse-problems.index') }}" 
+                           class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                            Mulai Apply
+                        </a>
+                    </div>
+                    @endif
                 </div>
-                @endif
             </div>
 
             {{-- sidebar (1 column) --}}
-            <div class="lg:col-span-1 space-y-6">
+            <div class="space-y-6">
                 
-                {{-- profile completion alert --}}
-                @if($profileCompletion['percentage'] < 100)
-                <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-sm p-6 text-white fade-in-up content-card" style="animation-delay: {{ $profileCompletion['percentage'] < 100 ? '0.4s' : '0.35s' }};">
-                    <div class="flex items-start gap-3 mb-3">
-                        <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        <div>
-                            <h3 class="font-bold text-lg mb-1">Lengkapi Profil Anda</h3>
-                            <p class="text-sm opacity-90">
-                                Profil anda {{ $profileCompletion['percentage'] }}% lengkap ({{ $profileCompletion['fields']['profile_photo'] + $profileCompletion['fields']['bio'] + $profileCompletion['fields']['skills'] + $profileCompletion['fields']['whatsapp'] + $profileCompletion['fields']['semester'] }}/{{ count($profileCompletion['fields']) }} field). Lengkapi profil untuk mendapat rekomendasi proyek yang lebih sesuai.
-                            </p>
-                        </div>
-                    </div>
-                    
-                    {{-- progress bar --}}
-                    <div class="mb-4">
-                        <div class="w-full bg-white bg-opacity-20 rounded-full h-2">
-                            <div class="bg-white h-2 rounded-full transition-all duration-500" style="width: {{ $profileCompletion['percentage'] }}%"></div>
-                        </div>
-                    </div>
-                    
-                    <a href="{{ route('student.profile.edit') }}" 
-                       class="block w-full px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-blue-50 transition-colors font-semibold text-sm text-center">
-                        Lengkapi Sekarang
-                    </a>
-                </div>
-                @endif
-                
+                {{-- recommended problems --}}
                 @if($recommendedProblems->isNotEmpty())
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 fade-in-up content-card" style="animation-delay: {{ $profileCompletion['percentage'] < 100 ? '0.45s' : '0.35s' }};">
-                    <h2 class="text-lg font-bold text-gray-900 mb-4">Rekomendasi Proyek</h2>
-                    <div class="space-y-4">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 fade-in-up content-card" style="animation-delay: 0.4s;">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-bold text-gray-900">Rekomendasi Untuk Anda</h2>
+                    </div>
+                    <div class="space-y-3">
                         @foreach($recommendedProblems->take(3) as $problem)
-                        <div class="border border-gray-200 rounded-lg p-3 hover:border-blue-300 transition-colors duration-200">
-                            @if($problem->coverImage)
-                                <div class="w-full h-32 rounded-lg mb-3 overflow-hidden">
-                                    <img src="{{ $problem->coverImage->image_url }}" 
-                                        alt="{{ $problem->title }}"
-                                        onerror="this.onerror=null; this.src='https://via.placeholder.com/400x150?text=No+Image';"
-                                        class="w-full h-full object-cover">
-                                </div>
-                            @endif
+                        <a href="{{ route('student.browse-problems.show', $problem->id) }}" 
+                           class="block border border-gray-200 rounded-lg p-3 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200">
                             <h3 class="font-semibold text-sm text-gray-900 mb-1 line-clamp-2">{{ $problem->title }}</h3>
                             <p class="text-xs text-gray-600 mb-2">{{ $problem->institution->name }}</p>
                             <div class="flex items-center justify-between">
-                                <span class="text-xs text-gray-500">
-                                    <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                    </svg>
-                                    {{ $problem->regency->name ?? $problem->location_regency }}
-                                </span>
-                                <a href="{{ route('student.browse-problems.show', $problem->id) }}" 
-                                class="text-xs text-blue-600 hover:text-blue-700 font-medium transition-colors">
-                                    Detail →
-                                </a>
+                                <span class="text-xs text-gray-500">{{ $problem->regency->name }}</span>
+                                <span class="text-xs font-semibold text-blue-600">Lihat →</span>
                             </div>
-                        </div>
+                        </a>
                         @endforeach
                     </div>
                     <a href="{{ route('student.browse-problems.index') }}" 
-                    class="mt-4 block text-center text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors">
-                        Lihat Semua Proyek →
+                       class="block mt-4 text-center text-sm text-blue-600 hover:text-blue-700 font-medium">
+                        Lihat Semua Proyek
                     </a>
                 </div>
                 @endif
 
                 {{-- upcoming milestones --}}
-                @if($upcomingMilestones->isNotEmpty())
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 fade-in-up content-card" style="animation-delay: {{ $profileCompletion['percentage'] < 100 ? '0.5s' : '0.4s' }};">
-                    <h2 class="text-lg font-bold text-gray-900 mb-4">Milestone Mendatang</h2>
-                    <div class="space-y-3">
-                        @foreach($upcomingMilestones as $milestone)
-                        <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                            </div>
-                            <div class="flex-1">
-                                <h3 class="text-sm font-semibold text-gray-900 mb-1">{{ $milestone->title }}</h3>
-                                <p class="text-xs text-gray-600 mb-1">{{ $milestone->project->title ?? 'N/A' }}</p>
-                                <div class="flex items-center text-xs text-gray-500">
-                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                    </svg>
-                                    {{ \Carbon\Carbon::parse($milestone->target_date)->format('d M Y') }}
-                                </div>
-                            </div>
-                        </div>
-                        @endforeach
-                    </div>
-                </div>
-                @endif
-
-                {{-- notifications --}}
-                @if($unreadNotifications->isNotEmpty())
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 fade-in-up content-card" style="animation-delay: {{ $profileCompletion['percentage'] < 100 ? '0.55s' : '0.45s' }};">
+                @if(isset($upcomingMilestones) && $upcomingMilestones->isNotEmpty())
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 fade-in-up content-card" style="animation-delay: 0.45s;">
                     <div class="flex items-center justify-between mb-4">
-                        <h2 class="text-lg font-bold text-gray-900">Notifikasi</h2>
-                        <a href="{{ route('notifications.index') }}" class="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors">
-                            Lihat Semua →
-                        </a>
+                        <h2 class="text-lg font-bold text-gray-900">Milestone Mendatang</h2>
                     </div>
                     <div class="space-y-3">
-                        @foreach($unreadNotifications as $notification)
-                        <div class="p-3 bg-blue-50 rounded-lg border border-blue-100">
-                            <p class="text-sm text-gray-900 mb-1">{{ $notification->title }}</p>
-                            <p class="text-xs text-gray-600">{{ $notification->created_at->diffForHumans() }}</p>
+                        @foreach($upcomingMilestones->take(5) as $milestone)
+                        <div class="border-l-4 border-orange-400 pl-3 py-2">
+                            <h3 class="font-semibold text-sm text-gray-900">{{ $milestone->title }}</h3>
+                            <p class="text-xs text-gray-600 mt-1">{{ $milestone->project->problem->title }}</p>
+                            <div class="flex items-center text-xs text-orange-600 mt-1">
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                {{ \Carbon\Carbon::parse($milestone->target_date)->format('d M Y') }}
+                            </div>
                         </div>
                         @endforeach
                     </div>

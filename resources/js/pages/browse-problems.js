@@ -310,7 +310,7 @@ function hideLoading() {
 function showError(message) {
     // implementasi toast notification
     const toast = document.createElement('div');
-    toast.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-slide-in';
+    toast.className = 'fixed top-20 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-[1100] animate-slide-in';
     toast.textContent = message;
     document.body.appendChild(toast);
     
