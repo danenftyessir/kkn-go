@@ -121,46 +121,57 @@
             <!-- main content -->
             <div class="lg:col-span-2 space-y-6">
                 
-                <!-- header card -->
+                <!-- status card -->
                 <div class="detail-card bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                    <div class="flex items-start justify-between mb-4">
+                    <div class="flex items-start justify-between">
                         <div class="flex-1">
                             <h1 class="text-2xl font-bold text-gray-900 mb-2">{{ $application->problem->title }}</h1>
-                            <p class="text-gray-600">{{ $application->problem->institution->name }}</p>
+                            <p class="text-gray-600 mb-4">{{ $application->problem->institution->name }}</p>
+                            <div class="flex flex-wrap gap-2">
+                                @php
+                                    $status = match($application->status) {
+                                        'pending' => ['text' => 'Menunggu Review', 'bg' => 'bg-yellow-100', 'text-color' => 'text-yellow-800'],
+                                        'reviewed' => ['text' => 'Sedang Direview', 'bg' => 'bg-blue-100', 'text-color' => 'text-blue-800'],
+                                        'accepted' => ['text' => 'Diterima', 'bg' => 'bg-green-100', 'text-color' => 'text-green-800'],
+                                        'rejected' => ['text' => 'Ditolak', 'bg' => 'bg-red-100', 'text-color' => 'text-red-800'],
+                                        default => ['text' => 'Unknown', 'bg' => 'bg-gray-100', 'text-color' => 'text-gray-800'],
+                                    };
+                                @endphp
+                                <span class="status-badge inline-flex items-center px-3 py-1 {{ $status['bg'] }} {{ $status['text-color'] }} text-sm font-semibold rounded-full">
+                                    {{ $status['text'] }}
+                                </span>
+                            </div>
                         </div>
-                        
-                        <!-- status badge -->
-                        @php
-                            $statusConfig = [
-                                'pending' => ['text' => 'Menunggu Review', 'bg' => 'bg-yellow-100', 'text-color' => 'text-yellow-800'],
-                                'reviewed' => ['text' => 'Sedang Direview', 'bg' => 'bg-blue-100', 'text-color' => 'text-blue-800'],
-                                'accepted' => ['text' => 'Diterima', 'bg' => 'bg-green-100', 'text-color' => 'text-green-800'],
-                                'rejected' => ['text' => 'Ditolak', 'bg' => 'bg-red-100', 'text-color' => 'text-red-800'],
-                            ];
-                            $status = $statusConfig[$application->status] ?? ['text' => 'Unknown', 'bg' => 'bg-gray-100', 'text-color' => 'text-gray-800'];
-                        @endphp
-                        
-                        <span class="status-badge inline-flex items-center px-3 py-1 {{ $status['bg'] }} {{ $status['text-color'] }} text-sm font-semibold rounded-full">
-                            {{ $status['text'] }}
-                        </span>
                     </div>
-                    
-                    <!-- project link -->
-                    <a href="{{ route('student.browse-problems.show', $application->problem->id) }}" 
-                       class="inline-flex items-center text-sm text-blue-600 hover:text-blue-700 font-medium">
-                        Lihat Detail Proyek
-                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                        </svg>
-                    </a>
+                </div>
+
+                <!-- problem detail -->
+                <div class="detail-card bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">Detail Proyek</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <h3 class="text-sm font-semibold text-gray-900 mb-2">Deskripsi</h3>
+                            <p class="text-gray-700 leading-relaxed">{{ $application->problem->description }}</p>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-semibold text-gray-900 mb-2">Lokasi</h3>
+                            <p class="text-gray-700">
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                                {{ $application->problem->regency->name ?? $application->problem->location_regency }}, 
+                                {{ $application->problem->province->name ?? $application->problem->location_province }}
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- timeline -->
                 <div class="detail-card bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                    <h2 class="text-xl font-bold text-gray-900 mb-6">Timeline Aplikasi</h2>
-                    
+                    <h2 class="text-xl font-bold text-gray-900 mb-6">Timeline</h2>
                     <div class="space-y-6">
-                        <!-- aplikasi diajukan -->
+                        <!-- submitted -->
                         <div class="timeline-item">
                             <div class="timeline-dot"></div>
                             <div>
@@ -213,28 +224,33 @@
                     </div>
                 </div>
 
-                <!-- proposal document -->
-                @if($application->proposal_path)
+                <!-- proposal document - DIGABUNG DI SINI, DIBAWAH MOTIVASI -->
+                @if($application->proposal_content)
                 <div class="detail-card bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                     <h2 class="text-xl font-bold text-gray-900 mb-4">Dokumen Proposal</h2>
-                    <a href="{{ supabase_url($application->proposal_path) }}" 
-                       target="_blank"
-                       class="document-preview flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                        <div class="flex items-center">
-                            <div class="p-3 bg-blue-100 rounded-lg mr-4">
-                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-                                </svg>
-                            </div>
-                            <div>
-                                <p class="text-sm font-semibold text-gray-900">{{ basename($application->proposal_path) }}</p>
-                                <p class="text-xs text-gray-500">Klik Untuk Melihat</p>
-                            </div>
+                    <div class="flex items-center gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                            </svg>
                         </div>
-                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                        </svg>
-                    </a>
+                        <div class="flex-1">
+                            <p class="font-medium text-gray-900">{{ $application->proposal_filename ?? 'Proposal.pdf' }}</p>
+                            <p class="text-sm text-gray-500">
+                                {{ $application->proposal_size_formatted ?? 'PDF Document' }} • 
+                                Diupload {{ $application->created_at->diffForHumans() }}
+                            </p>
+                        </div>
+                        <a href="{{ route('student.applications.download-proposal', $application->id) }}" 
+                           target="_blank"
+                           class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-semibold flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                            </svg>
+                            Lihat
+                        </a>
+                    </div>
                 </div>
                 @endif
 
@@ -289,67 +305,63 @@
                             <dt class="text-sm text-gray-600">Deadline</dt>
                             <dd class="text-sm font-semibold text-red-600 mt-1">
                                 {{ $application->problem->application_deadline->format('d M Y') }}
-                                @php
-                                    $daysLeft = floor(now()->diffInDays($application->problem->application_deadline, false));
-                                @endphp
-                                @if($daysLeft > 0)
-                                <span class="text-xs text-gray-500">({{ $daysLeft }} Hari Lagi)</span>
-                                @else
-                                <span class="text-xs text-gray-500">({{ abs($daysLeft) }} Hari Lalu)</span>
-                                @endif
                             </dd>
                         </div>
                     </dl>
                 </div>
 
-                <!-- aksi -->
+                <!-- instansi info -->
+                <div class="detail-card bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Instansi</h3>
+                    <div class="flex items-center mb-4">
+                        @if($application->problem->institution->logo_url)
+                        <img src="{{ $application->problem->institution->logo_url }}" 
+                             alt="{{ $application->problem->institution->name }}"
+                             class="w-12 h-12 rounded-lg object-cover mr-3">
+                        @else
+                        <div class="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center mr-3">
+                            <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                            </svg>
+                        </div>
+                        @endif
+                        <div>
+                            <p class="font-semibold text-gray-900">{{ $application->problem->institution->name }}</p>
+                            <p class="text-sm text-gray-600">{{ $application->problem->institution->type }}</p>
+                        </div>
+                    </div>
+                    <a href="{{ route('student.browse-problems.show', $application->problem->id) }}" 
+                       class="inline-flex items-center text-sm text-blue-600 hover:text-blue-700 transition-colors">
+                        Lihat Detail Proyek
+                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                </div>
+
+                <!-- action buttons -->
                 @if($application->status === 'pending')
                 <div class="detail-card bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                     <h3 class="text-lg font-bold text-gray-900 mb-4">Aksi</h3>
-                    
                     <form action="{{ route('student.applications.withdraw', $application->id) }}" 
                           method="POST"
-                          onsubmit="return confirm('Yakin ingin membatalkan aplikasi ini?')">
+                          onsubmit="return confirm('Apakah Anda yakin ingin membatalkan aplikasi ini?');">
                         @csrf
                         @method('DELETE')
-                        
                         <button type="submit" 
-                                class="action-btn w-full px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold">
+                                class="action-btn w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold">
                             Batalkan Aplikasi
                         </button>
                     </form>
-                    
-                    <p class="text-xs text-gray-500 mt-3 text-center">
-                        Anda dapat membatalkan aplikasi selama masih dalam proses review
+                    <p class="text-xs text-gray-500 mt-2">
+                        Anda dapat membatalkan aplikasi selama masih dalam status pending
                     </p>
-                </div>
-                @endif
-
-                @if($application->status === 'accepted')
-                <div class="detail-card bg-gradient-to-br from-green-50 to-blue-50 rounded-xl shadow-sm border border-green-200 p-6">
-                    <div class="text-center">
-                        <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-                            <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                        </div>
-                        <h3 class="text-lg font-bold text-gray-900 mb-2">Selamat!</h3>
-                        <p class="text-sm text-gray-600 mb-4">Aplikasi Anda telah diterima. Proyek akan segera dimulai.</p>
-                        <a href="{{ route('student.projects.index') }}" 
-                           class="action-btn inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold text-sm">
-                            Lihat Proyek Saya
-                            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                        </a>
-                    </div>
                 </div>
                 @endif
 
             </div>
 
         </div>
-
     </div>
 </div>
 @endsection
