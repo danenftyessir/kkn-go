@@ -8,8 +8,7 @@ use App\Models\ProblemImage;
 
 /**
  * seeder untuk problem images
- * simple version - langsung hardcode list file yang ada di supabase
- * tidak perlu upload, cukup simpan path saja
+ * extended version - menggunakan gambar baru dan minimalisir duplikasi
  * 
  * jalankan: php artisan db:seed --class=ProblemImagesSeeder
  */
@@ -30,9 +29,10 @@ class ProblemImagesSeeder extends Seeder
             return;
         }
 
-        // hardcode list file yang ada di supabase bucket "kkn-go storage"
-        // file-file ini harus benar-benar sudah ada di supabase storage
+        // daftar lengkap gambar yang tersedia di supabase storage
+        // gabungan gambar lama dan gambar baru
         $availableImages = [
+            // gambar lama (1-30)
             'problems/masalah-desa-1.jpg',
             'problems/masalah-desa-2.jpg',
             'problems/masalah-desa-3.jpeg',
@@ -64,75 +64,168 @@ class ProblemImagesSeeder extends Seeder
             'problems/masalah-desa-28.jpg',
             'problems/masalah-desa-29.jpg',
             'problems/masalah-desa-30.jpeg',
+            
+            // gambar baru (31-94)
+            'problems/masalah-desa-31.JPG',
+            'problems/masalah-desa-32.JPG',
+            'problems/masalah-desa-33.JPG',
+            'problems/masalah-desa-34.JPG',
+            'problems/masalah-desa-35.JPG',
+            'problems/masalah-desa-36.JPG',
+            'problems/masalah-desa-37.JPG',
+            'problems/masalah-desa-38.JPG',
+            'problems/masalah-desa-39.JPG',
+            'problems/masalah-desa-40.JPG',
+            'problems/masalah-desa-41.JPG',
+            'problems/masalah-desa-42.JPG',
+            'problems/masalah-desa-43.JPG',
+            'problems/masalah-desa-44.JPG',
+            'problems/masalah-desa-45.JPG',
+            'problems/masalah-desa-46.JPG',
+            'problems/masalah-desa-47.JPG',
+            'problems/masalah-desa-48.JPG',
+            'problems/masalah-desa-49.JPG',
+            'problems/masalah-desa-50.JPG',
+            'problems/masalah-desa-51.JPG',
+            'problems/masalah-desa-52.JPG',
+            'problems/masalah-desa-53.JPG',
+            'problems/masalah-desa-54.JPG',
+            'problems/masalah-desa-55.JPG',
+            'problems/masalah-desa-56.JPG',
+            'problems/masalah-desa-57.JPG',
+            'problems/masalah-desa-58.JPG',
+            'problems/masalah-desa-59.JPG',
+            'problems/masalah-desa-60.JPG',
+            'problems/masalah-desa-61.JPG',
+            'problems/masalah-desa-62.JPG',
+            'problems/masalah-desa-63.JPG',
+            'problems/masalah-desa-64.JPG',
+            'problems/masalah-desa-65.JPG',
+            'problems/masalah-desa-66.JPG',
+            'problems/masalah-desa-67.JPG',
+            'problems/masalah-desa-68.JPG',
+            'problems/masalah-desa-69.JPG',
+            'problems/masalah-desa-70.JPG',
+            'problems/masalah-desa-71.JPG',
+            'problems/masalah-desa-72.JPG',
+            'problems/masalah-desa-73.JPG',
+            'problems/masalah-desa-74.JPG',
+            'problems/masalah-desa-75.JPG',
+            'problems/masalah-desa-76.JPG',
+            'problems/masalah-desa-77.JPG',
+            'problems/masalah-desa-78.JPG',
+            'problems/masalah-desa-79.JPG',
+            'problems/masalah-desa-80.JPG',
+            'problems/masalah-desa-81.JPG',
+            'problems/masalah-desa-82.JPG',
+            'problems/masalah-desa-83.JPG',
+            'problems/masalah-desa-84.JPG',
+            'problems/masalah-desa-85.JPG',
+            'problems/masalah-desa-86.JPG',
+            'problems/masalah-desa-87.JPG',
+            'problems/masalah-desa-88.JPG',
+            'problems/masalah-desa-89.JPG',
+            'problems/masalah-desa-90.JPG',
+            'problems/masalah-desa-91.JPG',
+            'problems/masalah-desa-92.JPG',
+            'problems/masalah-desa-93.JPG',
+            'problems/masalah-desa-94.JPG',
         ];
 
         $this->command->info("🖼️  Ditemukan " . count($availableImages) . " gambar");
+        $this->command->info("📁 Total problems: " . $problems->count());
 
-        // hapus problem images lama untuk clean seeding
-        ProblemImage::truncate();
+        // shuffle gambar untuk random assignment dan minimalisir duplikasi
+        shuffle($availableImages);
 
+        // track gambar yang sudah digunakan untuk minimalisir duplikasi
+        $usedImages = [];
         $imageIndex = 0;
-        $totalSeeded = 0;
 
-        // distribusikan gambar ke setiap problem
+        // assign gambar ke setiap problem
         foreach ($problems as $problem) {
-            // setiap problem dapat 2-4 gambar secara acak
-            $imagesPerProblem = min(rand(2, 4), count($availableImages));
-            
-            for ($i = 0; $i < $imagesPerProblem; $i++) {
-                // cycle through images untuk distribusi merata
-                if ($imageIndex >= count($availableImages)) {
-                    $imageIndex = 0;
+            // setiap problem dapat 2-4 gambar
+            $numImages = rand(2, 4);
+            $assignedImages = [];
+
+            for ($i = 0; $i < $numImages; $i++) {
+                // ambil gambar yang belum digunakan atau paling sedikit digunakan
+                $selectedImage = null;
+                $minUsageCount = PHP_INT_MAX;
+
+                // cari gambar dengan usage paling rendah
+                foreach ($availableImages as $image) {
+                    $usageCount = $usedImages[$image] ?? 0;
+                    
+                    // skip jika gambar sudah di-assign ke problem ini
+                    if (in_array($image, $assignedImages)) {
+                        continue;
+                    }
+
+                    if ($usageCount < $minUsageCount) {
+                        $minUsageCount = $usageCount;
+                        $selectedImage = $image;
+                    }
                 }
 
-                $imagePath = $availableImages[$imageIndex];
-                $imageIndex++;
-                
-                // gambar pertama (order 0) menjadi cover
-                $isCover = ($i === 0);
-                
-                // buat record problem image
+                // jika semua gambar sudah digunakan untuk problem ini, ambil random
+                if ($selectedImage === null) {
+                    $selectedImage = $availableImages[array_rand($availableImages)];
+                }
+
+                // track image yang dipilih
+                $assignedImages[] = $selectedImage;
+                $usedImages[$selectedImage] = ($usedImages[$selectedImage] ?? 0) + 1;
+
+                // caption bervariasi
+                $captions = [
+                    'Kondisi lapangan saat ini',
+                    'Situasi yang memerlukan perhatian',
+                    'Area pelaksanaan program',
+                    'Dokumentasi kondisi eksisting',
+                    'Lokasi kegiatan',
+                    'Gambaran permasalahan',
+                    'Foto survei lokasi',
+                    'Kondisi infrastruktur',
+                    'Aktivitas masyarakat',
+                    'Potensi yang dapat dikembangkan',
+                ];
+
+                // buat problem image
                 ProblemImage::create([
                     'problem_id' => $problem->id,
-                    'image_path' => $imagePath,
-                    'caption' => $this->generateCaption($problem, $i),
-                    'is_cover' => $isCover,
-                    'order' => $i,
+                    'image_path' => $selectedImage,
+                    'caption' => $captions[array_rand($captions)],
+                    'order' => $i + 1,
                 ]);
-                
-                $totalSeeded++;
             }
+
+            $this->command->info("  ✓ Problem #{$problem->id}: {$numImages} gambar ditambahkan");
+        }
+
+        // tampilkan statistik penggunaan gambar
+        $this->command->newLine();
+        $this->command->info('📊 Statistik Penggunaan Gambar:');
+        
+        $totalUsage = array_sum($usedImages);
+        $uniqueImages = count($usedImages);
+        $avgUsage = $totalUsage / max($uniqueImages, 1);
+        
+        $this->command->info("  - Total penggunaan: {$totalUsage}");
+        $this->command->info("  - Gambar unik digunakan: {$uniqueImages} dari " . count($availableImages));
+        $this->command->info("  - Rata-rata penggunaan per gambar: " . round($avgUsage, 2));
+        
+        // gambar yang paling sering digunakan
+        arsort($usedImages);
+        $topUsed = array_slice($usedImages, 0, 5, true);
+        $this->command->info("  - Top 5 gambar paling sering digunakan:");
+        foreach ($topUsed as $image => $count) {
+            $this->command->info("    • " . basename($image) . ": {$count}x");
         }
 
         $this->command->newLine();
-        $this->command->info("✅ Berhasil seed {$totalSeeded} problem images");
-        $this->command->info("📊 Total problems: " . $problems->count());
-        $this->command->info("🖼️  Images per problem: 2-4 gambar");
-        $this->command->newLine();
-        $this->command->info("💡 Gambar akan diakses via Supabase Public URL");
-        $this->command->info("🔗 Format: https://zgpykwjzmiqxhweifmrn.supabase.co/storage/v1/object/public/kkn-go%20storage/PATH");
-    }
-
-    /**
-     * generate caption untuk gambar
-     * 
-     * @param Problem $problem instance problem
-     * @param int $index index gambar (0, 1, 2, dst)
-     * @return string caption untuk gambar
-     */
-    protected function generateCaption(Problem $problem, int $index): string
-    {
-        $captions = [
-            "Kondisi lapangan",
-            "Dokumentasi situasi terkini",
-            "Area yang memerlukan perhatian",
-            "Kondisi eksisting lokasi",
-            "Dokumentasi survei awal",
-            "Gambaran umum permasalahan",
-        ];
-
-        // pilih caption berdasarkan index (cyclic)
-        $captionIndex = $index % count($captions);
-        return $captions[$captionIndex];
+        $totalImages = ProblemImage::count();
+        $this->command->info("✅ {$totalImages} problem images berhasil dibuat!");
+        $this->command->info("✨ Duplikasi gambar diminimalisir dengan algoritma distribusi merata");
     }
 }
