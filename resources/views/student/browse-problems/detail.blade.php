@@ -270,30 +270,14 @@ html {
                         {{-- SDG categories --}}
                         @if($problem->sdg_categories)
                             @php
-                                $sdgLabels = [
-                                    'no_poverty' => 'No Poverty',
-                                    'zero_hunger' => 'Zero Hunger',
-                                    'good_health' => 'Good Health',
-                                    'quality_education' => 'Quality Education',
-                                    'gender_equality' => 'Gender Equality',
-                                    'clean_water' => 'Clean Water',
-                                    'affordable_energy' => 'Affordable Energy',
-                                    'decent_work' => 'Decent Work',
-                                    'industry_innovation' => 'Industry & Innovation',
-                                    'reduced_inequalities' => 'Reduced Inequalities',
-                                    'sustainable_cities' => 'Sustainable Cities',
-                                    'responsible_consumption' => 'Responsible Consumption',
-                                    'climate_action' => 'Climate Action',
-                                    'life_below_water' => 'Life Below Water',
-                                    'life_on_land' => 'Life On Land',
-                                    'peace_justice' => 'Peace & Justice',
-                                    'partnerships' => 'Partnerships'
-                                ];
-                                $categories = is_array($problem->sdg_categories) ? $problem->sdg_categories : json_decode($problem->sdg_categories, true) ?? [];
+                                // gunakan helper function sdg_label() untuk konsistensi
+                                $categories = is_array($problem->sdg_categories) 
+                                    ? $problem->sdg_categories 
+                                    : json_decode($problem->sdg_categories, true) ?? [];
                             @endphp
                             @foreach($categories as $sdg)
                             <span class="badge px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
-                                {{ $sdgLabels[$sdg] ?? $sdg }}
+                                {{ $sdg }}. {{ sdg_label($sdg) }}
                             </span>
                             @endforeach
                         @endif

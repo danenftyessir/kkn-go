@@ -52,6 +52,74 @@ if (!function_exists('document_url')) {
     }
 }
 
+if (!function_exists('sdg_label')) {
+    /**
+     * ✅ PERBAIKAN: helper function untuk mapping SDG integer ke label bahasa indonesia
+     * single source of truth untuk seluruh aplikasi
+     * 
+     * @param int|string $sdgNumber nomor SDG (1-17)
+     * @return string label SDG dalam bahasa indonesia
+     */
+    function sdg_label($sdgNumber): string
+    {
+        $sdgLabels = [
+            1 => 'Tanpa Kemiskinan',
+            2 => 'Tanpa Kelaparan',
+            3 => 'Kehidupan Sehat Dan Sejahtera',
+            4 => 'Pendidikan Berkualitas',
+            5 => 'Kesetaraan Gender',
+            6 => 'Air Bersih Dan Sanitasi',
+            7 => 'Energi Bersih Dan Terjangkau',
+            8 => 'Pekerjaan Layak Dan Pertumbuhan Ekonomi',
+            9 => 'Industri, Inovasi Dan Infrastruktur',
+            10 => 'Berkurangnya Kesenjangan',
+            11 => 'Kota Dan Komunitas Berkelanjutan',
+            12 => 'Konsumsi Dan Produksi Bertanggung Jawab',
+            13 => 'Penanganan Perubahan Iklim',
+            14 => 'Ekosistem Laut',
+            15 => 'Ekosistem Daratan',
+            16 => 'Perdamaian, Keadilan Dan Kelembagaan Yang Kuat',
+            17 => 'Kemitraan Untuk Mencapai Tujuan',
+        ];
+        
+        // convert ke integer
+        $sdgNumber = (int) $sdgNumber;
+        
+        return $sdgLabels[$sdgNumber] ?? 'SDG ' . $sdgNumber;
+    }
+}
+
+if (!function_exists('sdg_categories_array')) {
+    /**
+     * ✅ PERBAIKAN: helper function untuk mendapatkan semua kategori SDG
+     * digunakan untuk dropdown dan form select
+     * 
+     * @return array array dengan key integer dan value label indonesia
+     */
+    function sdg_categories_array(): array
+    {
+        return [
+            1 => 'Tanpa Kemiskinan',
+            2 => 'Tanpa Kelaparan',
+            3 => 'Kehidupan Sehat Dan Sejahtera',
+            4 => 'Pendidikan Berkualitas',
+            5 => 'Kesetaraan Gender',
+            6 => 'Air Bersih Dan Sanitasi',
+            7 => 'Energi Bersih Dan Terjangkau',
+            8 => 'Pekerjaan Layak Dan Pertumbuhan Ekonomi',
+            9 => 'Industri, Inovasi Dan Infrastruktur',
+            10 => 'Berkurangnya Kesenjangan',
+            11 => 'Kota Dan Komunitas Berkelanjutan',
+            12 => 'Konsumsi Dan Produksi Bertanggung Jawab',
+            13 => 'Penanganan Perubahan Iklim',
+            14 => 'Ekosistem Laut',
+            15 => 'Ekosistem Daratan',
+            16 => 'Perdamaian, Keadilan Dan Kelembagaan Yang Kuat',
+            17 => 'Kemitraan Untuk Mencapai Tujuan',
+        ];
+    }
+}
+
 if (!function_exists('format_file_size')) {
     /**
      * format file size dari bytes ke human readable format

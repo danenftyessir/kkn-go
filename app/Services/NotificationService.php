@@ -10,12 +10,10 @@ class NotificationService
 {
     /**
      * buat notifikasi baru
-     * FIXED: validasi action_url agar tidak invalid
      */
     public function create($userId, $type, $title, $message, $data = null, $actionUrl = null)
     {
         try {
-            // FIXED: validasi action_url
             // pastikan action_url tidak mengarah ke endpoint API atau invalid URL
             if ($actionUrl) {
                 $invalidPaths = [
