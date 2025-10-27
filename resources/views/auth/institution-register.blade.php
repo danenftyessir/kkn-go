@@ -410,14 +410,7 @@
                                             class="form-input w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition @error('province_id') border-red-500 @enderror"
                                             required>
                                         <option value="">Pilih Provinsi</option>
-                                        @php
-                                            // filter hanya 5 provinsi yang diizinkan
-                                            $allowedProvinces = ['Banten', 'DI Yogyakarta', 'DKI Jakarta', 'Jawa Barat', 'Jawa Tengah'];
-                                            $filteredProvinces = $provinces->filter(function($province) use ($allowedProvinces) {
-                                                return in_array($province->name, $allowedProvinces);
-                                            });
-                                        @endphp
-                                        @foreach($filteredProvinces as $province)
+                                        @foreach($provinces as $province)
                                             <option value="{{ $province->id }}" {{ old('province_id') == $province->id ? 'selected' : '' }}>
                                                 {{ $province->name }}
                                             </option>
