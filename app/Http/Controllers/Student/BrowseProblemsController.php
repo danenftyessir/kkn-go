@@ -40,15 +40,14 @@ class BrowseProblemsController extends Controller
                 'views_count',
                 'created_at'
             ])
-            ->where('status', 'open')
-            ->where('application_deadline', '>=', now());
+            ->where('status', 'open');
 
         // search - simple query only
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+                ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
@@ -71,12 +70,10 @@ class BrowseProblemsController extends Controller
         if ($request->filled('sdg_categories')) {
             $sdgCategories = $request->sdg_categories;
             
-            // pastikan input adalah array
             if (!is_array($sdgCategories)) {
                 $sdgCategories = [$sdgCategories];
             }
             
-            // filter menggunakan whereJsonContains untuk setiap kategori SDG yang dipilih
             $query->where(function($q) use ($sdgCategories) {
                 foreach ($sdgCategories as $category) {
                     // pastikan category adalah integer
@@ -122,8 +119,8 @@ class BrowseProblemsController extends Controller
             'regency:id,name,province_id',
             'images' => function($query) {
                 $query->select('id', 'problem_id', 'image_path', 'order')
-                      ->orderBy('order')
-                      ->limit(1);
+                    ->orderBy('order')
+                    ->limit(1);
             }
         ]);
 
@@ -142,7 +139,6 @@ class BrowseProblemsController extends Controller
 
         // hitung jumlah unique SDG categories dari semua active problems
         $uniqueSdgCount = Problem::where('status', 'open')
-            ->where('application_deadline', '>=', now())
             ->get()
             ->pluck('sdg_categories')
             ->flatten()
