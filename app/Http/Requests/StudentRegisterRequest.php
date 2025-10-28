@@ -112,7 +112,7 @@ class StudentRegisterRequest extends FormRequest
             // TAMBAHAN: pesan error untuk aturan password baru
             'password.mixed_case' => 'Password Harus Mengandung Huruf Besar Dan Kecil',
             'password.numbers' => 'Password Harus Mengandung Angka',
-            'password.symbols' => 'Password Harus Mengandung Simbol (@, #, $, !, %, *, ?, &)',
+            'password.symbols' => 'Password Harus Mengandung Simbol (@, #, $, !, %, *, ?, &, _)',
             'password.uncompromised' => 'Password Ini Terlalu Umum Dan Tidak Aman. Gunakan Password Yang Lebih Kuat',
             'university_id.required' => 'Universitas Wajib Dipilih',
             'university_id.exists' => 'Universitas Tidak Valid',

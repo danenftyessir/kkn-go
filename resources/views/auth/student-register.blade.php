@@ -449,7 +449,7 @@
                                                 <li>Minimal 8 karakter</li>
                                                 <li>Mengandung huruf besar (A-Z)</li>
                                                 <li>Mengandung huruf kecil (a-z)</li>
-                                                <li>Mengandung simbol (@, #, $, !, %, *, ?, &)</li>
+                                                <li>Mengandung simbol (@, #, $, !, %, *, ?, &, _)</li>
                                             </ul>
                                             <p class="text-sm text-amber-700 mt-3">
                                                 <span class="font-semibold">Contoh password yang valid:</span> 

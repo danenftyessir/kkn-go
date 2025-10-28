@@ -19,6 +19,13 @@ use Carbon\Carbon;
  * - required majors: minimal 5, maksimal 10
  * - persebaran lokasi lebih merata (menggunakan data BPS)
  * 
+ * BUG FIXED (28 Okt 2025):
+ * - setiap problem sekarang memiliki tanggal start dan deadline yang berbeda-beda
+ * - menggunakan Carbon::create() untuk membuat instance baru setiap kali
+ * - distribusi waktu: 30% masa lalu, 40% sedang berjalan, 30% masa depan
+ * - gunakan copy() untuk endDate dan applicationDeadline
+ * - status otomatis berdasarkan tanggal
+ * 
  * jalankan: php artisan db:seed --class=ProblemsSeeder
  */
 class ProblemsSeeder extends Seeder
@@ -159,7 +166,7 @@ class ProblemsSeeder extends Seeder
 
             // ===== SDG 3: GOOD HEALTH =====
             [
-                'title' => 'Edukasi Kesehatan dan Sanitasi',
+                'title' => 'Edukasi Kesehatan Dan Sanitasi',
                 'description' => 'Program sosialisasi pentingnya sanitasi, air bersih, dan pola hidup sehat untuk meningkatkan derajat kesehatan masyarakat.',
                 'background' => 'Masih banyak masyarakat yang belum memahami pentingnya sanitasi dan pola hidup sehat.',
                 'objectives' => 'Meningkatkan kesadaran masyarakat tentang kesehatan dan sanitasi.',
@@ -174,97 +181,67 @@ class ProblemsSeeder extends Seeder
                 'background' => 'Pencatatan posyandu masih manual dan rawan kehilangan data, perlu sistem digital terintegrasi.',
                 'objectives' => 'Meningkatkan efektivitas monitoring kesehatan ibu dan anak melalui digitalisasi.',
                 'scope' => 'Pembuatan aplikasi posyandu, pelatihan kader, dan implementasi sistem.',
-                'sdg_categories' => json_encode(['good_health', 'quality_education']),
-                'required_skills' => json_encode(['Sistem Informasi', 'Kesehatan', 'Teknologi']),
-                'difficulty_level' => 'intermediate',
+                'sdg_categories' => json_encode(['good_health', 'industry_innovation']),
+                'required_skills' => json_encode(['Sistem Informasi', 'Kesehatan Masyarakat', 'Teknologi']),
+                'difficulty_level' => 'advanced',
             ],
             [
-                'title' => 'Kampanye Kesehatan Mental Remaja',
-                'description' => 'Program sosialisasi dan konseling kesehatan mental untuk remaja di lingkungan sekolah.',
-                'background' => 'Kesadaran tentang kesehatan mental masih rendah, banyak remaja mengalami stres dan depresi.',
-                'objectives' => 'Meningkatkan kesadaran dan akses terhadap layanan kesehatan mental remaja.',
-                'scope' => 'Sosialisasi kesehatan mental, konseling peer, dan pelatihan life skills.',
+                'title' => 'Gerakan Hidup Sehat',
+                'description' => 'Kampanye pola hidup sehat dengan fokus pada olahraga teratur dan konsumsi makanan bergizi.',
+                'background' => 'Tingginya angka penyakit tidak menular akibat pola hidup tidak sehat.',
+                'objectives' => 'Meningkatkan kesadaran masyarakat tentang pentingnya pola hidup sehat.',
+                'scope' => 'Senam bersama, pemeriksaan kesehatan gratis, dan penyuluhan gizi.',
                 'sdg_categories' => json_encode(['good_health', 'quality_education']),
-                'required_skills' => json_encode(['Psikologi', 'Konseling', 'Pendidikan']),
-                'difficulty_level' => 'intermediate',
-            ],
-            [
-                'title' => 'Gerakan Masyarakat Hidup Sehat',
-                'description' => 'Program promosi gaya hidup sehat melalui olahraga rutin dan deteksi dini penyakit tidak menular.',
-                'background' => 'Penyakit tidak menular seperti diabetes dan hipertensi semakin meningkat di masyarakat.',
-                'objectives' => 'Mencegah penyakit tidak menular melalui promosi gaya hidup sehat.',
-                'scope' => 'Senam rutin, pemeriksaan kesehatan gratis, dan edukasi pola hidup sehat.',
-                'sdg_categories' => json_encode(['good_health']),
-                'required_skills' => json_encode(['Kesehatan Masyarakat', 'Olahraga', 'Promosi Kesehatan']),
+                'required_skills' => json_encode(['Kesehatan', 'Olahraga', 'Komunikasi']),
                 'difficulty_level' => 'beginner',
             ],
 
             // ===== SDG 4: QUALITY EDUCATION =====
             [
-                'title' => 'Literasi Digital untuk Generasi Muda',
-                'description' => 'Program pengenalan teknologi informasi dan literasi digital untuk anak-anak usia sekolah di daerah pedesaan.',
-                'background' => 'Gap literasi digital antara desa dan kota masih tinggi, perlu peningkatan akses dan pengetahuan teknologi.',
-                'objectives' => 'Meningkatkan kemampuan literasi digital generasi muda.',
-                'scope' => 'Pelatihan komputer dasar, internet sehat, dan penggunaan aplikasi edukatif.',
+                'title' => 'Literasi Digital Untuk Anak Desa',
+                'description' => 'Program pelatihan penggunaan komputer dan internet untuk anak-anak usia sekolah di desa.',
+                'background' => 'Kesenjangan digital antara kota dan desa masih tinggi, anak-anak desa perlu akses teknologi.',
+                'objectives' => 'Meningkatkan literasi digital anak-anak desa.',
+                'scope' => 'Pelatihan komputer, internet safety, dan pembelajaran online.',
                 'sdg_categories' => json_encode(['quality_education', 'reduced_inequalities']),
                 'required_skills' => json_encode(['Teknologi Informasi', 'Pendidikan', 'Komunikasi']),
-                'difficulty_level' => 'beginner',
-            ],
-            [
-                'title' => 'Perpustakaan Desa Interaktif',
-                'description' => 'Revitalisasi perpustakaan desa dengan koleksi buku yang beragam dan program literasi menarik.',
-                'background' => 'Minat baca masyarakat masih rendah, perpustakaan desa kurang menarik dan koleksi terbatas.',
-                'objectives' => 'Meningkatkan minat baca masyarakat terutama anak-anak melalui perpustakaan yang menarik.',
-                'scope' => 'Renovasi perpustakaan, penambahan koleksi, dan program reading club.',
-                'sdg_categories' => json_encode(['quality_education', 'sustainable_cities']),
-                'required_skills' => json_encode(['Perpustakaan', 'Pendidikan', 'Manajemen']),
-                'difficulty_level' => 'beginner',
-            ],
-            [
-                'title' => 'Bimbingan Belajar Gratis Anak Kurang Mampu',
-                'description' => 'Program bimbingan belajar gratis untuk anak-anak dari keluarga kurang mampu.',
-                'background' => 'Banyak anak dari keluarga miskin tidak mampu mengakses bimbingan belajar berbayar.',
-                'objectives' => 'Meningkatkan prestasi akademik anak kurang mampu melalui bimbingan belajar.',
-                'scope' => 'Bimbel mata pelajaran inti, motivasi belajar, dan konseling pendidikan.',
-                'sdg_categories' => json_encode(['quality_education', 'no_poverty']),
-                'required_skills' => json_encode(['Pendidikan', 'Mengajar', 'Konseling']),
-                'difficulty_level' => 'beginner',
-            ],
-            [
-                'title' => 'Pelatihan Keterampilan Vokasi',
-                'description' => 'Program pelatihan keterampilan vokasi untuk remaja putus sekolah agar siap kerja.',
-                'background' => 'Banyak remaja putus sekolah tidak memiliki keterampilan untuk bekerja.',
-                'objectives' => 'Membekali remaja putus sekolah dengan keterampilan vokasi yang marketable.',
-                'scope' => 'Pelatihan keterampilan teknis, soft skills, dan penempatan kerja.',
-                'sdg_categories' => json_encode(['quality_education', 'decent_work']),
-                'required_skills' => json_encode(['Pendidikan Vokasi', 'Pelatihan', 'Karir']),
                 'difficulty_level' => 'intermediate',
+            ],
+            [
+                'title' => 'Taman Baca Masyarakat',
+                'description' => 'Pembangunan dan pengelolaan taman baca untuk meningkatkan minat baca masyarakat, terutama anak-anak.',
+                'background' => 'Minat baca masyarakat masih rendah dan akses terhadap buku terbatas.',
+                'objectives' => 'Meningkatkan literasi dan minat baca masyarakat.',
+                'scope' => 'Pengadaan buku, penataan ruang baca, dan program literasi.',
+                'sdg_categories' => json_encode(['quality_education', 'reduced_inequalities']),
+                'required_skills' => json_encode(['Pendidikan', 'Manajemen Perpustakaan', 'Komunikasi']),
+                'difficulty_level' => 'beginner',
+            ],
+            [
+                'title' => 'Bimbingan Belajar Gratis',
+                'description' => 'Program bimbingan belajar gratis untuk anak kurang mampu di desa.',
+                'background' => 'Banyak anak kurang mampu tidak bisa mengakses bimbingan belajar berbayar.',
+                'objectives' => 'Meningkatkan prestasi akademik anak kurang mampu.',
+                'scope' => 'Bimbel mata pelajaran, motivasi belajar, dan konseling pendidikan.',
+                'sdg_categories' => json_encode(['quality_education', 'no_poverty']),
+                'required_skills' => json_encode(['Pendidikan', 'Tutoring', 'Konseling']),
+                'difficulty_level' => 'beginner',
             ],
 
             // ===== SDG 5: GENDER EQUALITY =====
             [
-                'title' => 'Pemberdayaan Perempuan Melalui Keterampilan',
-                'description' => 'Program pelatihan keterampilan untuk perempuan dalam bidang kerajinan tangan dan kewirausahaan.',
-                'background' => 'Partisipasi ekonomi perempuan masih rendah, perlu peningkatan keterampilan dan akses modal.',
-                'objectives' => 'Meningkatkan kemandirian ekonomi perempuan melalui pengembangan keterampilan.',
-                'scope' => 'Pelatihan menjahit, kerajinan, dan manajemen usaha kecil.',
+                'title' => 'Pemberdayaan Perempuan Desa',
+                'description' => 'Program pelatihan keterampilan dan kewirausahaan untuk meningkatkan kemandirian ekonomi perempuan desa.',
+                'background' => 'Partisipasi ekonomi perempuan masih rendah, perlu pemberdayaan melalui keterampilan.',
+                'objectives' => 'Meningkatkan kemandirian ekonomi perempuan desa.',
+                'scope' => 'Pelatihan keterampilan, pengembangan usaha, dan akses permodalan.',
                 'sdg_categories' => json_encode(['gender_equality', 'decent_work']),
-                'required_skills' => json_encode(['Kewirausahaan', 'Kerajinan', 'Manajemen Usaha']),
+                'required_skills' => json_encode(['Kewirausahaan', 'Keterampilan', 'Pemberdayaan']),
                 'difficulty_level' => 'intermediate',
             ],
             [
-                'title' => 'Pencegahan Kekerasan Berbasis Gender',
-                'description' => 'Program sosialisasi dan pendampingan korban kekerasan dalam rumah tangga.',
-                'background' => 'Kasus kekerasan terhadap perempuan masih tinggi dan banyak yang tidak terlapor.',
-                'objectives' => 'Meningkatkan kesadaran dan akses perlindungan bagi korban kekerasan gender.',
-                'scope' => 'Sosialisasi hukum, konseling korban, dan pembentukan forum perlindungan.',
-                'sdg_categories' => json_encode(['gender_equality', 'peace_justice']),
-                'required_skills' => json_encode(['Hukum', 'Psikologi', 'Sosial']),
-                'difficulty_level' => 'intermediate',
-            ],
-            [
-                'title' => 'Perempuan Pemimpin Desa',
-                'description' => 'Program peningkatan kapasitas kepemimpinan perempuan di tingkat desa.',
+                'title' => 'Kepemimpinan Perempuan Dalam Desa',
+                'description' => 'Program pelatihan kepemimpinan untuk meningkatkan partisipasi perempuan dalam pengambilan keputusan desa.',
                 'background' => 'Partisipasi perempuan dalam kepemimpinan desa masih minim, perlu penguatan kapasitas.',
                 'objectives' => 'Meningkatkan keterlibatan dan kapasitas perempuan dalam pengambilan keputusan desa.',
                 'scope' => 'Pelatihan kepemimpinan, public speaking, dan manajemen organisasi.',
@@ -275,7 +252,7 @@ class ProblemsSeeder extends Seeder
 
             // ===== SDG 6: CLEAN WATER =====
             [
-                'title' => 'Akses Air Bersih dan Sanitasi',
+                'title' => 'Akses Air Bersih Dan Sanitasi',
                 'description' => 'Pembangunan infrastruktur air bersih dan fasilitas sanitasi untuk meningkatkan kualitas hidup masyarakat.',
                 'background' => 'Akses air bersih masih terbatas, banyak warga yang menggunakan sumber air tidak layak.',
                 'objectives' => 'Menyediakan akses air bersih yang layak untuk seluruh warga.',
@@ -300,35 +277,25 @@ class ProblemsSeeder extends Seeder
                 'background' => 'Debit mata air semakin menurun akibat kerusakan lingkungan sekitar.',
                 'objectives' => 'Menjaga kelestarian mata air dan meningkatkan debit air.',
                 'scope' => 'Reboisasi area mata air, pembuatan sumur resapan, dan edukasi konservasi.',
-                'sdg_categories' => json_encode(['clean_water', 'climate_action']),
-                'required_skills' => json_encode(['Kehutanan', 'Lingkungan', 'Konservasi']),
+                'sdg_categories' => json_encode(['clean_water', 'life_on_land']),
+                'required_skills' => json_encode(['Lingkungan', 'Kehutanan', 'Konservasi']),
                 'difficulty_level' => 'intermediate',
             ],
 
             // ===== SDG 7: AFFORDABLE ENERGY =====
             [
-                'title' => 'Implementasi Energi Terbarukan',
-                'description' => 'Penerapan teknologi energi terbarukan seperti panel surya dan biogas untuk mengurangi ketergantungan pada energi fosil.',
-                'background' => 'Biaya energi tinggi dan akses listrik masih terbatas di beberapa area.',
-                'objectives' => 'Menyediakan akses energi bersih dan terjangkau untuk masyarakat.',
-                'scope' => 'Instalasi panel surya, pembuatan biogas, dan edukasi hemat energi.',
+                'title' => 'Energi Terbarukan Desa',
+                'description' => 'Program pemanfaatan energi terbarukan seperti biogas dan solar panel untuk kebutuhan rumah tangga.',
+                'background' => 'Biaya energi tinggi dan ketergantungan pada energi fosil masih besar.',
+                'objectives' => 'Mengurangi biaya energi dan ketergantungan pada energi fosil.',
+                'scope' => 'Instalasi biogas, solar panel, dan edukasi energi terbarukan.',
                 'sdg_categories' => json_encode(['affordable_energy', 'climate_action']),
-                'required_skills' => json_encode(['Teknik Elektro', 'Energi Terbarukan', 'Lingkungan']),
+                'required_skills' => json_encode(['Teknik', 'Energi Terbarukan', 'Lingkungan']),
                 'difficulty_level' => 'advanced',
             ],
             [
-                'title' => 'Biogas dari Limbah Peternakan',
-                'description' => 'Pemanfaatan kotoran ternak untuk menghasilkan biogas sebagai energi alternatif.',
-                'background' => 'Limbah peternakan belum dimanfaatkan optimal, dapat dijadikan sumber energi.',
-                'objectives' => 'Mengurangi ketergantungan pada LPG melalui biogas dari limbah peternakan.',
-                'scope' => 'Pembuatan instalasi biogas, pelatihan operasional, dan monitoring produksi.',
-                'sdg_categories' => json_encode(['affordable_energy', 'responsible_consumption']),
-                'required_skills' => json_encode(['Peternakan', 'Energi Alternatif', 'Lingkungan']),
-                'difficulty_level' => 'intermediate',
-            ],
-            [
-                'title' => 'Lampu Jalan Tenaga Surya',
-                'description' => 'Instalasi lampu jalan bertenaga surya untuk meningkatkan keamanan dan aktivitas malam.',
+                'title' => 'Lampu Tenaga Surya',
+                'description' => 'Instalasi lampu jalan tenaga surya untuk meningkatkan penerangan di desa.',
                 'background' => 'Penerangan jalan di desa masih minim, menghambat aktivitas malam hari.',
                 'objectives' => 'Meningkatkan penerangan jalan dengan teknologi ramah lingkungan.',
                 'scope' => 'Instalasi lampu surya, perawatan berkala, dan edukasi teknologi.',
@@ -339,7 +306,7 @@ class ProblemsSeeder extends Seeder
 
             // ===== SDG 8: DECENT WORK =====
             [
-                'title' => 'Job Fair dan Pelatihan Kerja',
+                'title' => 'Job Fair Dan Pelatihan Kerja',
                 'description' => 'Program bursa kerja dan pelatihan untuk menghubungkan pencari kerja dengan lowongan.',
                 'background' => 'Tingkat pengangguran masih tinggi, perlu fasilitasi akses pekerjaan.',
                 'objectives' => 'Mengurangi pengangguran melalui job matching dan peningkatan skill.',
@@ -371,7 +338,7 @@ class ProblemsSeeder extends Seeder
                 'difficulty_level' => 'intermediate',
             ],
             [
-                'title' => 'Taman Hijau dan Ruang Terbuka Publik',
+                'title' => 'Taman Hijau Dan Ruang Terbuka Publik',
                 'description' => 'Pembangunan dan revitalisasi taman sebagai ruang publik yang ramah keluarga.',
                 'background' => 'Kurangnya ruang terbuka hijau mengurangi kualitas hidup masyarakat perkotaan.',
                 'objectives' => 'Menyediakan ruang publik yang nyaman dan hijau untuk warga.',
@@ -393,7 +360,7 @@ class ProblemsSeeder extends Seeder
 
             // ===== SDG 13: CLIMATE ACTION =====
             [
-                'title' => 'Penghijauan dan Konservasi Lingkungan',
+                'title' => 'Penghijauan Dan Konservasi Lingkungan',
                 'description' => 'Program penanaman pohon dan konservasi lahan untuk mencegah erosi dan meningkatkan kualitas lingkungan.',
                 'background' => 'Lahan kritis semakin luas, diperlukan upaya penghijauan dan konservasi.',
                 'objectives' => 'Meningkatkan tutupan hijau dan mencegah kerusakan lingkungan.',
@@ -501,7 +468,7 @@ class ProblemsSeeder extends Seeder
                 'difficulty_level' => 'intermediate',
             ],
             [
-                'title' => 'Revitalisasi Seni dan Budaya Lokal',
+                'title' => 'Revitalisasi Seni Dan Budaya Lokal',
                 'description' => 'Program pelestarian dan pengembangan seni budaya tradisional.',
                 'background' => 'Seni budaya lokal mulai terlupakan, perlu revitalisasi untuk generasi muda.',
                 'objectives' => 'Melestarikan dan mengembangkan seni budaya lokal.',
@@ -541,7 +508,7 @@ class ProblemsSeeder extends Seeder
                 'difficulty_level' => 'intermediate',
             ],
             [
-                'title' => 'Hidroponik dan Pertanian Modern',
+                'title' => 'Hidroponik Dan Pertanian Modern',
                 'description' => 'Pengenalan sistem hidroponik dan pertanian presisi untuk meningkatkan produktivitas.',
                 'background' => 'Lahan pertanian terbatas, perlu teknologi pertanian modern.',
                 'objectives' => 'Meningkatkan produktivitas pertanian dengan lahan terbatas.',
@@ -608,8 +575,35 @@ class ProblemsSeeder extends Seeder
             return;
         }
 
-        // tentukan tanggal dengan durasi 3 minggu sampai 2 bulan
-        $startDate = Carbon::now()->addMonths(rand(1, 3));
+        // ====== FIX BUG: TANGGAL BERBEDA UNTUK SETIAP PROBLEM ======
+        // distribusi: 30% masa lalu, 40% sedang berjalan, 30% masa depan
+        $distributionRoll = rand(1, 100);
+        
+        if ($distributionRoll <= 30) {
+            // masa lalu (sudah selesai) - start 2-6 bulan yang lalu
+            $monthsAgo = rand(2, 6);
+            $startDate = Carbon::create(
+                Carbon::now()->year,
+                Carbon::now()->month,
+                rand(1, 28)  // tanggal acak 1-28
+            )->subMonths($monthsAgo);
+        } elseif ($distributionRoll <= 70) {
+            // sedang berjalan - start 0-2 bulan yang lalu
+            $monthsAgo = rand(0, 2);
+            $startDate = Carbon::create(
+                Carbon::now()->year,
+                Carbon::now()->month,
+                rand(1, 28)  // tanggal acak 1-28
+            )->subMonths($monthsAgo);
+        } else {
+            // masa depan - start 1-4 bulan kedepan
+            $monthsAhead = rand(1, 4);
+            $startDate = Carbon::create(
+                Carbon::now()->year,
+                Carbon::now()->month,
+                rand(1, 28)  // tanggal acak 1-28
+            )->addMonths($monthsAhead);
+        }
         
         // durasi dalam minggu: 3-8 minggu (3 minggu = ~1 bulan, 8 minggu = 2 bulan)
         $durationWeeks = rand(3, 8);
@@ -617,8 +611,24 @@ class ProblemsSeeder extends Seeder
         // konversi ke bulan dalam integer: 3-4 minggu = 1 bulan, 5-8 minggu = 2 bulan
         $durationMonths = $durationWeeks <= 4 ? 1 : 2;
         
+        // gunakan copy() untuk membuat instance baru agar tidak mengubah $startDate
         $endDate = $startDate->copy()->addWeeks($durationWeeks);
+        
+        // deadline aplikasi 2 minggu sebelum mulai
         $applicationDeadline = $startDate->copy()->subWeeks(2);
+
+        // tentukan status berdasarkan tanggal
+        $now = Carbon::now();
+        if ($applicationDeadline->isFuture()) {
+            $status = 'open';
+        } elseif ($startDate->isFuture()) {
+            $status = 'open'; // masih bisa apply
+        } elseif ($endDate->isPast()) {
+            $status = 'completed';
+        } else {
+            $status = 'closed'; // sedang berjalan, tidak bisa apply lagi
+        }
+        // ====== END FIX BUG ======
 
         // buat problem dengan lokasi yang sudah ditentukan di atas
         Problem::create([
@@ -641,20 +651,20 @@ class ProblemsSeeder extends Seeder
             'application_deadline' => $applicationDeadline,
             'duration_months' => $durationMonths, // 1 atau 2 bulan (integer)
             'difficulty_level' => $template['difficulty_level'],
-            'expected_outcomes' => 'Peningkatan kualitas hidup masyarakat dan pemberdayaan komunitas lokal.',
+            'expected_outcomes' => 'Peningkatan Kualitas Hidup Masyarakat Dan Pemberdayaan Komunitas Lokal.',
             'deliverables' => json_encode([
-                'Laporan survei awal',
-                'Dokumentasi kegiatan',
-                'Laporan akhir program',
-                'Evaluasi dampak'
+                'Laporan Survei Awal',
+                'Dokumentasi Kegiatan',
+                'Laporan Akhir Program',
+                'Evaluasi Dampak'
             ]),
             'facilities_provided' => json_encode([
                 'Akomodasi',
                 'Konsumsi',
-                'Transportasi lokal',
+                'Transportasi Lokal',
                 'Sertifikat'
             ]),
-            'status' => 'open',
+            'status' => $status,
         ]);
     }
 
@@ -664,7 +674,7 @@ class ProblemsSeeder extends Seeder
     private function generateVillageName(): string
     {
         $prefixes = ['Suka', 'Mekar', 'Jaya', 'Maju', 'Sentosa', 'Bahagia', 'Makmur', 'Sejahtera'];
-        $suffixes = ['maju', 'jaya', 'raya', 'asri', 'indah', 'mulya', 'makmur', 'santosa'];
+        $suffixes = ['Maju', 'Jaya', 'Raya', 'Asri', 'Indah', 'Mulya', 'Makmur', 'Santosa'];
 
         return $prefixes[array_rand($prefixes)] . $suffixes[array_rand($suffixes)];
     }
