@@ -37,7 +37,7 @@ class KnowledgeRepositoryController extends Controller
             });
         }
 
-        // filter by kategori SDG - gunakan integer value
+        // ✅ PERBAIKAN: filter by kategori SDG - gunakan integer value
         if ($request->filled('category')) {
             $category = (int) $request->category;
             $query->whereJsonContains('categories', $category);
@@ -50,7 +50,7 @@ class KnowledgeRepositoryController extends Controller
 
         // filter by year
         if ($request->filled('year')) {
-            $query->whereYear('published_at', $request->year);
+            $query->whereYear('created_at', $request->year);
         }
 
         // filter by institution type
@@ -89,8 +89,8 @@ class KnowledgeRepositoryController extends Controller
         // years dari dokumen yang ada
         $years = Document::where('is_public', true)
             ->where('status', 'approved')
-            ->whereNotNull('published_at')
-            ->selectRaw('DISTINCT EXTRACT(YEAR FROM published_at) as year')
+            ->whereNotNull('created_at')
+            ->selectRaw('DISTINCT EXTRACT(YEAR FROM created_at) as year')
             ->orderBy('year', 'desc')
             ->pluck('year');
 
