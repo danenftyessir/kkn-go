@@ -133,8 +133,10 @@
         </div>
 
         {{-- cta button --}}
-        <button class="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-2.5 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-sm hover:shadow-md mt-auto flex-shrink-0">
-            Lihat Detail
-        </button>
+        <div class="mt-auto">
+            <button class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
+                Lihat Detail
+            </button>
+        </div>
     </div>
 </a>

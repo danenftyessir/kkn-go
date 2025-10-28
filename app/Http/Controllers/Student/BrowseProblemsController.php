@@ -37,6 +37,7 @@ class BrowseProblemsController extends Controller
                 'sdg_categories',
                 'is_featured',
                 'is_urgent',
+                'views_count',
                 'created_at'
             ])
             ->where('status', 'open')
@@ -70,10 +71,12 @@ class BrowseProblemsController extends Controller
         if ($request->filled('sdg_categories')) {
             $sdgCategories = $request->sdg_categories;
             
+            // pastikan input adalah array
             if (!is_array($sdgCategories)) {
                 $sdgCategories = [$sdgCategories];
             }
             
+            // filter menggunakan whereJsonContains untuk setiap kategori SDG yang dipilih
             $query->where(function($q) use ($sdgCategories) {
                 foreach ($sdgCategories as $category) {
                     // pastikan category adalah integer

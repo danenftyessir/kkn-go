@@ -1,17 +1,17 @@
 {{-- problem card component untuk list view --}}
 <a href="{{ route('student.browse-problems.show', $problem->id) }}" 
-   class="problem-card-list group bg-white rounded-xl shadow-sm hover:shadow-xl border border-gray-100 overflow-hidden transition-all duration-300 hover:-translate-y-1">
+   class="problem-card-list group bg-white rounded-xl shadow-sm hover:shadow-xl border border-gray-100 overflow-hidden transition-all duration-300 hover:-translate-y-1 p-6">
     
-    <div class="flex gap-6 p-6">
-        {{-- image --}}
-        <div class="relative w-64 h-48 bg-gradient-to-br from-blue-100 to-blue-50 rounded-lg overflow-hidden flex-shrink-0">
+    <div class="flex gap-6">
+        {{-- image thumbnail --}}
+        <div class="w-48 h-32 bg-gradient-to-br from-blue-100 to-blue-50 rounded-lg overflow-hidden flex-shrink-0">
             @if($problem->images && $problem->images->count() > 0)
                 <img src="{{ supabase_url($problem->images->first()->image_path) }}" 
                      alt="{{ $problem->title }}"
                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
             @else
                 <div class="w-full h-full flex items-center justify-center">
-                    <svg class="w-20 h-20 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-16 h-16 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
                     </svg>
                 </div>
@@ -19,30 +19,23 @@
         </div>
 
         {{-- content --}}
-        <div class="flex-1 flex flex-col">
+        <div class="flex-1 min-w-0">
+            {{-- header dengan institution dan badges --}}
             <div class="flex items-start justify-between mb-3">
-                <div class="flex-1">
-                    {{-- institution info --}}
-                    <div class="flex items-center gap-3 mb-3">
-                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold flex-shrink-0 overflow-hidden">
-                            @if($problem->institution && $problem->institution->logo_path)
-                                <img src="{{ supabase_url($problem->institution->logo_path) }}" 
-                                     alt="{{ $problem->institution->name }}"
-                                     class="w-full h-full object-cover">
-                            @else
-                                {{ strtoupper(substr($problem->institution->name ?? 'I', 0, 1)) }}
-                            @endif
-                        </div>
-                        <div>
-                            <p class="font-semibold text-sm text-gray-900">{{ $problem->institution->name ?? 'Instansi' }}</p>
-                            <p class="text-xs text-gray-500">{{ $problem->institution->type ?? '' }}</p>
-                        </div>
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold flex-shrink-0 overflow-hidden">
+                        @if($problem->institution && $problem->institution->logo_path)
+                            <img src="{{ supabase_url($problem->institution->logo_path) }}" 
+                                 alt="{{ $problem->institution->name }}"
+                                 class="w-full h-full object-cover">
+                        @else
+                            {{ strtoupper(substr($problem->institution->name ?? 'I', 0, 1)) }}
+                        @endif
                     </div>
-
-                    {{-- problem title --}}
-                    <h3 class="font-bold text-xl text-gray-900 mb-2 hover:text-blue-600 transition-colors">
-                        {{ $problem->title }}
-                    </h3>
+                    <div>
+                        <p class="font-semibold text-sm text-gray-900">{{ $problem->institution->name ?? 'Instansi' }}</p>
+                        <p class="text-xs text-gray-500">{{ $problem->institution->type ?? '' }}</p>
+                    </div>
                 </div>
 
                 {{-- badges di kanan --}}
@@ -135,7 +128,8 @@
                     {{ $problem->difficulty_level === 'advanced' ? 'bg-red-100 text-red-700' : '' }}">
                     {{ ucfirst($problem->difficulty_level) }}
                 </span>
-                <button class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-2 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-sm hover:shadow-md">
+                
+                <button class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
                     Lihat Detail
                 </button>
             </div>

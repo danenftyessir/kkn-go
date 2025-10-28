@@ -37,7 +37,7 @@ class KnowledgeRepositoryController extends Controller
             });
         }
 
-        // filter by kategori SDG - gunakan integer value
+        // filter by kategori SDG - gunakan integer value dan whereJsonContains
         if ($request->filled('category')) {
             $category = (int) $request->category;
             $query->whereJsonContains('categories', $category);
@@ -60,8 +60,8 @@ class KnowledgeRepositoryController extends Controller
             case 'popular':
                 $query->orderBy('download_count', 'desc');
                 break;
-            case 'oldest':
-                $query->orderBy('created_at', 'asc');
+            case 'views':
+                $query->orderBy('view_count', 'desc');
                 break;
             case 'latest':
             default:
@@ -72,44 +72,38 @@ class KnowledgeRepositoryController extends Controller
         // paginate
         $documents = $query->paginate(12)->withQueryString();
 
-        // statistik untuk featured section
-        $featuredDocuments = Document::featured()
-            ->with(['uploader.student', 'province'])
-            ->limit(4)
-            ->get();
-
-        // data untuk filter dropdowns
+        // data untuk filters
         $provinces = Province::orderBy('name')->get(['id', 'name']);
         
-        // years dari dokumen yang ada
+        // ambil unique years dari dokumen
         $years = Document::where('is_public', true)
             ->where('status', 'approved')
-            ->whereNotNull('created_at')
             ->selectRaw('DISTINCT EXTRACT(YEAR FROM created_at) as year')
             ->orderBy('year', 'desc')
             ->pluck('year');
 
-        // statistik umum untuk hero section
-        // hitung jumlah institution dengan cara join ke projects
-        $totalInstitutions = DB::table('documents')
-            ->where('documents.is_public', true)
-            ->where('documents.status', 'approved')
-            ->join('projects', 'documents.project_id', '=', 'projects.id')
-            ->whereNotNull('projects.institution_id')
-            ->distinct()
-            ->count('projects.institution_id');
+        // featured documents
+        $featuredDocuments = Document::where('is_featured', true)
+            ->where('is_public', true)
+            ->where('status', 'approved')
+            ->with(['uploader.student', 'province'])
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
 
+        // statistik
         $stats = [
-            'total_documents' => Document::published()->count(),
-            'total_downloads' => Document::published()->sum('download_count'),
-            'total_institutions' => $totalInstitutions,
+            'total_documents' => Document::where('is_public', true)->where('status', 'approved')->count(),
+            'total_downloads' => Document::where('is_public', true)->where('status', 'approved')->sum('download_count'),
+            'total_provinces' => Document::where('is_public', true)->where('status', 'approved')->distinct('province_id')->count(),
+            'total_universities' => Document::where('is_public', true)->where('status', 'approved')->distinct('university_name')->count(),
         ];
 
         return view('student.repository.index', compact(
             'documents',
-            'featuredDocuments',
             'provinces',
             'years',
+            'featuredDocuments',
             'stats'
         ));
     }
@@ -119,45 +113,34 @@ class KnowledgeRepositoryController extends Controller
      */
     public function show($id)
     {
-        $document = Document::with([
-            'uploader.student.user',
-            'uploader.student.university',
-            'province',
-            'regency'
-        ])->findOrFail($id);
-
-        // pastikan dokumen public dan approved
-        if (!$document->is_public || $document->status !== 'approved') {
-            abort(404);
-        }
+        $document = Document::with(['uploader.student', 'province', 'regency'])
+            ->where('is_public', true)
+            ->where('status', 'approved')
+            ->findOrFail($id);
 
         // increment view count
-        $document->incrementViews();
+        $document->increment('view_count');
 
-        // related documents berdasarkan kategori SDG atau lokasi
-        $relatedDocuments = Document::published()
-            ->where('id', '!=', $document->id)
+        // related documents berdasarkan kategori dan lokasi
+        $relatedDocuments = Document::where('id', '!=', $document->id)
+            ->where('is_public', true)
+            ->where('status', 'approved')
             ->where(function($query) use ($document) {
-                // cari dokumen dengan kategori yang sama
-                if ($document->categories && is_array($document->categories)) {
+                // filter berdasarkan kategori atau provinsi yang sama
+                $query->where('province_id', $document->province_id);
+                
+                // jika ada categories, tambahkan filter
+                if (!empty($document->categories) && is_array($document->categories)) {
                     foreach ($document->categories as $category) {
                         $query->orWhereJsonContains('categories', $category);
                     }
                 }
-                // atau lokasi yang sama
-                if ($document->province_id) {
-                    $query->orWhere('province_id', $document->province_id);
-                }
             })
-            ->with(['uploader.student.user', 'province'])
+            ->with(['uploader.student', 'province'])
             ->limit(6)
-            ->inRandomOrder()
             ->get();
 
-        return view('student.repository.show', compact(
-            'document',
-            'relatedDocuments'
-        ));
+        return view('student.repository.show', compact('document', 'relatedDocuments'));
     }
 
     /**
@@ -165,17 +148,17 @@ class KnowledgeRepositoryController extends Controller
      */
     public function download($id)
     {
-        $document = Document::findOrFail($id);
-
-        // pastikan dokumen public dan approved
-        if (!$document->is_public || $document->status !== 'approved') {
-            abort(403, 'Dokumen tidak tersedia untuk diunduh');
-        }
+        $document = Document::where('is_public', true)
+            ->where('status', 'approved')
+            ->findOrFail($id);
 
         // increment download count
-        $document->incrementDownloads();
+        $document->increment('download_count');
 
-        // redirect ke URL supabase untuk download
-        return redirect()->away(document_url($document->file_path));
+        // get file dari supabase
+        $fileUrl = supabase_url($document->file_path);
+
+        // redirect ke URL file untuk download
+        return redirect($fileUrl);
     }
 }
