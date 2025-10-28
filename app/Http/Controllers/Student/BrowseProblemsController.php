@@ -66,12 +66,10 @@ class BrowseProblemsController extends Controller
             $query->where('difficulty_level', $request->difficulty);
         }
 
-        // ✅ PERBAIKAN FINAL: filter by SDG categories dengan raw query
+        // ✅ PERBAIKAN: filter by SDG categories
         if ($request->filled('sdg_categories')) {
-                \Log::info('SDG Categories from request:', [
-                    'value' => $request->sdg_categories,
-                    'type' => gettype($request->sdg_categories)
-                ]);
+            // ✅ DEFINE VARIABEL DULU sebelum digunakan
+            $sdgCategories = $request->sdg_categories;
             
             // pastikan input adalah array
             if (!is_array($sdgCategories)) {
@@ -81,9 +79,10 @@ class BrowseProblemsController extends Controller
             // konversi ke integer
             $sdgCategories = array_map('intval', $sdgCategories);
             
-            // buat kondisi OR untuk setiap kategori SDG
+            // filter menggunakan PostgreSQL JSON operator
             $query->where(function($q) use ($sdgCategories) {
                 foreach ($sdgCategories as $category) {
+                    // gunakan ? operator untuk check if key exists in JSONB array
                     $q->orWhereRaw("sdg_categories::jsonb ? ?", [(string)$category]);
                 }
             });
@@ -118,7 +117,7 @@ class BrowseProblemsController extends Controller
                 break;
         }
 
-        // ✅ PERBAIKAN: Clone query untuk hitung total SEBELUM paginate
+        // ✅ Clone query untuk hitung total SEBELUM paginate
         $totalProblems = (clone $query)->count();
 
         // eager load relationships - optimized
@@ -146,13 +145,21 @@ class BrowseProblemsController extends Controller
                 ->get(['id', 'name']);
         }
 
-        // hitung jumlah unique SDG categories dari semua active problems
-        $sdgCategories = Problem::where('status', 'open')
-            ->get()
-            ->pluck('sdg_categories')
-            ->flatten()
-            ->unique()
-            ->count();
+        // ✅ FIX: hitung jumlah unique SDG (hanya 1-17)
+        $allProblems = Problem::where('status', 'open')->get(['sdg_categories']);
+        $uniqueSdg = collect();
+        
+        foreach ($allProblems as $problem) {
+            if ($problem->sdg_categories && is_array($problem->sdg_categories)) {
+                foreach ($problem->sdg_categories as $sdg) {
+                    if (is_int($sdg) && $sdg >= 1 && $sdg <= 17) {
+                        $uniqueSdg->push($sdg);
+                    }
+                }
+            }
+        }
+        
+        $sdgCategories = $uniqueSdg->unique()->count();
 
         return view('student.browse-problems.index', compact(
             'problems',
