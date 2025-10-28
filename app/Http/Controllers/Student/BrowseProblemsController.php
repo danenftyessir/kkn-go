@@ -97,6 +97,17 @@ class BrowseProblemsController extends Controller
             ]);
         }
 
+        $problemTanpaSelect = Problem::where('status', 'open')->first();
+
+        if ($problemTanpaSelect) {
+            // Hentikan eksekusi dan cek tipe datanya
+            dd(
+                'Tipe data dari query TANPA ->select():',
+                gettype($problemTanpaSelect->sdg_categories),
+                $problemTanpaSelect->sdg_categories
+            );
+        }
+        
         // filter by duration
         if ($request->filled('duration')) {
             $duration = $request->duration;
@@ -201,7 +212,7 @@ class BrowseProblemsController extends Controller
             'sdgCategories'
         ));
     }
-    
+
     /**
      * tampilkan detail problem
      */
