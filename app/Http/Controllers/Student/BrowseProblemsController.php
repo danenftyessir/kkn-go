@@ -42,29 +42,29 @@ class BrowseProblemsController extends Controller
             ])
             ->where('status', 'open');
 
-        // search - simple query only
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                ->orWhere('description', 'like', "%{$search}%");
-            });
-        }
+        // // search - simple query only
+        // if ($request->filled('search')) {
+        //     $search = $request->search;
+        //     $query->where(function($q) use ($search) {
+        //         $q->where('title', 'like', "%{$search}%")
+        //         ->orWhere('description', 'like', "%{$search}%");
+        //     });
+        // }
 
-        // filter by province
-        if ($request->filled('province_id')) {
-            $query->where('province_id', $request->province_id);
-        }
+        // // filter by province
+        // if ($request->filled('province_id')) {
+        //     $query->where('province_id', $request->province_id);
+        // }
 
-        // filter by regency
-        if ($request->filled('regency_id')) {
-            $query->where('regency_id', $request->regency_id);
-        }
+        // // filter by regency
+        // if ($request->filled('regency_id')) {
+        //     $query->where('regency_id', $request->regency_id);
+        // }
 
-        // filter by difficulty
-        if ($request->filled('difficulty')) {
-            $query->where('difficulty_level', $request->difficulty);
-        }
+        // // filter by difficulty
+        // if ($request->filled('difficulty')) {
+        //     $query->where('difficulty_level', $request->difficulty);
+        // }
 
         if ($request->filled('sdg_categories')) {
             $sdgCategories = $request->sdg_categories;
@@ -82,49 +82,49 @@ class BrowseProblemsController extends Controller
             });
         }
 
-        // filter by duration
-        if ($request->filled('duration')) {
-            $duration = $request->duration;
+        // // filter by duration
+        // if ($request->filled('duration')) {
+        //     $duration = $request->duration;
             
-            if ($duration === '1-2') {
-                $query->whereBetween('duration_months', [1, 2]);
-            } elseif ($duration === '3-4') {
-                $query->whereBetween('duration_months', [3, 4]);
-            } elseif ($duration === '5-6') {
-                $query->whereBetween('duration_months', [5, 6]);
-            }
-        }
+        //     if ($duration === '1-2') {
+        //         $query->whereBetween('duration_months', [1, 2]);
+        //     } elseif ($duration === '3-4') {
+        //         $query->whereBetween('duration_months', [3, 4]);
+        //     } elseif ($duration === '5-6') {
+        //         $query->whereBetween('duration_months', [5, 6]);
+        //     }
+        // }
 
         // sorting
-        $sortBy = $request->get('sort', 'latest');
+        // $sortBy = $request->get('sort', 'latest');
         
-        switch ($sortBy) {
-            case 'deadline':
-                $query->orderBy('application_deadline', 'asc');
-                break;
-            case 'popular':
-                $query->orderBy('views_count', 'desc');
-                break;
-            case 'latest':
-            default:
-                $query->orderBy('created_at', 'desc');
-                break;
-        }
+        // switch ($sortBy) {
+        //     case 'deadline':
+        //         $query->orderBy('application_deadline', 'asc');
+        //         break;
+        //     case 'popular':
+        //         $query->orderBy('views_count', 'desc');
+        //         break;
+        //     case 'latest':
+        //     default:
+        //         $query->orderBy('created_at', 'desc');
+        //         break;
+        // }
 
-        // ✅ Clone query untuk hitung total SEBELUM paginate
-        $totalProblems = (clone $query)->count();
+        // // ✅ Clone query untuk hitung total SEBELUM paginate
+        // $totalProblems = (clone $query)->count();
 
-        // eager load relationships - optimized
-        $query->with([
-            'institution:id,name,type,logo_path',
-            'province:id,name',
-            'regency:id,name,province_id',
-            'images' => function($query) {
-                $query->select('id', 'problem_id', 'image_path', 'order')
-                    ->orderBy('order')
-                    ->limit(1);
-            }
-        ]);
+        // // eager load relationships - optimized
+        // $query->with([
+        //     'institution:id,name,type,logo_path',
+        //     'province:id,name',
+        //     'regency:id,name,province_id',
+        //     'images' => function($query) {
+        //         $query->select('id', 'problem_id', 'image_path', 'order')
+        //             ->orderBy('order')
+        //             ->limit(1);
+        //     }
+        // ]);
 
         // paginate 12 items per page
         $problems = $query->paginate(12)->withQueryString();
