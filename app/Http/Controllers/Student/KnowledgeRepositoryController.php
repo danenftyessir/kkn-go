@@ -66,11 +66,11 @@ class KnowledgeRepositoryController extends Controller
                 $query->orderBy('download_count', 'desc');
                 break;
             case 'oldest':
-                $query->orderBy('published_at', 'asc');
+                $query->orderBy('created_at', 'asc');
                 break;
             case 'latest':
             default:
-                $query->orderBy('published_at', 'desc');
+                $query->orderBy('created_at', 'desc');
                 break;
         }
 

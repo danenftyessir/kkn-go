@@ -137,10 +137,20 @@ class BrowseProblemsController extends Controller
                 ->get(['id', 'name']);
         }
 
+        // hitung jumlah unique SDG categories dari semua active problems
+        $uniqueSdgCount = Problem::where('status', 'open')
+            ->where('application_deadline', '>=', now())
+            ->get()
+            ->pluck('sdg_categories')
+            ->flatten()
+            ->unique()
+            ->count();
+
         return view('student.browse-problems.index', compact(
             'problems',
             'provinces',
-            'regencies'
+            'regencies',
+            'uniqueSdgCount'
         ));
     }
 

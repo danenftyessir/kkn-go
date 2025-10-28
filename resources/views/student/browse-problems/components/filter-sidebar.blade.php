@@ -1,66 +1,56 @@
-{{-- resources/views/student/browse-problems/components/filter-sidebar.blade.php --}}
-<div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6" 
-     x-data="{
-         provinceId: '{{ request('province_id') }}',
-         regencyId: '{{ request('regency_id') }}',
-         regencies: []
-     }"
-     x-init="
-         if (provinceId) {
-             fetch(`/student/browse-problems/regencies?province_id=${provinceId}`)
-                 .then(res => res.json())
-                 .then(data => {
-                     regencies = data;
-                     if (!data.find(r => r.id == regencyId)) {
-                         regencyId = '';
-                     }
-                 });
-         }
-     "
-     @change="
-         if ($event.target.name === 'province_id') {
-             regencyId = '';
-             if (provinceId) {
-                 fetch(`/student/browse-problems/regencies?province_id=${provinceId}`)
-                     .then(res => res.json())
-                     .then(data => regencies = data);
-             } else {
-                 regencies = [];
-             }
-         }
-     ">
-    
+{{-- filter sidebar component untuk browse problems --}}
+<div class="filter-sidebar bg-white rounded-xl shadow-sm p-6 border border-gray-100 sticky top-24">
     <div class="flex items-center justify-between mb-6">
-        <h3 class="text-lg font-bold text-gray-900">Filter Pencarian</h3>
+        <h3 class="text-xl font-bold text-gray-900">Filter</h3>
         <button type="button" 
                 onclick="window.location.href='{{ route('student.browse-problems.index') }}'"
-                class="text-sm text-blue-600 hover:text-blue-700 font-medium">
-            Reset Filter
+                class="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors">
+            Reset
         </button>
     </div>
 
     <form method="GET" action="{{ route('student.browse-problems.index') }}" class="space-y-6">
-        {{-- search bar --}}
+        
+        {{-- search --}}
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Cari Proyek</label>
             <input type="text" 
                    name="search" 
-                   value="{{ request('search') }}"
+                   value="{{ request('search') }}" 
                    placeholder="Cari berdasarkan judul atau deskripsi..."
                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
         </div>
 
         {{-- lokasi --}}
-        <div class="space-y-4">
-            <h4 class="font-semibold text-gray-900">Lokasi</h4>
-            
+        <div x-data="{
+            provinceId: '{{ request('province_id') }}',
+            regencyId: '{{ request('regency_id') }}',
+            regencies: {{ json_encode($regencies ?? []) }},
+            async fetchRegencies() {
+                if (!this.provinceId) {
+                    this.regencies = [];
+                    this.regencyId = '';
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`/student/browse-problems/get-regencies?province_id=${this.provinceId}`);
+                    const data = await response.json();
+                    this.regencies = data;
+                } catch (error) {
+                    console.error('Error fetching regencies:', error);
+                    this.regencies = [];
+                }
+            }
+        }" x-init="if (provinceId) fetchRegencies()">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Provinsi</label>
                 <select name="province_id" 
                         x-model="provinceId"
+                        @change="fetchRegencies()"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
                     <option value="">Semua Provinsi</option>
-                    @foreach($provinces as $province)
+                    @foreach($provinces ?? [] as $province)
                         <option value="{{ $province->id }}" {{ request('province_id') == $province->id ? 'selected' : '' }}>
                             {{ $province->name }}
                         </option>
@@ -81,7 +71,7 @@
             </div>
         </div>
 
-        {{-- kategori SDG - ✅ PERBAIKAN: gunakan integer 1-17 sesuai database --}}
+        {{-- kategori SDG - gunakan helper sdg_label() --}}
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Kategori SDG</label>
             <div class="space-y-2 max-h-64 overflow-y-auto pr-2">
@@ -113,96 +103,96 @@
                            value="{{ $value }}"
                            {{ in_array($value, request('sdg_categories', [])) ? 'checked' : '' }}
                            class="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500 rounded mt-0.5">
-                    <span class="ml-2 text-sm text-gray-700">{{ $value }}. {{ $label }}</span>
+                    <span class="ml-2 text-sm text-gray-700">{{ $label }}</span>
                 </label>
                 @endforeach
             </div>
-        </div>
-
-        {{-- durasi proyek --}}
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Durasi Proyek</label>
-            <select name="duration" 
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
-                <option value="">Semua Durasi</option>
-                <option value="1-2" {{ request('duration') === '1-2' ? 'selected' : '' }}>1-2 Bulan</option>
-                <option value="3-4" {{ request('duration') === '3-4' ? 'selected' : '' }}>3-4 Bulan</option>
-                <option value="5-6" {{ request('duration') === '5-6' ? 'selected' : '' }}>5-6 Bulan</option>
-                <option value="7+" {{ request('duration') === '7+' ? 'selected' : '' }}>7+ Bulan</option>
-            </select>
         </div>
 
         {{-- tingkat kesulitan --}}
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Tingkat Kesulitan</label>
             <div class="space-y-2">
-                @php
-                    $difficulties = [
-                        'beginner' => 'Pemula',
-                        'intermediate' => 'Menengah',
-                        'advanced' => 'Lanjutan'
-                    ];
-                @endphp
-                @foreach($difficulties as $value => $label)
                 <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors">
                     <input type="radio" 
                            name="difficulty" 
-                           value="{{ $value }}"
-                           {{ request('difficulty') === $value ? 'checked' : '' }}
+                           value="" 
+                           {{ request('difficulty') == '' ? 'checked' : '' }}
                            class="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500">
-                    <span class="ml-2 text-sm text-gray-700">{{ $label }}</span>
+                    <span class="ml-2 text-sm text-gray-700">Semua Level</span>
                 </label>
-                @endforeach
-                @if(request('difficulty'))
                 <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors">
                     <input type="radio" 
                            name="difficulty" 
-                           value=""
+                           value="beginner" 
+                           {{ request('difficulty') == 'beginner' ? 'checked' : '' }}
                            class="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500">
-                    <span class="ml-2 text-sm text-gray-500">Semua Tingkat</span>
+                    <span class="ml-2 text-sm text-gray-700">Beginner</span>
                 </label>
-                @endif
+                <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors">
+                    <input type="radio" 
+                           name="difficulty" 
+                           value="intermediate" 
+                           {{ request('difficulty') == 'intermediate' ? 'checked' : '' }}
+                           class="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500">
+                    <span class="ml-2 text-sm text-gray-700">Intermediate</span>
+                </label>
+                <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors">
+                    <input type="radio" 
+                           name="difficulty" 
+                           value="advanced" 
+                           {{ request('difficulty') == 'advanced' ? 'checked' : '' }}
+                           class="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500">
+                    <span class="ml-2 text-sm text-gray-700">Advanced</span>
+                </label>
             </div>
         </div>
 
-        {{-- status proyek --}}
+        {{-- durasi proyek --}}
         <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Status Proyek</label>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Durasi Proyek</label>
             <div class="space-y-2">
-                @php
-                    $statuses = [
-                        'open' => 'Terbuka',
-                        'in_progress' => 'Sedang Berjalan',
-                        'completed' => 'Selesai'
-                    ];
-                @endphp
-                @foreach($statuses as $value => $label)
                 <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors">
-                    <input type="checkbox" 
-                           name="status[]" 
-                           value="{{ $value }}"
-                           {{ in_array($value, request('status', [])) ? 'checked' : '' }}
-                           class="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500 rounded">
-                    <span class="ml-2 text-sm text-gray-700">{{ $label }}</span>
+                    <input type="radio" 
+                           name="duration" 
+                           value="" 
+                           {{ request('duration') == '' ? 'checked' : '' }}
+                           class="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500">
+                    <span class="ml-2 text-sm text-gray-700">Semua Durasi</span>
                 </label>
-                @endforeach
+                <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors">
+                    <input type="radio" 
+                           name="duration" 
+                           value="1-2" 
+                           {{ request('duration') == '1-2' ? 'checked' : '' }}
+                           class="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500">
+                    <span class="ml-2 text-sm text-gray-700">1-2 Bulan</span>
+                </label>
+                <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors">
+                    <input type="radio" 
+                           name="duration" 
+                           value="3-4" 
+                           {{ request('duration') == '3-4' ? 'checked' : '' }}
+                           class="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500">
+                    <span class="ml-2 text-sm text-gray-700">3-4 Bulan</span>
+                </label>
+                <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors">
+                    <input type="radio" 
+                           name="duration" 
+                           value="5-6" 
+                           {{ request('duration') == '5-6' ? 'checked' : '' }}
+                           class="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500">
+                    <span class="ml-2 text-sm text-gray-700">5-6 Bulan</span>
+                </label>
             </div>
         </div>
 
-        {{-- sorting --}}
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Urutkan Berdasarkan</label>
-            <select name="sort" 
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
-                <option value="latest" {{ request('sort', 'latest') === 'latest' ? 'selected' : '' }}>Terbaru</option>
-                <option value="deadline" {{ request('sort') === 'deadline' ? 'selected' : '' }}>Deadline Terdekat</option>
-            </select>
+        {{-- tombol filter --}}
+        <div class="pt-4 border-t border-gray-200">
+            <button type="submit" 
+                    class="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-sm hover:shadow-md">
+                Terapkan Filter
+            </button>
         </div>
-
-        {{-- submit button --}}
-        <button type="submit" 
-                class="w-full px-4 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md">
-            Terapkan Filter
-        </button>
     </form>
 </div>
