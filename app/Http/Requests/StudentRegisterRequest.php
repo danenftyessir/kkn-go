@@ -45,11 +45,16 @@ class StudentRegisterRequest extends FormRequest
                 'unique:users,username',
                 'min:4',
             ],
+            // PERBAIKAN KRITIS: tambahkan validasi password yang proper
             'password' => [
                 'required',
                 'string',
                 'confirmed',
-                'min:8',
+                Password::min(8)
+                    ->mixedCase()    // wajib huruf besar dan kecil
+                    ->numbers()      // wajib angka
+                    ->symbols()      // wajib simbol
+                    ->uncompromised(app()->isProduction() ? 3 : 0) // cek data breach hanya di production
             ],
             'university_id' => [
                 'required',
@@ -104,6 +109,11 @@ class StudentRegisterRequest extends FormRequest
             'password.required' => 'Password Wajib Diisi',
             'password.confirmed' => 'Konfirmasi Password Tidak Cocok',
             'password.min' => 'Password Minimal 8 Karakter',
+            // TAMBAHAN: pesan error untuk aturan password baru
+            'password.mixed_case' => 'Password Harus Mengandung Huruf Besar Dan Kecil',
+            'password.numbers' => 'Password Harus Mengandung Angka',
+            'password.symbols' => 'Password Harus Mengandung Simbol (@, #, $, !, %, *, ?, &)',
+            'password.uncompromised' => 'Password Ini Terlalu Umum Dan Tidak Aman. Gunakan Password Yang Lebih Kuat',
             'university_id.required' => 'Universitas Wajib Dipilih',
             'university_id.exists' => 'Universitas Tidak Valid',
             'major.required' => 'Jurusan Wajib Diisi',
