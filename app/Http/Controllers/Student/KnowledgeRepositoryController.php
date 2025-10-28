@@ -37,7 +37,7 @@ class KnowledgeRepositoryController extends Controller
             });
         }
 
-        // ✅ PERBAIKAN: filter by kategori SDG - gunakan integer value
+        // filter by kategori SDG - gunakan integer value
         if ($request->filled('category')) {
             $category = (int) $request->category;
             $query->whereJsonContains('categories', $category);
@@ -89,11 +89,16 @@ class KnowledgeRepositoryController extends Controller
             ->orderBy('year', 'desc')
             ->pluck('year');
 
-        // statistik umum
+        // statistik umum untuk hero section
         $stats = [
             'total_documents' => Document::published()->count(),
             'total_downloads' => Document::published()->sum('download_count'),
-            'total_views' => Document::published()->sum('view_count'),
+            'total_institutions' => Institution::whereHas('projects', function($query) {
+                $query->whereHas('documents', function($docQuery) {
+                    $docQuery->where('is_public', true)
+                             ->where('status', 'approved');
+                });
+            })->count(),
         ];
 
         return view('student.repository.index', compact(
@@ -111,7 +116,8 @@ class KnowledgeRepositoryController extends Controller
     public function show($id)
     {
         $document = Document::with([
-            'uploader.student',
+            'uploader.student.user',
+            'uploader.student.university',
             'province',
             'regency'
         ])->findOrFail($id);
@@ -124,18 +130,24 @@ class KnowledgeRepositoryController extends Controller
         // increment view count
         $document->incrementViews();
 
-        // related documents berdasarkan kategori SDG
+        // related documents berdasarkan kategori SDG atau lokasi
         $relatedDocuments = Document::published()
             ->where('id', '!=', $document->id)
             ->where(function($query) use ($document) {
+                // cari dokumen dengan kategori yang sama
                 if ($document->categories && is_array($document->categories)) {
                     foreach ($document->categories as $category) {
                         $query->orWhereJsonContains('categories', $category);
                     }
                 }
+                // atau lokasi yang sama
+                if ($document->province_id) {
+                    $query->orWhere('province_id', $document->province_id);
+                }
             })
-            ->with(['uploader.student', 'province'])
-            ->limit(4)
+            ->with(['uploader.student.user', 'province'])
+            ->limit(6)
+            ->inRandomOrder()
             ->get();
 
         return view('student.repository.show', compact(
@@ -153,7 +165,7 @@ class KnowledgeRepositoryController extends Controller
 
         // pastikan dokumen public dan approved
         if (!$document->is_public || $document->status !== 'approved') {
-            abort(404);
+            abort(403, 'Dokumen tidak tersedia untuk diunduh');
         }
 
         // increment download count
@@ -162,8 +174,4 @@ class KnowledgeRepositoryController extends Controller
         // redirect ke URL supabase untuk download
         return redirect()->away(document_url($document->file_path));
     }
-
-
-
-
 }
