@@ -437,20 +437,43 @@
                                     @enderror
                                 </div>
 
+                                {{-- announcement password requirement --}}
+                                <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                                    <div class="flex items-start gap-3">
+                                        <svg class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        <div class="flex-1">
+                                            <p class="text-sm font-semibold text-amber-800 mb-2">Syarat Password:</p>
+                                            <ul class="text-sm text-amber-700 space-y-1 list-disc list-inside">
+                                                <li>Minimal 8 karakter</li>
+                                                <li>Mengandung huruf besar (A-Z)</li>
+                                                <li>Mengandung huruf kecil (a-z)</li>
+                                                <li>Mengandung simbol (@, #, $, !, %, *, ?, &)</li>
+                                            </ul>
+                                            <p class="text-sm text-amber-700 mt-3">
+                                                <span class="font-semibold">Contoh password yang valid:</span> 
+                                                <code class="bg-amber-100 px-2 py-1 rounded text-amber-900 font-mono">Mahasiswa2024!</code> atau 
+                                                <code class="bg-amber-100 px-2 py-1 rounded text-amber-900 font-mono">KKNGo#2024</code>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 {{-- password --}}
                                 <div class="form-field-group">
                                     <label for="password" class="form-label required">Password</label>
                                     <div class="form-input-wrapper">
                                         <input type="password" 
-                                               id="password" 
-                                               name="password" 
-                                               placeholder="Minimal 8 Karakter"
-                                               class="form-input"
-                                               required>
+                                            id="password" 
+                                            name="password" 
+                                            placeholder="Minimal 8 Karakter"
+                                            class="form-input"
+                                            required>
                                         <button type="button" 
                                                 onclick="togglePassword('password')" 
-                                                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                class="password-toggle">
+                                            <svg class="eye-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                             </svg>
@@ -467,26 +490,34 @@
                                     @enderror
                                 </div>
 
-                                {{-- confirm password --}}
+                                {{-- konfirmasi password --}}
                                 <div class="form-field-group">
                                     <label for="password_confirmation" class="form-label required">Konfirmasi Password</label>
                                     <div class="form-input-wrapper">
                                         <input type="password" 
-                                               id="password_confirmation" 
-                                               name="password_confirmation" 
-                                               placeholder="Ketik Ulang Password"
-                                               class="form-input"
-                                               required>
+                                            id="password_confirmation" 
+                                            name="password_confirmation" 
+                                            placeholder="Ketik Ulang Password"
+                                            class="form-input"
+                                            required>
                                         <button type="button" 
                                                 onclick="togglePassword('password_confirmation')" 
-                                                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                class="password-toggle">
+                                            <svg class="eye-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                             </svg>
                                         </button>
                                     </div>
                                     <p class="error-message hidden" id="error-password_confirmation"></p>
+                                    @error('password_confirmation')
+                                        <p class="error-message">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            {{ $message }}
+                                        </p>
+                                    @enderror
                                 </div>
 
                                 {{-- terms --}}
@@ -541,7 +572,6 @@
             <p class="mt-4 text-gray-700 font-semibold">Mendaftarkan Akun Anda...</p>
         </div>
     </div>
-
     <script>
     let currentStep = 1;
 
@@ -565,7 +595,12 @@
             
             if (errorEl) {
                 errorEl.classList.remove('hidden');
-                errorEl.textContent = errors[field][0];
+                errorEl.innerHTML = `
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                    </svg>
+                    ${errors[field][0]}
+                `;
             }
             if (inputEl) {
                 inputEl.classList.add('border-red-500');
@@ -683,7 +718,7 @@
         }
     }
 
-    // PERBAIKAN UTAMA: event listener untuk submit form
+    // PERBAIKAN UTAMA: event listener untuk submit form dengan AJAX
     document.getElementById('studentRegisterForm')?.addEventListener('submit', async function(e) {
         e.preventDefault(); // batalkan submit bawaan
 
@@ -741,7 +776,7 @@
                 return;
             }
 
-            // PERBAIKAN KRITIS: jika sukses (status 200 dan success = true), redirect
+            // PERBAIKAN: jika sukses (status 200 dan success = true), redirect
             if (response.ok && data.success && data.redirect_url) {
                 // redirect ke dashboard student
                 window.location.href = data.redirect_url;

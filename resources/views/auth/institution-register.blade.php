@@ -724,13 +724,94 @@
         }
     }
 
-    // form submit handler
-    document.getElementById('institutionRegisterForm')?.addEventListener('submit', function(e) {
+    document.getElementById('institutionRegisterForm')?.addEventListener('submit', async function(e) {
+        e.preventDefault(); // batalkan submit bawaan
+
         const loadingOverlay = document.getElementById('loadingOverlay');
         loadingOverlay.style.display = 'flex';
+        
+        const formData = new FormData(this);
+        
+        try {
+            const response = await fetch("{{ route('register.institution.submit') }}", {
+                method: 'POST',
+                headers: { 
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            // jika backend mengembalikan error validasi saat submit akhir
+            if (response.status === 422) {
+                // cari tahu di langkah mana error pertama terjadi
+                const errorFields = Object.keys(data.errors);
+                const step1Fields = ['institution_name', 'institution_type', 'official_email'];
+                const step2Fields = ['address', 'province_id', 'regency_id'];
+                const step3Fields = ['pic_name', 'pic_position', 'phone_number', 'logo', 'verification_document', 'website', 'description'];
+                const step4Fields = ['username', 'password', 'password_confirmation'];
+
+                let errorStep = 4;
+                if (errorFields.some(field => step1Fields.includes(field))) {
+                    errorStep = 1;
+                } else if (errorFields.some(field => step2Fields.includes(field))) {
+                    errorStep = 2;
+                } else if (errorFields.some(field => step3Fields.includes(field))) {
+                    errorStep = 3;
+                }
+                
+                // pindah ke step yang error dan tampilkan pesan
+                if (currentStep !== errorStep) {
+                    showStep(errorStep);
+                    currentStep = errorStep;
+                }
+
+                // tampilkan error di bawah setiap input
+                Object.keys(data.errors).forEach(field => {
+                    const inputEl = document.getElementById(field);
+                    const errorMsg = data.errors[field][0];
+                    
+                    if (inputEl) {
+                        // tambah border merah
+                        inputEl.classList.add('border-red-500');
+                        
+                        // cari atau buat elemen error message
+                        let errorEl = inputEl.parentElement.querySelector('.error-message');
+                        if (!errorEl) {
+                            errorEl = document.createElement('p');
+                            errorEl.className = 'mt-1 text-sm text-red-600 error-message';
+                            inputEl.parentElement.appendChild(errorEl);
+                        }
+                        errorEl.textContent = errorMsg;
+                    }
+                });
+
+                loadingOverlay.style.display = 'none';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+
+            // jika sukses (status 200 dan success = true), redirect
+            if (response.ok && data.success && data.redirect_url) {
+                // redirect ke dashboard institution
+                window.location.href = data.redirect_url;
+                // jangan sembunyikan loading karena halaman akan redirect
+            } else {
+                // handle error lainnya
+                alert(data.message || 'Terjadi kesalahan saat pendaftaran.');
+                loadingOverlay.style.display = 'none';
+            }
+
+        } catch(error) {
+            console.error('Submit error:', error);
+            alert('Terjadi Kesalahan Saat Mengirimkan Formulir. Periksa Koneksi Internet Anda Dan Coba Lagi.');
+            loadingOverlay.style.display = 'none';
+        }
     });
 
-    // handle error dari server saat page load
+    // handle error dari server saat page load (tetap pertahankan)
     @if($errors->any())
         const errorFields = @json($errors->keys());
         const step1Fields = ['institution_name', 'institution_type', 'official_email'];
