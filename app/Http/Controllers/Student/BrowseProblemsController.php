@@ -107,24 +107,24 @@ class BrowseProblemsController extends Controller
         //         break;
         //     case 'latest':
         //     default:
-        //         $query->orderBy('created_at', 'desc');
+                $query->orderBy('created_at', 'desc');
         //         break;
         // }
 
-        // // ✅ Clone query untuk hitung total SEBELUM paginate
-        // $totalProblems = (clone $query)->count();
+        // ✅ Clone query untuk hitung total SEBELUM paginate
+        $totalProblems = (clone $query)->count();
 
-        // // eager load relationships - optimized
-        // $query->with([
-        //     'institution:id,name,type,logo_path',
-        //     'province:id,name',
-        //     'regency:id,name,province_id',
-        //     'images' => function($query) {
-        //         $query->select('id', 'problem_id', 'image_path', 'order')
-        //             ->orderBy('order')
-        //             ->limit(1);
-        //     }
-        // ]);
+        // eager load relationships - optimized
+        $query->with([
+            'institution:id,name,type,logo_path',
+            'province:id,name',
+            'regency:id,name,province_id',
+            'images' => function($query) {
+                $query->select('id', 'problem_id', 'image_path', 'order')
+                    ->orderBy('order')
+                    ->limit(1);
+            }
+        ]);
 
         // paginate 12 items per page
         $problems = $query->paginate(12)->withQueryString();
