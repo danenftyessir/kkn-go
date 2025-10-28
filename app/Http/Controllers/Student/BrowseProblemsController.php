@@ -66,9 +66,8 @@ class BrowseProblemsController extends Controller
             $query->where('difficulty_level', $request->difficulty);
         }
 
-        // ✅ PERBAIKAN: filter by SDG categories
+        // ✅ FINAL FIX: filter by SDG categories dengan operator @>
         if ($request->filled('sdg_categories')) {
-            // ✅ DEFINE VARIABEL DULU sebelum digunakan
             $sdgCategories = $request->sdg_categories;
             
             // pastikan input adalah array
@@ -79,11 +78,11 @@ class BrowseProblemsController extends Controller
             // konversi ke integer
             $sdgCategories = array_map('intval', $sdgCategories);
             
-            // filter menggunakan PostgreSQL JSON operator
+            // gunakan operator @> (contains) untuk PostgreSQL JSONB
             $query->where(function($q) use ($sdgCategories) {
                 foreach ($sdgCategories as $category) {
-                    // gunakan ? operator untuk check if key exists in JSONB array
-                    $q->orWhereRaw("sdg_categories::jsonb ? ?", [(string)$category]);
+                    // operator @> checks if left JSONB value contains right JSONB value
+                    $q->orWhereRaw("sdg_categories::jsonb @> ?::jsonb", [json_encode([$category])]);
                 }
             });
         }
