@@ -66,7 +66,7 @@ class BrowseProblemsController extends Controller
             $query->where('difficulty_level', $request->difficulty);
         }
 
-        // ✅ PERBAIKAN: filter by SDG categories dengan logika yang benar
+        // ✅ PERBAIKAN FINAL: filter by SDG categories dengan raw query
         if ($request->filled('sdg_categories')) {
             $sdgCategories = $request->sdg_categories;
             
@@ -75,17 +75,14 @@ class BrowseProblemsController extends Controller
                 $sdgCategories = [$sdgCategories];
             }
             
-            // gunakan whereHas untuk filter JSON array dengan OR logic
+            // konversi ke integer
+            $sdgCategories = array_map('intval', $sdgCategories);
+            
+            // buat kondisi OR untuk setiap kategori SDG
             $query->where(function($q) use ($sdgCategories) {
-                foreach ($sdgCategories as $index => $category) {
-                    $category = (int) $category;
-                    
-                    // gunakan orWhereJsonContains HANYA untuk multiple kategori
-                    if ($index === 0) {
-                        $q->whereJsonContains('sdg_categories', $category);
-                    } else {
-                        $q->orWhereJsonContains('sdg_categories', $category);
-                    }
+                foreach ($sdgCategories as $category) {
+                    // gunakan whereRaw dengan PostgreSQL JSON operator
+                    $q->orWhereRaw("sdg_categories::jsonb @> ?", [json_encode([$category])]);
                 }
             });
         }
@@ -119,8 +116,8 @@ class BrowseProblemsController extends Controller
                 break;
         }
 
-        // hitung total SEBELUM paginate
-        $totalProblems = $query->count();
+        // ✅ PERBAIKAN: Clone query untuk hitung total SEBELUM paginate
+        $totalProblems = (clone $query)->count();
 
         // eager load relationships - optimized
         $query->with([
@@ -163,7 +160,6 @@ class BrowseProblemsController extends Controller
             'sdgCategories'
         ));
     }
-
     /**
      * tampilkan detail problem
      */
