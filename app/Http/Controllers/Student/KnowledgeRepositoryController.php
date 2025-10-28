@@ -90,15 +90,19 @@ class KnowledgeRepositoryController extends Controller
             ->pluck('year');
 
         // statistik umum untuk hero section
+        // hitung jumlah institution dengan cara join ke projects
+        $totalInstitutions = DB::table('documents')
+            ->where('documents.is_public', true)
+            ->where('documents.status', 'approved')
+            ->join('projects', 'documents.project_id', '=', 'projects.id')
+            ->whereNotNull('projects.institution_id')
+            ->distinct()
+            ->count('projects.institution_id');
+
         $stats = [
             'total_documents' => Document::published()->count(),
             'total_downloads' => Document::published()->sum('download_count'),
-            'total_institutions' => Institution::whereHas('projects', function($query) {
-                $query->whereHas('documents', function($docQuery) {
-                    $docQuery->where('is_public', true)
-                             ->where('status', 'approved');
-                });
-            })->count(),
+            'total_institutions' => $totalInstitutions,
         ];
 
         return view('student.repository.index', compact(
