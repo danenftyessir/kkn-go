@@ -66,7 +66,6 @@ class BrowseProblemsController extends Controller
             $query->where('difficulty_level', $request->difficulty);
         }
 
-        // ✅ SUPER FIX: filter by SDG categories dengan Laravel whereJsonContains
         if ($request->filled('sdg_categories')) {
             $sdgCategories = $request->sdg_categories;
             
@@ -75,39 +74,15 @@ class BrowseProblemsController extends Controller
                 $sdgCategories = [$sdgCategories];
             }
             
-            // konversi ke integer
-            $sdgCategories = array_map('intval', $sdgCategories);
-            
-            // DEBUG: log apa yang kita filter
-            \Log::info('SDG Filter Applied', [
-                'categories' => $sdgCategories,
-                'total_before_filter' => Problem::where('status', 'open')->count()
-            ]);
-            
-            // gunakan Laravel native whereJsonContains (paling reliable)
             $query->where(function($q) use ($sdgCategories) {
-                foreach ($sdgCategories as $category) {
-                    $q->orWhereJsonContains('sdg_categories', $category);
-                }
-            });
-            
-            // DEBUG: log hasil setelah filter
-            \Log::info('After SDG Filter', [
-                'count' => (clone $query)->count()
-            ]);
-        }
+                    foreach ($sdgCategories as $category) {
+                        // SOLUSI FINAL: Gunakan operator '?' untuk mencari string
+                        // di dalam kolom jsonb di PostgreSQL.
+                        $q->orWhereRaw('sdg_categories::jsonb ? ?', [(string)$category]);
+                    }
+                });
+            }
 
-        $problemTanpaSelect = Problem::where('status', 'open')->first();
-
-        if ($problemTanpaSelect) {
-            // Hentikan eksekusi dan cek tipe datanya
-            dd(
-                'Tipe data dari query TANPA ->select():',
-                gettype($problemTanpaSelect->sdg_categories),
-                $problemTanpaSelect->sdg_categories
-            );
-        }
-        
         // filter by duration
         if ($request->filled('duration')) {
             $duration = $request->duration;
