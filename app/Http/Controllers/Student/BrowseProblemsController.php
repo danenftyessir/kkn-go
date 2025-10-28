@@ -19,139 +19,141 @@ class BrowseProblemsController extends Controller
     /**
      * tampilkan halaman browse problems
      */
-    public function index(Request $request)
-    {
-        // query dengan SELECT specific columns only
-        $query = Problem::select([
-                'id', 
-                'institution_id', 
-                'province_id', 
-                'regency_id', 
-                'title', 
-                'description',
-                'status',
-                'application_deadline',
-                'required_students',
-                'difficulty_level',
-                'duration_months',
-                'sdg_categories',
-                'is_featured',
-                'is_urgent',
-                'views_count',
-                'created_at'
-            ])
-            ->where('status', 'open');
+public function index(Request $request)
+{
+    // query dengan SELECT specific columns only
+    $query = Problem::select([
+            'id', 
+            'institution_id', 
+            'province_id', 
+            'regency_id', 
+            'title', 
+            'description',
+            'status',
+            'application_deadline',
+            'required_students',
+            'difficulty_level',
+            'duration_months',
+            'sdg_categories',
+            'is_featured',
+            'is_urgent',
+            'views_count',
+            'created_at'
+        ])
+        ->where('status', 'open');
 
-        // search - simple query only
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                ->orWhere('description', 'like', "%{$search}%");
-            });
-        }
-
-        // filter by province
-        if ($request->filled('province_id')) {
-            $query->where('province_id', $request->province_id);
-        }
-
-        // filter by regency
-        if ($request->filled('regency_id')) {
-            $query->where('regency_id', $request->regency_id);
-        }
-
-        // filter by difficulty
-        if ($request->filled('difficulty')) {
-            $query->where('difficulty_level', $request->difficulty);
-        }
-
-        // filter by SDG categories
-        if ($request->filled('sdg_categories')) {
-            $sdgCategories = $request->sdg_categories;
-            
-            if (!is_array($sdgCategories)) {
-                $sdgCategories = [$sdgCategories];
-            }
-            
-            $query->where(function($q) use ($sdgCategories) {
-                foreach ($sdgCategories as $category) {
-                    // pastikan category adalah integer
-                    $category = (int) $category;
-                    $q->orWhereJsonContains('sdg_categories', $category);
-                }
-            });
-        }
-
-        // filter by duration
-        if ($request->filled('duration')) {
-            $duration = $request->duration;
-            
-            if ($duration === '1-2') {
-                $query->whereBetween('duration_months', [1, 2]);
-            } elseif ($duration === '3-4') {
-                $query->whereBetween('duration_months', [3, 4]);
-            } elseif ($duration === '5-6') {
-                $query->whereBetween('duration_months', [5, 6]);
-            }
-        }
-
-        // sorting
-        $sortBy = $request->get('sort', 'latest');
-        
-        switch ($sortBy) {
-            case 'deadline':
-                $query->orderBy('application_deadline', 'asc');
-                break;
-            case 'popular':
-                $query->orderBy('views_count', 'desc');
-                break;
-            case 'latest':
-            default:
-                $query->orderBy('created_at', 'desc');
-                break;
-        }
-
-        // eager load relationships - optimized
-        $query->with([
-            'institution:id,name,type,logo_path',
-            'province:id,name',
-            'regency:id,name,province_id',
-            'images' => function($query) {
-                $query->select('id', 'problem_id', 'image_path', 'order')
-                    ->orderBy('order')
-                    ->limit(1);
-            }
-        ]);
-
-        // paginate 12 items per page
-        $problems = $query->paginate(12)->withQueryString();
-
-        // data untuk filter dropdowns
-        $provinces = Province::orderBy('name')->get(['id', 'name']);
-        $regencies = [];
-        
-        if ($request->filled('province_id')) {
-            $regencies = Regency::where('province_id', $request->province_id)
-                ->orderBy('name')
-                ->get(['id', 'name']);
-        }
-
-        // hitung jumlah unique SDG categories dari semua active problems
-        $uniqueSdgCount = Problem::where('status', 'open')
-            ->get()
-            ->pluck('sdg_categories')
-            ->flatten()
-            ->unique()
-            ->count();
-
-        return view('student.browse-problems.index', compact(
-            'problems',
-            'provinces',
-            'regencies',
-            'uniqueSdgCount'
-        ));
+    // search - simple query only
+    if ($request->filled('search')) {
+        $search = $request->search;
+        $query->where(function($q) use ($search) {
+            $q->where('title', 'like', "%{$search}%")
+              ->orWhere('description', 'like', "%{$search}%");
+        });
     }
+
+    // filter by province
+    if ($request->filled('province_id')) {
+        $query->where('province_id', $request->province_id);
+    }
+
+    // filter by regency
+    if ($request->filled('regency_id')) {
+        $query->where('regency_id', $request->regency_id);
+    }
+
+    // filter by difficulty
+    if ($request->filled('difficulty')) {
+        $query->where('difficulty_level', $request->difficulty);
+    }
+
+    // filter by SDG categories
+    if ($request->filled('sdg_categories')) {
+        $sdgCategories = $request->sdg_categories;
+        
+        if (!is_array($sdgCategories)) {
+            $sdgCategories = [$sdgCategories];
+        }
+        
+        $query->where(function($q) use ($sdgCategories) {
+            foreach ($sdgCategories as $category) {
+                // pastikan category adalah integer
+                $category = (int) $category;
+                $q->orWhereJsonContains('sdg_categories', $category);
+            }
+        });
+    }
+
+    // filter by duration
+    if ($request->filled('duration')) {
+        $duration = $request->duration;
+        
+        if ($duration === '1-2') {
+            $query->whereBetween('duration_months', [1, 2]);
+        } elseif ($duration === '3-4') {
+            $query->whereBetween('duration_months', [3, 4]);
+        } elseif ($duration === '5-6') {
+            $query->whereBetween('duration_months', [5, 6]);
+        }
+    }
+
+    // sorting
+    $sortBy = $request->get('sort', 'latest');
+    
+    switch ($sortBy) {
+        case 'deadline':
+            $query->orderBy('application_deadline', 'asc');
+            break;
+        case 'popular':
+            $query->orderBy('views_count', 'desc');
+            break;
+        case 'latest':
+        default:
+            $query->orderBy('created_at', 'desc');
+            break;
+    }
+
+    $totalProblems = $query->count();
+
+    // eager load relationships - optimized
+    $query->with([
+        'institution:id,name,type,logo_path',
+        'province:id,name',
+        'regency:id,name,province_id',
+        'images' => function($query) {
+            $query->select('id', 'problem_id', 'image_path', 'order')
+                  ->orderBy('order')
+                  ->limit(1);
+        }
+    ]);
+
+    // paginate 12 items per page
+    $problems = $query->paginate(12)->withQueryString();
+
+    // data untuk filter dropdowns
+    $provinces = Province::orderBy('name')->get(['id', 'name']);
+    $regencies = [];
+    
+    if ($request->filled('province_id')) {
+        $regencies = Regency::where('province_id', $request->province_id)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+    }
+
+    $sdgCategories = Problem::where('status', 'open')
+        ->get()
+        ->pluck('sdg_categories')
+        ->flatten()
+        ->unique()
+        ->count();
+
+    return view('student.browse-problems.index', compact(
+        'problems',
+        'provinces',
+        'regencies',
+        'totalProblems',  
+        'sdgCategories' 
+    ));
+}
 
     /**
      * tampilkan detail problem
