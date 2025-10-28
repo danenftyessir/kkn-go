@@ -11,6 +11,7 @@ use App\Models\Institution;
 use App\Models\University;
 use App\Models\Province;
 use App\Models\Regency;
+use App\Services\SupabaseStorageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -25,6 +26,16 @@ use Illuminate\Auth\Events\Registered;
  */
 class RegisterController extends Controller
 {
+    protected $storageService;
+
+    /**
+     * constructor - inject SupabaseStorageService
+     */
+    public function __construct(SupabaseStorageService $storageService)
+    {
+        $this->storageService = $storageService;
+    }
+
     /**
      * tampilkan halaman pilihan registrasi
      */
@@ -91,7 +102,7 @@ class RegisterController extends Controller
 
     /**
      * proses registrasi student
-     * PERBAIKAN: return JSON response untuk AJAX request
+     * PERBAIKAN BUG: gunakan Supabase untuk upload foto dan refresh session setelah registrasi
      */
     public function registerStudent(StudentRegisterRequest $request)
     {
@@ -107,7 +118,7 @@ class RegisterController extends Controller
             // gunakan database transaction untuk memastikan atomicity
             DB::beginTransaction();
             
-            // buat user account - PERBAIKAN: pastikan syntax lengkap
+            // buat user account
             $user = User::create([
                 'name' => $request->first_name . ' ' . $request->last_name,
                 'email' => $request->email,
@@ -119,33 +130,44 @@ class RegisterController extends Controller
             
             Log::info('User created successfully', ['user_id' => $user->id]);
             
-            // upload photo jika ada
-            $photoPath = null;
-            if ($request->hasFile('profile_photo')) {
-                try {
-                    $photoPath = $request->file('profile_photo')->store('students/photos', 'public');
-                    Log::info('Profile photo uploaded', ['path' => $photoPath]);
-                } catch (\Exception $e) {
-                    Log::warning('Failed to upload profile photo: ' . $e->getMessage());
-                    // lanjutkan proses tanpa foto
-                }
-            }
-            
-            // PERBAIKAN KRITIS: cek apakah field di database adalah 'phone' atau 'whatsapp_number'
-            // gunakan 'phone' karena itu nama field yang ada di migration
+            // buat student profile dengan data awal
             $student = Student::create([
                 'user_id' => $user->id,
                 'first_name' => $request->first_name,
                 'last_name' => $request->last_name,
+                'nim' => $request->nim,
                 'university_id' => $request->university_id,
                 'major' => $request->major,
-                'nim' => $request->nim,
                 'semester' => $request->semester,
-                'phone' => $request->whatsapp_number,  // field database adalah 'phone'
-                'profile_photo_path' => $photoPath,
+                'phone' => $request->whatsapp_number,
+                'profile_photo_path' => null, // akan diupdate jika ada foto
             ]);
             
             Log::info('Student profile created', ['student_id' => $student->id]);
+            
+            // ✅ PERBAIKAN BUG: upload foto menggunakan SupabaseStorageService
+            if ($request->hasFile('profile_photo')) {
+                try {
+                    $file = $request->file('profile_photo');
+                    
+                    // gunakan method uploadProfilePhoto dari SupabaseStorageService
+                    $uploadedPath = $this->storageService->uploadProfilePhoto($file, $student->id);
+                    
+                    if ($uploadedPath) {
+                        // update student profile dengan path foto yang baru
+                        $student->update(['profile_photo_path' => $uploadedPath]);
+                        Log::info('Profile photo uploaded successfully', [
+                            'student_id' => $student->id,
+                            'path' => $uploadedPath
+                        ]);
+                    } else {
+                        Log::warning('Failed to upload profile photo for student ID: ' . $student->id);
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Error uploading profile photo: ' . $e->getMessage());
+                    // tidak perlu throw exception, foto profil bersifat opsional
+                }
+            }
             
             DB::commit();
             
@@ -155,41 +177,39 @@ class RegisterController extends Controller
             // log successful registration
             Log::info('Student registered successfully', [
                 'user_id' => $user->id,
+                'student_id' => $student->id,
                 'email' => $user->email,
                 'username' => $user->username
             ]);
 
-            // login user secara otomatis
+            // auto-login user setelah registrasi berhasil
             Auth::login($user);
+            
+            // ✅ PERBAIKAN BUG: refresh session untuk memuat data terbaru termasuk foto profil
+            // fresh() akan reload model dari database dengan semua relasinya
+            Auth::setUser($user->fresh(['student']));
 
-            // PERBAIKAN: cek apakah request adalah AJAX
-            if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
-                // return JSON response dengan redirect URL untuk AJAX request
+            // cek apakah request adalah AJAX
+            if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Selamat Datang Di KKN-GO! Akun Anda Berhasil Dibuat. Jangan Lupa Verifikasi Email Anda.',
-                    'redirect_url' => route('student.dashboard')
+                    'message' => 'Registrasi Berhasil! Selamat Datang Di KKN-GO.',
+                    'redirect' => route('student.dashboard')
                 ], 200);
             }
 
-            // redirect normal untuk non-AJAX request
+            // redirect ke dashboard student dengan pesan sukses
             return redirect()
                 ->route('student.dashboard')
-                ->with('success', 'Selamat Datang Di KKN-GO! Akun Anda Berhasil Dibuat. Jangan Lupa Verifikasi Email Anda.');
+                ->with('success', 'Selamat Datang Di KKN-GO! Akun Anda Berhasil Dibuat. Silakan Lengkapi Profil Dan Mulai Mencari Proyek KKN Yang Sesuai Dengan Minat Anda.');
 
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Student registration failed: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
             
-            // log error dengan detail lengkap
-            Log::error('Student registration failed', [
-                'error' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            // PERBAIKAN: return JSON error untuk AJAX request
-            if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+            // cek apakah request adalah AJAX
+            if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Terjadi Kesalahan Saat Registrasi. Silakan Coba Lagi.',
@@ -205,7 +225,7 @@ class RegisterController extends Controller
 
     /**
      * proses registrasi institution
-     * sudah benar, tidak perlu diubah
+     * PERBAIKAN BUG: gunakan Supabase untuk upload logo dan refresh session setelah registrasi
      */
     public function registerInstitution(InstitutionRegisterRequest $request)
     {
@@ -223,20 +243,7 @@ class RegisterController extends Controller
                 'is_active' => true,
             ]);
             
-            // upload logo jika ada
-            $logoPath = null;
-            if ($request->hasFile('logo')) {
-                $logoPath = $request->file('logo')->store('institutions/logos', 'public');
-            }
-            
-            // upload verification document
-            $verificationDocPath = null;
-            if ($request->hasFile('verification_document')) {
-                $verificationDocPath = $request->file('verification_document')
-                                              ->store('institutions/verifications', 'public');
-            }
-            
-            // buat institution profile
+            // buat institution profile dengan data awal
             $institution = Institution::create([
                 'user_id' => $user->id,
                 'name' => $request->institution_name,
@@ -246,14 +253,51 @@ class RegisterController extends Controller
                 'regency_id' => $request->regency_id,
                 'email' => $request->official_email,
                 'phone' => $request->phone_number,
-                'logo_path' => $logoPath,
+                'logo_path' => null, // akan diupdate jika ada logo
                 'pic_name' => $request->pic_name,
                 'pic_position' => $request->pic_position,
-                'verification_document_path' => $verificationDocPath,
+                'verification_document_path' => null, // akan diupdate jika ada dokumen
                 'website' => $request->website,
                 'description' => $request->description,
                 'is_verified' => false, // akan diverifikasi oleh admin
             ]);
+            
+            // ✅ PERBAIKAN BUG: upload logo menggunakan SupabaseStorageService
+            if ($request->hasFile('logo')) {
+                try {
+                    $file = $request->file('logo');
+                    $uploadedPath = $this->storageService->uploadInstitutionLogo($file, $institution->id);
+                    
+                    if ($uploadedPath) {
+                        $institution->update(['logo_path' => $uploadedPath]);
+                        Log::info('Institution logo uploaded successfully', [
+                            'institution_id' => $institution->id,
+                            'path' => $uploadedPath
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Error uploading institution logo: ' . $e->getMessage());
+                }
+            }
+            
+            // ✅ PERBAIKAN BUG: upload verification document menggunakan SupabaseStorageService
+            if ($request->hasFile('verification_document')) {
+                try {
+                    $file = $request->file('verification_document');
+                    // gunakan uploadDocument dengan kategori khusus untuk dokumen verifikasi
+                    $uploadedPath = $this->storageService->uploadDocument($file, 'institutions/verifications');
+                    
+                    if ($uploadedPath) {
+                        $institution->update(['verification_document_path' => $uploadedPath]);
+                        Log::info('Verification document uploaded successfully', [
+                            'institution_id' => $institution->id,
+                            'path' => $uploadedPath
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Error uploading verification document: ' . $e->getMessage());
+                }
+            }
             
             DB::commit();
             
@@ -270,6 +314,9 @@ class RegisterController extends Controller
 
             // auto-login user setelah registrasi berhasil
             Auth::login($user);
+            
+            // ✅ PERBAIKAN BUG: refresh session untuk memuat data terbaru termasuk logo
+            Auth::setUser($user->fresh(['institution']));
 
             // redirect ke dashboard institusi dengan pesan sukses
             return redirect()
