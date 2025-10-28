@@ -68,7 +68,10 @@ class BrowseProblemsController extends Controller
 
         // ✅ PERBAIKAN FINAL: filter by SDG categories dengan raw query
         if ($request->filled('sdg_categories')) {
-            $sdgCategories = $request->sdg_categories;
+                \Log::info('SDG Categories from request:', [
+                    'value' => $request->sdg_categories,
+                    'type' => gettype($request->sdg_categories)
+                ]);
             
             // pastikan input adalah array
             if (!is_array($sdgCategories)) {
@@ -81,8 +84,7 @@ class BrowseProblemsController extends Controller
             // buat kondisi OR untuk setiap kategori SDG
             $query->where(function($q) use ($sdgCategories) {
                 foreach ($sdgCategories as $category) {
-                    // gunakan whereRaw dengan PostgreSQL JSON operator
-                    $q->orWhereRaw("sdg_categories::jsonb @> ?", [json_encode([$category])]);
+                    $q->orWhereRaw("sdg_categories::jsonb ? ?", [(string)$category]);
                 }
             });
         }
