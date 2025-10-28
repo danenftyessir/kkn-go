@@ -19,37 +19,100 @@ class BrowseProblemsController extends Controller
     /**
      * tampilkan halaman browse problems
      */
-public function index(Request $request)
-{
-    // ============ LANGKAH DEBUGGING TERAKHIR & PALING DASAR ============
 
-    // 1. Kita mulai dengan query yang benar-benar kosong, tanpa filter apapun.
-    $query = \App\Models\Problem::query(); 
-    
-    // 2. Kita terapkan HANYA satu kondisi: cari problem yang sdg_categories-nya
-    //    mengandung string "12". Nilainya kita tulis langsung (hardcode).
-    $query->whereRaw('jsonb_exists(sdg_categories::jsonb, ?)', ['12']);
+    public function index(Request $request)
+    {
+        $query = Problem::select([
+                'id', 'institution_id', 'province_id', 'regency_id', 'title', 
+                'description', 'status', 'application_deadline', 'required_students',
+                'difficulty_level', 'duration_months', 'sdg_categories', 'is_featured',
+                'is_urgent', 'views_count', 'created_at'
+            ])
+            ->where('status', 'open');
 
-    // 3. Langsung ambil hasilnya dari database.
-    $problemsFound = $query->get();
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
 
-    // 4. Hentikan semua proses dan tampilkan hasilnya secara paksa.
-    dd(
-        "SQL mentah yang dikirim ke database:",
-        $query->toSql(),
-        "Nilai yang dicari:",
-        $query->getBindings(),
-        "Jumlah hasil yang ditemukan:",
-        $problemsFound->count(),
-        "Data lengkap yang ditemukan:",
-        $problemsFound
-    );
-    
-    // ====================================================================
+        if ($request->filled('province_id')) {
+            $query->where('province_id', $request->province_id);
+        }
 
-    // Baris-baris di bawah ini tidak akan pernah dijalankan selama dd() aktif.
-    return view('student.browse-problems.index');
-}
+        if ($request->filled('regency_id')) {
+            $query->where('regency_id', $request->regency_id);
+        }
+
+        if ($request->filled('difficulty')) {
+            $query->where('difficulty_level', $request->difficulty);
+        }
+
+        // ✅ KODE FILTER SDG YANG SUDAH BENAR
+        if ($request->filled('sdg_categories')) {
+            $sdgCategories = $request->sdg_categories;
+            if (!is_array($sdgCategories)) {
+                $sdgCategories = [$sdgCategories];
+            }
+            $query->where(function($q) use ($sdgCategories) {
+                foreach ($sdgCategories as $category) {
+                    $q->orWhereRaw('jsonb_exists(sdg_categories::jsonb, ?)', [(string)$category]);
+                }
+            });
+        }
+
+        if ($request->filled('duration')) {
+            $duration = $request->duration;
+            if ($duration === '1-2') {
+                $query->whereBetween('duration_months', [1, 2]);
+            } elseif ($duration === '3-4') {
+                $query->whereBetween('duration_months', [3, 4]);
+            } elseif ($duration === '5-6') {
+                $query->whereBetween('duration_months', [5, 6]);
+            }
+        }
+
+        $sortBy = $request->get('sort', 'latest');
+        switch ($sortBy) {
+            case 'deadline':
+                $query->orderBy('application_deadline', 'asc');
+                break;
+            case 'popular':
+                $query->orderBy('views_count', 'desc');
+                break;
+            case 'latest':
+            default:
+                $query->orderBy('created_at', 'desc');
+                break;
+        }
+
+        $totalProblems = (clone $query)->count();
+
+        $query->with([
+            'institution:id,name,type,logo_path',
+            'province:id,name',
+            'regency:id,name,province_id',
+            'images' => function($query) {
+                $query->select('id', 'problem_id', 'image_path', 'order')->orderBy('order')->limit(1);
+            }
+        ]);
+
+        $problems = $query->paginate(12)->withQueryString();
+
+        $provinces = \App\Models\Province::orderBy('name')->get(['id', 'name']);
+        $regencies = [];
+        if ($request->filled('province_id')) {
+            $regencies = \App\Models\Regency::where('province_id', $request->province_id)->orderBy('name')->get(['id', 'name']);
+        }
+
+        $sdgCategories = 17;
+
+        return view('student.browse-problems.index', compact(
+            'problems', 'provinces', 'regencies', 'totalProblems', 'sdgCategories'
+        ));
+    }
 
     /**
      * tampilkan detail problem
