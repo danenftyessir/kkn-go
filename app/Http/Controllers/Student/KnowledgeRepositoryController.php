@@ -53,11 +53,6 @@ class KnowledgeRepositoryController extends Controller
             $query->whereYear('created_at', $request->year);
         }
 
-        // filter by institution type
-        if ($request->filled('institution_type')) {
-            $query->where('institution_type', $request->institution_type);
-        }
-
         // sorting
         $sortBy = $request->get('sort', 'latest');
         
@@ -94,14 +89,6 @@ class KnowledgeRepositoryController extends Controller
             ->orderBy('year', 'desc')
             ->pluck('year');
 
-        // institution types yang unik
-        $institutionTypes = Document::where('is_public', true)
-            ->where('status', 'approved')
-            ->whereNotNull('institution_type')
-            ->distinct()
-            ->pluck('institution_type')
-            ->filter();
-
         // statistik umum
         $stats = [
             'total_documents' => Document::published()->count(),
@@ -114,7 +101,6 @@ class KnowledgeRepositoryController extends Controller
             'featuredDocuments',
             'provinces',
             'years',
-            'institutionTypes',
             'stats'
         ));
     }
@@ -176,4 +162,8 @@ class KnowledgeRepositoryController extends Controller
         // redirect ke URL supabase untuk download
         return redirect()->away(document_url($document->file_path));
     }
+
+
+
+
 }
