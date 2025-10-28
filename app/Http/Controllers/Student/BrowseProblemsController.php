@@ -66,7 +66,7 @@ class BrowseProblemsController extends Controller
             $query->where('difficulty_level', $request->difficulty);
         }
 
-        // ✅ FINAL FIX: filter by SDG categories dengan operator @>
+        // ✅ SUPER FIX: filter by SDG categories dengan Laravel whereJsonContains
         if ($request->filled('sdg_categories')) {
             $sdgCategories = $request->sdg_categories;
             
@@ -78,13 +78,23 @@ class BrowseProblemsController extends Controller
             // konversi ke integer
             $sdgCategories = array_map('intval', $sdgCategories);
             
-            // gunakan operator @> (contains) untuk PostgreSQL JSONB
+            // DEBUG: log apa yang kita filter
+            \Log::info('SDG Filter Applied', [
+                'categories' => $sdgCategories,
+                'total_before_filter' => Problem::where('status', 'open')->count()
+            ]);
+            
+            // gunakan Laravel native whereJsonContains (paling reliable)
             $query->where(function($q) use ($sdgCategories) {
                 foreach ($sdgCategories as $category) {
-                    // operator @> checks if left JSONB value contains right JSONB value
-                    $q->orWhereRaw("sdg_categories::jsonb @> ?::jsonb", [json_encode([$category])]);
+                    $q->orWhereJsonContains('sdg_categories', $category);
                 }
             });
+            
+            // DEBUG: log hasil setelah filter
+            \Log::info('After SDG Filter', [
+                'count' => (clone $query)->count()
+            ]);
         }
 
         // filter by duration
@@ -144,21 +154,44 @@ class BrowseProblemsController extends Controller
                 ->get(['id', 'name']);
         }
 
-        // ✅ FIX: hitung jumlah unique SDG (hanya 1-17)
-        $allProblems = Problem::where('status', 'open')->get(['sdg_categories']);
-        $uniqueSdg = collect();
+        // ✅ SIMPLE FIX: hitung unique SDG dengan cara paling simple
+        $sdgCategories = 17; // default karena SDG selalu 1-17
         
-        foreach ($allProblems as $problem) {
-            if ($problem->sdg_categories && is_array($problem->sdg_categories)) {
-                foreach ($problem->sdg_categories as $sdg) {
-                    if (is_int($sdg) && $sdg >= 1 && $sdg <= 17) {
-                        $uniqueSdg->push($sdg);
+        // atau kalau mau dynamic, pakai query simple:
+        try {
+            $allSdgs = \DB::table('problems')
+                ->where('status', 'open')
+                ->whereNotNull('sdg_categories')
+                ->pluck('sdg_categories');
+            
+            $uniqueSdgs = collect();
+            foreach ($allSdgs as $sdgJson) {
+                $decoded = json_decode($sdgJson, true);
+                if (is_array($decoded)) {
+                    foreach ($decoded as $sdg) {
+                        if (is_int($sdg) && $sdg >= 1 && $sdg <= 17) {
+                            $uniqueSdgs->push($sdg);
+                        }
                     }
                 }
             }
+            
+            $sdgCount = $uniqueSdgs->unique()->count();
+            
+            // jika ada data, gunakan count dynamic
+            if ($sdgCount > 0) {
+                $sdgCategories = $sdgCount;
+            }
+            
+            \Log::info('SDG Count Calculated', [
+                'unique_count' => $sdgCount,
+                'all_sdgs' => $uniqueSdgs->unique()->sort()->values()->toArray()
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error counting SDG categories', ['error' => $e->getMessage()]);
+            // fallback ke 17
+            $sdgCategories = 17;
         }
-        
-        $sdgCategories = $uniqueSdg->unique()->count();
 
         return view('student.browse-problems.index', compact(
             'problems',
@@ -168,6 +201,7 @@ class BrowseProblemsController extends Controller
             'sdgCategories'
         ));
     }
+    
     /**
      * tampilkan detail problem
      */
