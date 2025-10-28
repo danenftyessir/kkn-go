@@ -69,19 +69,18 @@ class BrowseProblemsController extends Controller
         if ($request->filled('sdg_categories')) {
             $sdgCategories = $request->sdg_categories;
             
-            // pastikan input adalah array
             if (!is_array($sdgCategories)) {
                 $sdgCategories = [$sdgCategories];
             }
             
             $query->where(function($q) use ($sdgCategories) {
-                    foreach ($sdgCategories as $category) {
-                        // SOLUSI FINAL: Gunakan operator '?' untuk mencari string
-                        // di dalam kolom jsonb di PostgreSQL.
-                        $q->orWhereRaw('sdg_categories::jsonb ? ?', [(string)$category]);
-                    }
-                });
-            }
+                foreach ($sdgCategories as $category) {
+                    // SOLUSI FINAL: Gunakan fungsi jsonb_exists() yang tidak ambigu
+                    // untuk menghindari konflik parser PDO.
+                    $q->orWhereRaw('jsonb_exists(sdg_categories::jsonb, ?)', [(string)$category]);
+                }
+            });
+        }
 
         // filter by duration
         if ($request->filled('duration')) {
