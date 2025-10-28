@@ -14,7 +14,6 @@ use App\Models\Regency;
 
 /**
  * seeder untuk data dummy users, students, institutions, universities
- * FULLY OPTIMIZED: menggunakan bulk operations dan menghindari N+1 queries
  * UPDATED: menggunakan data provinces & regencies dari database (dinamis dari BPS)
  * 
  * path: database/seeders/DummyDataSeeder.php
@@ -22,13 +21,8 @@ use App\Models\Regency;
  */
 class DummyDataSeeder extends Seeder
 {
-    private $batchSize = 50; // insert per 50 records
-    
     public function run(): void
     {
-        // disable query log untuk performa
-        DB::connection()->disableQueryLog();
-        
         echo "memulai seeding data dummy...\n\n";
         
         $this->cleanOldData();
@@ -76,64 +70,25 @@ class DummyDataSeeder extends Seeder
     {
         echo "membersihkan data lama...\n";
         
-        try {
-            // untuk PostgreSQL gunakan TRUNCATE CASCADE
-            DB::statement('TRUNCATE TABLE applications, wishlists, problem_images, problems, students, institutions, universities RESTART IDENTITY CASCADE');
-            
-            // hapus users non-admin
-            DB::table('users')
-                ->where('user_type', '!=', 'admin')
-                ->delete();
-            
-            echo "  -> data lama berhasil dibersihkan\n";
-        } catch (\Exception $e) {
-            echo "  -> warning: " . $e->getMessage() . "\n";
-            echo "  -> mencoba alternatif pembersihan...\n";
-            
-            try {
-                // alternatif: disable foreign key checks, truncate, enable lagi
-                DB::statement('SET session_replication_role = replica');
-                
-                DB::table('applications')->truncate();
-                DB::table('wishlists')->truncate();
-                DB::table('problem_images')->truncate();
-                DB::table('problems')->truncate();
-                DB::table('students')->truncate();
-                DB::table('institutions')->truncate();
-                DB::table('universities')->truncate();
-                
-                // hapus users non-admin
-                DB::table('users')
-                    ->where('user_type', '!=', 'admin')
-                    ->delete();
-                
-                DB::statement('SET session_replication_role = DEFAULT');
-                
-                echo "  -> alternatif pembersihan berhasil\n";
-            } catch (\Exception $e2) {
-                echo "  -> error: " . $e2->getMessage() . "\n";
-                echo "  -> mencoba delete manual...\n";
-                
-                // last resort: delete satu per satu
-                DB::table('applications')->delete();
-                DB::table('wishlists')->delete();
-                DB::table('problem_images')->delete();
-                DB::table('problems')->delete();
-                DB::table('students')->delete();
-                DB::table('institutions')->delete();
-                DB::table('users')
-                    ->where('user_type', '!=', 'admin')
-                    ->delete();
-                DB::table('universities')->delete();
-                
-                echo "  -> delete manual selesai\n";
-            }
-        }
+        // untuk PostgreSQL gunakan TRUNCATE CASCADE atau disable triggers
+        DB::statement('SET session_replication_role = replica');
+        
+        // truncate tables dalam urutan yang benar
+        DB::table('applications')->truncate();
+        DB::table('wishlists')->truncate();
+        DB::table('problem_images')->truncate();
+        DB::table('problems')->truncate();
+        DB::table('students')->truncate();
+        DB::table('institutions')->truncate();
+        DB::table('users')->where('user_type', '!=', 'admin')->delete();
+        DB::table('universities')->truncate();
+        
+        // enable kembali foreign key checks
+        DB::statement('SET session_replication_role = DEFAULT');
     }
 
     /**
      * seeding universities - 120+ universitas
-     * FIXED: menggunakan batch insert
      * DISTRIBUSI OTOMATIS ke semua provinsi dari database BPS
      */
     private function seedUniversities(): void
@@ -150,65 +105,193 @@ class DummyDataSeeder extends Seeder
         
         echo "  -> tersedia " . $allProvinces->count() . " provinsi dari BPS\n";
         
-        // daftar universitas Indonesia (120+ universitas)
-        $universities = $this->getUniversitiesData();
+        // helper function untuk mendapatkan location
+        $getLocation = function($provinceName = null) use ($allProvinces) {
+            if ($provinceName) {
+                // cari province berdasarkan nama
+                $province = $allProvinces->first(function($p) use ($provinceName) {
+                    return stripos($p->name, $provinceName) !== false;
+                });
+                
+                if (!$province) {
+                    $province = $allProvinces->random();
+                }
+            } else {
+                // random province
+                $province = $allProvinces->random();
+            }
+            
+            // ambil regency dari province tersebut
+            $regencies = Regency::where('province_id', $province->id)->get();
+            
+            if ($regencies->isEmpty()) {
+                // fallback jika tidak ada regency
+                return [
+                    'province_id' => $province->id,
+                    'regency_id' => null // akan dihandle oleh database
+                ];
+            }
+            
+            $regency = $regencies->random();
+            
+            return [
+                'province_id' => $province->id,
+                'regency_id' => $regency->id
+            ];
+        };
         
-        $universitiesToInsert = [];
+        // daftar universitas dengan hint lokasi (opsional)
+        $universitiesData = [
+            ['name' => 'Universitas Indonesia', 'code' => 'UI', 'province_hint' => 'Jakarta', 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'Institut Teknologi Bandung', 'code' => 'ITB', 'province_hint' => 'Jawa Barat', 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'Institut Pertanian Bogor', 'code' => 'IPB', 'province_hint' => 'Jawa Barat', 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'Universitas Padjadjaran', 'code' => 'UNPAD', 'province_hint' => 'Jawa Barat', 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'Universitas Diponegoro', 'code' => 'UNDIP', 'province_hint' => 'Jawa Tengah', 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'Universitas Sebelas Maret', 'code' => 'UNS', 'province_hint' => 'Jawa Tengah', 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'Universitas Gadjah Mada', 'code' => 'UGM', 'province_hint' => 'Yogyakarta', 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'Universitas Airlangga', 'code' => 'UNAIR', 'province_hint' => 'Jawa Timur', 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'Universitas Brawijaya', 'code' => 'UB', 'province_hint' => 'Jawa Timur', 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'Institut Teknologi Sepuluh Nopember', 'code' => 'ITS', 'province_hint' => 'Jawa Timur', 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'Universitas Udayana', 'code' => 'UNUD', 'province_hint' => 'Bali', 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'Universitas Trunojoyo Madura', 'code' => 'UTM', 'province_hint' => 'Jawa Timur', 'type' => 'negeri', 'accreditation' => 'B'],
+            ['name' => 'Universitas Teuku Umar', 'code' => 'UTU', 'province_hint' => 'Aceh', 'type' => 'negeri', 'accreditation' => 'B'],
+            ['name' => 'Universitas Terbuka', 'code' => 'UT', 'province_hint' => 'Jakarta', 'type' => 'negeri', 'accreditation' => 'B'],
+            ['name' => 'Universitas Tanjungpura', 'code' => 'UNTAN', 'province_hint' => 'Kalimantan Barat', 'type' => 'negeri', 'accreditation' => 'B'],
+            ['name' => 'Universitas Syiah Kuala', 'code' => 'UNSYIAH', 'province_hint' => 'Aceh', 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'Universitas Sumatera Utara', 'code' => 'USU', 'province_hint' => 'Sumatera Utara', 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'Universitas Sultan Ageng Tirtayasa', 'code' => 'UNTIRTA', 'province_hint' => 'Banten', 'type' => 'negeri', 'accreditation' => 'B'],
+            ['name' => 'Universitas Sulawesi Tenggara', 'code' => 'USULTRA', 'province_hint' => null, 'type' => 'negeri', 'accreditation' => 'B'],
+            ['name' => 'Universitas Sulawesi Barat', 'code' => 'UNSULBAR', 'province_hint' => null, 'type' => 'negeri', 'accreditation' => 'B'],
+            ['name' => 'Universitas Sembilanbelas November', 'code' => 'UNS19', 'province_hint' => 'Jawa Timur', 'type' => 'negeri', 'accreditation' => 'B'],
+            ['name' => 'Universitas Samudra', 'code' => 'UNSAM', 'province_hint' => 'Aceh', 'type' => 'negeri', 'accreditation' => 'B'],
+            ['name' => 'Universitas Sains Al Quran', 'code' => 'UNSIQ', 'province_hint' => 'Jawa Tengah', 'type' => 'swasta', 'accreditation' => 'B'],
+            ['name' => 'Universitas Pendidikan Muhammadiyah Sorong', 'code' => 'UNIMUDA', 'province_hint' => null, 'type' => 'swasta', 'accreditation' => 'B'],
+            ['name' => 'Universitas Pendidikan Indonesia', 'code' => 'UPI', 'province_hint' => 'Jawa Barat', 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'Universitas Pendidikan Ganesha', 'code' => 'UNDIKSHA', 'province_hint' => 'Bali', 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'Universitas Pembangunan Nasional Veteran Jawa Timur', 'code' => 'UPNVJT', 'province_hint' => 'Jawa Timur', 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'Universitas Pattimura', 'code' => 'UNPATTI', 'province_hint' => 'Maluku', 'type' => 'negeri', 'accreditation' => 'B'],
+            ['name' => 'Universitas Pasifik Morotai', 'code' => 'UNIPAS', 'province_hint' => null, 'type' => 'swasta', 'accreditation' => 'C'],
+            ['name' => 'Universitas Pancasakti Tegal', 'code' => 'UPS', 'province_hint' => 'Jawa Tengah', 'type' => 'swasta', 'accreditation' => 'B'],
+            ['name' => 'Universitas Palangka Raya', 'code' => 'UPR', 'province_hint' => 'Kalimantan Tengah', 'type' => 'negeri', 'accreditation' => 'B'],
+            ['name' => 'Universitas Nurul Huda', 'code' => 'UNUHA', 'province_hint' => null, 'type' => 'swasta', 'accreditation' => 'B'],
+            ['name' => 'Universitas Noor Huda Mustofa', 'code' => 'UNHM', 'province_hint' => null, 'type' => 'swasta', 'accreditation' => 'C'],
+            ['name' => 'Universitas Negeri Yogyakarta', 'code' => 'UNY', 'province_hint' => 'Yogyakarta', 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'Universitas Negeri Surabaya', 'code' => 'UNESA', 'province_hint' => 'Jawa Timur', 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'Universitas Negeri Semarang', 'code' => 'UNNES', 'province_hint' => 'Jawa Tengah', 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'Universitas Negeri Padang', 'code' => 'UNP', 'province_hint' => 'Sumatera Barat', 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'Universitas Negeri Medan', 'code' => 'UNIMED', 'province_hint' => 'Sumatera Utara', 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'Universitas Negeri Manado', 'code' => 'UNIMA', 'province_hint' => null, 'type' => 'negeri', 'accreditation' => 'B'],
+            ['name' => 'Universitas Negeri Malang', 'code' => 'UM', 'province_hint' => 'Jawa Timur', 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'Universitas Negeri Makassar', 'code' => 'UNM', 'province_hint' => 'Sulawesi Selatan', 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'Universitas Negeri Jakarta', 'code' => 'UNJ', 'province_hint' => 'Jakarta', 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'Universitas Negeri Gorontalo', 'code' => 'UNG', 'province_hint' => 'Gorontalo', 'type' => 'negeri', 'accreditation' => 'B'],
+            ['name' => 'Universitas Muslim Nusantara Al Washliyah', 'code' => 'UMNAW', 'province_hint' => 'Sumatera Utara', 'type' => 'swasta', 'accreditation' => 'B'],
+            ['name' => 'Universitas Muslim Indonesia', 'code' => 'UMI', 'province_hint' => 'Sulawesi Selatan', 'type' => 'swasta', 'accreditation' => 'B'],
+            ['name' => 'Universitas Musamus Merauke', 'code' => 'UNMUS', 'province_hint' => 'Papua', 'type' => 'negeri', 'accreditation' => 'B'],
+            ['name' => 'Universitas Muria Kudus', 'code' => 'UMK', 'province_hint' => 'Jawa Tengah', 'type' => 'negeri', 'accreditation' => 'B'],
+            ['name' => 'Universitas Mulawarman', 'code' => 'UNMUL', 'province_hint' => 'Kalimantan Timur', 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'Universitas Muhammadiyah Sinjai', 'code' => 'UMSINJAI', 'province_hint' => 'Sulawesi Selatan', 'type' => 'swasta', 'accreditation' => 'C'],
+            ['name' => 'Universitas Muhammadiyah Purworejo', 'code' => 'UMPWR', 'province_hint' => 'Jawa Tengah', 'type' => 'swasta', 'accreditation' => 'B'],
+            ['name' => 'Universitas Muhammadiyah Ponorogo', 'code' => 'UMPO', 'province_hint' => 'Jawa Timur', 'type' => 'swasta', 'accreditation' => 'B'],
+            ['name' => 'Universitas Muhammadiyah Palangkaraya', 'code' => 'UMPALANGKA', 'province_hint' => 'Kalimantan Tengah', 'type' => 'swasta', 'accreditation' => 'B'],
+            ['name' => 'Universitas Muhammadiyah Kolaka Utara', 'code' => 'UMKOLAKA', 'province_hint' => null, 'type' => 'swasta', 'accreditation' => 'C'],
+            ['name' => 'Universitas Muhammadiyah Buton', 'code' => 'UMBUTON', 'province_hint' => null, 'type' => 'swasta', 'accreditation' => 'C'],
+            ['name' => 'Universitas Muhammadiyah Makassar', 'code' => 'UNISMUH', 'province_hint' => 'Sulawesi Selatan', 'type' => 'swasta', 'accreditation' => 'B'],
+            ['name' => 'Universitas Mataram', 'code' => 'UNRAM', 'province_hint' => 'Nusa Tenggara Barat', 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'Universitas Malikussaleh', 'code' => 'UNIMAL', 'province_hint' => 'Aceh', 'type' => 'negeri', 'accreditation' => 'B'],
+            ['name' => 'Universitas Madura', 'code' => 'UNIRA', 'province_hint' => 'Jawa Timur', 'type' => 'swasta', 'accreditation' => 'B'],
+            ['name' => 'Universitas Lelemuku Saumlaki', 'code' => 'UNIMOR', 'province_hint' => null, 'type' => 'swasta', 'accreditation' => 'C'],
+            ['name' => 'Universitas Lampung', 'code' => 'UNILA', 'province_hint' => 'Lampung', 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'Universitas Labuhanbatu', 'code' => 'UNLABUHAN', 'province_hint' => 'Sumatera Utara', 'type' => 'swasta', 'accreditation' => 'C'],
+            ['name' => 'Universitas Kuningan', 'code' => 'UNIKU', 'province_hint' => 'Jawa Barat', 'type' => 'swasta', 'accreditation' => 'B'],
+            ['name' => 'Universitas Kristen Indonesia Toraja', 'code' => 'UKITORAJA', 'province_hint' => null, 'type' => 'swasta', 'accreditation' => 'C'],
+            ['name' => 'Universitas Kristen Indonesia Maluku', 'code' => 'UKIM', 'province_hint' => 'Maluku', 'type' => 'swasta', 'accreditation' => 'B'],
+            ['name' => 'Universitas Komputer Indonesia', 'code' => 'UNIKOM', 'province_hint' => 'Jawa Barat', 'type' => 'swasta', 'accreditation' => 'B'],
+            ['name' => 'Universitas Khairun', 'code' => 'UNKHAIR', 'province_hint' => null, 'type' => 'negeri', 'accreditation' => 'B'],
+            ['name' => 'Universitas Jambi', 'code' => 'UNJA', 'province_hint' => 'Jambi', 'type' => 'negeri', 'accreditation' => 'B'],
+            ['name' => 'Universitas Islam Makassar', 'code' => 'UIM', 'province_hint' => 'Sulawesi Selatan', 'type' => 'swasta', 'accreditation' => 'B'],
+            ['name' => 'Universitas Indonesia Timur', 'code' => 'UIT', 'province_hint' => 'Sulawesi Selatan', 'type' => 'swasta', 'accreditation' => 'B'],
+            ['name' => 'Universitas Ibn Khaldun Bogor', 'code' => 'UIKA', 'province_hint' => 'Jawa Barat', 'type' => 'swasta', 'accreditation' => 'B'],
+            ['name' => 'Universitas Hasanuddin', 'code' => 'UNHAS', 'province_hint' => 'Sulawesi Selatan', 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'Universitas Halu Oleo', 'code' => 'UHO', 'province_hint' => null, 'type' => 'negeri', 'accreditation' => 'B'],
+            ['name' => 'Universitas Famika', 'code' => 'UFAMIKA', 'province_hint' => 'Jawa Tengah', 'type' => 'swasta', 'accreditation' => 'C'],
+            ['name' => 'Universitas Esa Unggul', 'code' => 'UEU', 'province_hint' => 'Jakarta', 'type' => 'swasta', 'accreditation' => 'B'],
+            ['name' => 'Universitas Darma Agung', 'code' => 'UDA', 'province_hint' => 'Sumatera Utara', 'type' => 'swasta', 'accreditation' => 'B'],
+            ['name' => 'Universitas Boyolali', 'code' => 'UBY', 'province_hint' => 'Jawa Tengah', 'type' => 'swasta', 'accreditation' => 'C'],
+            ['name' => 'Universitas Borneo Tarakan', 'code' => 'UBT', 'province_hint' => 'Kalimantan Utara', 'type' => 'negeri', 'accreditation' => 'B'],
+            ['name' => 'Universitas Atma Jaya Makassar', 'code' => 'UAJM', 'province_hint' => 'Sulawesi Selatan', 'type' => 'swasta', 'accreditation' => 'B'],
+            ['name' => 'Universitas Andalas', 'code' => 'UNAND', 'province_hint' => 'Sumatera Barat', 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'Universitas Almarisah Madani', 'code' => 'UAM', 'province_hint' => null, 'type' => 'swasta', 'accreditation' => 'C'],
+            ['name' => 'Universitas Al Azhar Indonesia', 'code' => 'UAI', 'province_hint' => 'Jakarta', 'type' => 'swasta', 'accreditation' => 'B'],
+            ['name' => 'Universitas Al Asyariah Mandar', 'code' => 'UNASMAN', 'province_hint' => null, 'type' => 'swasta', 'accreditation' => 'B'],
+            ['name' => 'Universitas Abulyatama', 'code' => 'UNAYA', 'province_hint' => 'Aceh', 'type' => 'swasta', 'accreditation' => 'B'],
+            ['name' => 'Universitas 17 Agustus 1945 Samarinda', 'code' => 'UNTAG', 'province_hint' => 'Kalimantan Timur', 'type' => 'swasta', 'accreditation' => 'B'],
+            ['name' => 'Universitas Tadulako', 'code' => 'UNTAD', 'province_hint' => 'Sulawesi Tengah', 'type' => 'negeri', 'accreditation' => 'B'],
+            ['name' => 'Universitas Bima Internasional MFH', 'code' => 'UBI', 'province_hint' => null, 'type' => 'swasta', 'accreditation' => 'C'],
+            ['name' => 'Universitas Nahdatul Watan Mataram', 'code' => 'UNWAM', 'province_hint' => 'Nusa Tenggara Barat', 'type' => 'swasta', 'accreditation' => 'B'],
+            ['name' => 'Universitas Islam Negeri Tulung Agung', 'code' => 'UINTA', 'province_hint' => 'Jawa Timur', 'type' => 'negeri', 'accreditation' => 'B'],
+            ['name' => 'Universitas Islam Negeri Sultan Syarif Kasim Riau', 'code' => 'UIN SUSKA', 'province_hint' => 'Riau', 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'Universitas Bangka Belitung', 'code' => 'UBB', 'province_hint' => null, 'type' => 'negeri', 'accreditation' => 'B'],
+            ['name' => 'Universitas Islam Negeri Sayyid Ali Rahmatullah Tulungagung', 'code' => 'UIN SATU', 'province_hint' => 'Jawa Timur', 'type' => 'negeri', 'accreditation' => 'B'],
+            ['name' => 'Universitas Jenderal Soedirman', 'code' => 'UNSOED', 'province_hint' => 'Jawa Tengah', 'type' => 'negeri', 'accreditation' => 'A'],         
+            ['name' => 'Institut Teknologi Sumatera', 'code' => 'ITERA', 'province_hint' => 'Lampung', 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'Institut Teknologi Kalimantan', 'code' => 'ITK', 'province_hint' => 'Kalimantan Timur', 'type' => 'negeri', 'accreditation' => 'B'],
+            ['name' => 'Institut Teknologi Dan Sains Nahdlatul Ulama Pekalongan', 'code' => 'ITSNUPKL', 'province_hint' => 'Jawa Tengah', 'type' => 'swasta', 'accreditation' => 'B'],
+            ['name' => 'Institut Teknologi Dan Bisnis Maritim Balik Diwa Makassar', 'code' => 'ITBM', 'province_hint' => 'Sulawesi Selatan', 'type' => 'swasta', 'accreditation' => 'C'],
+            ['name' => 'Institut Seni Budaya Indonesia Bandung', 'code' => 'ISBI BDG', 'province_hint' => 'Jawa Barat', 'type' => 'negeri', 'accreditation' => 'B'],
+            ['name' => 'Institut Seni Budaya Indonesia Aceh', 'code' => 'ISBI ACEH', 'province_hint' => 'Aceh', 'type' => 'negeri', 'accreditation' => 'B'],
+            ['name' => 'Institut Pangeran Dharma Kusuma Indramayu', 'code' => 'IPDKI', 'province_hint' => 'Jawa Barat', 'type' => 'swasta', 'accreditation' => 'B'],
+            ['name' => 'Institut Agama Hindu Negeri Tampung Penyang Palangka Raya', 'code' => 'IAHN', 'province_hint' => 'Kalimantan Tengah', 'type' => 'negeri', 'accreditation' => 'B'],           
+            ['name' => 'Sekolah Tinggi Keguruan Dan Ilmu Pendidikan Al Hikmah Surabaya', 'code' => 'STKIP ALHIK', 'province_hint' => 'Jawa Timur', 'type' => 'swasta', 'accreditation' => 'B'],
+            ['name' => 'Sekolah Tinggi Ilmu Manajemen Indonesia', 'code' => 'STIMI', 'province_hint' => 'Jakarta', 'type' => 'swasta', 'accreditation' => 'B'],
+            ['name' => 'Sekolah Tinggi Ilmu Kesehatan Salewangan Maros', 'code' => 'STIKES MAROS', 'province_hint' => 'Sulawesi Selatan', 'type' => 'swasta', 'accreditation' => 'B'],
+            ['name' => 'Sekolah Tinggi Ilmu Kesehatan Masyarakat', 'code' => 'STIKMA', 'province_hint' => 'Jakarta', 'type' => 'swasta', 'accreditation' => 'B'],
+            ['name' => 'Sekolah Tinggi Ilmu Ekonomi Indonesia Makassar', 'code' => 'STIEM', 'province_hint' => 'Sulawesi Selatan', 'type' => 'swasta', 'accreditation' => 'B'],   
+            ['name' => 'Politeknik Bombana', 'code' => 'POLBOM', 'province_hint' => null, 'type' => 'negeri', 'accreditation' => 'C'],          
+            ['name' => 'UIN Syarif Hidayatullah Jakarta', 'code' => 'UIN JKT', 'province_hint' => 'Jakarta', 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'Universitas Trisakti', 'code' => 'USAKTI', 'province_hint' => 'Jakarta', 'type' => 'swasta', 'accreditation' => 'B'],
+            ['name' => 'Universitas Mercu Buana', 'code' => 'UMB', 'province_hint' => 'Jakarta', 'type' => 'swasta', 'accreditation' => 'B'],
+            ['name' => 'UIN Sunan Gunung Djati Bandung', 'code' => 'UIN SGD', 'province_hint' => 'Jawa Barat', 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'Universitas Pasundan', 'code' => 'UNPAS', 'province_hint' => 'Jawa Barat', 'type' => 'swasta', 'accreditation' => 'B'],
+            ['name' => 'UIN Walisongo Semarang', 'code' => 'UIN WALISONGO', 'province_hint' => 'Jawa Tengah', 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'Universitas Islam Sultan Agung', 'code' => 'UNISSULA', 'province_hint' => 'Jawa Tengah', 'type' => 'swasta', 'accreditation' => 'B'],
+            ['name' => 'Universitas Muhammadiyah Semarang', 'code' => 'UNIMUS', 'province_hint' => 'Jawa Tengah', 'type' => 'swasta', 'accreditation' => 'B'],
+            ['name' => 'UIN Sunan Kalijaga Yogyakarta', 'code' => 'UIN SUKA', 'province_hint' => 'Yogyakarta', 'type' => 'negeri', 'accreditation' => 'A'],
+            ['name' => 'Universitas Islam Indonesia', 'code' => 'UII', 'province_hint' => 'Yogyakarta', 'type' => 'swasta', 'accreditation' => 'A'],
+            ['name' => 'Universitas Muhammadiyah Tangerang', 'code' => 'UMT', 'province_hint' => 'Banten', 'type' => 'swasta', 'accreditation' => 'B'],
+        ];
         
-        foreach ($universities as $univData) {
-            $location = $this->findUniversityLocation($univData['province_hint'], $allProvinces);
+        // insert universitas dengan lokasi dinamis
+        $createdCount = 0;
+        foreach ($universitiesData as $univData) {
+            $location = $getLocation($univData['province_hint'] ?? null);
             
             // skip jika tidak dapat location
             if (!$location || !$location['province_id']) {
                 continue;
             }
             
-            $universitiesToInsert[] = [
+            University::create([
                 'name' => $univData['name'],
                 'code' => $univData['code'],
                 'province_id' => $location['province_id'],
                 'regency_id' => $location['regency_id'],
                 'type' => $univData['type'],
                 'accreditation' => $univData['accreditation'],
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
+            ]);
             
-            // batch insert jika sudah mencapai batch size
-            if (count($universitiesToInsert) >= $this->batchSize) {
-                $this->batchInsert('universities', $universitiesToInsert);
-                echo "  -> " . count($universitiesToInsert) . " universities di-batch insert\n";
-                $universitiesToInsert = [];
-                
-                // cleanup connection setelah batch
-                $this->cleanupConnection();
-            }
+            $createdCount++;
         }
         
-        // insert sisa data
-        if (!empty($universitiesToInsert)) {
-            $this->batchInsert('universities', $universitiesToInsert);
-            echo "  -> " . count($universitiesToInsert) . " universities di-batch insert\n";
-        }
-        
-        $totalCreated = University::count();
-        echo "  -> {$totalCreated} universities berhasil dibuat\n";
+        echo "  -> {$createdCount} universities berhasil dibuat\n";
     }
 
     /**
      * seeding students dummy (400 students untuk 120+ universitas)
-     * FULLY OPTIMIZED: bulk operations tanpa N+1 queries
      */
     private function seedStudents(): void
     {
         echo "seeding students...\n";
-        
-        $universities = University::all();
-        
-        if ($universities->isEmpty()) {
-            echo "  ERROR: Tidak ada universities! Seed universities dulu.\n";
-            return;
-        }
         
         $firstNames = [
             'Andi', 'Budi', 'Citra', 'Devi', 'Eko', 'Farah', 'Gilang', 'Hana', 'Indra', 'Joko',
@@ -232,157 +315,131 @@ class DummyDataSeeder extends Seeder
         ];
         
         $majors = [
-            'Teknik Informatika', 'Sistem Informasi', 'Teknik Elektro', 'Teknik Mesin',
-            'Teknik Sipil', 'Arsitektur', 'Manajemen', 'Akuntansi', 'Ekonomi Pembangunan',
-            'Ilmu Komunikasi', 'Hukum', 'Psikologi', 'Kedokteran', 'Keperawatan',
-            'Farmasi', 'Kesehatan Masyarakat', 'Pendidikan', 'Sastra Indonesia',
-            'Sastra Inggris', 'Desain Komunikasi Visual', 'Desain Produk', 'Seni Rupa',
-            'Pertanian', 'Peternakan', 'Kehutanan', 'Perikanan', 'Biologi',
-            'Kimia', 'Fisika', 'Matematika', 'Statistika', 'Geografi',
-            'Sosiologi', 'Ilmu Politik', 'Hubungan Internasional', 'Administrasi Publik',
-            'Teknik Industri', 'Teknik Kimia', 'Teknik Lingkungan', 'Agroteknologi'
+            'Teknik Informatika', 'Sistem Informasi', 'Teknik Sipil', 'Arsitektur', 'Manajemen',
+            'Akuntansi', 'Ilmu Komunikasi', 'Psikologi', 'Hukum', 'Kedokteran', 'Farmasi',
+            'Agroteknologi', 'Ekonomi Pembangunan', 'Teknik Elektro', 'Desain Grafis',
+            'Teknik Mesin', 'Teknik Industri', 'Teknik Kimia', 'Pendidikan Bahasa Inggris',
+            'Pendidikan Matematika', 'Sastra Indonesia', 'Hubungan Internasional', 'Ilmu Politik',
+            'Sosiologi', 'Antropologi', 'Kesehatan Masyarakat', 'Gizi', 'Keperawatan',
+            'Biologi', 'Fisika', 'Kimia', 'Matematika', 'Statistika', 'Ilmu Komputer'
         ];
         
-        // password hash dibuat sekali saja untuk efisiensi
-        $hashedPassword = Hash::make('password123');
-        $now = now();
+        $universities = University::all();
         
-        $usersToInsert = [];
-        $studentsData = []; // simpan data student untuk insert nanti
-        $usedUsernames = []; // track username yang sudah digunakan
-        $allUsernames = []; // simpan semua username untuk bulk lookup
+        if ($universities->isEmpty()) {
+            echo "  ERROR: Tidak ada data universities!\n";
+            return;
+        }
         
-        // buat 400 mahasiswa
+        // buat 400 mahasiswa agar lebih realistis
         for ($i = 0; $i < 400; $i++) {
             $firstName = $firstNames[array_rand($firstNames)];
             $lastName = $lastNames[array_rand($lastNames)];
-            
-            // generate username yang unique
-            $baseUsername = strtolower($firstName . $lastName);
-            $username = $baseUsername . rand(1000, 9999);
-            
-            // pastikan username benar-benar unique
-            $counter = 1;
-            while (isset($usedUsernames[$username])) {
-                $username = $baseUsername . rand(1000, 9999) . $counter;
-                $counter++;
-            }
-            $usedUsernames[$username] = true;
-            $allUsernames[] = $username;
-            
             $university = $universities->random();
+            $major = $majors[array_rand($majors)];
+            $username = strtolower($firstName . $lastName . rand(100, 9999));
+            $nim = '21' . str_pad($i, 8, '0', STR_PAD_LEFT); // format: 2100000000 - 2100000399
             
-            // generate email sesuai domain universitas
-            $email = $username . '@' . $this->getUniversityEmailDomain($university->code);
+            // generate email berdasarkan kode universitas
+            $emailDomain = $this->getUniversityEmailDomain($university->code);
+            $email = $username . '@' . $emailDomain;
             
-            $usersToInsert[] = [
+            // buat user
+            $user = User::create([
                 'name' => $firstName . ' ' . $lastName,
                 'email' => $email,
                 'username' => $username,
-                'password' => $hashedPassword,
+                'password' => Hash::make('password123'),
                 'user_type' => 'student',
                 'is_active' => true,
-                'email_verified_at' => $now,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ];
-            
-            // simpan data student untuk nanti (setelah user di-insert)
-            $studentsData[] = [
-                'username' => $username, // untuk lookup user_id nanti
-                'university_id' => $university->id,
+                'email_verified_at' => now(),
+            ]);
+
+            // buat student
+            Student::create([
+                'user_id' => $user->id,
                 'first_name' => $firstName,
                 'last_name' => $lastName,
-                'nim' => rand(1000000000, 9999999999),
-                'major' => $majors[array_rand($majors)],
-                'semester' => rand(1, 8),
+                'university_id' => $university->id,
+                'major' => $major,
+                'nim' => $nim,
+                'semester' => rand(4, 8),
                 'phone' => '+628' . rand(1000000000, 9999999999),
-                'created_at' => $now,
-                'updated_at' => $now,
-            ];
-            
-            // batch insert users jika sudah mencapai batch size
-            if (count($usersToInsert) >= $this->batchSize) {
-                $this->batchInsert('users', $usersToInsert);
-                echo "  -> " . count($usersToInsert) . " users di-batch insert\n";
-                $usersToInsert = [];
-                
-                // cleanup connection setelah batch
-                $this->cleanupConnection();
-            }
+            ]);
         }
         
-        // insert sisa users
-        if (!empty($usersToInsert)) {
-            $this->batchInsert('users', $usersToInsert);
-            echo "  -> " . count($usersToInsert) . " users di-batch insert\n";
-        }
-        
-        // OPTIMASI CRITICAL: bulk lookup semua users sekaligus dengan whereIn
-        echo "  -> mapping students ke users (bulk lookup)...\n";
-        
-        // ambil semua users yang baru dibuat dalam SATU query
-        $usersMap = DB::table('users')
-            ->whereIn('username', $allUsernames)
-            ->where('user_type', 'student')
-            ->pluck('id', 'username')
-            ->toArray();
-        
-        echo "  -> " . count($usersMap) . " users berhasil di-lookup\n";
-        
-        // sekarang insert students dengan mapping dari usersMap
-        $studentsToInsert = [];
-        
-        foreach ($studentsData as $studentData) {
-            $username = $studentData['username'];
-            
-            // lookup user_id dari map (O(1) complexity)
-            if (!isset($usersMap[$username])) {
-                continue; // skip jika user tidak ditemukan
-            }
-            
-            $studentsToInsert[] = [
-                'user_id' => $usersMap[$username],
-                'university_id' => $studentData['university_id'],
-                'first_name' => $studentData['first_name'],
-                'last_name' => $studentData['last_name'],
-                'nim' => $studentData['nim'],
-                'major' => $studentData['major'],
-                'semester' => $studentData['semester'],
-                'phone' => $studentData['phone'],
-                'created_at' => $studentData['created_at'],
-                'updated_at' => $studentData['updated_at'],
-            ];
-            
-            // batch insert students
-            if (count($studentsToInsert) >= $this->batchSize) {
-                $this->batchInsert('students', $studentsToInsert);
-                echo "  -> " . count($studentsToInsert) . " students di-batch insert\n";
-                $studentsToInsert = [];
-                
-                // cleanup connection setelah batch
-                $this->cleanupConnection();
-            }
-        }
-        
-        // insert sisa students
-        if (!empty($studentsToInsert)) {
-            $this->batchInsert('students', $studentsToInsert);
-            echo "  -> " . count($studentsToInsert) . " students di-batch insert\n";
-        }
-        
-        $totalStudents = Student::count();
-        echo "  -> {$totalStudents} students berhasil dibuat\n";
+        echo "  -> " . Student::count() . " students berhasil dibuat\n";
     }
 
     /**
      * seeding institutions dummy (80 institutions untuk lebih realistis)
-     * FULLY OPTIMIZED: bulk operations tanpa N+1 queries
      * DISTRIBUSI OTOMATIS ke semua provinsi dari database
      */
     private function seedInstitutions(): void
     {
         echo "seeding institutions...\n";
+        
+        $institutionTypes = [
+            'Pemerintah Desa',
+            'Dinas Kesehatan',
+            'Dinas Pendidikan',
+            'Dinas Pertanian',
+            'Dinas Pariwisata',
+            'Dinas Sosial',
+            'NGO',
+            'Puskesmas',
+            'Kelurahan',
+            'Kecamatan',
+            'Dinas Lingkungan Hidup',
+            'Dinas Perindustrian',
+            'Dinas Perdagangan',
+            'Dinas Koperasi',
+            'BPBD',
+            'Yayasan Sosial',
+            'Lembaga Pendidikan',
+            'Posyandu'
+        ];
+        
+        $picNames = [
+            'Pak Agus Hartono',
+            'Bu Siti Nurhaliza',
+            'Pak Bambang Setiawan',
+            'Bu Rita Sari',
+            'Pak Eko Prasetyo',
+            'Bu Dewi Lestari',
+            'Pak Hendra Kusuma',
+            'Bu Maya Anggraini',
+            'Pak Joko Santoso',
+            'Bu Nina Rahayu',
+            'Pak Ahmad Yani',
+            'Bu Ratna Wijaya',
+            'Pak Budi Hermawan',
+            'Bu Sinta Permata',
+            'Pak Dedi Kurniawan',
+            'Bu Lina Marlina',
+            'Pak Rizki Ramadhan',
+            'Bu Fitri Handayani',
+            'Pak Hadi Suryanto',
+            'Bu Diana Putri'
+        ];
+        
+        $positions = [
+            'Kepala Desa',
+            'Sekretaris Desa',
+            'Kepala Dinas',
+            'Koordinator Program',
+            'Manajer Proyek',
+            'Staff Program',
+            'Lurah',
+            'Camat',
+            'Kepala Puskesmas',
+            'Sekretaris',
+            'Kabid Pemberdayaan',
+            'Kabid Pengembangan',
+            'Direktur Eksekutif',
+            'Ketua Yayasan',
+            'Bendahara'
+        ];
         
         $provinces = Province::all();
         
@@ -391,432 +448,181 @@ class DummyDataSeeder extends Seeder
             return;
         }
         
-        // template nama institusi berdasarkan tipe
-        $institutionTemplates = $this->getInstitutionTemplates();
-        
-        // password hash dibuat sekali saja
-        $hashedPassword = Hash::make('password123');
-        $now = now();
-        
-        $usersToInsert = [];
-        $institutionsData = [];
-        $usedUsernames = [];
-        $usedEmails = []; // track email yang sudah digunakan
-        $allUsernames = [];
-        
-        // buat 80 institutions dengan distribusi merata ke semua provinsi
-        $numInstitutions = 80;
-        $provinceIndex = 0;
-        
-        for ($i = 0; $i < $numInstitutions; $i++) {
-            // ambil province secara round-robin untuk distribusi merata
-            $province = $provinces[$provinceIndex % $provinces->count()];
-            $provinceIndex++;
+        // buat 80 institusi
+        for ($i = 0; $i < 80; $i++) {
+            $type = $institutionTypes[array_rand($institutionTypes)];
+            $instName = $type . ' ' . chr(65 + ($i % 26));
+            $username = strtolower(str_replace(' ', '', $instName)) . rand(1, 999);
             
-            // ambil regency dari province
-            $regency = Regency::where('province_id', $province->id)->inRandomOrder()->first();
+            // random province dan regency
+            $province = $provinces->random();
+            $regencies = Regency::where('province_id', $province->id)->get();
             
-            // pilih template random
-            $template = $institutionTemplates[array_rand($institutionTemplates)];
-            $baseInstitutionName = $template['names'][array_rand($template['names'])];
-            $picData = $template['pic'][array_rand($template['pic'])];
-            
-            // tambahkan identifier unik ke nama institution
-            // gunakan nama province yang lebih singkat untuk uniqueness
-            $provinceName = str_replace(['Kab. ', 'Kota ', 'Provinsi '], '', $province->name);
-            $institutionName = $baseInstitutionName . ' ' . $provinceName;
-            
-            // generate username unique
-            $baseUsername = strtolower(str_replace(' ', '', $institutionName));
-            $username = substr($baseUsername, 0, 15) . rand(100, 999);
-            
-            $counter = 1;
-            while (isset($usedUsernames[$username])) {
-                $username = substr($baseUsername, 0, 15) . rand(100, 999) . $counter;
-                $counter++;
-            }
-            $usedUsernames[$username] = true;
-            $allUsernames[] = $username;
-            
-            // generate email yang UNIQUE dengan menambahkan counter
-            $emailDomain = str_replace(' ', '', strtolower($institutionName)) . '.id';
-            $email = 'admin@' . $emailDomain;
-            
-            // pastikan email unique
-            $emailCounter = 1;
-            while (isset($usedEmails[$email])) {
-                $email = 'admin' . $emailCounter . '@' . $emailDomain;
-                $emailCounter++;
-            }
-            $usedEmails[$email] = true;
-            
-            $usersToInsert[] = [
-                'name' => $institutionName,
-                'email' => $email,
-                'username' => $username,
-                'password' => $hashedPassword,
-                'user_type' => 'institution',
-                'is_active' => true,
-                'email_verified_at' => $now,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ];
-            
-            $institutionsData[] = [
-                'username' => $username,
-                'name' => $institutionName,
-                'type' => $template['type'],
-                'email' => $email, // tambahkan email untuk institutions table
-                'address' => 'Jl. ' . $institutionName . ' No. ' . rand(1, 999),
-                'province_id' => $province->id,
-                'regency_id' => $regency ? $regency->id : null,
-                'phone' => '+62' . rand(21, 274) . rand(1000000, 9999999),
-                'pic_name' => $picData['name'],
-                'pic_position' => $picData['position'],
-                'description' => 'Lembaga ' . $template['type'] . ' yang berkomitmen untuk pembangunan daerah.',
-                'created_at' => $now,
-                'updated_at' => $now,
-            ];
-            
-            // batch insert users
-            if (count($usersToInsert) >= $this->batchSize) {
-                $this->batchInsert('users', $usersToInsert);
-                echo "  -> " . count($usersToInsert) . " users di-batch insert\n";
-                $usersToInsert = [];
-                
-                // cleanup connection setelah batch
-                $this->cleanupConnection();
-            }
-        }
-        
-        // insert sisa users
-        if (!empty($usersToInsert)) {
-            $this->batchInsert('users', $usersToInsert);
-            echo "  -> " . count($usersToInsert) . " users di-batch insert\n";
-        }
-        
-        // OPTIMASI CRITICAL: bulk lookup semua users sekaligus
-        echo "  -> mapping institutions ke users (bulk lookup)...\n";
-        
-        $usersMap = DB::table('users')
-            ->whereIn('username', $allUsernames)
-            ->where('user_type', 'institution')
-            ->pluck('id', 'username')
-            ->toArray();
-        
-        echo "  -> " . count($usersMap) . " users berhasil di-lookup\n";
-        
-        // insert institutions dengan mapping
-        $institutionsToInsert = [];
-        
-        foreach ($institutionsData as $instData) {
-            $username = $instData['username'];
-            
-            if (!isset($usersMap[$username])) {
+            if ($regencies->isEmpty()) {
+                // skip jika tidak ada regency
                 continue;
             }
             
-            $institutionsToInsert[] = [
-                'user_id' => $usersMap[$username],
-                'name' => $instData['name'],
-                'type' => $instData['type'],
-                'email' => $instData['email'], // tambahkan email
-                'address' => $instData['address'],
-                'province_id' => $instData['province_id'],
-                'regency_id' => $instData['regency_id'],
-                'phone' => $instData['phone'],
-                'pic_name' => $instData['pic_name'],
-                'pic_position' => $instData['pic_position'],
-                'description' => $instData['description'],
-                'created_at' => $instData['created_at'],
-                'updated_at' => $instData['updated_at'],
-            ];
+            $regency = $regencies->random();
             
-            // batch insert institutions
-            if (count($institutionsToInsert) >= $this->batchSize) {
-                $this->batchInsert('institutions', $institutionsToInsert);
-                echo "  -> " . count($institutionsToInsert) . " institutions di-batch insert\n";
-                $institutionsToInsert = [];
-                
-                // cleanup connection setelah batch
-                $this->cleanupConnection();
-            }
-        }
-        
-        // insert sisa institutions
-        if (!empty($institutionsToInsert)) {
-            $this->batchInsert('institutions', $institutionsToInsert);
-            echo "  -> " . count($institutionsToInsert) . " institutions di-batch insert\n";
-        }
-        
-        $totalInstitutions = Institution::count();
-        echo "  -> {$totalInstitutions} institutions berhasil dibuat\n";
-    }
+            // buat user
+            $user = User::create([
+                'name' => ucwords($instName),
+                'email' => $username . '@institution.go.id',
+                'username' => $username,
+                'password' => Hash::make('password123'),
+                'user_type' => 'institution',
+                'is_active' => true,
+                'email_verified_at' => now(),
+            ]);
 
-    /**
-     * batch insert dengan transaction
-     */
-    private function batchInsert(string $table, array $data): void
-    {
-        DB::transaction(function () use ($table, $data) {
-            DB::table($table)->insert($data);
-        });
-    }
-
-    /**
-     * cleanup connection untuk clear prepared statements
-     */
-    private function cleanupConnection(): void
-    {
-        try {
-            // commit pending transactions
-            while (DB::transactionLevel() > 0) {
-                DB::commit();
-            }
-            
-            // untuk PostgreSQL: deallocate prepared statements
-            if (DB::connection()->getDriverName() === 'pgsql') {
-                try {
-                    DB::statement("DEALLOCATE ALL");
-                } catch (\Exception $e) {
-                    // silent fail
-                }
-            }
-            
-        } catch (\Exception $e) {
-            // silent fail, tidak perlu error untuk cleanup
-        }
-    }
-
-    /**
-     * get template institutions
-     */
-    private function getInstitutionTemplates(): array
-    {
-        return [
-            [
-                'type' => 'Pemerintah Desa',
-                'names' => [
-                    'Desa Sukamaju', 'Desa Mekar Sari', 'Desa Sukamakmur', 'Desa Cimanggis', 
-                    'Desa Tanjung Raya', 'Desa Sidorejo', 'Desa Karanganyar', 'Desa Purworejo',
-                    'Desa Banjarwangi', 'Desa Margahayu', 'Desa Cibitung', 'Desa Bojong Gede'
-                ],
-                'pic' => [
-                    ['name' => 'Drs. Ahmad Hidayat', 'position' => 'Kepala Desa'],
-                    ['name' => 'H. Budi Santoso, S.Sos', 'position' => 'Kepala Desa'],
-                    ['name' => 'Drs. Cahyo Utomo', 'position' => 'Sekretaris Desa'],
-                    ['name' => 'Ir. Dedi Mulyadi', 'position' => 'Kepala Desa'],
-                ],
-            ],
-            [
-                'type' => 'Dinas Kesehatan',
-                'names' => [
-                    'Dinas Kesehatan Kabupaten', 'Puskesmas Kecamatan', 
-                    'Dinas Kesehatan Kota', 'Puskesmas Desa'
-                ],
-                'pic' => [
-                    ['name' => 'dr. Endah Kusuma, M.Kes', 'position' => 'Kepala Dinas'],
-                    ['name' => 'dr. Fitri Handayani, Sp.PK', 'position' => 'Kepala Puskesmas'],
-                    ['name' => 'dr. Gunawan Wijaya, M.PH', 'position' => 'Kepala Dinas'],
-                ],
-            ],
-            [
-                'type' => 'Dinas Pendidikan',
-                'names' => [
-                    'Dinas Pendidikan Kabupaten', 'Dinas Pendidikan Kota',
-                    'Dinas Pendidikan Provinsi'
-                ],
-                'pic' => [
-                    ['name' => 'Prof. Dr. Hendra Pratama, M.Pd', 'position' => 'Kepala Dinas'],
-                    ['name' => 'Dr. Indah Permata Sari, M.Ed', 'position' => 'Sekretaris Dinas'],
-                    ['name' => 'Drs. Joko Widodo, M.M', 'position' => 'Kepala Dinas'],
-                ],
-            ],
-            [
-                'type' => 'NGO',
-                'names' => [
-                    'Yayasan Cinta Alam', 'Lembaga Swadaya Masyarakat Peduli',
-                    'Yayasan Pendidikan Bangsa', 'Forum Masyarakat Peduli Lingkungan'
-                ],
-                'pic' => [
-                    ['name' => 'Ir. Kartika Dewi, M.Si', 'position' => 'Direktur Eksekutif'],
-                    ['name' => 'Drs. Lukman Hakim, M.A', 'position' => 'Ketua Yayasan'],
-                    ['name' => 'Dr. Maya Susanti, S.Sos', 'position' => 'Koordinator Program'],
-                ],
-            ],
-            [
-                'type' => 'Dinas Pertanian',
-                'names' => [
-                    'Dinas Pertanian Kabupaten', 'Dinas Ketahanan Pangan',
-                    'Balai Penyuluhan Pertanian'
-                ],
-                'pic' => [
-                    ['name' => 'Ir. Nanda Pratama, M.P', 'position' => 'Kepala Dinas'],
-                    ['name' => 'Dr. Oki Firmansyah, S.P., M.Si', 'position' => 'Kepala Balai'],
-                ],
-            ],
-        ];
-    }
-
-    /**
-     * get daftar universitas Indonesia
-     */
-    private function getUniversitiesData(): array
-    {
-        return [
-            // PTN tier 1
-            ['name' => 'Universitas Indonesia', 'code' => 'UI', 'province_hint' => 'DKI Jakarta', 'type' => 'negeri', 'accreditation' => 'A'],
-            ['name' => 'Institut Teknologi Bandung', 'code' => 'ITB', 'province_hint' => 'Jawa Barat', 'type' => 'negeri', 'accreditation' => 'A'],
-            ['name' => 'Universitas Gadjah Mada', 'code' => 'UGM', 'province_hint' => 'DI Yogyakarta', 'type' => 'negeri', 'accreditation' => 'A'],
-            ['name' => 'Institut Teknologi Sepuluh Nopember', 'code' => 'ITS', 'province_hint' => 'Jawa Timur', 'type' => 'negeri', 'accreditation' => 'A'],
-            ['name' => 'Universitas Airlangga', 'code' => 'UNAIR', 'province_hint' => 'Jawa Timur', 'type' => 'negeri', 'accreditation' => 'A'],
-            ['name' => 'Universitas Padjadjaran', 'code' => 'UNPAD', 'province_hint' => 'Jawa Barat', 'type' => 'negeri', 'accreditation' => 'A'],
-            ['name' => 'Universitas Diponegoro', 'code' => 'UNDIP', 'province_hint' => 'Jawa Tengah', 'type' => 'negeri', 'accreditation' => 'A'],
-            ['name' => 'Universitas Brawijaya', 'code' => 'UB', 'province_hint' => 'Jawa Timur', 'type' => 'negeri', 'accreditation' => 'A'],
-            ['name' => 'Institut Pertanian Bogor', 'code' => 'IPB', 'province_hint' => 'Jawa Barat', 'type' => 'negeri', 'accreditation' => 'A'],
-            ['name' => 'Universitas Hasanuddin', 'code' => 'UNHAS', 'province_hint' => 'Sulawesi Selatan', 'type' => 'negeri', 'accreditation' => 'A'],
-            
-            // PTN tier 2
-            ['name' => 'Universitas Sebelas Maret', 'code' => 'UNS', 'province_hint' => 'Jawa Tengah', 'type' => 'negeri', 'accreditation' => 'A'],
-            ['name' => 'Universitas Sumatera Utara', 'code' => 'USU', 'province_hint' => 'Sumatera Utara', 'type' => 'negeri', 'accreditation' => 'A'],
-            ['name' => 'Universitas Andalas', 'code' => 'UNAND', 'province_hint' => 'Sumatera Barat', 'type' => 'negeri', 'accreditation' => 'A'],
-            ['name' => 'Universitas Riau', 'code' => 'UNRI', 'province_hint' => 'Riau', 'type' => 'negeri', 'accreditation' => 'B'],
-            ['name' => 'Universitas Sriwijaya', 'code' => 'UNSRI', 'province_hint' => 'Sumatera Selatan', 'type' => 'negeri', 'accreditation' => 'B'],
-            ['name' => 'Universitas Lampung', 'code' => 'UNILA', 'province_hint' => 'Lampung', 'type' => 'negeri', 'accreditation' => 'B'],
-            ['name' => 'Universitas Jenderal Soedirman', 'code' => 'UNSOED', 'province_hint' => 'Jawa Tengah', 'type' => 'negeri', 'accreditation' => 'B'],
-            ['name' => 'Universitas Jember', 'code' => 'UNEJ', 'province_hint' => 'Jawa Timur', 'type' => 'negeri', 'accreditation' => 'B'],
-            ['name' => 'Universitas Udayana', 'code' => 'UNUD', 'province_hint' => 'Bali', 'type' => 'negeri', 'accreditation' => 'A'],
-            ['name' => 'Universitas Mataram', 'code' => 'UNRAM', 'province_hint' => 'Nusa Tenggara Barat', 'type' => 'negeri', 'accreditation' => 'B'],
-            ['name' => 'Universitas Nusa Cendana', 'code' => 'UNDANA', 'province_hint' => 'Nusa Tenggara Timur', 'type' => 'negeri', 'accreditation' => 'B'],
-            ['name' => 'Universitas Mulawarman', 'code' => 'UNMUL', 'province_hint' => 'Kalimantan Timur', 'type' => 'negeri', 'accreditation' => 'B'],
-            ['name' => 'Universitas Lambung Mangkurat', 'code' => 'ULM', 'province_hint' => 'Kalimantan Selatan', 'type' => 'negeri', 'accreditation' => 'B'],
-            ['name' => 'Universitas Tanjungpura', 'code' => 'UNTAN', 'province_hint' => 'Kalimantan Barat', 'type' => 'negeri', 'accreditation' => 'B'],
-            ['name' => 'Universitas Palangka Raya', 'code' => 'UPR', 'province_hint' => 'Kalimantan Tengah', 'type' => 'negeri', 'accreditation' => 'B'],
-            ['name' => 'Universitas Tadulako', 'code' => 'UNTAD', 'province_hint' => 'Sulawesi Tengah', 'type' => 'negeri', 'accreditation' => 'B'],
-            ['name' => 'Universitas Halu Oleo', 'code' => 'UHO', 'province_hint' => 'Sulawesi Tenggara', 'type' => 'negeri', 'accreditation' => 'B'],
-            ['name' => 'Universitas Sam Ratulangi', 'code' => 'UNSRAT', 'province_hint' => 'Sulawesi Utara', 'type' => 'negeri', 'accreditation' => 'B'],
-            ['name' => 'Universitas Khairun', 'code' => 'UNKHAIR', 'province_hint' => 'Maluku Utara', 'type' => 'negeri', 'accreditation' => 'B'],
-            ['name' => 'Universitas Pattimura', 'code' => 'UNPATTI', 'province_hint' => 'Maluku', 'type' => 'negeri', 'accreditation' => 'B'],
-            ['name' => 'Universitas Cenderawasih', 'code' => 'UNCEN', 'province_hint' => 'Papua', 'type' => 'negeri', 'accreditation' => 'B'],
-            ['name' => 'Universitas Syiah Kuala', 'code' => 'UNSYIAH', 'province_hint' => 'Aceh', 'type' => 'negeri', 'accreditation' => 'A'],
-            ['name' => 'Universitas Bengkulu', 'code' => 'UNIB', 'province_hint' => 'Bengkulu', 'type' => 'negeri', 'accreditation' => 'B'],
-            ['name' => 'Universitas Jambi', 'code' => 'UNJA', 'province_hint' => 'Jambi', 'type' => 'negeri', 'accreditation' => 'B'],
-            
-            // UIN/IAIN
-            ['name' => 'UIN Syarif Hidayatullah Jakarta', 'code' => 'UIN JKT', 'province_hint' => 'DKI Jakarta', 'type' => 'negeri', 'accreditation' => 'A'],
-            ['name' => 'UIN Sunan Gunung Djati Bandung', 'code' => 'UIN SGD', 'province_hint' => 'Jawa Barat', 'type' => 'negeri', 'accreditation' => 'A'],
-            ['name' => 'UIN Walisongo Semarang', 'code' => 'UIN WALISONGO', 'province_hint' => 'Jawa Tengah', 'type' => 'negeri', 'accreditation' => 'A'],
-            ['name' => 'UIN Sunan Kalijaga Yogyakarta', 'code' => 'UIN SUKA', 'province_hint' => 'DI Yogyakarta', 'type' => 'negeri', 'accreditation' => 'A'],
-            ['name' => 'UIN Sunan Ampel Surabaya', 'code' => 'UIN SUNAN AMPEL', 'province_hint' => 'Jawa Timur', 'type' => 'negeri', 'accreditation' => 'A'],
-            ['name' => 'UIN Maulana Malik Ibrahim Malang', 'code' => 'UIN MALANG', 'province_hint' => 'Jawa Timur', 'type' => 'negeri', 'accreditation' => 'A'],
-            
-            // Politeknik
-            ['name' => 'Politeknik Negeri Bandung', 'code' => 'POLBAN', 'province_hint' => 'Jawa Barat', 'type' => 'negeri', 'accreditation' => 'A'],
-            ['name' => 'Politeknik Elektronika Negeri Surabaya', 'code' => 'PENS', 'province_hint' => 'Jawa Timur', 'type' => 'negeri', 'accreditation' => 'A'],
-            ['name' => 'Politeknik Negeri Jakarta', 'code' => 'PNJ', 'province_hint' => 'DKI Jakarta', 'type' => 'negeri', 'accreditation' => 'A'],
-            ['name' => 'Politeknik Negeri Semarang', 'code' => 'POLINES', 'province_hint' => 'Jawa Tengah', 'type' => 'negeri', 'accreditation' => 'A'],
-            
-            // PTS Top
-            ['name' => 'Universitas Bina Nusantara', 'code' => 'BINUS', 'province_hint' => 'DKI Jakarta', 'type' => 'swasta', 'accreditation' => 'A'],
-            ['name' => 'Universitas Telkom', 'code' => 'TEL-U', 'province_hint' => 'Jawa Barat', 'type' => 'swasta', 'accreditation' => 'A'],
-            ['name' => 'Universitas Muhammadiyah Malang', 'code' => 'UMM', 'province_hint' => 'Jawa Timur', 'type' => 'swasta', 'accreditation' => 'A'],
-            ['name' => 'Universitas Islam Indonesia', 'code' => 'UII', 'province_hint' => 'DI Yogyakarta', 'type' => 'swasta', 'accreditation' => 'A'],
-            ['name' => 'Universitas Atma Jaya Yogyakarta', 'code' => 'UAJY', 'province_hint' => 'DI Yogyakarta', 'type' => 'swasta', 'accreditation' => 'A'],
-        ];
-    }
-
-    /**
-     * cari lokasi universitas berdasarkan province_hint
-     */
-    private function findUniversityLocation(?string $provinceHint, $allProvinces): ?array
-    {
-        if (!$provinceHint) {
-            // random jika tidak ada hint
-            $province = $allProvinces->random();
-            $regency = Regency::where('province_id', $province->id)->inRandomOrder()->first();
-            
-            return [
+            // buat institution
+            Institution::create([
+                'user_id' => $user->id,
+                'name' => ucwords($instName),
+                'type' => $type,
                 'province_id' => $province->id,
-                'regency_id' => $regency ? $regency->id : null,
-            ];
+                'regency_id' => $regency->id,
+                'email' => $username . '@institution.go.id',
+                'address' => 'Jl. ' . ucwords($instName) . ' No. ' . rand(1, 100) . ', ' . $regency->name,
+                'phone' => '+622' . rand(100000000, 999999999),
+                'pic_name' => $picNames[array_rand($picNames)],
+                'pic_position' => $positions[array_rand($positions)],
+                'description' => 'Instansi Yang Bergerak Di Bidang ' . $type . ' Dengan Fokus Pemberdayaan Masyarakat.',
+                'is_verified' => true,
+            ]);
         }
         
-        // cari province berdasarkan hint (case insensitive, partial match)
-        $province = $allProvinces->first(function($prov) use ($provinceHint) {
-            return stripos($prov->name, $provinceHint) !== false;
-        });
-        
-        if (!$province) {
-            // fallback ke random
-            $province = $allProvinces->random();
-        }
-        
-        // ambil regency dari province
-        $regency = Regency::where('province_id', $province->id)->inRandomOrder()->first();
-        
-        return [
-            'province_id' => $province->id,
-            'regency_id' => $regency ? $regency->id : null,
-        ];
+        echo "  -> " . Institution::count() . " institutions berhasil dibuat\n";
     }
 
     /**
-     * get email domain dari university code
+     * dapatkan email domain berdasarkan kode universitas
+     * SEMUA universitas punya email domain sendiri, tidak ada default
      */
-    private function getUniversityEmailDomain(string $code): string
+    private function getUniversityEmailDomain($code): string
     {
-        $domains = [
+        return match(strtoupper($code)) {
             'UI' => 'ui.ac.id',
             'ITB' => 'itb.ac.id',
-            'UGM' => 'ugm.ac.id',
-            'ITS' => 'its.ac.id',
-            'UNAIR' => 'unair.ac.id',
+            'IPB' => 'ipb.ac.id',
             'UNPAD' => 'unpad.ac.id',
             'UNDIP' => 'undip.ac.id',
-            'UB' => 'ub.ac.id',
-            'IPB' => 'ipb.ac.id',
-            'UNHAS' => 'unhas.ac.id',
             'UNS' => 'uns.ac.id',
-            'USU' => 'usu.ac.id',
-            'UNAND' => 'unand.ac.id',
-            'UNRI' => 'unri.ac.id',
-            'UNSRI' => 'unsri.ac.id',
-            'UNILA' => 'unila.ac.id',
-            'UNSOED' => 'unsoed.ac.id',
-            'UNEJ' => 'unej.ac.id',
+            'UGM' => 'ugm.ac.id',
+            'UNAIR' => 'unair.ac.id',
+            'UB' => 'ub.ac.id',
+            'ITS' => 'its.ac.id',    
             'UNUD' => 'unud.ac.id',
-            'UNRAM' => 'unram.ac.id',
-            'UNDANA' => 'undana.ac.id',
-            'UNMUL' => 'unmul.ac.id',
-            'ULM' => 'ulm.ac.id',
+            'UTM' => 'trunojoyo.ac.id',
+            'UTU' => 'utu.ac.id',
+            'UT' => 'ut.ac.id',
             'UNTAN' => 'untan.ac.id',
-            'UPR' => 'upr.ac.id',
-            'UNTAD' => 'untad.ac.id',
-            'UHO' => 'uho.ac.id',
-            'UNSRAT' => 'unsrat.ac.id',
-            'UNKHAIR' => 'unkhair.ac.id',
-            'UNPATTI' => 'unpatti.ac.id',
-            'UNCEN' => 'uncen.ac.id',
             'UNSYIAH' => 'unsyiah.ac.id',
-            'UNIB' => 'unib.ac.id',
+            'USU' => 'usu.ac.id',
+            'UNTIRTA' => 'untirta.ac.id',
+            'USULTRA' => 'usultra.ac.id',
+            'UNSULBAR' => 'unsulbar.ac.id',
+            'UNS19' => 'uns19.ac.id',
+            'UNSAM' => 'unsam.ac.id',
+            'UNSIQ' => 'unsiq.ac.id',
+            'UNIMUDA' => 'unimuda.ac.id',
+            'UPI' => 'upi.edu',
+            'UNDIKSHA' => 'undiksha.ac.id',
+            'UPNVJT' => 'upnjatim.ac.id',
+            'UNPATTI' => 'unpatti.ac.id',
+            'UNIPAS' => 'unipas.ac.id',
+            'UPS' => 'upstegal.ac.id',
+            'UPR' => 'upr.ac.id',
+            'UNUHA' => 'unuha.ac.id',
+            'UNHM' => 'unhm.ac.id',
+            'UNY' => 'uny.ac.id',
+            'UNESA' => 'unesa.ac.id',
+            'UNNES' => 'unnes.ac.id',
+            'UNP' => 'unp.ac.id',
+            'UNIMED' => 'unimed.ac.id',
+            'UNIMA' => 'unima.ac.id',
+            'UM' => 'um.ac.id',
+            'UNM' => 'unm.ac.id',
+            'UNJ' => 'unj.ac.id',
+            'UNG' => 'ung.ac.id',
+            'UMNAW' => 'umnaw.ac.id',
+            'UMI' => 'umi.ac.id',
+            'UNMUS' => 'unmus.ac.id',
+            'UMK' => 'umk.ac.id',
+            'UNMUL' => 'unmul.ac.id',
+            'UMSINJAI' => 'umsinjai.ac.id',
+            'UMPWR' => 'umpwr.ac.id',
+            'UMPO' => 'umpo.ac.id',
+            'UMPALANGKA' => 'umpalangka.ac.id',
+            'UMKOLAKA' => 'umkolaka.ac.id',
+            'UMBUTON' => 'umbuton.ac.id',
+            'UNISMUH' => 'unismuh.ac.id',
+            'UNRAM' => 'unram.ac.id',
+            'UNIMAL' => 'unimal.ac.id',
+            'UNIRA' => 'unira.ac.id',
+            'UNIMOR' => 'unimor.ac.id',
+            'UNILA' => 'unila.ac.id',
+            'UNLABUHAN' => 'unlabuhan.ac.id',
+            'UNIKU' => 'uniku.ac.id',
+            'UKITORAJA' => 'ukitoraja.ac.id',
+            'UKIM' => 'ukim.ac.id',
+            'UNIKOM' => 'unikom.ac.id',
+            'UNKHAIR' => 'unkhair.ac.id',
             'UNJA' => 'unja.ac.id',
+            'UIM' => 'uim.ac.id',
+            'UIT' => 'uit.ac.id',
+            'UIKA' => 'uika-bogor.ac.id',
+            'UNHAS' => 'unhas.ac.id',
+            'UHO' => 'uho.ac.id',
+            'UFAMIKA' => 'ufamika.ac.id',
+            'UEU' => 'esaunggul.ac.id',
+            'UDA' => 'darmaagung.ac.id',
+            'UBY' => 'boyolali.ac.id',
+            'UBT' => 'borneo.ac.id',
+            'UAJM' => 'uajm.ac.id',
+            'UNAND' => 'unand.ac.id',
+            'UAM' => 'almarisah.ac.id',
+            'UAI' => 'uai.ac.id',
+            'UNASMAN' => 'unasman.ac.id',
+            'UNAYA' => 'unaya.ac.id',
+            'UNTAG' => 'untag-smd.ac.id',
+            'UNTAD' => 'untad.ac.id',
+            'UBI' => 'bimainter.ac.id',
+            'UNWAM' => 'unwam.ac.id',
+            'UINTA' => 'uinta.ac.id',
+            'UIN SUSKA' => 'uin-suska.ac.id',
+            'UNSOED' => 'unsoed.ac.id',
+            'UBB' => 'ubb.ac.id',
+            'UIN SATU' => 'uinsatu.ac.id',      
+            'ITERA' => 'itera.ac.id',
+            'ITK' => 'itk.ac.id',
+            'ITSNUPKL' => 'itsnupekalongan.ac.id',
+            'ITBM' => 'itbm.ac.id',
+            'ISBI BDG' => 'isbi.ac.id',
+            'ISBI ACEH' => 'isbiaceh.ac.id',
+            'IPDKI' => 'ipdki.ac.id',
+            'IAHN' => 'iahn.ac.id',
+            'STKIP ALHIK' => 'stkipalhikmah.ac.id',
+            'STIMI' => 'stimi.ac.id',
+            'STIKES MAROS' => 'stikesmaros.ac.id',
+            'STIKMA' => 'stikma.ac.id',
+            'STIEM' => 'stiem.ac.id',
+            'POLBOM' => 'polbombana.ac.id',        
             'UIN JKT' => 'uinjkt.ac.id',
             'UIN SGD' => 'uinsgd.ac.id',
             'UIN WALISONGO' => 'walisongo.ac.id',
-            'UIN SUKA' => 'uin-suka.ac.id',
-            'UIN SUNAN AMPEL' => 'uinsby.ac.id',
-            'UIN MALANG' => 'uin-malang.ac.id',
-            'POLBAN' => 'polban.ac.id',
-            'PENS' => 'pens.ac.id',
-            'PNJ' => 'pnj.ac.id',
-            'POLINES' => 'polines.ac.id',
-            'BINUS' => 'binus.ac.id',
-            'TEL-U' => 'telkomuniversity.ac.id',
-            'UMM' => 'umm.ac.id',
+            'UIN SUKA' => 'uin-suka.ac.id',           
+            'USAKTI' => 'trisakti.ac.id',
+            'UMB' => 'mercubuana.ac.id',
+            'UNPAS' => 'unpas.ac.id',
             'UII' => 'uii.ac.id',
-            'UAJY' => 'uajy.ac.id',
-        ];
-        
-        return $domains[$code] ?? 'student.ac.id';
+            'UNISSULA' => 'unissula.ac.id',
+            'UNIMUS' => 'unimus.ac.id',
+            'UMT' => 'umt.ac.id',
+            
+            // fallback untuk kode yang tidak terdaftar - generate dari kode
+            default => strtolower($code) . '.ac.id',
+        };
     }
 }

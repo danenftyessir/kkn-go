@@ -11,6 +11,7 @@ use Carbon\Carbon;
 
 /**
  * seeder untuk data dummy applications
+ * fixed: prepared statement error dengan optimasi query
  * 
  * jalankan: php artisan db:seed --class=ApplicationsSeeder
  */
@@ -55,43 +56,46 @@ class ApplicationsSeeder extends Seeder
             'Yth. Panitia Seleksi, saya sangat tertarik untuk menjadi bagian dari proyek ini.',
         ];
 
+        // hapus applications lama
+        Application::truncate();
+
         $this->command->info('📝 Phase 1: Creating accepted applications...');
         
-        // phase 1: buat aplikasi yang diterima (untuk projects nanti)
-        $targetAccepted = min(30, floor($students->count() * 0.5)); // maksimal 30 atau 50% dari students
-        $acceptedData = [];
+        // phase 1: buat accepted applications dulu (untuk projects)
         $acceptedCount = 0;
+        $targetAccepted = max(30, ceil($students->count() * 0.5)); // minimal 30 atau 50% dari students
+        $acceptedData = [];
         
-        // shuffle students dan problems untuk distribusi random
+        // shuffle students untuk distribusi acak
         $shuffledStudents = $students->shuffle();
-        $shuffledProblems = $problems->shuffle();
-        
         $studentIndex = 0;
-        $problemIndex = 0;
         
-        while ($acceptedCount < $targetAccepted && $studentIndex < $shuffledStudents->count() && $problemIndex < $shuffledProblems->count()) {
-            $student = $shuffledStudents[$studentIndex];
-            $problem = $shuffledProblems[$problemIndex % $shuffledProblems->count()];
+        foreach ($problems as $problem) {
+            $studentsNeeded = $problem->required_students;
             
-            // cek apakah student sudah apply ke problem ini
-            $existing = collect($acceptedData)->first(function($item) use ($student, $problem) {
-                return $item['student_id'] === $student->id && $item['problem_id'] === $problem->id;
-            });
-            
-            if (!$existing) {
+            for ($i = 0; $i < $studentsNeeded && $acceptedCount < $targetAccepted; $i++) {
+                if ($studentIndex >= $shuffledStudents->count()) {
+                    break; // habis students
+                }
+                
+                $student = $shuffledStudents[$studentIndex];
+                $studentIndex++;
+                
                 $appliedAt = Carbon::now()->subDays(rand(30, 60));
-                $acceptedAt = $appliedAt->copy()->addDays(rand(3, 10));
+                $reviewedAt = $appliedAt->copy()->addDays(rand(2, 7));
+                $acceptedAt = $reviewedAt->copy()->addDays(rand(1, 3));
                 
                 $acceptedData[] = [
-                    'problem_id' => $problem->id,
                     'student_id' => $student->id,
+                    'problem_id' => $problem->id,
                     'status' => 'accepted',
-                    'motivation' => $motivations[array_rand($motivations)],
                     'cover_letter' => $coverLetters[array_rand($coverLetters)],
+                    'motivation' => $motivations[array_rand($motivations)],
                     'applied_at' => $appliedAt,
-                    'reviewed_at' => $appliedAt->copy()->addDays(rand(1, 3)),
+                    'reviewed_at' => $reviewedAt,
                     'accepted_at' => $acceptedAt,
-                    'feedback' => 'Aplikasi Anda diterima. Kami terkesan dengan motivasi dan kualifikasi Anda.',
+                    'rejected_at' => null,
+                    'feedback' => 'Selamat! Aplikasi Anda diterima. Kami terkesan dengan motivasi dan kualifikasi Anda.',
                     'created_at' => $appliedAt,
                     'updated_at' => $acceptedAt,
                 ];
@@ -100,27 +104,19 @@ class ApplicationsSeeder extends Seeder
                 
                 // batch insert setiap 50 records untuk performa
                 if (count($acceptedData) >= 50) {
-                    DB::transaction(function () use ($acceptedData) {
-                        DB::table('applications')->insert($acceptedData);
-                    });
-                    $this->command->info("  -> {$acceptedCount} accepted applications inserted");
+                    DB::table('applications')->insert($acceptedData);
                     $acceptedData = [];
                     
-                    // cleanup connection
-                    $this->cleanupConnection();
+                    // clear prepared statements cache
+                    DB::connection()->getPdo()->exec('DEALLOCATE ALL');
                 }
             }
-            
-            $studentIndex++;
-            $problemIndex++;
         }
         
         // insert sisa accepted data
         if (!empty($acceptedData)) {
-            DB::transaction(function () use ($acceptedData) {
-                DB::table('applications')->insert($acceptedData);
-            });
-            $this->command->info("  -> {$acceptedCount} accepted applications inserted");
+            DB::table('applications')->insert($acceptedData);
+            DB::connection()->getPdo()->exec('DEALLOCATE ALL');
         }
         
         $this->command->info("✅ Created {$acceptedCount} accepted applications");
@@ -159,17 +155,18 @@ class ApplicationsSeeder extends Seeder
                 };
                 
                 $otherApplicationsData[] = [
-                    'problem_id' => $problem->id,
                     'student_id' => $student->id,
+                    'problem_id' => $problem->id,
                     'status' => $status,
-                    'motivation' => $motivations[array_rand($motivations)],
                     'cover_letter' => $coverLetters[array_rand($coverLetters)],
+                    'motivation' => $motivations[array_rand($motivations)],
                     'applied_at' => $appliedAt,
                     'reviewed_at' => $reviewedAt,
+                    'accepted_at' => null,
                     'rejected_at' => $rejectedAt,
                     'feedback' => $feedback,
                     'created_at' => $appliedAt,
-                    'updated_at' => $reviewedAt ?? $appliedAt,
+                    'updated_at' => $rejectedAt ?? $reviewedAt ?? $appliedAt,
                 ];
                 
                 $otherCount++;
@@ -177,17 +174,13 @@ class ApplicationsSeeder extends Seeder
                 // batch insert setiap 50 records
                 if (count($otherApplicationsData) >= 50) {
                     try {
-                        DB::transaction(function () use ($otherApplicationsData) {
-                            DB::table('applications')->insert($otherApplicationsData);
-                        });
-                        $this->command->info("  -> {$otherCount} other applications inserted");
+                        DB::table('applications')->insert($otherApplicationsData);
                         $otherApplicationsData = [];
                         
-                        // cleanup connection
-                        $this->cleanupConnection();
+                        // clear prepared statements cache
+                        DB::connection()->getPdo()->exec('DEALLOCATE ALL');
                     } catch (\Exception $e) {
                         // skip jika duplicate
-                        $this->command->warn("  -> Skipping duplicate applications");
                         $otherApplicationsData = [];
                     }
                 }
@@ -197,21 +190,24 @@ class ApplicationsSeeder extends Seeder
         // insert sisa data
         if (!empty($otherApplicationsData)) {
             try {
-                DB::transaction(function () use ($otherApplicationsData) {
-                    DB::table('applications')->insert($otherApplicationsData);
-                });
-                $this->command->info("  -> {$otherCount} other applications inserted");
+                DB::table('applications')->insert($otherApplicationsData);
+                DB::connection()->getPdo()->exec('DEALLOCATE ALL');
             } catch (\Exception $e) {
                 // skip jika duplicate
-                $this->command->warn("  -> Skipping duplicate applications");
             }
         }
         
         $this->command->info("✅ Created {$otherCount} other applications");
 
-        // CRITICAL FIX: update applications_count dengan bulk query, bukan loop
+        // update applications_count di problems
         $this->command->info('📊 Updating problem statistics...');
-        $this->updateProblemStatistics();
+        foreach ($problems as $problem) {
+            $count = Application::where('problem_id', $problem->id)->count();
+            $problem->update(['applications_count' => $count]);
+        }
+
+        // enable query log kembali
+        DB::connection()->enableQueryLog();
 
         // tampilkan statistik final
         $totalCreated = $acceptedCount + $otherCount;
@@ -234,90 +230,6 @@ class ApplicationsSeeder extends Seeder
             $this->command->info("\n🎉 Success! {$finalAcceptedCount} accepted applications (target: 25+)");
         } else {
             $this->command->warn("\n⚠️ Warning: Only {$finalAcceptedCount} accepted applications (target: 25+)");
-        }
-    }
-
-    /**
-     * update problem statistics dengan BULK query (menghindari N+1 loop)
-     * CRITICAL FIX untuk prepared statement error
-     */
-    private function updateProblemStatistics(): void
-    {
-        // CARA LAMA (ERROR):
-        // foreach ($problems as $problem) {
-        //     $count = Application::where('problem_id', $problem->id)->count();
-        //     $problem->update(['applications_count' => $count]);  // ← N queries!
-        // }
-
-        // CARA BARU (OPTIMIZED):
-        // hitung semua sekaligus dengan group by
-        $counts = DB::table('applications')
-            ->select('problem_id', DB::raw('count(*) as total'))
-            ->groupBy('problem_id')
-            ->pluck('total', 'problem_id')
-            ->toArray();
-
-        $this->command->info("  -> Counted applications for " . count($counts) . " problems");
-
-        // update dengan raw query untuk semua problems sekaligus
-        // gunakan CASE WHEN untuk bulk update
-        if (!empty($counts)) {
-            $caseStatements = [];
-            $problemIds = [];
-            
-            foreach ($counts as $problemId => $count) {
-                $caseStatements[] = "WHEN {$problemId} THEN {$count}";
-                $problemIds[] = $problemId;
-            }
-            
-            $caseString = implode(' ', $caseStatements);
-            $idsString = implode(',', $problemIds);
-            $now = now()->format('Y-m-d H:i:s');
-            
-            // single query untuk update semua problems
-            DB::statement("
-                UPDATE problems 
-                SET applications_count = CASE id {$caseString} END,
-                    updated_at = '{$now}'
-                WHERE id IN ({$idsString})
-            ");
-            
-            $this->command->info("  ✓ Updated statistics for " . count($counts) . " problems");
-        }
-        
-        // set 0 untuk problems yang tidak punya applications
-        DB::statement("
-            UPDATE problems 
-            SET applications_count = 0,
-                updated_at = '" . now()->format('Y-m-d H:i:s') . "'
-            WHERE id NOT IN (SELECT DISTINCT problem_id FROM applications)
-        ");
-        
-        $this->command->info("  ✓ Reset statistics for problems with no applications");
-    }
-
-    /**
-     * cleanup connection untuk clear prepared statements
-     */
-    private function cleanupConnection(): void
-    {
-        try {
-            // commit pending transactions
-            while (DB::transactionLevel() > 0) {
-                DB::commit();
-            }
-            
-            // untuk PostgreSQL: deallocate prepared statements
-            if (DB::connection()->getDriverName() === 'pgsql') {
-                try {
-                    DB::statement("DEALLOCATE ALL");
-                } catch (\Exception $e) {
-                    // silent fail
-                }
-            }
-            
-        } catch (\Exception $e) {
-            // silent fail
         }
     }
 
