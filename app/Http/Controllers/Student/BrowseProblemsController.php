@@ -20,6 +20,8 @@ class BrowseProblemsController extends Controller
      * tampilkan halaman browse problems
      */
 
+// app/Http/Controllers/Student/BrowseProblemsController.php
+
     public function index(Request $request)
     {
         $query = Problem::select([
@@ -50,7 +52,7 @@ class BrowseProblemsController extends Controller
             $query->where('difficulty_level', $request->difficulty);
         }
 
-        // ✅ KODE FILTER SDG YANG SUDAH BENAR
+        // ✅ TES BARU: Mencari sebagai TEKS BIASA berdasarkan ide Anda
         if ($request->filled('sdg_categories')) {
             $sdgCategories = $request->sdg_categories;
             if (!is_array($sdgCategories)) {
@@ -58,7 +60,9 @@ class BrowseProblemsController extends Controller
             }
             $query->where(function($q) use ($sdgCategories) {
                 foreach ($sdgCategories as $category) {
-                    $q->orWhereRaw('jsonb_exists(sdg_categories::jsonb, ?)', [(string)$category]);
+                    // Mencari string seperti %"12"% untuk menghindari kecocokan parsial (misal: 8 di dalam 18)
+                    $searchTerm = '%"' . (string)$category . '"%';
+                    $q->orWhere('sdg_categories', 'LIKE', $searchTerm);
                 }
             });
         }
