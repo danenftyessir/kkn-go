@@ -1,39 +1,36 @@
-{{-- resources/views/student/browse-problems/components/problem-card-list.blade.php --}}
-<div class="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-lg hover:border-blue-200 transition-all duration-300 overflow-hidden mb-4">
+{{-- problem card component untuk list view --}}
+<a href="{{ route('student.browse-problems.show', $problem->id) }}" 
+   class="problem-card-list group bg-white rounded-xl shadow-sm hover:shadow-xl border border-gray-100 overflow-hidden transition-all duration-300 hover:-translate-y-1">
+    
     <div class="flex gap-6 p-6">
-        {{-- problem image --}}
-        <div class="flex-shrink-0 w-64 h-48 rounded-lg overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-50">
+        {{-- image --}}
+        <div class="relative w-64 h-48 bg-gradient-to-br from-blue-100 to-blue-50 rounded-lg overflow-hidden flex-shrink-0">
             @if($problem->images && $problem->images->count() > 0)
                 <img src="{{ supabase_url($problem->images->first()->image_path) }}" 
                      alt="{{ $problem->title }}"
-                     class="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                     loading="lazy">
+                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
             @else
                 <div class="w-full h-full flex items-center justify-center">
-                    <svg class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    <svg class="w-20 h-20 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
                     </svg>
                 </div>
             @endif
         </div>
 
-        {{-- problem content --}}
-        <div class="flex-1 min-w-0">
-            {{-- header dengan badges --}}
+        {{-- content --}}
+        <div class="flex-1 flex flex-col">
             <div class="flex items-start justify-between mb-3">
-                <div>
+                <div class="flex-1">
                     {{-- institution info --}}
-                    <div class="flex items-center gap-2 mb-2">
-                        <div class="w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold flex-shrink-0 overflow-hidden">
                             @if($problem->institution && $problem->institution->logo_path)
                                 <img src="{{ supabase_url($problem->institution->logo_path) }}" 
                                      alt="{{ $problem->institution->name }}"
-                                     class="w-full h-full object-cover"
-                                     loading="lazy">
+                                     class="w-full h-full object-cover">
                             @else
-                                <div class="w-full h-full flex items-center justify-center bg-blue-100 text-blue-600 font-bold text-xs">
-                                    {{ substr($problem->institution->name ?? 'I', 0, 1) }}
-                                </div>
+                                {{ strtoupper(substr($problem->institution->name ?? 'I', 0, 1)) }}
                             @endif
                         </div>
                         <div>
@@ -79,10 +76,9 @@
                 {{ $problem->description }}
             </p>
 
-            {{-- sdg categories --}}
+            {{-- sdg categories - gunakan helper sdg_label() --}}
             <div class="flex flex-wrap gap-2 mb-4">
                 @php
-                    // ✅ perbaikan: pastikan sdg_categories adalah array sebelum di-slice
                     $sdgCategories = $problem->sdg_categories ?? [];
                     
                     // jika masih string (JSON), decode dulu
@@ -98,7 +94,7 @@
                 
                 @foreach(array_slice($sdgCategories, 0, 4) as $sdg)
                 <span class="px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded">
-                    SDG {{ $sdg }}
+                    {{ sdg_label($sdg) }}
                 </span>
                 @endforeach
                 
@@ -139,15 +135,10 @@
                     {{ $problem->difficulty_level === 'advanced' ? 'bg-red-100 text-red-700' : '' }}">
                     {{ ucfirst($problem->difficulty_level) }}
                 </span>
-
-                <a href="{{ route('student.browse-problems.show', $problem->id) }}" 
-                   class="inline-flex items-center px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                <button class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-2 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-sm hover:shadow-md">
                     Lihat Detail
-                    <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
-                </a>
+                </button>
             </div>
         </div>
     </div>
-</div>
+</a>

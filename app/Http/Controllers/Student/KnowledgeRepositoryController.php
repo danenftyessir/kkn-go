@@ -48,76 +48,74 @@ class KnowledgeRepositoryController extends Controller
             $query->where('province_id', $request->province_id);
         }
 
-        // filter by regency
-        if ($request->filled('regency_id')) {
-            $query->where('regency_id', $request->regency_id);
-        }
-
         // filter by year
         if ($request->filled('year')) {
-            $query->where('year', $request->year);
+            $query->whereYear('published_at', $request->year);
+        }
+
+        // filter by institution type
+        if ($request->filled('institution_type')) {
+            $query->where('institution_type', $request->institution_type);
         }
 
         // sorting
-        switch ($request->sort) {
+        $sortBy = $request->get('sort', 'latest');
+        
+        switch ($sortBy) {
             case 'popular':
                 $query->orderBy('download_count', 'desc');
                 break;
-            case 'most_viewed':
-                $query->orderBy('view_count', 'desc');
-                break;
-            case 'most_cited':
-                $query->orderBy('citation_count', 'desc');
+            case 'oldest':
+                $query->orderBy('published_at', 'asc');
                 break;
             case 'latest':
             default:
-                $query->latest();
+                $query->orderBy('published_at', 'desc');
                 break;
         }
 
-        // pagination
+        // paginate
         $documents = $query->paginate(12)->withQueryString();
 
-        // ambil featured documents untuk carousel
-        $featuredDocuments = Document::with(['uploader.student', 'province'])
-            ->where('is_public', true)
-            ->where('status', 'approved')
-            ->where('is_featured', true)
-            ->latest()
-            ->limit(5)
+        // statistik untuk featured section
+        $featuredDocuments = Document::featured()
+            ->with(['uploader.student', 'province'])
+            ->limit(4)
             ->get();
 
-        // statistik untuk hero section
-        $stats = [
-            'total_documents' => Document::where('is_public', true)
-                                         ->where('status', 'approved')
-                                         ->count(),
-            'total_downloads' => Document::where('is_public', true)
-                                         ->where('status', 'approved')
-                                         ->sum('download_count'),
-            'total_institutions' => Document::where('is_public', true)
-                                           ->where('status', 'approved')
-                                           ->distinct('institution_name')
-                                           ->count('institution_name'),
-        ];
-
-        // data untuk filters
-        $provinces = Province::orderBy('name')->get();
+        // data untuk filter dropdowns
+        $provinces = Province::orderBy('name')->get(['id', 'name']);
+        
+        // years dari dokumen yang ada
         $years = Document::where('is_public', true)
-                        ->where('status', 'approved')
-                        ->whereNotNull('year')
-                        ->distinct()
-                        ->pluck('year')
-                        ->sort()
-                        ->reverse()
-                        ->values();
+            ->where('status', 'approved')
+            ->whereNotNull('published_at')
+            ->selectRaw('DISTINCT EXTRACT(YEAR FROM published_at) as year')
+            ->orderBy('year', 'desc')
+            ->pluck('year');
+
+        // institution types yang unik
+        $institutionTypes = Document::where('is_public', true)
+            ->where('status', 'approved')
+            ->whereNotNull('institution_type')
+            ->distinct()
+            ->pluck('institution_type')
+            ->filter();
+
+        // statistik umum
+        $stats = [
+            'total_documents' => Document::published()->count(),
+            'total_downloads' => Document::published()->sum('download_count'),
+            'total_views' => Document::published()->sum('view_count'),
+        ];
 
         return view('student.repository.index', compact(
             'documents',
             'featuredDocuments',
-            'stats',
             'provinces',
-            'years'
+            'years',
+            'institutionTypes',
+            'stats'
         ));
     }
 
@@ -126,34 +124,38 @@ class KnowledgeRepositoryController extends Controller
      */
     public function show($id)
     {
-        $document = Document::with(['uploader.student', 'province', 'regency', 'project'])
-            ->where('is_public', true)
-            ->where('status', 'approved')
-            ->findOrFail($id);
+        $document = Document::with([
+            'uploader.student',
+            'province',
+            'regency'
+        ])->findOrFail($id);
+
+        // pastikan dokumen public dan approved
+        if (!$document->is_public || $document->status !== 'approved') {
+            abort(404);
+        }
 
         // increment view count
-        $document->increment('view_count');
+        $document->incrementViews();
 
-        // ambil dokumen terkait berdasarkan kategori
-        $relatedDocuments = Document::with(['uploader.student', 'province'])
-            ->where('is_public', true)
-            ->where('status', 'approved')
+        // related documents berdasarkan kategori SDG
+        $relatedDocuments = Document::published()
             ->where('id', '!=', $document->id)
-            ->where(function ($query) use ($document) {
-                $categories = is_array($document->categories)
-                    ? $document->categories
-                    : json_decode($document->categories, true) ?? [];
-                
-                if (!empty($categories)) {
-                    foreach ($categories as $category) {
+            ->where(function($query) use ($document) {
+                if ($document->categories && is_array($document->categories)) {
+                    foreach ($document->categories as $category) {
                         $query->orWhereJsonContains('categories', $category);
                     }
                 }
             })
-            ->limit(3)
+            ->with(['uploader.student', 'province'])
+            ->limit(4)
             ->get();
 
-        return view('student.repository.show', compact('document', 'relatedDocuments'));
+        return view('student.repository.show', compact(
+            'document',
+            'relatedDocuments'
+        ));
     }
 
     /**
@@ -161,14 +163,17 @@ class KnowledgeRepositoryController extends Controller
      */
     public function download($id)
     {
-        $document = Document::where('is_public', true)
-            ->where('status', 'approved')
-            ->findOrFail($id);
+        $document = Document::findOrFail($id);
+
+        // pastikan dokumen public dan approved
+        if (!$document->is_public || $document->status !== 'approved') {
+            abort(404);
+        }
 
         // increment download count
-        $document->increment('download_count');
+        $document->incrementDownloads();
 
-        // redirect ke storage file
-        return Storage::disk('public')->download($document->file_path, $document->title . '.pdf');
+        // redirect ke URL supabase untuk download
+        return redirect()->away(document_url($document->file_path));
     }
 }

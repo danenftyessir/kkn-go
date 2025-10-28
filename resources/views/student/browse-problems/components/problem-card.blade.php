@@ -1,48 +1,50 @@
-{{-- resources/views/student/browse-problems/components/problem-card.blade.php --}}
-<div class="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-lg hover:border-blue-200 transition-all duration-300 overflow-hidden group flex flex-col h-full">
-    {{-- problem image --}}
-    <div class="relative h-48 flex-shrink-0 overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-50">
+{{-- problem card component untuk grid view --}}
+<a href="{{ route('student.browse-problems.show', $problem->id) }}" 
+   class="problem-card group bg-white rounded-xl shadow-sm hover:shadow-xl border border-gray-100 overflow-hidden transition-all duration-300 hover:-translate-y-1 flex flex-col h-full">
+    
+    {{-- badges container --}}
+    @if($problem->is_featured || $problem->is_urgent)
+    <div class="absolute top-4 right-4 z-10 flex flex-col gap-2">
+        @if($problem->is_featured)
+            <span class="px-2 py-1 bg-yellow-500 text-white text-xs font-bold rounded shadow">
+                ⭐ Unggulan
+            </span>
+        @endif
+        @if($problem->is_urgent)
+            <span class="px-2 py-1 bg-red-500 text-white text-xs font-bold rounded shadow animate-pulse">
+                🔥 Mendesak
+            </span>
+        @endif
+    </div>
+    @endif
+
+    {{-- image --}}
+    <div class="relative h-48 bg-gradient-to-br from-blue-100 to-blue-50 overflow-hidden flex-shrink-0">
         @if($problem->images && $problem->images->count() > 0)
             <img src="{{ supabase_url($problem->images->first()->image_path) }}" 
                  alt="{{ $problem->title }}"
-                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                 loading="lazy">
+                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
         @else
             <div class="w-full h-full flex items-center justify-center">
-                <svg class="w-20 h-20 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                <svg class="w-20 h-20 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
                 </svg>
             </div>
         @endif
-        
-        {{-- badges --}}
-        <div class="absolute top-3 right-3 flex gap-2">
-            @if($problem->is_featured)
-                <span class="px-2 py-1 bg-yellow-500 text-white text-xs font-bold rounded shadow-lg">
-                    ⭐ Unggulan
-                </span>
-            @endif
-            @if($problem->is_urgent)
-                <span class="px-2 py-1 bg-red-500 text-white text-xs font-bold rounded shadow-lg animate-pulse">
-                    🔥 Mendesak
-                </span>
-            @endif
-        </div>
     </div>
 
+    {{-- content --}}
     <div class="p-5 flex flex-col flex-1">
+        
         {{-- institution info --}}
-        <div class="flex items-center gap-3 mb-3 flex-shrink-0">
-            <div class="w-10 h-10 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+        <div class="flex items-center gap-3 mb-4 flex-shrink-0">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold flex-shrink-0 overflow-hidden">
                 @if($problem->institution && $problem->institution->logo_path)
                     <img src="{{ supabase_url($problem->institution->logo_path) }}" 
                          alt="{{ $problem->institution->name }}"
-                         class="w-full h-full object-cover"
-                         loading="lazy">
+                         class="w-full h-full object-cover">
                 @else
-                    <div class="w-full h-full flex items-center justify-center bg-blue-100 text-blue-600 font-bold text-sm">
-                        {{ substr($problem->institution->name ?? 'I', 0, 1) }}
-                    </div>
+                    {{ strtoupper(substr($problem->institution->name ?? 'I', 0, 1)) }}
                 @endif
             </div>
             <div class="flex-1 min-w-0">
@@ -72,7 +74,7 @@
             </div>
         </div>
         
-        {{-- sdg categories - fixed height --}}
+        {{-- sdg categories - gunakan helper sdg_label() --}}
         <div class="flex flex-wrap gap-2 mb-4 h-16 content-start overflow-hidden flex-shrink-0">
             @php
                 $sdgCategories = $problem->sdg_categories ?? [];                
@@ -89,7 +91,7 @@
             
             @foreach(array_slice($sdgCategories, 0, 3) as $sdg)
             <span class="px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded h-fit">
-                SDG {{ $sdg }}
+                {{ sdg_label($sdg) }}
             </span>
             @endforeach
             
@@ -130,12 +132,9 @@
             </span>
         </div>
 
-        {{-- action button - tetap di bawah --}}
-        <div class="mt-auto">
-            <a href="{{ route('student.browse-problems.show', $problem->id) }}" 
-               class="block w-full text-center px-4 py-2.5 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors group-hover:bg-blue-700">
-                Lihat Detail
-            </a>
-        </div>
+        {{-- cta button --}}
+        <button class="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-2.5 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-sm hover:shadow-md mt-auto flex-shrink-0">
+            Lihat Detail
+        </button>
     </div>
-</div>
+</a>

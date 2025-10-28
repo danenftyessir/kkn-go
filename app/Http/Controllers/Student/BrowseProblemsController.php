@@ -22,7 +22,6 @@ class BrowseProblemsController extends Controller
     public function index(Request $request)
     {
         // query dengan SELECT specific columns only
-        // tambahkan sdg_categories ke SELECT agar bisa difilter
         $query = Problem::select([
                 'id', 
                 'institution_id', 
@@ -77,7 +76,8 @@ class BrowseProblemsController extends Controller
             
             $query->where(function($q) use ($sdgCategories) {
                 foreach ($sdgCategories as $category) {
-                    $category = is_numeric($category) ? (int)$category : $category;
+                    // pastikan category adalah integer
+                    $category = (int) $category;
                     $q->orWhereJsonContains('sdg_categories', $category);
                 }
             });
