@@ -67,7 +67,7 @@
             </div>
         </div>
 
-        {{-- ✅ KATEGORI SDG - MULTIPLE CHECKBOX SELECTION --}}
+        {{-- KATEGORI SDG - MULTIPLE CHECKBOX SELECTION --}}
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-3">
                 Kategori SDG

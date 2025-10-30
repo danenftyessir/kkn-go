@@ -172,6 +172,38 @@ Route::middleware(['auth', 'check.user.type:student'])->prefix('student')->name(
         return redirect()->route('student.profile.index');
     });
     
+    // friend management routes
+    Route::middleware(['auth', 'role:mahasiswa'])->prefix('student')->name('student.')->group(function () {
+        
+        // halaman daftar teman dan network
+        Route::get('/friends', [FriendController::class, 'index'])->name('friends.index');
+        
+        // pencarian teman
+        Route::get('/friends/search', [FriendController::class, 'search'])->name('friends.search');
+        
+        // kirim friend request
+        Route::post('/friends/request/{student}', [FriendController::class, 'sendRequest'])->name('friends.send-request');
+        
+        // terima friend request
+        Route::post('/friends/accept/{friendship}', [FriendController::class, 'acceptRequest'])->name('friends.accept');
+        
+        // tolak friend request
+        Route::post('/friends/reject/{friendship}', [FriendController::class, 'rejectRequest'])->name('friends.reject');
+        
+        // batalkan friend request
+        Route::delete('/friends/cancel/{friendship}', [FriendController::class, 'cancelRequest'])->name('friends.cancel');
+        
+        // unfriend
+        Route::delete('/friends/unfriend/{friendship}', [FriendController::class, 'unfriend'])->name('friends.unfriend');
+        
+        // lihat profil teman
+        Route::get('/friends/profile/{student}', [FriendController::class, 'showProfile'])->name('friends.profile');
+        Route::get('/friends/activities', [FriendController::class, 'getActivities'])->name('friends.activities');
+        Route::get('/friends/activity-stats', [FriendController::class, 'getActivityStats'])->name('friends.activity-stats');
+        Route::get('/friends/trending', [FriendController::class, 'getTrendingConnections'])->name('friends.trending');
+        Route::get('/friends/network-growth', [FriendController::class, 'getNetworkGrowth'])->name('friends.network-growth');
+    });
+
     // wishlist
     Route::prefix('wishlist')->name('wishlist.')->group(function () {
         Route::get('/', [WishlistController::class, 'index'])->name('index');

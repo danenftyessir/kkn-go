@@ -1,354 +1,484 @@
-{{-- resources/views/student/dashboard/index.blade.php --}}
 @extends('layouts.app')
 
-@section('title', 'Dashboard Mahasiswa')
-
-@push('styles')
-<link rel="stylesheet" href="{{ asset('css/browse-problems.css') }}">
-<style>
-    .dashboard-hero-background {
-        position: relative;
-        background-image: url('/dashboard-student2.jpeg');
-        background-size: cover;
-        background-position: center;
-        background-attachment: fixed;
-        min-height: 450px;
-        padding-top: 40px;
-    }
-    
-    .dashboard-hero-background::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(
-            135deg, 
-            rgba(37, 99, 235, 0.50) 0%,
-            rgba(59, 130, 246, 0.45) 35%,
-            rgba(16, 185, 129, 0.45) 65%,
-            rgba(5, 150, 105, 0.50) 100%
-        );
-        backdrop-filter: blur(1px);
-    }
-    
-    .stats-card-dashboard {
-        background: rgba(255, 255, 255, 0.20);
-        backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    
-    .stats-card-dashboard:hover {
-        background: rgba(255, 255, 255, 0.30);
-        transform: translateY(-4px);
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
-    }
-    
-    .text-shadow-strong {
-        text-shadow: 
-            0 2px 4px rgba(0, 0, 0, 0.4),
-            0 4px 8px rgba(0, 0, 0, 0.3),
-            0 1px 2px rgba(0, 0, 0, 0.5);
-    }
-    
-    .fade-in-up {
-        animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        opacity: 0;
-        will-change: transform, opacity;
-    }
-    
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translate3d(0, 20px, 0);
-        }
-        to {
-            opacity: 1;
-            transform: translate3d(0, 0, 0);
-        }
-    }
-
-    .content-card {
-        will-change: transform, box-shadow;
-        transform: translate3d(0, 0, 0);
-        backface-visibility: hidden;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    
-    .content-card:hover {
-        transform: translateY(-2px) translate3d(0, 0, 0);
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    }
-</style>
-@endpush
+@section('title', 'Dashboard Mahasiswa - KKN-Go')
 
 @section('content')
 {{-- hero section dengan background --}}
-<div class="dashboard-hero-background text-white">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 py-12">
-        <div class="mb-8 fade-in-up">
-            <h1 class="text-4xl md:text-5xl font-bold mb-3 text-shadow-strong">
-                Selamat Datang, {{ $student->first_name }} {{ $student->last_name }}!
-            </h1>
-            <p class="text-xl md:text-2xl text-white text-shadow-strong">
-                Pantau Progress Dan Jelajahi Peluang KKN Terbaru
-            </p>
-        </div>
-
-        {{-- statistics cards --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mt-10">
-            {{-- total applications --}}
-            <div class="stats-card-dashboard rounded-xl p-6 fade-in-up" style="animation-delay: 0.1s;">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <div class="text-4xl md:text-5xl font-bold text-white text-shadow-strong">
-                            {{ $stats['total_applications'] }}
-                        </div>
-                        <div class="text-sm md:text-base text-white font-medium text-shadow-strong mt-2">
-                            Total Aplikasi
-                        </div>
-                    </div>
-                    <div class="w-14 h-14 md:w-16 md:h-16 bg-white/25 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                        <svg class="w-7 h-7 md:w-8 md:h-8 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M7 18h10v-2H7v2zM17 14H7v-2h10v2zM7 10h4V8H7v2zM21 4H3v16h18V4zm-2 14H5V6h14v12z"/>
-                        </svg>
-                    </div>
-                </div>
-                <a href="{{ route('student.applications.index') }}" class="mt-3 text-sm text-white hover:underline font-medium inline-flex items-center">
-                    Lihat Detail
-                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
-                </a>
-            </div>
-
-            {{-- pending applications --}}
-            <div class="stats-card-dashboard rounded-xl p-6 fade-in-up" style="animation-delay: 0.15s;">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <div class="text-4xl md:text-5xl font-bold text-white text-shadow-strong">
-                            {{ $stats['pending_applications'] }}
-                        </div>
-                        <div class="text-sm md:text-base text-white font-medium text-shadow-strong mt-2">
-                            Aplikasi Pending
-                        </div>
-                    </div>
-                    <div class="w-14 h-14 md:w-16 md:h-16 bg-white/25 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                        <svg class="w-7 h-7 md:w-8 md:h-8 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.2 3.2.8-1.3-4.5-2.7V7z"/>
-                        </svg>
-                    </div>
-                </div>
-                <a href="{{ route('student.applications.index', ['status' => 'pending']) }}" class="mt-3 text-sm text-white hover:underline font-medium inline-flex items-center">
-                    Lihat Detail
-                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
-                </a>
-            </div>
-
-            {{-- active projects --}}
-            <div class="stats-card-dashboard rounded-xl p-6 fade-in-up" style="animation-delay: 0.2s;">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <div class="text-4xl md:text-5xl font-bold text-white text-shadow-strong">
-                            {{ $stats['active_projects'] }}
-                        </div>
-                        <div class="text-sm md:text-base text-white font-medium text-shadow-strong mt-2">
-                            Proyek Aktif
-                        </div>
-                    </div>
-                    <div class="w-14 h-14 md:w-16 md:h-16 bg-white/25 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                        <svg class="w-7 h-7 md:w-8 md:h-8 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M7 2v11h3v9l7-12h-4l3-8z"/>
-                        </svg>
-                    </div>
-                </div>
-                <a href="{{ route('student.projects.index') }}" class="mt-3 text-sm text-white hover:underline font-medium inline-flex items-center">
-                    Lihat Detail
-                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
-                </a>
-            </div>
-
-            {{-- completed projects --}}
-            <div class="stats-card-dashboard rounded-xl p-6 fade-in-up" style="animation-delay: 0.25s;">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <div class="text-4xl md:text-5xl font-bold text-white text-shadow-strong">
-                            {{ $stats['completed_projects'] }}
-                        </div>
-                        <div class="text-sm md:text-base text-white font-medium text-shadow-strong mt-2">
-                            Proyek Selesai
-                        </div>
-                    </div>
-                    <div class="w-14 h-14 md:w-16 md:h-16 bg-white/25 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                        <svg class="w-7 h-7 md:w-8 md:h-8 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                        </svg>
-                    </div>
-                </div>
-                <a href="{{ route('student.profile.index') }}" class="mt-3 text-sm text-white hover:underline font-medium inline-flex items-center">
-                    Lihat Portfolio
-                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
-                </a>
-            </div>
-        </div>
+<div class="relative bg-gradient-to-r from-blue-600 to-indigo-700 overflow-hidden">
+    <div class="absolute inset-0">
+        <img src="{{ asset('dashboard-student.jpg') }}" 
+             alt="Dashboard Background" 
+             class="w-full h-full object-cover opacity-20">
+    </div>
+    
+    <div class="relative container mx-auto px-6 py-12">
+        <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">
+            Selamat Datang, {{ Auth::user()->first_name }}!
+        </h1>
+        <p class="text-blue-100 text-lg">
+            Mari berkontribusi untuk pembangunan berkelanjutan melalui program KKN
+        </p>
     </div>
 </div>
 
-{{-- main content area - TAMBAHAN UNTUK MENGISI SPACE KOSONG --}}
-<div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 py-8">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {{-- section proyek aktif - BARU --}}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6 fade-in-up content-card" style="animation-delay: 0.3s;">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-xl font-bold text-gray-900">Proyek Aktif</h2>
-                <a href="{{ route('student.projects.index') }}" class="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors">
-                    Lihat Semua →
-                </a>
-            </div>
+{{-- main dashboard content --}}
+<div class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-6 py-8">
+        <div class="flex flex-col lg:flex-row gap-6">
             
-            @if($activeProjects->isNotEmpty())
-            <div class="space-y-4">
-                @foreach($activeProjects as $project)
-                <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200">
-                    <div class="flex items-start justify-between">
-                        <div class="flex-1">
-                            <h3 class="font-semibold text-gray-900 mb-1">{{ $project->problem->title }}</h3>
-                            <p class="text-sm text-gray-600 mb-3">{{ $project->institution->name }}</p>
-                            
-                            {{-- progress bar --}}
-                            <div class="mb-3">
-                                <div class="flex justify-between items-center mb-1">
-                                    <span class="text-xs text-gray-600">Progress</span>
-                                    <span class="text-xs font-semibold text-gray-700">{{ $project->progress_percentage ?? 0 }}%</span>
-                                </div>
-                                <div class="w-full bg-gray-200 rounded-full h-2">
-                                    <div class="bg-blue-600 h-2 rounded-full transition-all duration-500" style="width: {{ $project->progress_percentage ?? 0 }}%"></div>
-                                </div>
-                            </div>
-
-                            {{-- milestone terdekat --}}
-                            @if($project->milestones->where('status', '!=', 'completed')->first())
-                            @php
-                                $nextMilestone = $project->milestones->where('status', '!=', 'completed')->first();
-                            @endphp
-                            <div class="flex items-center gap-2 text-xs text-gray-500">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                                <span>Milestone Berikutnya: {{ $nextMilestone->title }} ({{ \Carbon\Carbon::parse($nextMilestone->target_date)->format('d M Y') }})</span>
-                            </div>
-                            @endif
+            {{-- sidebar kiri --}}
+            <aside class="lg:w-1/4">
+                {{-- profile card --}}
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-6">
+                    <div class="relative h-20 bg-gradient-to-r from-blue-500 to-indigo-600">
+                        <img src="{{ asset('dashboard-student2.jpeg') }}" 
+                             alt="Cover" 
+                             class="w-full h-full object-cover opacity-50">
+                    </div>
+                    <div class="relative px-4 pb-4">
+                        <div class="flex justify-center -mt-12 mb-3">
+                            <img src="{{ Auth::user()->profile_photo 
+                                        ? Storage::url(Auth::user()->profile_photo) 
+                                        : asset('default-avatar.png') }}" 
+                                 alt="{{ Auth::user()->first_name }}" 
+                                 class="w-24 h-24 rounded-full border-4 border-white shadow-lg object-cover">
                         </div>
-                        
-                        <a href="{{ route('student.projects.show', $project->id) }}" 
-                           class="ml-4 flex-shrink-0 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
-                            Lihat Detail →
+                        <h3 class="text-center font-bold text-gray-900 text-lg">
+                            {{ Auth::user()->first_name }} {{ Auth::user()->last_name }}
+                        </h3>
+                        <p class="text-center text-sm text-gray-600 mb-1">
+                            {{ Auth::user()->student->major }}
+                        </p>
+                        <p class="text-center text-xs text-gray-500">
+                            {{ Auth::user()->student->university->name }}
+                        </p>
+                    </div>
+                </div>
+
+                {{-- navigation menu --}}
+                <nav class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                    <h3 class="font-semibold text-gray-900 mb-3 text-sm">Menu Navigasi</h3>
+                    <div class="space-y-1">
+                        {{-- dashboard --}}
+                        <a href="{{ route('student.dashboard') }}" 
+                           class="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors {{ request()->routeIs('student.dashboard') ? 'bg-blue-50 text-blue-600 font-medium' : '' }}">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                            </svg>
+                            <span>Dashboard</span>
+                        </a>
+
+                        {{-- browse problems --}}
+                        <a href="{{ route('student.browse-problems') }}" 
+                           class="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors {{ request()->routeIs('student.browse-problems*') ? 'bg-blue-50 text-blue-600 font-medium' : '' }}">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                            <span>Cari Proyek</span>
+                        </a>
+
+                        {{-- friends/network - NEW --}}
+                        <a href="{{ route('student.friends.index') }}" 
+                           class="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors {{ request()->routeIs('student.friends.*') ? 'bg-blue-50 text-blue-600 font-medium' : '' }}">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                            <span>Jaringan</span>
+                            @if(Auth::user()->student->pendingFriendRequests()->count() > 0)
+                            <span class="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                                {{ Auth::user()->student->pendingFriendRequests()->count() }}
+                            </span>
+                            @endif
+                        </a>
+
+                        {{-- my applications --}}
+                        <a href="{{ route('student.applications.index') }}" 
+                           class="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors {{ request()->routeIs('student.applications.*') ? 'bg-blue-50 text-blue-600 font-medium' : '' }}">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            <span>Aplikasi Saya</span>
+                        </a>
+
+                        {{-- my projects --}}
+                        <a href="{{ route('student.projects.index') }}" 
+                           class="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors {{ request()->routeIs('student.projects.*') ? 'bg-blue-50 text-blue-600 font-medium' : '' }}">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                            <span>Proyek Saya</span>
+                        </a>
+
+                        {{-- wishlist --}}
+                        <a href="{{ route('student.wishlist') }}" 
+                           class="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors {{ request()->routeIs('student.wishlist') ? 'bg-blue-50 text-blue-600 font-medium' : '' }}">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                            </svg>
+                            <span>Wishlist</span>
+                        </a>
+
+                        {{-- repository --}}
+                        <a href="{{ route('student.repository.index') }}" 
+                           class="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors {{ request()->routeIs('student.repository.*') ? 'bg-blue-50 text-blue-600 font-medium' : '' }}">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                            </svg>
+                            <span>Repository</span>
+                        </a>
+
+                        {{-- profile --}}
+                        <a href="{{ route('student.profile.index') }}" 
+                           class="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors {{ request()->routeIs('student.profile.*') ? 'bg-blue-50 text-blue-600 font-medium' : '' }}">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                            <span>Profil Saya</span>
                         </a>
                     </div>
-                </div>
-                @endforeach
-            </div>
-            @else
-            {{-- empty state --}}
-            <div class="text-center py-12">
-                <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
-                    <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                    </svg>
-                </div>
-                <h3 class="text-lg font-semibold text-gray-900 mb-2">Belum Ada Proyek Aktif</h3>
-                <p class="text-gray-600 mb-4">Proyek Yang Sedang Anda Kerjakan Akan Muncul Di Sini</p>
-                <a href="{{ route('student.browse-problems.index') }}" 
-                   class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                    Cari Proyek
-                </a>
-            </div>
-            @endif
-        </div>
+                </nav>
+            </aside>
 
-        {{-- section aplikasi terbaru - BARU --}}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 fade-in-up content-card" style="animation-delay: 0.35s;">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-xl font-bold text-gray-900">Aplikasi Terbaru</h2>
-                <a href="{{ route('student.applications.index') }}" class="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors">
-                    Lihat Semua →
-                </a>
-            </div>
-            
-            @if($recentApplications->isNotEmpty())
-            <div class="space-y-3">
-                @foreach($recentApplications as $application)
-                <div class="flex items-start justify-between border-b border-gray-100 pb-3 last:border-0 hover:bg-gray-50 transition-colors p-3 rounded-lg">
-                    <div class="flex-1">
-                        <h3 class="font-semibold text-gray-900 text-sm mb-1">{{ $application->problem->title }}</h3>
-                        <p class="text-xs text-gray-600 mb-2">{{ $application->problem->institution->name }}</p>
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
-                                {{ $application->status === 'pending' ? 'bg-yellow-100 text-yellow-800' : '' }}
-                                {{ $application->status === 'reviewed' ? 'bg-blue-100 text-blue-800' : '' }}
-                                {{ $application->status === 'accepted' ? 'bg-green-100 text-green-800' : '' }}
-                                {{ $application->status === 'rejected' ? 'bg-red-100 text-red-800' : '' }}">
-                                @switch($application->status)
-                                    @case('pending')
-                                        Menunggu
-                                        @break
-                                    @case('reviewed')
-                                        Sedang Ditinjau
-                                        @break
-                                    @case('accepted')
-                                        Diterima
-                                        @break
-                                    @case('rejected')
-                                        Ditolak
-                                        @break
-                                    @default
-                                        {{ ucfirst($application->status) }}
-                                @endswitch
-                            </span>
-                            <span class="text-xs text-gray-500">
-                                {{ $application->created_at->diffForHumans() }}
-                            </span>
+            {{-- main content area --}}
+            <main class="lg:w-3/4 space-y-6">
+                
+                {{-- quick statistics --}}
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-sm font-medium text-gray-600">Total Aplikasi</h3>
+                            <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
                         </div>
+                        <p class="text-3xl font-bold text-gray-900">
+                            {{ Auth::user()->student->applications()->count() }}
+                        </p>
                     </div>
-                    <a href="{{ route('student.applications.show', $application->id) }}" 
-                       class="ml-4 text-blue-600 hover:text-blue-700 text-sm font-medium whitespace-nowrap">
-                        Detail →
-                    </a>
+
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-sm font-medium text-gray-600">Proyek Aktif</h3>
+                            <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                        </div>
+                        <p class="text-3xl font-bold text-gray-900">
+                            {{ Auth::user()->student->projects()->where('status', 'in_progress')->count() }}
+                        </p>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-sm font-medium text-gray-600">Proyek Selesai</h3>
+                            <svg class="w-8 h-8 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <p class="text-3xl font-bold text-gray-900">
+                            {{ Auth::user()->student->projects()->where('status', 'completed')->count() }}
+                        </p>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-sm font-medium text-gray-600">Koneksi</h3>
+                            <svg class="w-8 h-8 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                        </div>
+                        <p class="text-3xl font-bold text-gray-900">
+                            {{ Auth::user()->student->friendsCount() }}
+                        </p>
+                    </div>
                 </div>
-                @endforeach
-            </div>
-            @else
-            {{-- empty state --}}
-            <div class="text-center py-12">
-                <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
+
+                {{-- network widget - NEW --}}
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                            <h2 class="text-lg font-bold text-gray-900">Jaringan Saya</h2>
+                        </div>
+                        <a href="{{ route('student.friends.index') }}" 
+                           class="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                            Lihat Semua
+                        </a>
+                    </div>
+
+                    <div class="p-6">
+                        {{-- network stats --}}
+                        <div class="grid grid-cols-3 gap-4 mb-6">
+                            <div class="text-center p-4 bg-blue-50 rounded-lg">
+                                <div class="text-2xl font-bold text-blue-600">
+                                    {{ Auth::user()->student->friendsCount() }}
+                                </div>
+                                <div class="text-xs text-gray-600 mt-1">Koneksi</div>
+                            </div>
+                            <div class="text-center p-4 bg-yellow-50 rounded-lg">
+                                <div class="text-2xl font-bold text-yellow-600">
+                                    {{ Auth::user()->student->pendingFriendRequests()->count() }}
+                                </div>
+                                <div class="text-xs text-gray-600 mt-1">Permintaan</div>
+                            </div>
+                            <div class="text-center p-4 bg-purple-50 rounded-lg">
+                                <div class="text-2xl font-bold text-purple-600">
+                                    {{ Auth::user()->student->suggestedFriends(10)->count() }}
+                                </div>
+                                <div class="text-xs text-gray-600 mt-1">Saran</div>
+                            </div>
+                        </div>
+
+                        {{-- pending requests preview --}}
+                        @php
+                            $pendingRequests = Auth::user()->student->pendingFriendRequests()->take(3);
+                        @endphp
+                        
+                        @if($pendingRequests->count() > 0)
+                        <div class="mb-6">
+                            <h3 class="font-semibold text-gray-900 mb-3 text-sm">Permintaan Pertemanan</h3>
+                            <div class="space-y-2">
+                                @foreach($pendingRequests as $request)
+                                <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                    <img src="{{ $request->requester->user->profile_photo 
+                                                ? Storage::url($request->requester->user->profile_photo) 
+                                                : asset('default-avatar.png') }}" 
+                                         alt="{{ $request->requester->user->first_name }}" 
+                                         class="w-10 h-10 rounded-full object-cover">
+                                    <div class="flex-1 min-w-0">
+                                        <p class="font-medium text-gray-900 text-sm truncate">
+                                            {{ $request->requester->user->first_name }} {{ $request->requester->user->last_name }}
+                                        </p>
+                                        <p class="text-xs text-gray-600 truncate">
+                                            {{ $request->requester->university->name }}
+                                        </p>
+                                    </div>
+                                    <div class="flex gap-1">
+                                        <form method="POST" action="{{ route('student.friends.accept', $request->id) }}">
+                                            @csrf
+                                            <button type="submit" 
+                                                    class="px-3 py-1 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700"
+                                                    title="Terima">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                                </svg>
+                                            </button>
+                                        </form>
+                                        <form method="POST" action="{{ route('student.friends.reject', $request->id) }}">
+                                            @csrf
+                                            <button type="submit" 
+                                                    class="px-3 py-1 bg-gray-200 text-gray-700 text-xs font-medium rounded hover:bg-gray-300"
+                                                    title="Tolak">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                                @endforeach
+                            </div>
+                            @if(Auth::user()->student->pendingFriendRequests()->count() > 3)
+                            <a href="{{ route('student.friends.index') }}" 
+                               class="block text-center text-sm text-blue-600 hover:text-blue-700 font-medium mt-3">
+                                Lihat {{ Auth::user()->student->pendingFriendRequests()->count() - 3 }} permintaan lainnya
+                            </a>
+                            @endif
+                        </div>
+                        @endif
+
+                        {{-- suggestions preview --}}
+                        @php
+                            $suggestions = Auth::user()->student->suggestedFriends(4);
+                        @endphp
+                        
+                        @if($suggestions->count() > 0)
+                        <div>
+                            <h3 class="font-semibold text-gray-900 mb-3 text-sm">Rekomendasi Koneksi</h3>
+                            <div class="grid grid-cols-2 gap-3">
+                                @foreach($suggestions as $suggestion)
+                                <div class="border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow">
+                                    <div class="flex items-start gap-2 mb-2">
+                                        <img src="{{ $suggestion->user->profile_photo 
+                                                    ? Storage::url($suggestion->user->profile_photo) 
+                                                    : asset('default-avatar.png') }}" 
+                                             alt="{{ $suggestion->user->first_name }}" 
+                                             class="w-10 h-10 rounded-full object-cover">
+                                        <div class="flex-1 min-w-0">
+                                            <p class="font-medium text-gray-900 text-sm truncate">
+                                                {{ $suggestion->user->first_name }} {{ $suggestion->user->last_name }}
+                                            </p>
+                                            <p class="text-xs text-gray-600 truncate">
+                                                {{ $suggestion->major }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <form method="POST" action="{{ route('student.friends.send-request', $suggestion->id) }}">
+                                        @csrf
+                                        <button type="submit" 
+                                                class="w-full px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700 transition-colors">
+                                            Hubungkan
+                                        </button>
+                                    </form>
+                                </div>
+                                @endforeach
+                            </div>
+                        </div>
+                        @endif
+
+                        {{-- call to action jika belum ada network --}}
+                        @if($suggestions->count() === 0 && $pendingRequests->count() === 0 && Auth::user()->student->friendsCount() === 0)
+                        <div class="text-center py-8">
+                            <div class="inline-flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full mb-3">
+                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-sm font-semibold text-gray-900 mb-1">
+                                Mulai Bangun Jaringan
+                            </h3>
+                            <p class="text-xs text-gray-600 mb-4">
+                                Terhubung dengan mahasiswa lain untuk berbagi pengalaman KKN
+                            </p>
+                            <a href="{{ route('student.friends.search') }}" 
+                               class="inline-block px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                                Cari Teman
+                            </a>
+                        </div>
+                        @endif
+                    </div>
                 </div>
-                <h3 class="text-lg font-semibold text-gray-900 mb-2">Belum Ada Aplikasi</h3>
-                <p class="text-gray-600 mb-4">Mulai Apply Ke Proyek Yang Menarik Untuk Anda</p>
-                <a href="{{ route('student.browse-problems.index') }}" 
-                   class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                    </svg>
-                    Mulai Apply
-                </a>
-            </div>
-            @endif
+
+                {{-- activity feed component - OPTIONAL --}}
+                @php
+                    // ambil aktivitas teman (implementasi bisa disesuaikan)
+                    $activities = [];
+                    // untuk saat ini kosongkan, nanti bisa diisi dari controller
+                @endphp
+                
+                @if(count($activities) > 0)
+                @include('components.activity-feed', ['activities' => $activities])
+                @endif
+
+                {{-- recent applications --}}
+                @php
+                    $recentApplications = Auth::user()->student->applications()
+                        ->with(['problem.institution'])
+                        ->latest()
+                        ->take(5)
+                        ->get();
+                @endphp
+
+                @if($recentApplications->count() > 0)
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+                        <h2 class="text-lg font-bold text-gray-900">Aplikasi Terbaru</h2>
+                        <a href="{{ route('student.applications.index') }}" 
+                           class="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                            Lihat Semua
+                        </a>
+                    </div>
+                    <div class="divide-y divide-gray-200">
+                        @foreach($recentApplications as $application)
+                        <div class="p-6 hover:bg-gray-50 transition-colors">
+                            <div class="flex items-start justify-between gap-4">
+                                <div class="flex-1">
+                                    <h3 class="font-semibold text-gray-900 mb-1">
+                                        {{ $application->problem->title }}
+                                    </h3>
+                                    <p class="text-sm text-gray-600 mb-2">
+                                        {{ $application->problem->institution->name }}
+                                    </p>
+                                    <div class="flex items-center gap-3 text-xs text-gray-500">
+                                        <span>Diajukan {{ $application->created_at->diffForHumans() }}</span>
+                                        <span class="px-2 py-1 rounded-full font-medium
+                                            {{ $application->status === 'accepted' ? 'bg-green-100 text-green-700' : '' }}
+                                            {{ $application->status === 'pending' ? 'bg-yellow-100 text-yellow-700' : '' }}
+                                            {{ $application->status === 'rejected' ? 'bg-red-100 text-red-700' : '' }}
+                                            {{ $application->status === 'under_review' ? 'bg-blue-100 text-blue-700' : '' }}">
+                                            {{ ucfirst(str_replace('_', ' ', $application->status)) }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <a href="{{ route('student.applications.show', $application->id) }}" 
+                                   class="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors">
+                                    Detail
+                                </a>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
+                {{-- active projects --}}
+                @php
+                    $activeProjects = Auth::user()->student->projects()
+                        ->where('status', 'in_progress')
+                        ->with(['problem.institution'])
+                        ->latest()
+                        ->take(3)
+                        ->get();
+                @endphp
+
+                @if($activeProjects->count() > 0)
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+                        <h2 class="text-lg font-bold text-gray-900">Proyek Aktif</h2>
+                        <a href="{{ route('student.projects.index') }}" 
+                           class="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                            Lihat Semua
+                        </a>
+                    </div>
+                    <div class="divide-y divide-gray-200">
+                        @foreach($activeProjects as $project)
+                        <div class="p-6 hover:bg-gray-50 transition-colors">
+                            <div class="flex items-start justify-between gap-4">
+                                <div class="flex-1">
+                                    <h3 class="font-semibold text-gray-900 mb-1">
+                                        {{ $project->problem->title }}
+                                    </h3>
+                                    <p class="text-sm text-gray-600 mb-3">
+                                        {{ $project->problem->institution->name }}
+                                    </p>
+                                    <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                                        <div class="bg-blue-600 h-2 rounded-full" 
+                                             style="width: {{ $project->progress ?? 0 }}%"></div>
+                                    </div>
+                                    <p class="text-xs text-gray-500">
+                                        Progress: {{ $project->progress ?? 0 }}%
+                                    </p>
+                                </div>
+                                <a href="{{ route('student.projects.show', $project->id) }}" 
+                                   class="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors">
+                                    Detail
+                                </a>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
+            </main>
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+// auto hide alerts
+document.addEventListener('DOMContentLoaded', function() {
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        setTimeout(() => {
+            alert.style.opacity = '0';
+            setTimeout(() => alert.remove(), 300);
+        }, 5000);
+    });
+});
+</script>
+@endpush
 @endsection
