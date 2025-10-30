@@ -207,21 +207,40 @@ class ProblemController extends Controller
 
                         // Try upload to Supabase
                         try {
+                            Log::info('Problem Store - Starting Supabase Upload', [
+                                'file' => $image->getClientOriginalName(),
+                                'size' => $image->getSize(),
+                                'mime' => $image->getMimeType(),
+                                'bucket' => config('filesystems.disks.supabase.bucket'),
+                                'endpoint' => config('filesystems.disks.supabase.endpoint')
+                            ]);
+
                             $path = $image->store('problems', 'supabase');
 
                             if (!$path) {
                                 throw new \Exception("Store method returned false/empty path");
                             }
 
-                            Log::info('Problem Store - Image Stored to Supabase', [
+                            Log::info('Problem Store - Image Stored to Supabase Successfully', [
                                 'path' => $path,
-                                'problem_id' => $problem->id
+                                'problem_id' => $problem->id,
+                                'url' => supabase_url($path)
                             ]);
 
                         } catch (\Exception $supabaseException) {
-                            // Fallback ke public disk jika Supabase gagal
-                            Log::warning('Problem Store - Supabase Upload Failed, Using Public Disk', [
+                            Log::error('Problem Store - Supabase Upload Failed', [
                                 'error' => $supabaseException->getMessage(),
+                                'file' => $image->getClientOriginalName(),
+                                'trace' => $supabaseException->getTraceAsString()
+                            ]);
+
+                            // Di production, jangan fallback ke local storage (ephemeral)
+                            if (app()->environment('production')) {
+                                throw new \Exception("Gagal upload gambar ke Supabase: " . $supabaseException->getMessage());
+                            }
+
+                            // Fallback ke public disk HANYA di local/development
+                            Log::warning('Problem Store - Using Public Disk Fallback (Development Only)', [
                                 'file' => $image->getClientOriginalName()
                             ]);
 
@@ -493,21 +512,40 @@ class ProblemController extends Controller
 
                         // Try upload to Supabase
                         try {
+                            Log::info('Problem Update - Starting Supabase Upload', [
+                                'file' => $image->getClientOriginalName(),
+                                'size' => $image->getSize(),
+                                'mime' => $image->getMimeType(),
+                                'bucket' => config('filesystems.disks.supabase.bucket'),
+                                'endpoint' => config('filesystems.disks.supabase.endpoint')
+                            ]);
+
                             $path = $image->store('problems', 'supabase');
 
                             if (!$path) {
                                 throw new \Exception("Store method returned false/empty path");
                             }
 
-                            Log::info('Problem Update - Image Stored to Supabase', [
+                            Log::info('Problem Update - Image Stored to Supabase Successfully', [
                                 'path' => $path,
-                                'problem_id' => $problem->id
+                                'problem_id' => $problem->id,
+                                'url' => supabase_url($path)
                             ]);
 
                         } catch (\Exception $supabaseException) {
-                            // Fallback ke public disk jika Supabase gagal
-                            Log::warning('Problem Update - Supabase Upload Failed, Using Public Disk', [
+                            Log::error('Problem Update - Supabase Upload Failed', [
                                 'error' => $supabaseException->getMessage(),
+                                'file' => $image->getClientOriginalName(),
+                                'trace' => $supabaseException->getTraceAsString()
+                            ]);
+
+                            // Di production, jangan fallback ke local storage (ephemeral)
+                            if (app()->environment('production')) {
+                                throw new \Exception("Gagal upload gambar ke Supabase: " . $supabaseException->getMessage());
+                            }
+
+                            // Fallback ke public disk HANYA di local/development
+                            Log::warning('Problem Update - Using Public Disk Fallback (Development Only)', [
                                 'file' => $image->getClientOriginalName()
                             ]);
 

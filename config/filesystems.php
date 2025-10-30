@@ -53,7 +53,7 @@ return [
             'bucket' => env('SUPABASE_BUCKET'),
             'url' => env('SUPABASE_URL'),
             'endpoint' => env('SUPABASE_ENDPOINT'),
-            'use_path_style_endpoint' => env('SUPABASE_USE_PATH_STYLE_ENDPOINT', false),
+            'use_path_style_endpoint' => true, // FIX: Supabase uses path-style URLs
             'throw' => true, // Enable exception untuk debugging
             'visibility' => 'public',
             // Opsi untuk menonaktifkan verifikasi SSL di lingkungan lokal
