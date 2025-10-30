@@ -139,7 +139,7 @@ class KnowledgeRepositoryController extends Controller
         ];
 
         // daftar tahun untuk filter
-        $availableYears = Document::where('is_public', true)
+        $years = Document::where('is_public', true)
             ->where('status', 'approved')
             ->selectRaw('DISTINCT EXTRACT(YEAR FROM created_at) as year')
             ->orderBy('year', 'desc')
@@ -150,7 +150,7 @@ class KnowledgeRepositoryController extends Controller
             'provinces',
             'featuredDocuments',
             'stats',
-            'availableYears',
+            'years',
             'totalDocuments'
         ));
     }
