@@ -33,9 +33,13 @@
                            class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('student.projects.*') ? 'text-blue-600' : '' }}">
                             Proyek Saya
                         </a>
-                        <a href="{{ route('student.repository.index') }}" 
+                        <a href="{{ route('student.repository.index') }}"
                            class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('repository.*') ? 'text-blue-600' : '' }}">
                             Repositori
+                        </a>
+                        <a href="{{ route('friends.index') }}"
+                           class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('friends.*') ? 'text-blue-600' : '' }}">
+                            Network
                         </a>
                     @elseif(Auth::user()->isInstitution())
                         <a href="{{ route('institution.dashboard') }}" 
@@ -114,12 +118,19 @@
                                         </svg>
                                         Profil Mahasiswa
                                     </a>
-                                    <a href="{{ route('student.wishlist.index') }}" 
+                                    <a href="{{ route('student.wishlist.index') }}"
                                        class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
                                         <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
                                         </svg>
                                         Wishlist
+                                    </a>
+                                    <a href="{{ route('friends.index') }}"
+                                       class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                                        <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                        </svg>
+                                        Network
                                     </a>
                                 @elseif(Auth::user()->isInstitution())
                                     <a href="{{ route('institution.profile.index') }}" 
@@ -214,15 +225,19 @@
                        class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors {{ request()->routeIs('student.projects.*') ? 'text-blue-600 bg-blue-50' : '' }}">
                         Proyek Saya
                     </a>
-                    <a href="{{ route('student.repository.index') }}" 
+                    <a href="{{ route('student.repository.index') }}"
                        class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors {{ request()->routeIs('repository.*') ? 'text-blue-600 bg-blue-50' : '' }}">
                         Repositori
                     </a>
-                    <a href="{{ route('student.profile.index') }}" 
+                    <a href="{{ route('friends.index') }}"
+                       class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors {{ request()->routeIs('friends.*') ? 'text-blue-600 bg-blue-50' : '' }}">
+                        Network
+                    </a>
+                    <a href="{{ route('student.profile.index') }}"
                        class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors">
                         Profil Mahasiswa
                     </a>
-                    <a href="{{ route('student.wishlist.index') }}" 
+                    <a href="{{ route('student.wishlist.index') }}"
                        class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg {{ request()->routeIs('student.wishlist.*') ? 'bg-blue-50 text-blue-600' : '' }}">
                         Wishlist
                     </a>
