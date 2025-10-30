@@ -256,117 +256,72 @@ class ProblemController extends Controller
     /**
      * update problem
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, Problem $problem)
     {
-        try {
-            $problem = Problem::where('institution_id', auth()->user()->institution->id)
-                             ->findOrFail($id);
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'problem_domain' => 'required|string',
+            'duration_months' => 'required|integer|min:1',
+            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // Izinkan null jika tidak ada perubahan gambar
+            'delete_images' => 'nullable|array', // Untuk menandai gambar yang ingin dihapus
+            'delete_images.*' => 'exists:problem_images,id', // Validasi ID gambar yang akan dihapus
+        ]);
 
-            // preprocessing sama seperti store
-            $requestData = $request->all();
-            
-            if (isset($requestData['required_skills'])) {
-                if (is_string($requestData['required_skills'])) {
-                    $requestData['required_skills'] = array_filter(
-                        array_map('trim', explode(',', $requestData['required_skills']))
-                    );
-                }
-                $requestData['required_skills'] = array_values(array_filter($requestData['required_skills']));
-            }
+        // Update data problem lainnya
+        $problem->update($request->except(['_token', '_method', 'images', 'delete_images']));
 
-            if (isset($requestData['required_majors'])) {
-                if (is_string($requestData['required_majors']) && !empty($requestData['required_majors'])) {
-                    $requestData['required_majors'] = array_filter(
-                        array_map('trim', explode(',', $requestData['required_majors']))
-                    );
-                }
-                $requestData['required_majors'] = array_values(array_filter($requestData['required_majors']));
-            }
+        // --- Logika untuk Gambar ---
 
-            if (isset($requestData['deliverables']) && is_array($requestData['deliverables'])) {
-                $requestData['deliverables'] = array_values(array_filter($requestData['deliverables']));
-            }
-
-            if (isset($requestData['facilities_provided']) && is_array($requestData['facilities_provided'])) {
-                $requestData['facilities_provided'] = array_values(array_filter($requestData['facilities_provided']));
-            }
-
-            if (isset($requestData['sdg_categories']) && is_array($requestData['sdg_categories'])) {
-                $requestData['sdg_categories'] = array_values(array_map('intval', $requestData['sdg_categories']));
-            }
-
-            $request->merge($requestData);
-
-            $validated = $request->validate([
-                'title' => 'required|string|max:255',
-                'description' => 'required|string',
-                'background' => 'nullable|string',
-                'objectives' => 'nullable|string',
-                'scope' => 'nullable|string',
-                'province_id' => 'required|exists:provinces,id',
-                'regency_id' => 'required|exists:regencies,id',
-                'village' => 'nullable|string|max:255',
-                'detailed_location' => 'nullable|string',
-                'sdg_categories' => 'required|array|min:1',
-                'required_students' => 'required|integer|min:1',
-                'required_skills' => 'required|array|min:1',
-                'required_majors' => 'nullable|array',
-                'start_date' => 'required|date',
-                'end_date' => 'required|date|after:start_date',
-                'application_deadline' => 'required|date|before:start_date',
-                'duration_months' => 'required|integer|min:1',
-                'difficulty_level' => 'required|in:beginner,intermediate,advanced',
-                'status' => 'required|in:draft,open,in_progress,completed,closed',
-                'expected_outcomes' => 'nullable|string',
-                'deliverables' => 'nullable|array',
-                'facilities_provided' => 'nullable|array',
-                'delete_images' => 'nullable|array',
-                'images' => 'nullable|array|max:5',
-                'images.*' => 'image|mimes:jpeg,png,jpg|max:5120',
-            ]);
-
-            DB::beginTransaction();
-            
-            // hapus gambar yang dipilih untuk dihapus
-            if ($request->filled('delete_images')) {
-                foreach ($request->delete_images as $imageId) {
-                    $image = $problem->images()->find($imageId);
-                    if ($image) {
-                        Storage::disk('public')->delete($image->image_path);
-                        $image->delete();
-                    }
+        // 1. Hapus Gambar yang Ditandai untuk Dihapus
+        if ($request->has('delete_images')) {
+            foreach ($request->delete_images as $imageId) {
+                $imageToDelete = $problem->images()->find($imageId);
+                if ($imageToDelete) {
+                    // Hapus dari storage (misal: Supabase Storage)
+                    Storage::disk('public')->delete($imageToDelete->image_path);
+                    // Hapus dari database
+                    $imageToDelete->delete();
                 }
             }
-            
-            // upload gambar baru
-            if ($request->hasFile('images')) {
-                $currentImageCount = $problem->images()->count();
-                foreach ($request->file('images') as $index => $imageFile) {
-                    $path = $imageFile->store('problems', 'public');
-                    $problem->images()->create([
-                        'image_path' => $path,
-                        'order' => $currentImageCount + $index + 1,
-                        'is_cover' => $currentImageCount === 0 && $index === 0,
-                    ]);
-                }
-            }
-            
-            $problem->update($validated);
-
-            DB::commit();
-            
-            return redirect()
-                ->route('institution.problems.show', $problem->id)
-                ->with('success', 'Problem Berhasil Diperbarui!');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Problem Update - Exception', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage())->withInput();
         }
+
+        // 2. Upload Gambar Baru
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $index => $image) {
+                // Hapus gambar cover lama jika ada gambar baru yang diupload dan ini adalah gambar pertama
+                // Ini adalah pendekatan "replace all" atau menambahkan. Jika ingin mengganti cover, logika akan lebih kompleks.
+                // Untuk sederhana, kita tambahkan saja gambar baru.
+                // Jika Anda hanya ingin 1 gambar (seperti profil), Anda perlu hapus semua gambar lama dan upload yang baru.
+                // Mari kita asumsikan multiple images, tapi yang pertama akan jadi cover.
+
+                $path = $image->store('problems', 'public'); // 'problems' adalah folder di Supabase Storage Anda
+
+                $problem->images()->create([
+                    'image_path' => $path,
+                    'order' => $problem->images()->count() + 1, // Sesuaikan order
+                    'is_cover' => ($problem->images()->count() === 0 && $index === 0) // Jika ini gambar pertama dan belum ada gambar lain, jadi cover
+                ]);
+            }
+            // Jika ada gambar baru diupload, dan belum ada cover, set gambar pertama yang baru sebagai cover
+            if ($problem->images()->where('is_cover', true)->doesntExist()) {
+                $firstImage = $problem->images()->orderBy('order')->first();
+                if ($firstImage) {
+                    $firstImage->update(['is_cover' => true]);
+                }
+            }
+        }
+
+        // Jika tidak ada gambar baru diupload dan semua gambar lama dihapus, pastikan tidak ada cover yang tersisa
+        if ($problem->images()->where('is_cover', true)->doesntExist() && $problem->images()->count() > 0) {
+            $firstImage = $problem->images()->orderBy('order')->first();
+            if ($firstImage) {
+                $firstImage->update(['is_cover' => true]);
+            }
+        }
+
+
+        return redirect()->route('institution.problems.show', $problem->id)->with('success', 'Problem berhasil diperbarui.');
     }
     
     /**

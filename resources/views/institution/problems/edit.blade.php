@@ -19,7 +19,7 @@
         </div>
 
         {{-- form --}}
-        <form method="POST" action="{{ route('institution.problems.update', $problem->id) }}" enctype="multipart/form-data" class="space-y-6">
+        <form action="{{ route('institution.problems.update', $problem->id) }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
 
