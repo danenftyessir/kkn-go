@@ -124,16 +124,20 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function getProfilePhotoUrlAttribute()
     {
-        if ($this->isStudent() && $this->student?->profile_photo_path) {
+        if ($this->isStudent()) {
             // gunakan accessor dari Student model yang sudah di-fix
-            return $this->student->profile_photo_url;
-        } elseif ($this->isInstitution() && $this->institution?->logo_path) {
+            // Student model sudah handle fallback ke ui-avatars jika tidak ada foto
+            return $this->student?->profile_photo_url
+                ?? 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&size=200&background=4F46E5&color=ffffff';
+        } elseif ($this->isInstitution()) {
             // gunakan accessor dari Institution model
-            return $this->institution->logo_url;
+            // Institution model sudah handle fallback ke ui-avatars jika tidak ada logo
+            return $this->institution?->logo_url
+                ?? 'https://ui-avatars.com/api/?name=' . urlencode(substr($this->name, 0, 1)) . '&size=200&background=10B981&color=ffffff';
         }
-        
-        // default avatar
-        return asset('images/default-avatar.png');
+
+        // default avatar untuk user type lain (admin)
+        return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&size=200&background=6366F1&color=ffffff';
     }
 
     /**

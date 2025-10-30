@@ -163,27 +163,68 @@ class SupabaseStorageService
 
     /**
      * get public URL untuk file di Supabase
-     * 
+     *
      * @param string $path path file di bucket
      * @return string public URL
      */
     public function getPublicUrl(string $path): string
     {
-        if (!$this->useSupabase) {
-            // return local storage URL
-            return asset('storage/' . $path);
+        // validasi: jika path kosong, return placeholder
+        if (empty($path)) {
+            Log::debug("⚠️ getPublicUrl: Empty path provided");
+            return $this->getPlaceholderAvatar();
         }
-        
+
+        if (!$this->useSupabase) {
+            Log::debug("⚠️ getPublicUrl: Supabase not configured, falling back to local storage", [
+                'path' => $path
+            ]);
+
+            // cek apakah path mengandung 'public/' prefix (local storage)
+            if (str_starts_with($path, 'public/')) {
+                return asset('storage/' . str_replace('public/', '', $path));
+            }
+
+            // path tanpa 'public/' kemungkinan dari Supabase yang belum ter-upload
+            // return placeholder instead of broken link
+            Log::warning("⚠️ getPublicUrl: Path mismatch - expected local storage format", [
+                'path' => $path,
+                'expected_format' => 'public/...',
+            ]);
+
+            return $this->getPlaceholderAvatar();
+        }
+
         // hilangkan slash di awal jika ada
         $path = ltrim($path, '/');
-        
+
         // encode path untuk URL
         $encodedPath = $this->encodePath($path);
-        
+
         // encode bucket name (ganti spasi dengan %20)
         $encodedBucket = str_replace(' ', '%20', $this->bucketName);
-        
-        return "https://{$this->projectId}.supabase.co/storage/v1/object/public/{$encodedBucket}/{$encodedPath}";
+
+        $url = "https://{$this->projectId}.supabase.co/storage/v1/object/public/{$encodedBucket}/{$encodedPath}";
+
+        if (config('app.debug')) {
+            Log::debug("✅ getPublicUrl: Generated Supabase URL", [
+                'path' => $path,
+                'bucket' => $this->bucketName,
+                'url' => $url,
+            ]);
+        }
+
+        return $url;
+    }
+
+    /**
+     * get placeholder avatar URL
+     *
+     * @return string placeholder avatar URL
+     */
+    protected function getPlaceholderAvatar(): string
+    {
+        return 'https://ui-avatars.com/api/?name=User&size=200&background=6366F1&color=ffffff';
     }
 
     /**

@@ -68,24 +68,25 @@ class ReviewController extends Controller
 
         $reviews = $query->paginate(15)->withQueryString();
 
-        // statistik review
+        // OPTIMIZED: statistik review - 1 query instead of 4
+        // Menggunakan single query dengan agregasi untuk performa lebih baik
+        $statsQuery = Review::query()
+            ->join('projects', 'reviews.project_id', '=', 'projects.id')
+            ->where('reviews.type', 'institution_to_student')
+            ->where('projects.institution_id', $institution->id)
+            ->selectRaw('
+                COUNT(*) as total,
+                COALESCE(AVG(reviews.rating), 0) as average_rating,
+                SUM(CASE WHEN reviews.rating = 5 THEN 1 ELSE 0 END) as five_star,
+                SUM(CASE WHEN reviews.rating = 4 THEN 1 ELSE 0 END) as four_star
+            ')
+            ->first();
+
         $stats = [
-            'total' => Review::where('type', 'institution_to_student')
-                ->whereHas('project', function($q) use ($institution) {
-                    $q->where('institution_id', $institution->id);
-                })->count(),
-            'average_rating' => Review::where('type', 'institution_to_student')
-                ->whereHas('project', function($q) use ($institution) {
-                    $q->where('institution_id', $institution->id);
-                })->avg('rating') ?? 0,
-            'five_star' => Review::where('type', 'institution_to_student')
-                ->whereHas('project', function($q) use ($institution) {
-                    $q->where('institution_id', $institution->id);
-                })->where('rating', 5)->count(),
-            'four_star' => Review::where('type', 'institution_to_student')
-                ->whereHas('project', function($q) use ($institution) {
-                    $q->where('institution_id', $institution->id);
-                })->where('rating', 4)->count(),
+            'total' => $statsQuery->total ?? 0,
+            'average_rating' => round($statsQuery->average_rating ?? 0, 1),
+            'five_star' => $statsQuery->five_star ?? 0,
+            'four_star' => $statsQuery->four_star ?? 0,
         ];
 
         return view('institution.reviews.index', compact('reviews', 'stats'));
