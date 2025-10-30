@@ -259,7 +259,13 @@ function filterHandler() {
             }
             
             try {
-                const response = await fetch(`{{ route('student.browse-problems.get-regencies') }}?province_id=${this.filters.provinceId}`);
+                const url = '/student/browse-problems/get-regencies?province_id=' + this.filters.provinceId;
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load regencies');
+                }
+                
                 this.regencies = await response.json();
                 
                 // reset regency selection jika province berubah
@@ -269,6 +275,7 @@ function filterHandler() {
                 }
             } catch (error) {
                 console.error('Error loading regencies:', error);
+                this.regencies = [];
             }
         },
         
