@@ -13,6 +13,7 @@ use App\Http\Controllers\Student\ApplicationController;
 use App\Http\Controllers\Student\MyProjectsController;
 use App\Http\Controllers\Student\ProfileController as StudentProfileController;
 use App\Http\Controllers\Student\WishlistController;
+use App\Http\Controllers\Student\FriendController;
 use App\Http\Controllers\Student\KnowledgeRepositoryController;
 use App\Http\Controllers\Institution\DashboardController as InstitutionDashboardController;
 use App\Http\Controllers\Institution\ProblemController;
@@ -171,37 +172,36 @@ Route::middleware(['auth', 'check.user.type:student'])->prefix('student')->name(
     Route::get('/portfolio', function() {
         return redirect()->route('student.profile.index');
     });
-    
+
     // friend management routes
-    Route::middleware(['auth', 'role:mahasiswa'])->prefix('student')->name('student.')->group(function () {
-        
+    Route::prefix('friends')->name('friends.')->group(function () {
         // halaman daftar teman dan network
-        Route::get('/friends', [FriendController::class, 'index'])->name('friends.index');
-        
+        Route::get('/', [FriendController::class, 'index'])->name('index');
+
         // pencarian teman
-        Route::get('/friends/search', [FriendController::class, 'search'])->name('friends.search');
-        
+        Route::get('/search', [FriendController::class, 'search'])->name('search');
+
         // kirim friend request
-        Route::post('/friends/request/{student}', [FriendController::class, 'sendRequest'])->name('friends.send-request');
-        
+        Route::post('/request/{student}', [FriendController::class, 'sendRequest'])->name('send-request');
+
         // terima friend request
-        Route::post('/friends/accept/{friendship}', [FriendController::class, 'acceptRequest'])->name('friends.accept');
-        
+        Route::post('/accept/{friendship}', [FriendController::class, 'acceptRequest'])->name('accept');
+
         // tolak friend request
-        Route::post('/friends/reject/{friendship}', [FriendController::class, 'rejectRequest'])->name('friends.reject');
-        
+        Route::post('/reject/{friendship}', [FriendController::class, 'rejectRequest'])->name('reject');
+
         // batalkan friend request
-        Route::delete('/friends/cancel/{friendship}', [FriendController::class, 'cancelRequest'])->name('friends.cancel');
-        
+        Route::delete('/cancel/{friendship}', [FriendController::class, 'cancelRequest'])->name('cancel');
+
         // unfriend
-        Route::delete('/friends/unfriend/{friendship}', [FriendController::class, 'unfriend'])->name('friends.unfriend');
-        
+        Route::delete('/unfriend/{friendship}', [FriendController::class, 'unfriend'])->name('unfriend');
+
         // lihat profil teman
-        Route::get('/friends/profile/{student}', [FriendController::class, 'showProfile'])->name('friends.profile');
-        Route::get('/friends/activities', [FriendController::class, 'getActivities'])->name('friends.activities');
-        Route::get('/friends/activity-stats', [FriendController::class, 'getActivityStats'])->name('friends.activity-stats');
-        Route::get('/friends/trending', [FriendController::class, 'getTrendingConnections'])->name('friends.trending');
-        Route::get('/friends/network-growth', [FriendController::class, 'getNetworkGrowth'])->name('friends.network-growth');
+        Route::get('/profile/{student}', [FriendController::class, 'showProfile'])->name('profile');
+        Route::get('/activities', [FriendController::class, 'getActivities'])->name('activities');
+        Route::get('/activity-stats', [FriendController::class, 'getActivityStats'])->name('activity-stats');
+        Route::get('/trending', [FriendController::class, 'getTrendingConnections'])->name('trending');
+        Route::get('/network-growth', [FriendController::class, 'getNetworkGrowth'])->name('network-growth');
     });
 
     // wishlist
