@@ -428,11 +428,41 @@ class ProblemController extends Controller
                 foreach ($request->delete_images as $imageId) {
                     $imageToDelete = $problem->images()->find($imageId);
                     if ($imageToDelete) {
-                        // Hapus dari storage (Supabase Storage)
-                        Storage::disk('supabase')->delete($imageToDelete->image_path);
+                        $imagePath = $imageToDelete->image_path;
+
+                        // Coba hapus dari public disk dulu (untuk file lama)
+                        try {
+                            if (Storage::disk('public')->exists($imagePath)) {
+                                Storage::disk('public')->delete($imagePath);
+                                Log::info('Problem Update - Image Deleted from Public Disk', [
+                                    'image_id' => $imageId,
+                                    'path' => $imagePath
+                                ]);
+                            }
+                        } catch (\Exception $e) {
+                            Log::warning('Problem Update - Failed to delete from public disk', [
+                                'error' => $e->getMessage()
+                            ]);
+                        }
+
+                        // Coba hapus dari supabase disk (untuk file baru)
+                        try {
+                            if (Storage::disk('supabase')->exists($imagePath)) {
+                                Storage::disk('supabase')->delete($imagePath);
+                                Log::info('Problem Update - Image Deleted from Supabase Disk', [
+                                    'image_id' => $imageId,
+                                    'path' => $imagePath
+                                ]);
+                            }
+                        } catch (\Exception $e) {
+                            Log::warning('Problem Update - Failed to delete from supabase disk', [
+                                'error' => $e->getMessage()
+                            ]);
+                        }
+
                         // Hapus dari database
                         $imageToDelete->delete();
-                        Log::info('Problem Update - Image Deleted', ['image_id' => $imageId]);
+                        Log::info('Problem Update - Image Record Deleted', ['image_id' => $imageId]);
                     }
                 }
             }
@@ -562,7 +592,7 @@ class ProblemController extends Controller
     
     /**
      * hapus problem
-     * FIX: gunakan disk supabase untuk hapus gambar
+     * FIX: support multi-disk deletion (public dan supabase)
      */
     public function destroy($id)
     {
@@ -574,9 +604,32 @@ class ProblemController extends Controller
             return back()->with('error', 'Tidak Dapat Menghapus Problem yang Sudah Memiliki Aplikasi Diterima!');
         }
 
-        // hapus semua gambar (FIX: gunakan disk supabase)
+        // hapus semua gambar (support public dan supabase disk)
         foreach ($problem->images as $image) {
-            Storage::disk('supabase')->delete($image->image_path);
+            $imagePath = $image->image_path;
+
+            // Coba hapus dari public disk
+            try {
+                if (Storage::disk('public')->exists($imagePath)) {
+                    Storage::disk('public')->delete($imagePath);
+                }
+            } catch (\Exception $e) {
+                Log::warning('Problem Destroy - Failed to delete from public disk', [
+                    'error' => $e->getMessage()
+                ]);
+            }
+
+            // Coba hapus dari supabase disk
+            try {
+                if (Storage::disk('supabase')->exists($imagePath)) {
+                    Storage::disk('supabase')->delete($imagePath);
+                }
+            } catch (\Exception $e) {
+                Log::warning('Problem Destroy - Failed to delete from supabase disk', [
+                    'error' => $e->getMessage()
+                ]);
+            }
+
             $image->delete();
         }
 
