@@ -185,8 +185,16 @@ class ProblemController extends Controller
 
             Log::info('Problem Store - Problem Created', ['problem_id' => $problem->id]);
             
-            // upload images jika ada (FIX: gunakan disk supabase)
+            // upload images jika ada (FIX: gunakan disk supabase dengan fallback)
             if ($request->hasFile('images')) {
+                // Log disk configuration untuk debugging
+                Log::info('Problem Store - Disk Configuration', [
+                    'default_disk' => config('filesystems.default'),
+                    'supabase_endpoint' => config('filesystems.disks.supabase.endpoint'),
+                    'supabase_bucket' => config('filesystems.disks.supabase.bucket'),
+                    'supabase_region' => config('filesystems.disks.supabase.region'),
+                ]);
+
                 foreach ($request->file('images') as $index => $image) {
                     try {
                         Log::info('Problem Store - Attempting Image Upload', [
@@ -197,20 +205,36 @@ class ProblemController extends Controller
                             'problem_id' => $problem->id
                         ]);
 
-                        $path = $image->store('problems', 'supabase');
+                        // Try upload to Supabase
+                        try {
+                            $path = $image->store('problems', 'supabase');
 
-                        if (!$path) {
-                            Log::error('Problem Store - Image Store Returned False', [
-                                'index' => $index,
-                                'file_name' => $image->getClientOriginalName()
+                            if (!$path) {
+                                throw new \Exception("Store method returned false/empty path");
+                            }
+
+                            Log::info('Problem Store - Image Stored to Supabase', [
+                                'path' => $path,
+                                'problem_id' => $problem->id
                             ]);
-                            throw new \Exception("Gagal upload gambar: {$image->getClientOriginalName()}. Silakan coba lagi.");
-                        }
 
-                        Log::info('Problem Store - Image Stored Successfully', [
-                            'path' => $path,
-                            'problem_id' => $problem->id
-                        ]);
+                        } catch (\Exception $supabaseException) {
+                            // Fallback ke public disk jika Supabase gagal
+                            Log::warning('Problem Store - Supabase Upload Failed, Using Public Disk', [
+                                'error' => $supabaseException->getMessage(),
+                                'file' => $image->getClientOriginalName()
+                            ]);
+
+                            $path = $image->store('problems', 'public');
+
+                            if (!$path) {
+                                throw new \Exception("Fallback upload juga gagal. Error: " . $supabaseException->getMessage());
+                            }
+
+                            Log::info('Problem Store - Image Stored to Public Disk (Fallback)', [
+                                'path' => $path
+                            ]);
+                        }
 
                         $problem->images()->create([
                             'problem_id' => $problem->id,
@@ -419,6 +443,14 @@ class ProblemController extends Controller
                 $problem->load('images');
                 $currentImageCount = $problem->images->count();
 
+                // Log disk configuration untuk debugging
+                Log::info('Problem Update - Disk Configuration', [
+                    'default_disk' => config('filesystems.default'),
+                    'supabase_endpoint' => config('filesystems.disks.supabase.endpoint'),
+                    'supabase_bucket' => config('filesystems.disks.supabase.bucket'),
+                    'supabase_region' => config('filesystems.disks.supabase.region'),
+                ]);
+
                 foreach ($request->file('images') as $index => $image) {
                     try {
                         Log::info('Problem Update - Attempting Image Upload', [
@@ -429,20 +461,36 @@ class ProblemController extends Controller
                             'problem_id' => $problem->id
                         ]);
 
-                        $path = $image->store('problems', 'supabase'); // Gunakan disk supabase
+                        // Try upload to Supabase
+                        try {
+                            $path = $image->store('problems', 'supabase');
 
-                        if (!$path) {
-                            Log::error('Problem Update - Image Store Returned False', [
-                                'index' => $index,
-                                'file_name' => $image->getClientOriginalName()
+                            if (!$path) {
+                                throw new \Exception("Store method returned false/empty path");
+                            }
+
+                            Log::info('Problem Update - Image Stored to Supabase', [
+                                'path' => $path,
+                                'problem_id' => $problem->id
                             ]);
-                            throw new \Exception("Gagal upload gambar: {$image->getClientOriginalName()}. Silakan coba lagi.");
-                        }
 
-                        Log::info('Problem Update - Image Stored Successfully', [
-                            'path' => $path,
-                            'problem_id' => $problem->id
-                        ]);
+                        } catch (\Exception $supabaseException) {
+                            // Fallback ke public disk jika Supabase gagal
+                            Log::warning('Problem Update - Supabase Upload Failed, Using Public Disk', [
+                                'error' => $supabaseException->getMessage(),
+                                'file' => $image->getClientOriginalName()
+                            ]);
+
+                            $path = $image->store('problems', 'public');
+
+                            if (!$path) {
+                                throw new \Exception("Fallback upload juga gagal. Error: " . $supabaseException->getMessage());
+                            }
+
+                            Log::info('Problem Update - Image Stored to Public Disk (Fallback)', [
+                                'path' => $path
+                            ]);
+                        }
 
                         $problem->images()->create([
                             'problem_id' => $problem->id,

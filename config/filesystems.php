@@ -54,11 +54,11 @@ return [
             'url' => env('SUPABASE_URL'),
             'endpoint' => env('SUPABASE_ENDPOINT'),
             'use_path_style_endpoint' => env('SUPABASE_USE_PATH_STYLE_ENDPOINT', false),
-            'throw' => false,
+            'throw' => true, // Enable exception untuk debugging
             'visibility' => 'public',
             // Opsi untuk menonaktifkan verifikasi SSL di lingkungan lokal
             'http'    => [
-                'verify' => false, 
+                'verify' => false,
             ],
         ],
 

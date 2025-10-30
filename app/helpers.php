@@ -132,8 +132,9 @@ if (!function_exists('sdg_color')) {
 
 if (!function_exists('supabase_url')) {
     /**
-     * generate URL publik untuk file di Supabase Storage
-     * 
+     * generate URL publik untuk file di Supabase Storage atau local storage
+     * FIX: Support fallback ke local storage jika file ada di public disk
+     *
      * @param string|null $path path file di bucket
      * @return string URL publik file
      */
@@ -142,20 +143,44 @@ if (!function_exists('supabase_url')) {
         if (!$path) {
             return '';
         }
-        
-        // nama bucket dari config
+
+        // Check apakah file ada di local storage (public disk)
+        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
+            // Return URL local storage
+            return \Illuminate\Support\Facades\Storage::disk('public')->url($path);
+        }
+
+        // Check apakah file ada di supabase
+        try {
+            if (\Illuminate\Support\Facades\Storage::disk('supabase')->exists($path)) {
+                // nama bucket dari config
+                $bucket = config('filesystems.disks.supabase.bucket', 'kkn-go storage');
+
+                // base URL dari supabase
+                $baseUrl = config('filesystems.disks.supabase.url');
+
+                // encode bucket name untuk URL (ganti spasi dengan %20)
+                $encodedBucket = str_replace(' ', '%20', $bucket);
+
+                // encode path jika perlu
+                $encodedPath = implode('/', array_map('rawurlencode', explode('/', $path)));
+
+                // format: https://PROJECT_ID.supabase.co/storage/v1/object/public/BUCKET_NAME/PATH
+                return "{$baseUrl}/storage/v1/object/public/{$encodedBucket}/{$encodedPath}";
+            }
+        } catch (\Exception $e) {
+            // Jika error cek supabase, fallback ke URL supabase anyway
+            \Illuminate\Support\Facades\Log::warning('supabase_url - Error checking supabase storage', [
+                'path' => $path,
+                'error' => $e->getMessage()
+            ]);
+        }
+
+        // Default: return supabase URL (meski file mungkin tidak ada)
         $bucket = config('filesystems.disks.supabase.bucket', 'kkn-go storage');
-        
-        // base URL dari supabase
         $baseUrl = config('filesystems.disks.supabase.url');
-        
-        // encode bucket name untuk URL (ganti spasi dengan %20)
         $encodedBucket = str_replace(' ', '%20', $bucket);
-        
-        // encode path jika perlu
         $encodedPath = implode('/', array_map('rawurlencode', explode('/', $path)));
-        
-        // format: https://PROJECT_ID.supabase.co/storage/v1/object/public/BUCKET_NAME/PATH
         return "{$baseUrl}/storage/v1/object/public/{$encodedBucket}/{$encodedPath}";
     }
 }
