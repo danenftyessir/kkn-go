@@ -55,7 +55,7 @@ class ProblemsSeeder extends Seeder
 
             // generate dates
             $startDate = Carbon::now()->addDays(rand(30, 60));
-            $durationMonths = rand(2, 6);
+            $durationMonths = rand(1, 2);
             $endDate = $startDate->copy()->addMonths($durationMonths);
             $applicationDeadline = $startDate->copy()->subDays(rand(7, 14));
 

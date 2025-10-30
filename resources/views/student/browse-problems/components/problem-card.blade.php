@@ -1,165 +1,126 @@
-{{-- resources/views/student/browse-problems/components/problem-card.blade.php --}}
-
+{{-- problem card component untuk grid view --}}
 <a href="{{ route('student.browse-problems.show', $problem->id) }}" 
-   class="group block bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-blue-200 transform hover:-translate-y-1">
-    
-    {{-- image section --}}
-    <div class="relative h-48 bg-gradient-to-br from-blue-50 to-indigo-50 overflow-hidden">
-        @if($problem->images && $problem->images->isNotEmpty())
+   class="problem-card group bg-white rounded-xl shadow-sm hover:shadow-xl border border-gray-100 overflow-hidden transition-all duration-300 hover:-translate-y-1 flex flex-col h-full">
+
+    {{-- image --}}
+    <div class="relative h-48 bg-gradient-to-br from-blue-100 to-blue-50 overflow-hidden flex-shrink-0">
+        @if($problem->images && $problem->images->count() > 0)
             <img src="{{ supabase_url($problem->images->first()->image_path) }}" 
                  alt="{{ $problem->title }}"
-                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
         @else
-            {{-- default gradient jika tidak ada gambar --}}
             <div class="w-full h-full flex items-center justify-center">
-                <svg class="w-20 h-20 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                <svg class="w-20 h-20 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
                 </svg>
             </div>
         @endif
-        
-        {{-- badges overlay --}}
-        <div class="absolute top-3 left-3 flex gap-2">
-            @if($problem->is_urgent)
-                <span class="px-3 py-1 bg-red-500 text-white text-xs font-bold rounded-full shadow-lg animate-pulse">
-                    URGENT
-                </span>
-            @endif
-            @if($problem->is_featured)
-                <span class="px-3 py-1 bg-yellow-500 text-white text-xs font-bold rounded-full shadow-lg">
-                    ⭐ FEATURED
-                </span>
-            @endif
-        </div>
-        
-        {{-- difficulty badge --}}
-        <div class="absolute top-3 right-3">
-            <span class="px-3 py-1 {{ difficulty_color($problem->difficulty_level) }} text-xs font-semibold rounded-full shadow-lg backdrop-blur-sm">
-                {{ difficulty_label($problem->difficulty_level) }}
-            </span>
-        </div>
     </div>
 
-    {{-- content section --}}
-    <div class="p-5">
+    {{-- content --}}
+    <div class="p-5 flex flex-col flex-1">
         
-        {{-- institution info - compact --}}
-        <div class="flex items-center gap-2 mb-3">
-            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0 shadow-sm">
-                <span class="text-white font-bold text-xs">
+        {{-- institution info --}}
+        <div class="flex items-center gap-3 mb-4 flex-shrink-0">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold flex-shrink-0 overflow-hidden">
+                @if($problem->institution && $problem->institution->logo_path)
+                    <img src="{{ supabase_url($problem->institution->logo_path) }}" 
+                         alt="{{ $problem->institution->name }}"
+                         class="w-full h-full object-cover">
+                @else
                     {{ strtoupper(substr($problem->institution->name ?? 'I', 0, 1)) }}
-                </span>
+                @endif
             </div>
             <div class="flex-1 min-w-0">
-                <p class="font-semibold text-xs text-gray-900 truncate">{{ $problem->institution->name ?? 'Instansi' }}</p>
-                <p class="text-[10px] text-gray-500 truncate">{{ $problem->institution->type ?? '' }}</p>
+                <p class="font-semibold text-sm text-gray-900 truncate">{{ $problem->institution->name ?? 'Instansi' }}</p>
+                <p class="text-xs text-gray-500 truncate">{{ $problem->institution->type ?? '' }}</p>
             </div>
         </div>
 
-        {{-- title --}}
-        <h3 class="font-bold text-base text-gray-900 mb-2 line-clamp-2 h-12 group-hover:text-blue-600 transition-colors">
+        {{-- problem title --}}
+        <h3 class="font-bold text-lg text-gray-900 mb-2 line-clamp-2 h-14 group-hover:text-blue-600 transition-colors flex-shrink-0">
             {{ $problem->title }}
         </h3>
 
-        {{-- location - compact --}}
-        <div class="flex items-center gap-1 text-xs text-gray-600 mb-4">
-            <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-            </svg>
-            <span class="line-clamp-1">{{ $problem->regency->name ?? '' }}, {{ $problem->province->name ?? '' }}</span>
+        {{-- description --}}
+        <p class="text-gray-600 text-sm mb-4 line-clamp-2 h-10 flex-shrink-0">
+            {{ $problem->description }}
+        </p>
+
+        {{-- metadata --}}
+        <div class="flex items-center gap-4 text-xs text-gray-600 mb-4 flex-shrink-0">
+            <div class="flex items-center gap-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <span class="line-clamp-1">{{ $problem->regency->name ?? $problem->location_regency }}, {{ $problem->province->name ?? $problem->location_province }}</span>
+            </div>
         </div>
         
-        {{-- ✅ STATS SECTION - DESIGN BARU: ANGKA PROMINENT --}}
-        <div class="grid grid-cols-3 gap-3 mb-4 pt-4 border-t border-gray-100">
-            
-            {{-- views count --}}
-            <div class="text-center">
-                <div class="text-2xl font-bold text-gray-900">
-                    {{ $problem->views_count >= 1000 ? number_format($problem->views_count / 1000, 1) . 'K' : $problem->views_count }}
-                </div>
-                <div class="text-[10px] text-gray-500 mt-0.5">Views</div>
-            </div>
-            
-            {{-- applications count --}}
-            <div class="text-center">
-                <div class="text-2xl font-bold text-blue-600">
-                    {{ $problem->applications_count ?? 0 }}
-                </div>
-                <div class="text-[10px] text-gray-500 mt-0.5">Pendaftar</div>
-            </div>
-            
-            {{-- days until deadline --}}
-            <div class="text-center">
-                @php
-                    $daysLeft = $problem->application_deadline ? max(0, now()->diffInDays($problem->application_deadline, false)) : 0;
-                @endphp
-                <div class="text-2xl font-bold {{ $daysLeft <= 7 ? 'text-red-600' : 'text-green-600' }}">
-                    {{ $daysLeft }}
-                </div>
-                <div class="text-[10px] text-gray-500 mt-0.5">Hari Lagi</div>
-            </div>
-            
-        </div>
-
-        {{-- sdg categories - compact badges --}}
-        <div class="flex flex-wrap gap-1.5 mb-4">
+        {{-- sdg categories - gunakan helper sdg_label() --}}
+        <div class="flex flex-wrap gap-2 mb-4 h-16 content-start overflow-hidden flex-shrink-0">
             @php
-                $sdgCategories = $problem->sdg_categories ?? [];
+                $sdgCategories = $problem->sdg_categories ?? [];                
+                // jika masih string (JSON), decode dulu
                 if (is_string($sdgCategories)) {
                     $sdgCategories = json_decode($sdgCategories, true) ?? [];
                 }
-                // tampilkan maksimal 3 SDG, sisanya tampilkan +N
-                $displayCategories = array_slice($sdgCategories, 0, 3);
-                $remainingCount = count($sdgCategories) - 3;
+                
+                // pastikan hasilnya array
+                if (!is_array($sdgCategories)) {
+                    $sdgCategories = [];
+                }
             @endphp
             
-            @foreach($displayCategories as $sdg)
-                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold text-white shadow-sm"
-                      style="background-color: {{ sdg_color($sdg) }};">
-                    SDG {{ $sdg }}
-                </span>
+            @foreach(array_slice($sdgCategories, 0, 3) as $sdg)
+            <span class="px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded h-fit">
+                {{ sdg_label($sdg) }}
+            </span>
             @endforeach
             
-            @if($remainingCount > 0)
-                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-gray-200 text-gray-700">
-                    +{{ $remainingCount }}
-                </span>
+            @if(count($sdgCategories) > 3)
+            <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded h-fit">
+                +{{ count($sdgCategories) - 3 }} Lainnya
+            </span>
             @endif
         </div>
 
-        {{-- footer info - clean --}}
-        <div class="flex items-center justify-between pt-3 border-t border-gray-100">
-            <div class="flex items-center gap-1 text-xs text-gray-600">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+        {{-- stats --}}
+        <div class="flex items-center justify-between text-xs text-gray-600 mb-4 pb-4 border-b border-gray-100 flex-shrink-0">
+            <div class="flex items-center gap-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
                 </svg>
                 <span>{{ $problem->required_students }} Mahasiswa</span>
             </div>
-            
-            <div class="flex items-center gap-1 text-xs text-gray-600">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            <div class="flex items-center gap-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                 </svg>
                 <span>{{ $problem->duration_months }} Bulan</span>
             </div>
         </div>
+
+        {{-- deadline & difficulty --}}
+        <div class="flex items-center justify-between mb-4 flex-shrink-0">
+            <div>
+                <p class="text-xs text-gray-500 mb-1">Deadline Aplikasi</p>
+                <p class="text-sm font-semibold text-gray-900">{{ $problem->application_deadline->format('d M Y') }}</p>
+            </div>
+            <span class="px-3 py-1 text-xs font-semibold rounded-full
+                {{ $problem->difficulty_level === 'beginner' ? 'bg-green-100 text-green-700' : '' }}
+                {{ $problem->difficulty_level === 'intermediate' ? 'bg-yellow-100 text-yellow-700' : '' }}
+                {{ $problem->difficulty_level === 'advanced' ? 'bg-red-100 text-red-700' : '' }}">
+                {{ ucfirst($problem->difficulty_level) }}
+            </span>
+        </div>
+
+        {{-- cta button --}}
+        <div class="mt-auto">
+            <button class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
+                Lihat Detail
+            </button>
+        </div>
     </div>
 </a>
-
-{{-- custom styles untuk smooth animations --}}
-<style>
-    .line-clamp-1 {
-        display: -webkit-box;
-        -webkit-line-clamp: 1;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-    
-    .line-clamp-2 {
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-</style>
