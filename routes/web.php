@@ -79,8 +79,7 @@ Route::middleware('guest')->group(function () {
     
     // authentication pages
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [LoginController::class, 'login']);
-    
+    Route::post('/login', [LoginController::class, 'login']);    
     Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
     Route::get('/register/student', [RegisterController::class, 'showStudentForm'])->name('register.student');
     Route::post('/register/student', [RegisterController::class, 'registerStudent'])->name('register.student.submit');
@@ -135,6 +134,7 @@ Route::middleware(['auth', 'check.user.type:student'])->prefix('student')->name(
     Route::prefix('problems')->name('problems.')->group(function () {
         Route::get('/', [BrowseProblemsController::class, 'index'])->name('index');
         Route::get('/{id}', [BrowseProblemsController::class, 'show'])->name('show');
+        Route::get('/api/get-regencies', [BrowseProblemsController::class, 'getRegencies'])->name('get-regencies');
     });
     
     // applications
@@ -184,6 +184,7 @@ Route::middleware(['auth', 'check.user.type:student'])->prefix('student')->name(
         Route::get('/', [KnowledgeRepositoryController::class, 'index'])->name('index');
         Route::get('/{id}', [KnowledgeRepositoryController::class, 'show'])->name('show');
         Route::get('/{id}/download', [KnowledgeRepositoryController::class, 'download'])->name('download');
+        Route::get('/api/get-regencies', [KnowledgeRepositoryController::class, 'getRegencies'])->name('get-regencies');    
     });
     
 });

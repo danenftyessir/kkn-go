@@ -4,12 +4,40 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * model Problem
+ * model untuk problems dengan accessor dan scope yang telah di-refactor
+ * 
+ * @property int $id
+ * @property int $institution_id
+ * @property string $title
+ * @property string $description
+ * @property string|null $background
+ * @property string|null $objectives
+ * @property string|null $scope
+ * @property int $province_id
+ * @property int $regency_id
+ * @property string|null $village
+ * @property string|null $detailed_location
+ * @property array $sdg_categories
+ * @property int $required_students
+ * @property array $required_skills
+ * @property array|null $required_majors
+ * @property \Carbon\Carbon $start_date
+ * @property \Carbon\Carbon $end_date
+ * @property \Carbon\Carbon $application_deadline
+ * @property int $duration_months
+ * @property string $difficulty_level
+ * @property string $status
+ * @property string|null $expected_outcomes
+ * @property array|null $deliverables
+ * @property array|null $facilities_provided
+ * @property int $views_count
+ * @property int $applications_count
+ * @property int $accepted_students
+ * @property bool $is_featured
+ * @property bool $is_urgent
  */
 class Problem extends Model
 {
@@ -57,153 +85,163 @@ class Problem extends Model
         'application_deadline' => 'date',
         'is_featured' => 'boolean',
         'is_urgent' => 'boolean',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
     ];
 
-    // relasi ke institution
-    public function institution(): BelongsTo
+    // ===========================================
+    // RELATIONSHIPS
+    // ===========================================
+
+    /**
+     * relasi ke institution
+     */
+    public function institution()
     {
         return $this->belongsTo(Institution::class);
     }
 
-    // relasi ke province
-    public function province(): BelongsTo
+    /**
+     * relasi ke province
+     */
+    public function province()
     {
         return $this->belongsTo(Province::class);
     }
 
-    // relasi ke regency
-    public function regency(): BelongsTo
+    /**
+     * relasi ke regency
+     */
+    public function regency()
     {
         return $this->belongsTo(Regency::class);
     }
 
-    // relasi ke images
-    public function images(): HasMany
+    /**
+     * relasi ke problem images
+     */
+    public function images()
     {
-        return $this->hasMany(ProblemImage::class)->orderBy('order', 'asc');
+        return $this->hasMany(ProblemImage::class);
     }
 
-    // relasi ke applications
-    public function applications(): HasMany
+    /**
+     * relasi ke applications
+     */
+    public function applications()
     {
         return $this->hasMany(Application::class);
     }
 
-    // relasi ke wishlists
-    public function wishlists(): HasMany
-    {
-        return $this->hasMany(Wishlist::class);
-    }
-
-    // relasi ke projects
-    public function projects(): HasMany
+    /**
+     * relasi ke projects
+     */
+    public function projects()
     {
         return $this->hasMany(Project::class);
     }
 
+    // ===========================================
+    // ACCESSORS & MUTATORS
+    // ===========================================
+
     /**
-     * prioritas: is_cover = true, fallback ke gambar pertama
+     * ✅ ACCESSOR: get SDG categories labels dalam bahasa indonesia
+     * menggunakan helper function sdg_label() untuk konsistensi
      * 
-     * usage di blade: {{ $problem->coverImage->image_url }}
-     * 
-     * @return ProblemImage|null
+     * usage: $problem->sdg_categories_labels
+     * return: ['Tanpa Kemiskinan', 'Tanpa Kelaparan']
      */
-    public function getCoverImageAttribute(): ?ProblemImage
+    public function getSdgCategoriesLabelsAttribute(): array
     {
-        // cari gambar dengan is_cover = true
-        $coverImage = $this->images->where('is_cover', true)->first();
-        
-        // fallback ke gambar pertama jika tidak ada cover
-        if (!$coverImage) {
-            $coverImage = $this->images->first();
+        if (!$this->sdg_categories || !is_array($this->sdg_categories)) {
+            return [];
         }
         
-        return $coverImage;
+        return array_map(function($sdgNumber) {
+            return sdg_label($sdgNumber);
+        }, $this->sdg_categories);
     }
 
     /**
-     * accessor untuk mendapatkan gambar pertama
+     * ✅ ACCESSOR: get first SDG category label
+     * berguna untuk display primary category
      * 
-     * usage di blade: 
-     * <img src="{{ $problem->first_image_url }}" alt="{{ $problem->title }}">
-     * 
-     * @return string URL gambar pertama atau placeholder
+     * usage: $problem->primary_sdg_label
+     * return: 'Tanpa Kemiskinan'
      */
-    public function getFirstImageUrlAttribute(): string
+    public function getPrimarySdgLabelAttribute(): string
     {
-        $firstImage = $this->images()->first();
-        
-        if ($firstImage) {
-            return $firstImage->image_url;
+        if (!$this->sdg_categories || !is_array($this->sdg_categories) || empty($this->sdg_categories)) {
+            return 'Tidak Ada Kategori';
         }
         
-        // return placeholder jika tidak ada gambar
-        return asset('images/placeholder-problem.jpg');
+        return sdg_label($this->sdg_categories[0]);
     }
 
     /**
-     * accessor untuk mendapatkan semua URLs gambar
-     * 
-     * usage di blade:
-     * @foreach($problem->image_urls as $imageUrl)
-     *     <img src="{{ $imageUrl }}" alt="{{ $problem->title }}">
-     * @endforeach
-     * 
-     * @return array array of image URLs
+     * accessor: cek apakah problem sudah expired (deadline lewat)
      */
-    public function getImageUrlsAttribute(): array
+    public function getIsExpiredAttribute(): bool
     {
-        return $this->images->map(function($image) {
-            return $image->image_url;
-        })->toArray();
+        return $this->application_deadline && $this->application_deadline->isPast();
     }
 
     /**
-     * accessor untuk mendapatkan label SDG categories dalam bahasa indonesia
-     * 
-     * usage di blade:
-     * @foreach($problem->sdg_labels as $label)
-     *     <span>{{ $label }}</span>
-     * @endforeach
-     * 
-     * @return array array of SDG labels
+     * accessor: hitung sisa hari deadline
      */
-    public function getSdgLabelsAttribute(): array
+    public function getDaysUntilDeadlineAttribute(): int
     {
-        $sdgLabels = [
-            1 => 'Tanpa Kemiskinan',
-            2 => 'Tanpa Kelaparan',
-            3 => 'Kehidupan Sehat Dan Sejahtera',
-            4 => 'Pendidikan Berkualitas',
-            5 => 'Kesetaraan Gender',
-            6 => 'Air Bersih Dan Sanitasi Layak',
-            7 => 'Energi Bersih Dan Terjangkau',
-            8 => 'Pekerjaan Layak Dan Pertumbuhan Ekonomi',
-            9 => 'Industri, Inovasi, Dan Infrastruktur',
-            10 => 'Berkurangnya Kesenjangan',
-            11 => 'Kota Dan Komunitas Berkelanjutan',
-            12 => 'Konsumsi Dan Produksi Bertanggung Jawab',
-            13 => 'Penanganan Perubahan Iklim',
-            14 => 'Ekosistem Lautan',
-            15 => 'Ekosistem Daratan',
-            16 => 'Perdamaian, Keadilan, Dan Kelembagaan Yang Tangguh',
-            17 => 'Kemitraan Untuk Mencapai Tujuan',
-        ];
+        if (!$this->application_deadline) {
+            return 0;
+        }
+        
+        return max(0, now()->diffInDays($this->application_deadline, false));
+    }
 
-        $labels = [];
-        foreach ($this->sdg_categories ?? [] as $sdgNumber) {
-            if (isset($sdgLabels[$sdgNumber])) {
-                $labels[] = $sdgLabels[$sdgNumber];
+    /**
+     * accessor: get cover/thumbnail image
+     */
+    public function getCoverImageAttribute()
+    {
+        return $this->images()->where('is_cover', true)->first() 
+            ?? $this->images()->orderBy('order')->first();
+    }
+
+    // ===========================================
+    // QUERY SCOPES
+    // ===========================================
+
+    /**
+     * ✅ SCOPE: filter by SDG categories
+     * mendukung single atau multiple categories
+     * menggunakan whereJsonContains untuk akurasi sempurna
+     * 
+     * usage: Problem::bySdgCategories([1, 4])->get()
+     */
+    public function scopeBySdgCategories($query, $categories)
+    {
+        // pastikan input adalah array
+        if (!is_array($categories)) {
+            $categories = [$categories];
+        }
+        
+        // convert ke integer
+        $categories = array_map('intval', array_filter($categories));
+        
+        if (empty($categories)) {
+            return $query;
+        }
+        
+        // gunakan whereJsonContains untuk setiap kategori
+        // dengan OR logic
+        return $query->where(function($q) use ($categories) {
+            foreach ($categories as $category) {
+                $q->orWhereJsonContains('sdg_categories', $category);
             }
-        }
-
-        return $labels;
+        });
     }
 
     /**
-     * scope untuk filter by status
+     * scope: filter by status
      */
     public function scopeStatus($query, string $status)
     {
@@ -211,7 +249,7 @@ class Problem extends Model
     }
 
     /**
-     * scope untuk problem yang sedang open
+     * scope: problem yang sedang open (status open dan belum expired)
      */
     public function scopeOpen($query)
     {
@@ -220,7 +258,7 @@ class Problem extends Model
     }
 
     /**
-     * scope untuk filter by difficulty
+     * scope: filter by difficulty level
      */
     public function scopeDifficulty($query, string $difficulty)
     {
@@ -228,26 +266,116 @@ class Problem extends Model
     }
 
     /**
-     * scope untuk filter by province
+     * scope: filter by province
      */
-    public function scopeProvince($query, int $provinceId)
+    public function scopeByProvince($query, int $provinceId)
     {
         return $query->where('province_id', $provinceId);
     }
 
     /**
-     * scope untuk filter by regency
+     * scope: filter by regency
      */
-    public function scopeRegency($query, int $regencyId)
+    public function scopeByRegency($query, int $regencyId)
     {
         return $query->where('regency_id', $regencyId);
     }
 
     /**
+     * scope: filter by duration range
+     */
+    public function scopeByDuration($query, int $minMonths, int $maxMonths = null)
+    {
+        if ($maxMonths) {
+            return $query->whereBetween('duration_months', [$minMonths, $maxMonths]);
+        }
+        
+        return $query->where('duration_months', '>=', $minMonths);
+    }
+
+    /**
+     * scope: featured problems
+     */
+    public function scopeFeatured($query)
+    {
+        return $query->where('is_featured', true);
+    }
+
+    /**
+     * scope: urgent problems
+     */
+    public function scopeUrgent($query)
+    {
+        return $query->where('is_urgent', true);
+    }
+
+    /**
+     * scope: problems yang mendekati deadline
+     */
+    public function scopeDeadlineSoon($query, int $days = 7)
+    {
+        return $query->where('status', 'open')
+                    ->whereBetween('application_deadline', [
+                        now(),
+                        now()->addDays($days)
+                    ]);
+    }
+
+    /**
+     * scope: search by keyword (title dan description)
+     */
+    public function scopeSearch($query, string $keyword)
+    {
+        return $query->where(function($q) use ($keyword) {
+            $q->where('title', 'ILIKE', "%{$keyword}%")
+              ->orWhere('description', 'ILIKE', "%{$keyword}%");
+        });
+    }
+
+    // ===========================================
+    // METHODS
+    // ===========================================
+
+    /**
      * increment views count
      */
-    public function incrementViews()
+    public function incrementViews(): void
     {
         $this->increment('views_count');
+    }
+
+    /**
+     * increment applications count
+     */
+    public function incrementApplications(): void
+    {
+        $this->increment('applications_count');
+    }
+
+    /**
+     * increment accepted students count
+     */
+    public function incrementAcceptedStudents(): void
+    {
+        $this->increment('accepted_students');
+    }
+
+    /**
+     * cek apakah problem masih menerima aplikasi
+     */
+    public function isAcceptingApplications(): bool
+    {
+        return $this->status === 'open' 
+            && $this->application_deadline 
+            && $this->application_deadline->isFuture()
+            && $this->accepted_students < $this->required_students;
+    }
+
+    /**
+     * cek apakah problem sudah penuh
+     */
+    public function isFull(): bool
+    {
+        return $this->accepted_students >= $this->required_students;
     }
 }

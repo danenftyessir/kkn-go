@@ -1,64 +1,28 @@
 <?php
 
 /**
- * helper functions untuk aplikasi KKN-GO
+ * file helper functions global untuk aplikasi KKN-Go
+ * berisi fungsi-fungsi utility yang sering digunakan
  * 
- * file ini otomatis di-load oleh composer (lihat composer.json)
+ * path: app/helpers.php
+ * autoload via composer.json -> "files": ["app/helpers.php"]
  */
 
-if (!function_exists('supabase_url')) {
-    /**
-     * generate public URL untuk file di supabase storage
-     * 
-     * @param string|null $path path file di bucket (contoh: 'problems/image.jpg')
-     * @param string|null $bucket nama bucket (default: 'kkn-go storage')
-     * @return string URL publik file atau placeholder jika path kosong
-     */
-    function supabase_url(?string $path, ?string $bucket = null): string
-    {
-        // jika path kosong, return placeholder
-        if (empty($path)) {
-            return asset('images/placeholder.jpg');
-        }
-        
-        // gunakan bucket dari config atau default
-        $bucket = $bucket ?? config('filesystems.disks.supabase.bucket', 'kkn-go storage');
-        
-        // base URL dari supabase
-        $baseUrl = config('filesystems.disks.supabase.url');
-        
-        // encode bucket name untuk URL (ganti spasi dengan %20)
-        $encodedBucket = str_replace(' ', '%20', $bucket);
-        
-        // encode path jika perlu
-        $encodedPath = implode('/', array_map('rawurlencode', explode('/', $path)));
-        
-        // format: https://PROJECT_ID.supabase.co/storage/v1/object/public/BUCKET_NAME/PATH
-        return "{$baseUrl}/storage/v1/object/public/{$encodedBucket}/{$encodedPath}";
-    }
-}
-
-if (!function_exists('document_url')) {
-    /**
-     * generate URL untuk mengakses dokumen
-     * alias untuk supabase_url() khusus dokumen
-     * 
-     * @param string|null $path path file dokumen di bucket
-     * @return string URL publik dokumen
-     */
-    function document_url(?string $path): string
-    {
-        return supabase_url($path);
-    }
-}
+// ===============================================
+// SDG CATEGORIES HELPERS
+// ===============================================
 
 if (!function_exists('sdg_label')) {
     /**
-     * ✅ PERBAIKAN: helper function untuk mapping SDG integer ke label bahasa indonesia
+     * ✅ helper function untuk mapping SDG integer ke label bahasa indonesia
      * single source of truth untuk seluruh aplikasi
      * 
      * @param int|string $sdgNumber nomor SDG (1-17)
      * @return string label SDG dalam bahasa indonesia
+     * 
+     * usage: 
+     * sdg_label(1) // returns "Tanpa Kemiskinan"
+     * sdg_label(4) // returns "Pendidikan Berkualitas"
      */
     function sdg_label($sdgNumber): string
     {
@@ -91,10 +55,16 @@ if (!function_exists('sdg_label')) {
 
 if (!function_exists('sdg_categories_array')) {
     /**
-     * ✅ PERBAIKAN: helper function untuk mendapatkan semua kategori SDG
-     * digunakan untuk dropdown dan form select
+     * ✅ helper function untuk mendapatkan semua kategori SDG
+     * digunakan untuk dropdown, form select, dan filter
      * 
-     * @return array array dengan key integer dan value label indonesia
+     * @return array array dengan key integer (1-17) dan value label indonesia
+     * 
+     * usage:
+     * $categories = sdg_categories_array();
+     * foreach ($categories as $value => $label) {
+     *     echo "<option value='{$value}'>{$label}</option>";
+     * }
      */
     function sdg_categories_array(): array
     {
@@ -120,12 +90,100 @@ if (!function_exists('sdg_categories_array')) {
     }
 }
 
+if (!function_exists('sdg_color')) {
+    /**
+     * helper function untuk mendapatkan warna SDG sesuai standar UN
+     * 
+     * @param int $sdgNumber nomor SDG (1-17)
+     * @return string hex color code
+     * 
+     * usage:
+     * <div style="background-color: {{ sdg_color(1) }}">...</div>
+     */
+    function sdg_color(int $sdgNumber): string
+    {
+        $colors = [
+            1 => '#E5243B',  // no poverty - merah
+            2 => '#DDA63A',  // zero hunger - kuning
+            3 => '#4C9F38',  // good health - hijau
+            4 => '#C5192D',  // quality education - merah gelap
+            5 => '#FF3A21',  // gender equality - oranye
+            6 => '#26BDE2',  // clean water - biru muda
+            7 => '#FCC30B',  // affordable energy - kuning cerah
+            8 => '#A21942',  // decent work - ungu gelap
+            9 => '#FD6925',  // industry innovation - oranye
+            10 => '#DD1367', // reduced inequalities - pink
+            11 => '#FD9D24', // sustainable cities - oranye terang
+            12 => '#BF8B2E', // responsible consumption - coklat
+            13 => '#3F7E44', // climate action - hijau gelap
+            14 => '#0A97D9', // life below water - biru
+            15 => '#56C02B', // life on land - hijau terang
+            16 => '#00689D', // peace justice - biru tua
+            17 => '#19486A', // partnerships - biru navy
+        ];
+        
+        return $colors[$sdgNumber] ?? '#666666';
+    }
+}
+
+// ===============================================
+// FILE & STORAGE HELPERS
+// ===============================================
+
+if (!function_exists('supabase_url')) {
+    /**
+     * generate URL publik untuk file di Supabase Storage
+     * 
+     * @param string|null $path path file di bucket
+     * @return string URL publik file
+     */
+    function supabase_url(?string $path): string
+    {
+        if (!$path) {
+            return '';
+        }
+        
+        // nama bucket dari config
+        $bucket = config('filesystems.disks.supabase.bucket', 'kkn-go storage');
+        
+        // base URL dari supabase
+        $baseUrl = config('filesystems.disks.supabase.url');
+        
+        // encode bucket name untuk URL (ganti spasi dengan %20)
+        $encodedBucket = str_replace(' ', '%20', $bucket);
+        
+        // encode path jika perlu
+        $encodedPath = implode('/', array_map('rawurlencode', explode('/', $path)));
+        
+        // format: https://PROJECT_ID.supabase.co/storage/v1/object/public/BUCKET_NAME/PATH
+        return "{$baseUrl}/storage/v1/object/public/{$encodedBucket}/{$encodedPath}";
+    }
+}
+
+if (!function_exists('document_url')) {
+    /**
+     * generate URL untuk mengakses dokumen
+     * alias untuk supabase_url() khusus dokumen
+     * 
+     * @param string|null $path path file dokumen di bucket
+     * @return string URL publik dokumen
+     */
+    function document_url(?string $path): string
+    {
+        return supabase_url($path);
+    }
+}
+
 if (!function_exists('format_file_size')) {
     /**
      * format file size dari bytes ke human readable format
      * 
      * @param int $bytes ukuran file dalam bytes
-     * @return string ukuran file yang mudah dibaca (contoh: "2.5 MB")
+     * @return string ukuran file yang mudah dibaca
+     * 
+     * usage:
+     * format_file_size(1024) // "1 KB"
+     * format_file_size(1048576) // "1 MB"
      */
     function format_file_size(int $bytes): string
     {
@@ -139,12 +197,19 @@ if (!function_exists('format_file_size')) {
     }
 }
 
+// ===============================================
+// DATE & TIME HELPERS
+// ===============================================
+
 if (!function_exists('time_ago')) {
     /**
      * konversi timestamp ke format "time ago" dalam bahasa indonesia
      * 
      * @param \Carbon\Carbon|string $time waktu yang akan dikonversi
-     * @return string format waktu relatif (contoh: "2 jam yang lalu")
+     * @return string format waktu relatif
+     * 
+     * usage:
+     * time_ago($post->created_at) // "2 jam yang lalu"
      */
     function time_ago($time): string
     {
@@ -169,29 +234,82 @@ if (!function_exists('time_ago')) {
     }
 }
 
-if (!function_exists('status_badge')) {
+if (!function_exists('format_date_indonesian')) {
     /**
-     * generate HTML badge untuk status dengan warna yang sesuai
+     * format tanggal ke bahasa indonesia
      * 
-     * @param string $status nama status
-     * @param string|null $type tipe badge (application, project, problem, document)
-     * @return string HTML badge
+     * @param \Carbon\Carbon|string $date tanggal yang akan diformat
+     * @param string $format format output ('short', 'medium', 'long')
+     * @return string tanggal dalam format indonesia
+     * 
+     * usage:
+     * format_date_indonesian($date, 'short') // "15 Jan 2025"
+     * format_date_indonesian($date, 'long')  // "15 Januari 2025"
      */
-    function status_badge(string $status, ?string $type = null): string
+    function format_date_indonesian($date, string $format = 'medium'): string
     {
-        // definisi warna untuk setiap status berdasarkan tipe
+        $date = \Carbon\Carbon::parse($date);
+        
+        $months = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+        ];
+        
+        $monthsShort = [
+            1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr',
+            5 => 'Mei', 6 => 'Jun', 7 => 'Jul', 8 => 'Ags',
+            9 => 'Sep', 10 => 'Okt', 11 => 'Nov', 12 => 'Des'
+        ];
+        
+        $days = [
+            'Sunday' => 'Minggu', 'Monday' => 'Senin', 'Tuesday' => 'Selasa',
+            'Wednesday' => 'Rabu', 'Thursday' => 'Kamis', 'Friday' => 'Jumat',
+            'Saturday' => 'Sabtu'
+        ];
+        
+        switch ($format) {
+            case 'short':
+                return $date->day . ' ' . $monthsShort[$date->month] . ' ' . $date->year;
+            case 'long':
+                return $days[$date->englishDayOfWeek] . ', ' . $date->day . ' ' . 
+                       $months[$date->month] . ' ' . $date->year;
+            case 'medium':
+            default:
+                return $date->day . ' ' . $months[$date->month] . ' ' . $date->year;
+        }
+    }
+}
+
+// ===============================================
+// STATUS & BADGE HELPERS
+// ===============================================
+
+if (!function_exists('status_badge_color')) {
+    /**
+     * get Tailwind CSS classes untuk badge berdasarkan status
+     * 
+     * @param string $status status value
+     * @param string $type tipe entity ('application', 'project', 'problem', 'document')
+     * @return string Tailwind CSS classes
+     * 
+     * usage:
+     * <span class="{{ status_badge_color('accepted', 'application') }}">Diterima</span>
+     */
+    function status_badge_color(string $status, string $type = 'application'): string
+    {
         $colors = [
             'application' => [
                 'pending' => 'bg-yellow-100 text-yellow-800',
-                'reviewed' => 'bg-blue-100 text-blue-800',
+                'under_review' => 'bg-blue-100 text-blue-800',
                 'accepted' => 'bg-green-100 text-green-800',
                 'rejected' => 'bg-red-100 text-red-800',
             ],
             'project' => [
                 'active' => 'bg-green-100 text-green-800',
-                'on_hold' => 'bg-yellow-100 text-yellow-800',
                 'completed' => 'bg-blue-100 text-blue-800',
-                'cancelled' => 'bg-gray-100 text-gray-800',
+                'on_hold' => 'bg-yellow-100 text-yellow-800',
+                'cancelled' => 'bg-red-100 text-red-800',
             ],
             'problem' => [
                 'draft' => 'bg-gray-100 text-gray-800',
@@ -205,73 +323,137 @@ if (!function_exists('status_badge')) {
                 'approved' => 'bg-green-100 text-green-800',
                 'rejected' => 'bg-red-100 text-red-800',
             ],
-            'milestone' => [
-                'pending' => 'bg-gray-100 text-gray-800',
-                'in_progress' => 'bg-blue-100 text-blue-800',
-                'completed' => 'bg-green-100 text-green-800',
-                'delayed' => 'bg-red-100 text-red-800',
-            ],
         ];
         
-        // label indonesia untuk status
-        $labels = [
-            'pending' => 'Menunggu',
-            'reviewed' => 'Ditinjau',
-            'accepted' => 'Diterima',
-            'rejected' => 'Ditolak',
-            'active' => 'Aktif',
-            'on_hold' => 'Ditahan',
-            'completed' => 'Selesai',
-            'cancelled' => 'Dibatalkan',
-            'draft' => 'Draft',
-            'open' => 'Terbuka',
-            'in_progress' => 'Sedang Berjalan',
-            'closed' => 'Ditutup',
-            'approved' => 'Disetujui',
-            'delayed' => 'Terlambat',
-        ];
-        
-        // ambil warna berdasarkan tipe dan status
-        $color = 'bg-gray-100 text-gray-800'; // default
-        if ($type && isset($colors[$type][$status])) {
-            $color = $colors[$type][$status];
-        } else {
-            // coba cari di semua tipe
-            foreach ($colors as $typeColors) {
-                if (isset($typeColors[$status])) {
-                    $color = $typeColors[$status];
-                    break;
-                }
-            }
-        }
-        
-        $label = $labels[$status] ?? ucfirst($status);
-        
-        return '<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ' . $color . '">' 
-               . $label . 
-               '</span>';
+        return $colors[$type][$status] ?? 'bg-gray-100 text-gray-800';
     }
 }
 
-if (!function_exists('user_avatar')) {
+if (!function_exists('status_label')) {
     /**
-     * generate avatar URL atau inisial untuk user
+     * get label bahasa indonesia untuk status
      * 
-     * @param object|null $user user object
-     * @return string URL avatar atau data URI untuk inisial
+     * @param string $status status value
+     * @param string $type tipe entity
+     * @return string label dalam bahasa indonesia
      */
-    function user_avatar($user): string
+    function status_label(string $status, string $type = 'application'): string
     {
-        if (!$user) {
-            return asset('images/default-avatar.png');
+        $labels = [
+            'application' => [
+                'pending' => 'Menunggu',
+                'under_review' => 'Sedang Ditinjau',
+                'accepted' => 'Diterima',
+                'rejected' => 'Ditolak',
+            ],
+            'project' => [
+                'active' => 'Aktif',
+                'completed' => 'Selesai',
+                'on_hold' => 'Ditunda',
+                'cancelled' => 'Dibatalkan',
+            ],
+            'problem' => [
+                'draft' => 'Draft',
+                'open' => 'Terbuka',
+                'in_progress' => 'Berjalan',
+                'completed' => 'Selesai',
+                'closed' => 'Ditutup',
+            ],
+            'document' => [
+                'pending' => 'Menunggu Persetujuan',
+                'approved' => 'Disetujui',
+                'rejected' => 'Ditolak',
+            ],
+        ];
+        
+        return $labels[$type][$status] ?? ucfirst($status);
+    }
+}
+
+// ===============================================
+// DIFFICULTY LEVEL HELPERS
+// ===============================================
+
+if (!function_exists('difficulty_label')) {
+    /**
+     * get label bahasa indonesia untuk difficulty level
+     * 
+     * @param string $difficulty difficulty level (beginner, intermediate, advanced)
+     * @return string label dalam bahasa indonesia
+     */
+    function difficulty_label(string $difficulty): string
+    {
+        $labels = [
+            'beginner' => 'Pemula',
+            'intermediate' => 'Menengah',
+            'advanced' => 'Lanjutan',
+        ];
+        
+        return $labels[$difficulty] ?? ucfirst($difficulty);
+    }
+}
+
+if (!function_exists('difficulty_color')) {
+    /**
+     * get Tailwind CSS classes untuk difficulty badge
+     * 
+     * @param string $difficulty difficulty level
+     * @return string Tailwind CSS classes
+     */
+    function difficulty_color(string $difficulty): string
+    {
+        $colors = [
+            'beginner' => 'bg-green-100 text-green-800',
+            'intermediate' => 'bg-yellow-100 text-yellow-800',
+            'advanced' => 'bg-red-100 text-red-800',
+        ];
+        
+        return $colors[$difficulty] ?? 'bg-gray-100 text-gray-800';
+    }
+}
+
+// ===============================================
+// NUMBER FORMATTING HELPERS
+// ===============================================
+
+if (!function_exists('format_number_indonesian')) {
+    /**
+     * format angka ke format indonesia (separator titik dan koma)
+     * 
+     * @param float|int $number angka yang akan diformat
+     * @param int $decimals jumlah desimal
+     * @return string angka terformat
+     * 
+     * usage:
+     * format_number_indonesian(1000000) // "1.000.000"
+     */
+    function format_number_indonesian($number, int $decimals = 0): string
+    {
+        return number_format($number, $decimals, ',', '.');
+    }
+}
+
+if (!function_exists('short_number')) {
+    /**
+     * format angka ke format pendek (1K, 1M, 1B)
+     * 
+     * @param int $number angka yang akan diformat
+     * @return string angka terformat pendek
+     * 
+     * usage:
+     * short_number(1500) // "1.5K"
+     * short_number(1500000) // "1.5M"
+     */
+    function short_number(int $number): string
+    {
+        if ($number >= 1000000000) {
+            return round($number / 1000000000, 1) . 'B';
+        } elseif ($number >= 1000000) {
+            return round($number / 1000000, 1) . 'M';
+        } elseif ($number >= 1000) {
+            return round($number / 1000, 1) . 'K';
         }
         
-        // jika user punya photo_path, gunakan supabase URL
-        if (isset($user->photo_path) && !empty($user->photo_path)) {
-            return supabase_url($user->photo_path);
-        }
-        
-        // jika tidak ada photo, return default
-        return asset('images/default-avatar.png');
+        return (string) $number;
     }
 }
