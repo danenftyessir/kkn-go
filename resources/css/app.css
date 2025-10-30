@@ -21,7 +21,7 @@
 @import './auth-student.css';
 @import './auth-institution.css';
 @import './navbar-dropdown.css';
-@import 'friends.css';
+@import './friends.css';
 
 /* Navbar Z-Index Fix */
 nav,
