@@ -188,13 +188,50 @@ class ProblemController extends Controller
             // upload images jika ada (FIX: gunakan disk supabase)
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $index => $image) {
-                    $path = $image->store('problems', 'supabase');
-                    $problem->images()->create([
-                        'image_path' => $path,
-                        'order' => $index + 1,
-                        'is_cover' => $index === 0, // image pertama jadi cover
-                    ]);
-                    Log::info('Problem Store - Image Uploaded', ['path' => $path, 'order' => $index + 1]);
+                    try {
+                        Log::info('Problem Store - Attempting Image Upload', [
+                            'index' => $index,
+                            'original_name' => $image->getClientOriginalName(),
+                            'mime_type' => $image->getMimeType(),
+                            'size' => $image->getSize(),
+                            'problem_id' => $problem->id
+                        ]);
+
+                        $path = $image->store('problems', 'supabase');
+
+                        if (!$path) {
+                            Log::error('Problem Store - Image Store Returned False', [
+                                'index' => $index,
+                                'file_name' => $image->getClientOriginalName()
+                            ]);
+                            throw new \Exception("Gagal upload gambar: {$image->getClientOriginalName()}. Silakan coba lagi.");
+                        }
+
+                        Log::info('Problem Store - Image Stored Successfully', [
+                            'path' => $path,
+                            'problem_id' => $problem->id
+                        ]);
+
+                        $problem->images()->create([
+                            'problem_id' => $problem->id,
+                            'image_path' => $path,
+                            'order' => $index + 1,
+                            'is_cover' => $index === 0, // image pertama jadi cover
+                        ]);
+
+                        Log::info('Problem Store - Image Record Created', [
+                            'path' => $path,
+                            'order' => $index + 1
+                        ]);
+
+                    } catch (\Exception $imgException) {
+                        Log::error('Problem Store - Image Upload Exception', [
+                            'index' => $index,
+                            'error' => $imgException->getMessage(),
+                            'trace' => $imgException->getTraceAsString()
+                        ]);
+                        throw new \Exception("Error upload gambar ke-" . ($index + 1) . ": " . $imgException->getMessage());
+                    }
                 }
             }
 
@@ -257,8 +294,12 @@ class ProblemController extends Controller
      * update problem
      * FIX: handle array conversion dan validation lengkap seperti store
      */
-    public function update(Request $request, Problem $problem)
+    public function update(Request $request, $id)
     {
+        // fetch problem dengan authorization check
+        $problem = Problem::where('institution_id', auth()->user()->institution->id)
+                         ->findOrFail($id);
+
         try {
             Log::info('Problem Update - Request Data', [
                 'problem_id' => $problem->id,
@@ -374,16 +415,59 @@ class ProblemController extends Controller
 
             // 2. Upload Gambar Baru
             if ($request->hasFile('images')) {
-                foreach ($request->file('images') as $index => $image) {
-                    $path = $image->store('problems', 'supabase'); // Gunakan disk supabase
+                // Refresh relation setelah delete dan hitung existing images
+                $problem->load('images');
+                $currentImageCount = $problem->images->count();
 
-                    $problem->images()->create([
-                        'image_path' => $path,
-                        'order' => $problem->images()->count() + 1,
-                        'is_cover' => ($problem->images()->count() === 0 && $index === 0)
-                    ]);
-                    Log::info('Problem Update - Image Uploaded', ['path' => $path, 'order' => $problem->images()->count()]);
+                foreach ($request->file('images') as $index => $image) {
+                    try {
+                        Log::info('Problem Update - Attempting Image Upload', [
+                            'index' => $index,
+                            'original_name' => $image->getClientOriginalName(),
+                            'mime_type' => $image->getMimeType(),
+                            'size' => $image->getSize(),
+                            'problem_id' => $problem->id
+                        ]);
+
+                        $path = $image->store('problems', 'supabase'); // Gunakan disk supabase
+
+                        if (!$path) {
+                            Log::error('Problem Update - Image Store Returned False', [
+                                'index' => $index,
+                                'file_name' => $image->getClientOriginalName()
+                            ]);
+                            throw new \Exception("Gagal upload gambar: {$image->getClientOriginalName()}. Silakan coba lagi.");
+                        }
+
+                        Log::info('Problem Update - Image Stored Successfully', [
+                            'path' => $path,
+                            'problem_id' => $problem->id
+                        ]);
+
+                        $problem->images()->create([
+                            'problem_id' => $problem->id,
+                            'image_path' => $path,
+                            'order' => $currentImageCount + $index + 1,
+                            'is_cover' => ($currentImageCount === 0 && $index === 0)
+                        ]);
+
+                        Log::info('Problem Update - Image Record Created', [
+                            'path' => $path,
+                            'order' => $currentImageCount + $index + 1
+                        ]);
+
+                    } catch (\Exception $imgException) {
+                        Log::error('Problem Update - Image Upload Exception', [
+                            'index' => $index,
+                            'error' => $imgException->getMessage(),
+                            'trace' => $imgException->getTraceAsString()
+                        ]);
+                        throw new \Exception("Error upload gambar ke-" . ($index + 1) . ": " . $imgException->getMessage());
+                    }
                 }
+
+                // Refresh relation lagi setelah upload
+                $problem->load('images');
 
                 // Jika ada gambar baru diupload dan belum ada cover, set gambar pertama yang baru sebagai cover
                 if ($problem->images()->where('is_cover', true)->doesntExist()) {
