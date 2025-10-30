@@ -10,900 +10,946 @@ use App\Models\Regency;
 use Carbon\Carbon;
 
 /**
- * problems seeder dengan data dummy yang realistis
+ * seeder untuk problems dengan format SDG categories yang benar
+ * ✅ FULL CODE dengan SEMUA template SDG 1-17
+ * ✅ sdg_categories disimpan sebagai ARRAY LANGSUNG, bukan JSON string
  * 
- * SPESIFIKASI KKN:
- * - durasi proyek: minimal 3 minggu (1 bulan), maksimal 2 bulan
- * - jumlah anggota: minimal 8, maksimal 20
- * - required majors: minimal 5, maksimal 10
- * - persebaran lokasi lebih merata (menggunakan data BPS)
+ * jalankan: php artisan db:seed --class=ProblemsSeeder
  * 
- * BUG FIXED (28 Okt 2025):
- * - setiap problem sekarang memiliki tanggal start dan deadline yang berbeda-beda
- * - menggunakan Carbon::create() untuk membuat instance baru setiap kali
- * - distribusi waktu: 30% masa lalu, 40% sedang berjalan, 30% masa depan
- * - gunakan copy() untuk endDate dan applicationDeadline
- * - status otomatis berdasarkan tanggal
+ * TIDAK PERLU lagi menjalankan php artisan fix:double-encoded-json setelah seeding!
  */
 class ProblemsSeeder extends Seeder
 {
     /**
-     * run the database seeds
+     * jalankan database seeds
      */
     public function run(): void
     {
-        $this->command->info('🌱 Seeding problems...');
-
-        // pastikan institutions sudah ada (gunakan is_verified bukan status)
-        $institutions = Institution::where('is_verified', true)->get();
+        $institutions = Institution::all();
+        $provinces = Province::all();
         
-        if ($institutions->isEmpty()) {
-            $this->command->warn('⚠ Tidak ada institutions yang verified. Seed DummyDataSeeder dulu!');
+        if ($institutions->isEmpty() || $provinces->isEmpty()) {
+            $this->command->error('Harap jalankan InstitutionsSeeder dan ProvincesSeeder terlebih dahulu!');
             return;
         }
 
-        // seed problems untuk setiap institution
-        foreach ($institutions as $institution) {
-            // setiap institution punya 2-4 problems
-            $numProblems = rand(2, 4);
+        // array template problems dengan SDG categories yang benar
+        $problemsTemplates = $this->getProblemTemplates();
 
-            for ($i = 0; $i < $numProblems; $i++) {
-                $this->createProblem($institution);
+        $this->command->info('Membuat ' . count($problemsTemplates) . ' problems...');
+
+        // create problems untuk setiap template
+        foreach ($problemsTemplates as $index => $template) {
+            // pilih institution random
+            $institution = $institutions->random();
+            
+            // pilih province random
+            $province = $provinces->random();
+            
+            // ambil regency dari province tersebut
+            $regency = Regency::where('province_id', $province->id)->inRandomOrder()->first();
+            
+            if (!$regency) {
+                continue; // skip jika tidak ada regency
+            }
+
+            // generate dates
+            $startDate = Carbon::now()->addDays(rand(30, 60));
+            $durationMonths = rand(2, 6);
+            $endDate = $startDate->copy()->addMonths($durationMonths);
+            $applicationDeadline = $startDate->copy()->subDays(rand(7, 14));
+
+            // ✅ PENTING: sdg_categories langsung pass ARRAY, JANGAN json_encode!
+            Problem::create([
+                'institution_id' => $institution->id,
+                'title' => $template['title'],
+                'description' => $template['description'],
+                'background' => $template['background'],
+                'objectives' => $template['objectives'],
+                'scope' => $template['scope'],
+                'province_id' => $province->id,
+                'regency_id' => $regency->id,
+                'village' => 'Desa ' . fake()->city(),
+                'detailed_location' => fake()->address(),
+                
+                // ✅ BENAR: langsung pass array of integers
+                'sdg_categories' => $template['sdg_categories'],
+                'required_skills' => $template['required_skills'],
+                'required_majors' => ['Semua Jurusan'],
+                
+                'required_students' => rand(2, 5),
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'application_deadline' => $applicationDeadline,
+                'duration_months' => $durationMonths,
+                'difficulty_level' => $template['difficulty_level'],
+                'status' => 'open',
+                'expected_outcomes' => 'Hasil yang terukur dan berdampak positif bagi masyarakat.',
+                'deliverables' => [
+                    'Laporan kegiatan',
+                    'Dokumentasi foto/video',
+                    'Laporan akhir proyek'
+                ],
+                'facilities_provided' => [
+                    'Tempat pelaksanaan kegiatan',
+                    'Koordinasi dengan pihak terkait',
+                    'Surat tugas resmi'
+                ],
+                'is_featured' => fake()->boolean(20),
+                'is_urgent' => fake()->boolean(10),
+            ]);
+
+            // progress indicator
+            if (($index + 1) % 10 == 0) {
+                $this->command->info('Progress: ' . ($index + 1) . '/' . count($problemsTemplates));
             }
         }
 
-        $totalProblems = Problem::count();
-        $this->command->info("✓ {$totalProblems} problems berhasil dibuat!");
+        $this->command->info('✅ Problems seeder berhasil dijalankan!');
+        $this->command->info('Total problems: ' . Problem::count());
     }
 
     /**
-     * buat problem untuk institution dengan persebaran lokasi yang lebih merata
+     * get problem templates - FULL 85+ templates untuk SDG 1-17
      */
-    private function createProblem($institution)
-    {
-        // untuk variasi lokasi, ambil province dan regency random dari database
-        // 50% mengikuti lokasi institution, 50% random dari BPS data
-        $useInstitutionLocation = rand(0, 1) === 1;
-        
-        if ($useInstitutionLocation) {
-            $provinceId = $institution->province_id;
-            $regencyId = $institution->regency_id;
-        } else {
-            // ambil random province dan regency dari BPS
-            $province = Province::inRandomOrder()->first();
-            $provinceId = $province->id;
-            
-            // ambil regency dari province tersebut
-            $regency = Regency::where('province_id', $provinceId)->inRandomOrder()->first();
-            $regencyId = $regency ? $regency->id : $institution->regency_id;
-        }
-        
-        // ambil template random
-        $template = $this->getProblemTemplates()[array_rand($this->getProblemTemplates())];
-
-        // tambahkan field tambahan
-        $template['institution_id'] = $institution->id;
-        $template['province_id'] = $provinceId;
-        $template['regency_id'] = $regencyId;
-        
-        // tambahkan informasi lokasi detail
-        $template['village'] = $this->getVillageName();
-        $template['detailed_location'] = 'Dusun ' . ['Satu', 'Dua', 'Tiga', 'Empat'][array_rand(['Satu', 'Dua', 'Tiga', 'Empat'])] . ', RT/RW ' . rand(1, 10) . '/' . rand(1, 5);
-
-        // durasi proyek: minimal 1 bulan (3-4 minggu), maksimal 2 bulan
-        $template['duration_months'] = rand(1, 2);
-        
-        // jumlah mahasiswa: minimal 8, maksimal 20
-        $template['required_students'] = rand(8, 20);
-
-        // generate tanggal dengan distribusi yang bervariasi
-        // 30% masa lalu, 40% sedang berjalan, 30% masa depan
-        $timeDistribution = rand(1, 100);
-        
-        if ($timeDistribution <= 30) {
-            // 30% masa lalu - project sudah selesai
-            $startDate = Carbon::create(2024, rand(1, 12), rand(1, 28))->startOfDay();
-            $template['status'] = 'completed';
-        } elseif ($timeDistribution <= 70) {
-            // 40% sedang berjalan - project aktif
-            $startDate = Carbon::create(2025, rand(1, 10), rand(1, 28))->startOfDay();
-            $template['status'] = 'open';
-        } else {
-            // 30% masa depan - project belum dimulai
-            $startDate = Carbon::create(2025, rand(11, 12), rand(1, 28))->startOfDay();
-            $template['status'] = 'open';
-        }
-
-        // hitung end date berdasarkan durasi (gunakan copy() untuk instance baru)
-        $endDate = $startDate->copy()->addMonths($template['duration_months']);
-        
-        // application deadline: 2-4 minggu sebelum start date (gunakan copy())
-        $applicationDeadline = $startDate->copy()->subWeeks(rand(2, 4));
-
-        // set tanggal
-        $template['start_date'] = $startDate->format('Y-m-d');
-        $template['end_date'] = $endDate->format('Y-m-d');
-        $template['application_deadline'] = $applicationDeadline->format('Y-m-d');
-
-        // deliverables dummy
-        $template['deliverables'] = json_encode([
-            'Laporan Kegiatan Lengkap',
-            'Dokumentasi Foto Dan Video',
-            'Modul Atau Panduan Pelaksanaan',
-            'Hasil Produk/Output Program'
-        ]);
-
-        // facilities provided dummy
-        $template['facilities_provided'] = json_encode([
-            'Konsumsi Selama Kegiatan',
-            'Transportasi Lokal',
-            'Akomodasi (Jika Diperlukan)',
-            'Pendampingan Lapangan'
-        ]);
-
-        // required majors: minimal 5, maksimal 10
-        $template['required_majors'] = json_encode($this->getRandomMajors());
-
-        // features
-        $template['is_featured'] = rand(0, 100) < 20; // 20% chance featured
-        $template['is_urgent'] = rand(0, 100) < 15; // 15% chance urgent
-        $template['views_count'] = rand(50, 500);
-
-        Problem::create($template);
-    }
-
-    /**
-     * ambil nama desa random
-     */
-    private function getVillageName(): string
-    {
-        $villages = [
-            'Sukamaju', 'Makmur Jaya', 'Sumber Rezeki', 'Harapan Baru', 
-            'Maju Bersama', 'Cinta Damai', 'Karya Mulya', 'Sejahtera',
-            'Bina Sejahtera', 'Suka Maju', 'Tanjung Sari', 'Mekar Sari',
-            'Puri Agung', 'Cipta Karya', 'Sumber Makmur', 'Cahaya Abadi'
-        ];
-        
-        return $villages[array_rand($villages)];
-    }
-
-    /**
-     * ambil random majors (minimal 5, maksimal 10)
-     */
-    private function getRandomMajors(): array
-    {
-        $allMajors = [
-            'Teknik Informatika',
-            'Sistem Informasi',
-            'Teknik Sipil',
-            'Teknik Elektro',
-            'Teknik Mesin',
-            'Arsitektur',
-            'Ilmu Komunikasi',
-            'Manajemen',
-            'Akuntansi',
-            'Ekonomi Pembangunan',
-            'Administrasi Publik',
-            'Ilmu Pemerintahan',
-            'Hukum',
-            'Psikologi',
-            'Sosiologi',
-            'Antropologi',
-            'Kesehatan Masyarakat',
-            'Keperawatan',
-            'Farmasi',
-            'Gizi',
-            'Kedokteran',
-            'Pendidikan',
-            'PGSD',
-            'Bahasa Indonesia',
-            'Bahasa Inggris',
-            'Matematika',
-            'Fisika',
-            'Kimia',
-            'Biologi',
-            'Pertanian',
-            'Agribisnis',
-            'Peternakan',
-            'Kehutanan',
-            'Perikanan',
-            'Ilmu Lingkungan',
-            'Pariwisata',
-            'Perhotelan',
-            'Desain Grafis',
-            'Desain Interior',
-            'Seni Rupa',
-            'Broadcasting'
-        ];
-
-        // acak array
-        shuffle($allMajors);
-        
-        // ambil 5-10 jurusan random
-        $count = rand(5, 10);
-        return array_slice($allMajors, 0, $count);
-    }
-
-    /**
-     * template problems berdasarkan SDG
-     * setiap SDG minimal 4-6 template problem
-     */
-    private function getProblemTemplates(): array
+    protected function getProblemTemplates(): array
     {
         return [
-            // ===== SDG 1: TANPA KEMISKINAN (6 templates) =====
+            // =============================================
+            // SDG 1: TANPA KEMISKINAN (5 templates)
+            // =============================================
             [
                 'title' => 'Pemberdayaan Ekonomi Masyarakat Desa',
-                'description' => 'Program pemberdayaan ekonomi masyarakat melalui pelatihan keterampilan dan pengembangan UMKM lokal untuk meningkatkan kesejahteraan warga.',
-                'background' => 'Tingkat kemiskinan di wilayah ini masih cukup tinggi. Masyarakat memerlukan pendampingan dalam mengembangkan usaha mikro dan kecil.',
-                'objectives' => 'Meningkatkan pendapatan masyarakat melalui pengembangan keterampilan dan akses pasar yang lebih luas.',
-                'scope' => 'Pelatihan keterampilan, pendampingan UMKM, dan fasilitasi akses permodalan.',
-                'sdg_categories' => json_encode([1, 8]),
-                'required_skills' => json_encode(['Manajemen UMKM', 'Kewirausahaan', 'Marketing', 'Pemberdayaan Masyarakat']),
+                'description' => 'Program untuk meningkatkan perekonomian masyarakat desa melalui pelatihan kewirausahaan dan akses modal usaha.',
+                'background' => 'Tingkat kemiskinan di desa masih tinggi, perlu program pemberdayaan yang berkelanjutan.',
+                'objectives' => 'Meningkatkan pendapatan dan kesejahteraan masyarakat desa.',
+                'scope' => 'Pelatihan kewirausahaan, pendampingan UMKM, dan fasilitasi akses modal.',
+                'sdg_categories' => [1, 8],
+                'required_skills' => ['Ekonomi', 'Manajemen', 'Kewirausahaan', 'Akuntansi'],
                 'difficulty_level' => 'intermediate',
             ],
             [
-                'title' => 'Pengentasan Kemiskinan Melalui Koperasi',
-                'description' => 'Program pembentukan dan penguatan koperasi simpan pinjam untuk membantu masyarakat mengakses modal usaha dengan bunga rendah.',
-                'background' => 'Akses terhadap permodalan masih terbatas, banyak warga terlilit rentenir dengan bunga tinggi.',
-                'objectives' => 'Menyediakan akses permodalan yang terjangkau dan meningkatkan literasi keuangan masyarakat.',
-                'scope' => 'Pembentukan koperasi, pelatihan manajemen keuangan, dan pendampingan anggota.',
-                'sdg_categories' => json_encode([1, 8]),
-                'required_skills' => json_encode(['Manajemen Keuangan', 'Koperasi', 'Pemberdayaan Masyarakat', 'Akuntansi']),
+                'title' => 'Bank Sampah Untuk Kesejahteraan',
+                'description' => 'Pendirian dan pengelolaan bank sampah sebagai sumber penghasilan tambahan masyarakat.',
+                'background' => 'Sampah yang belum terkelola dapat menjadi sumber ekonomi baru.',
+                'objectives' => 'Mengurangi kemiskinan sambil menjaga kebersihan lingkungan.',
+                'scope' => 'Pembentukan bank sampah, pelatihan sortir, dan pemasaran hasil daur ulang.',
+                'sdg_categories' => [1, 11, 12],
+                'required_skills' => ['Ekonomi', 'Lingkungan', 'Manajemen', 'Marketing'],
                 'difficulty_level' => 'intermediate',
             ],
             [
-                'title' => 'Program Bantuan Sosial Terpadu',
-                'description' => 'Sistem pendataan dan distribusi bantuan sosial yang terintegrasi untuk memastikan bantuan tepat sasaran.',
-                'background' => 'Masih terdapat ketidakmerataan distribusi bantuan sosial dan pendataan penerima yang belum optimal.',
-                'objectives' => 'Meningkatkan efektivitas penyaluran bantuan sosial kepada masyarakat miskin.',
-                'scope' => 'Pendataan penerima bantuan, sistem monitoring, dan evaluasi program bantuan.',
-                'sdg_categories' => json_encode([1, 10]),
-                'required_skills' => json_encode(['Sistem Informasi', 'Sosial', 'Manajemen Data', 'Administrasi']),
-                'difficulty_level' => 'beginner',
+                'title' => 'Koperasi Simpan Pinjam Desa',
+                'description' => 'Pembentukan koperasi simpan pinjam untuk membantu akses modal usaha mikro.',
+                'background' => 'Masyarakat kesulitan akses ke lembaga keuangan formal.',
+                'objectives' => 'Menyediakan akses keuangan yang mudah dan terjangkau.',
+                'scope' => 'Pembentukan koperasi, pelatihan manajemen keuangan, dan operasional.',
+                'sdg_categories' => [1, 8, 17],
+                'required_skills' => ['Ekonomi', 'Akuntansi', 'Manajemen Koperasi', 'Hukum'],
+                'difficulty_level' => 'advanced',
             ],
             [
-                'title' => 'Literasi Keuangan Keluarga',
-                'description' => 'Edukasi pengelolaan keuangan keluarga untuk meningkatkan kesejahteraan dan mengurangi kemiskinan.',
-                'background' => 'Banyak keluarga kesulitan mengelola keuangan, sering terjerat hutang konsumtif.',
-                'objectives' => 'Meningkatkan kemampuan keluarga dalam mengelola keuangan dengan bijak.',
-                'scope' => 'Workshop keuangan keluarga, konseling, dan pendampingan usaha rumahan.',
-                'sdg_categories' => json_encode([1, 8]),
-                'required_skills' => json_encode(['Keuangan', 'Konseling', 'Pendidikan', 'Ekonomi']),
-                'difficulty_level' => 'beginner',
+                'title' => 'Program Beasiswa Anak Tidak Mampu',
+                'description' => 'Fasilitasi akses pendidikan untuk anak-anak dari keluarga kurang mampu.',
+                'background' => 'Banyak anak putus sekolah karena keterbatasan ekonomi.',
+                'objectives' => 'Memutus rantai kemiskinan melalui pendidikan.',
+                'scope' => 'Pendataan anak kurang mampu, penggalangan dana, dan distribusi beasiswa.',
+                'sdg_categories' => [1, 4],
+                'required_skills' => ['Pendidikan', 'Sosial', 'Administrasi', 'Fundraising'],
+                'difficulty_level' => 'intermediate',
             ],
             [
                 'title' => 'Pelatihan Keterampilan Warga Miskin',
-                'description' => 'Program pelatihan keterampilan praktis untuk meningkatkan daya saing ekonomi warga miskin.',
-                'background' => 'Kurangnya keterampilan menjadi hambatan utama dalam mendapatkan pekerjaan layak.',
-                'objectives' => 'Memberikan keterampilan yang marketable untuk meningkatkan pendapatan.',
-                'scope' => 'Pelatihan menjahit, tata boga, otomotif, dan keterampilan lainnya.',
-                'sdg_categories' => json_encode([1, 4]),
-                'required_skills' => json_encode(['Pelatihan Vokasi', 'Pemberdayaan', 'Manajemen', 'Komunikasi']),
-                'difficulty_level' => 'beginner',
-            ],
-            [
-                'title' => 'Akses Perbankan Untuk Masyarakat Miskin',
-                'description' => 'Program fasilitasi akses layanan perbankan dan keuangan digital untuk masyarakat miskin.',
-                'background' => 'Masyarakat miskin kesulitan mengakses layanan perbankan formal.',
-                'objectives' => 'Meningkatkan inklusi keuangan masyarakat miskin.',
-                'scope' => 'Edukasi perbankan, pendampingan pembukaan rekening, dan literasi keuangan digital.',
-                'sdg_categories' => json_encode([1, 9]),
-                'required_skills' => json_encode(['Perbankan', 'Keuangan Digital', 'Teknologi', 'Pendidikan']),
+                'description' => 'Program pelatihan keterampilan praktis untuk mengurangi pengangguran.',
+                'background' => 'Tingkat pengangguran tinggi akibat kurangnya keterampilan.',
+                'objectives' => 'Meningkatkan employability dan mengurangi kemiskinan.',
+                'scope' => 'Pelatihan menjahit, otomotif, elektronik, dan keterampilan lainnya.',
+                'sdg_categories' => [1, 8, 4],
+                'required_skills' => ['Pendidikan', 'Teknik', 'Manajemen Pelatihan'],
                 'difficulty_level' => 'intermediate',
             ],
 
-            // ===== SDG 2: TANPA KELAPARAN (6 templates) =====
+            // =============================================
+            // SDG 2: TANPA KELAPARAN (5 templates)
+            // =============================================
             [
-                'title' => 'Program Ketahanan Pangan Desa',
-                'description' => 'Inisiatif peningkatan ketahanan pangan melalui optimalisasi lahan pertanian dan pengembangan sistem irigasi berkelanjutan.',
-                'background' => 'Produksi pangan lokal masih rendah dan bergantung pada pasokan dari luar daerah.',
-                'objectives' => 'Meningkatkan produksi pangan lokal dan kemandirian pangan masyarakat.',
-                'scope' => 'Pelatihan pertanian modern, pengembangan irigasi, dan diversifikasi tanaman.',
-                'sdg_categories' => json_encode([2, 12]),
-                'required_skills' => json_encode(['Pertanian', 'Agribisnis', 'Teknologi Pertanian', 'Manajemen']),
+                'title' => 'Optimalisasi Lahan Pertanian',
+                'description' => 'Program peningkatan produktivitas pertanian melalui teknologi modern dan pendampingan.',
+                'background' => 'Produktivitas pertanian masih rendah karena kurangnya akses teknologi.',
+                'objectives' => 'Meningkatkan hasil panen dan ketahanan pangan.',
+                'scope' => 'Pendampingan teknis, penyuluhan, dan introduksi teknologi pertanian.',
+                'sdg_categories' => [2, 12],
+                'required_skills' => ['Pertanian', 'Agronomi', 'Penyuluhan', 'Teknologi Pertanian'],
                 'difficulty_level' => 'intermediate',
-            ],
-            [
-                'title' => 'Pengembangan Urban Farming',
-                'description' => 'Program pemanfaatan lahan sempit di perkotaan untuk budidaya sayuran organik dan tanaman pangan.',
-                'background' => 'Lahan pertanian di perkotaan terbatas, namun permintaan pangan organik terus meningkat.',
-                'objectives' => 'Meningkatkan ketahanan pangan keluarga dan mengurangi biaya belanja pangan.',
-                'scope' => 'Pelatihan urban farming, pemberian bibit, dan pendampingan budidaya.',
-                'sdg_categories' => json_encode([2, 11]),
-                'required_skills' => json_encode(['Pertanian Urban', 'Hortikultura', 'Agribisnis', 'Lingkungan']),
-                'difficulty_level' => 'beginner',
-            ],
-            [
-                'title' => 'Diversifikasi Pangan Lokal',
-                'description' => 'Program pengembangan dan promosi pangan lokal non-beras untuk mengurangi ketergantungan pada beras.',
-                'background' => 'Ketergantungan masyarakat pada beras sangat tinggi, perlu diversifikasi sumber karbohidrat.',
-                'objectives' => 'Meningkatkan konsumsi pangan lokal alternatif seperti singkong, jagung, dan sagu.',
-                'scope' => 'Sosialisasi pangan lokal, pelatihan pengolahan, dan pengembangan produk.',
-                'sdg_categories' => json_encode([2, 12]),
-                'required_skills' => json_encode(['Teknologi Pangan', 'Gizi', 'Pengolahan Makanan', 'Marketing']),
-                'difficulty_level' => 'intermediate',
-            ],
-            [
-                'title' => 'Pencegahan Stunting Melalui Edukasi Gizi',
-                'description' => 'Program edukasi gizi untuk ibu hamil dan balita dalam mencegah stunting dan malnutrisi.',
-                'background' => 'Angka stunting di wilayah ini masih tinggi, perlu intervensi edukasi gizi sejak dini.',
-                'objectives' => 'Menurunkan angka stunting melalui peningkatan pengetahuan gizi ibu dan anak.',
-                'scope' => 'Penyuluhan gizi, pemantauan pertumbuhan balita, dan pemberian makanan tambahan.',
-                'sdg_categories' => json_encode([2, 3]),
-                'required_skills' => json_encode(['Gizi', 'Kesehatan Masyarakat', 'Pendidikan', 'Keperawatan']),
-                'difficulty_level' => 'beginner',
             ],
             [
                 'title' => 'Hidroponik Dan Pertanian Modern',
-                'description' => 'Pengenalan sistem hidroponik dan pertanian presisi untuk meningkatkan produktivitas dengan lahan terbatas.',
-                'background' => 'Lahan pertanian terbatas, perlu teknologi pertanian modern yang efisien.',
-                'objectives' => 'Meningkatkan produktivitas pertanian dengan teknologi modern dan lahan minimal.',
-                'scope' => 'Pelatihan hidroponik, greenhouse, dan teknologi pertanian presisi.',
-                'sdg_categories' => json_encode([2, 9]),
-                'required_skills' => json_encode(['Pertanian', 'Teknologi', 'Agribisnis', 'Teknik']),
+                'description' => 'Pengembangan sistem hidroponik untuk pertanian perkotaan.',
+                'background' => 'Lahan terbatas di perkotaan namun kebutuhan pangan terus meningkat.',
+                'objectives' => 'Menciptakan ketahanan pangan di lingkungan urban.',
+                'scope' => 'Instalasi sistem hidroponik, pelatihan pemeliharaan, dan pemasaran hasil.',
+                'sdg_categories' => [2, 11, 9],
+                'required_skills' => ['Pertanian', 'Teknologi', 'Biologi', 'Marketing'],
                 'difficulty_level' => 'advanced',
+            ],
+            [
+                'title' => 'Diversifikasi Pangan Lokal',
+                'description' => 'Program untuk meningkatkan konsumsi dan produksi pangan lokal.',
+                'background' => 'Ketergantungan pada beras terlalu tinggi, perlu diversifikasi.',
+                'objectives' => 'Meningkatkan keberagaman pangan dan ketahanan pangan.',
+                'scope' => 'Sosialisasi pangan lokal, pelatihan pengolahan, dan pemasaran.',
+                'sdg_categories' => [2, 12],
+                'required_skills' => ['Gizi', 'Pertanian', 'Pengolahan Pangan', 'Komunikasi'],
+                'difficulty_level' => 'intermediate',
+            ],
+            [
+                'title' => 'Kebun Sayur Komunitas',
+                'description' => 'Pembentukan kebun sayur bersama untuk memenuhi kebutuhan sayuran warga.',
+                'background' => 'Harga sayuran mahal dan akses terbatas.',
+                'objectives' => 'Menyediakan sayuran segar dengan harga terjangkau.',
+                'scope' => 'Pembukaan lahan, penanaman sayuran, dan sistem bagi hasil.',
+                'sdg_categories' => [2, 11],
+                'required_skills' => ['Pertanian', 'Hortikultura', 'Sosial', 'Manajemen'],
+                'difficulty_level' => 'beginner',
             ],
             [
                 'title' => 'Bank Pangan Desa',
-                'description' => 'Pembentukan lumbung pangan desa untuk menjaga stabilitas ketersediaan pangan.',
-                'background' => 'Fluktuasi harga dan ketersediaan pangan menjadi masalah, terutama saat paceklik.',
-                'objectives' => 'Menjaga stabilitas pangan dan harga melalui sistem lumbung desa.',
-                'scope' => 'Pembangunan lumbung, sistem pengelolaan stok, dan distribusi pangan.',
-                'sdg_categories' => json_encode([2, 1]),
-                'required_skills' => json_encode(['Manajemen', 'Pertanian', 'Logistik', 'Administrasi']),
+                'description' => 'Pembentukan lumbung pangan untuk mengantisipasi krisis pangan.',
+                'background' => 'Ketahanan pangan masih rentan saat paceklik.',
+                'objectives' => 'Memastikan ketersediaan pangan sepanjang tahun.',
+                'scope' => 'Pembangunan gudang, sistem simpan pinjam pangan, dan manajemen stok.',
+                'sdg_categories' => [2, 1],
+                'required_skills' => ['Pertanian', 'Manajemen', 'Logistik', 'Sosial'],
                 'difficulty_level' => 'intermediate',
             ],
 
-            // ===== SDG 3: KEHIDUPAN SEHAT DAN SEJAHTERA (6 templates) =====
-            [
-                'title' => 'Edukasi Kesehatan Dan Sanitasi',
-                'description' => 'Program sosialisasi pentingnya sanitasi, air bersih, dan pola hidup sehat untuk meningkatkan derajat kesehatan masyarakat.',
-                'background' => 'Masih banyak masyarakat yang belum memahami pentingnya sanitasi dan pola hidup sehat.',
-                'objectives' => 'Meningkatkan kesadaran masyarakat tentang kesehatan dan sanitasi.',
-                'scope' => 'Sosialisasi kesehatan, pembangunan MCK, dan edukasi gizi.',
-                'sdg_categories' => json_encode([3, 6]),
-                'required_skills' => json_encode(['Kesehatan Masyarakat', 'Pendidikan', 'Komunikasi', 'Keperawatan']),
-                'difficulty_level' => 'beginner',
-            ],
+            // =============================================
+            // SDG 3: KEHIDUPAN SEHAT DAN SEJAHTERA (5 templates)
+            // =============================================
             [
                 'title' => 'Posyandu Digital Desa',
-                'description' => 'Digitalisasi sistem posyandu untuk monitoring kesehatan ibu dan anak secara real-time.',
-                'background' => 'Pencatatan posyandu masih manual dan rawan kehilangan data, perlu sistem digital terintegrasi.',
-                'objectives' => 'Meningkatkan efektivitas monitoring kesehatan ibu dan anak melalui digitalisasi.',
-                'scope' => 'Pembuatan aplikasi posyandu, pelatihan kader, dan implementasi sistem.',
-                'sdg_categories' => json_encode([3, 9]),
-                'required_skills' => json_encode(['Sistem Informasi', 'Kesehatan Masyarakat', 'Teknologi', 'Manajemen']),
+                'description' => 'Revitalisasi posyandu dengan sistem digital untuk layanan kesehatan ibu dan anak.',
+                'background' => 'Posyandu kurang aktif dan data tidak terintegrasi.',
+                'objectives' => 'Meningkatkan cakupan layanan kesehatan dasar.',
+                'scope' => 'Pelatihan kader, implementasi aplikasi, dan monitoring digital.',
+                'sdg_categories' => [3, 9],
+                'required_skills' => ['Kesehatan Masyarakat', 'Teknologi Informasi', 'Gizi', 'Manajemen'],
                 'difficulty_level' => 'advanced',
             ],
             [
-                'title' => 'Gerakan Hidup Sehat',
-                'description' => 'Kampanye pola hidup sehat dengan fokus pada olahraga teratur dan konsumsi makanan bergizi.',
-                'background' => 'Tingginya angka penyakit tidak menular akibat pola hidup tidak sehat.',
-                'objectives' => 'Meningkatkan kesadaran masyarakat tentang pentingnya pola hidup sehat.',
-                'scope' => 'Senam bersama, pemeriksaan kesehatan gratis, dan penyuluhan gizi.',
-                'sdg_categories' => json_encode([3, 4]),
-                'required_skills' => json_encode(['Kesehatan', 'Olahraga', 'Komunikasi', 'Gizi']),
+                'title' => 'Edukasi Kesehatan Dan Sanitasi',
+                'description' => 'Program sosialisasi perilaku hidup bersih dan sehat (PHBS).',
+                'background' => 'Tingkat kesadaran masyarakat tentang PHBS masih rendah.',
+                'objectives' => 'Meningkatkan kesadaran dan praktik hidup sehat.',
+                'scope' => 'Penyuluhan, demonstrasi, dan monitoring perilaku hidup sehat.',
+                'sdg_categories' => [3, 6],
+                'required_skills' => ['Kesehatan Masyarakat', 'Komunikasi', 'Penyuluhan', 'Sosiologi'],
                 'difficulty_level' => 'beginner',
-            ],
-            [
-                'title' => 'Sistem Rujukan Kesehatan Terintegrasi',
-                'description' => 'Pengembangan sistem rujukan kesehatan yang terintegrasi antara puskesmas dan rumah sakit.',
-                'background' => 'Sistem rujukan kesehatan belum optimal, sering terjadi keterlambatan penanganan.',
-                'objectives' => 'Meningkatkan efektivitas sistem rujukan kesehatan.',
-                'scope' => 'Pembuatan SOP rujukan, sistem informasi, dan koordinasi antar fasilitas kesehatan.',
-                'sdg_categories' => json_encode([3, 9]),
-                'required_skills' => json_encode(['Kesehatan Masyarakat', 'Manajemen', 'Sistem Informasi', 'Administrasi']),
-                'difficulty_level' => 'advanced',
             ],
             [
                 'title' => 'Program Lansia Sehat',
-                'description' => 'Pemberdayaan dan peningkatan kesehatan lansia melalui posyandu lansia dan senam rutin.',
-                'background' => 'Jumlah lansia meningkat namun pelayanan kesehatan khusus lansia masih terbatas.',
-                'objectives' => 'Meningkatkan kualitas hidup dan kesehatan lansia.',
-                'scope' => 'Posyandu lansia, senam lansia, dan pemeriksaan kesehatan berkala.',
-                'sdg_categories' => json_encode([3, 10]),
-                'required_skills' => json_encode(['Kesehatan', 'Keperawatan', 'Gerontologi', 'Sosial']),
-                'difficulty_level' => 'intermediate',
+                'description' => 'Layanan kesehatan dan senam khusus untuk lansia.',
+                'background' => 'Populasi lansia meningkat namun layanan kesehatan khusus kurang.',
+                'objectives' => 'Meningkatkan kualitas hidup lansia.',
+                'scope' => 'Senam rutin, pemeriksaan kesehatan, dan kegiatan sosial lansia.',
+                'sdg_categories' => [3, 10],
+                'required_skills' => ['Kesehatan Masyarakat', 'Fisioterapi', 'Psikologi', 'Sosial'],
+                'difficulty_level' => 'beginner',
             ],
             [
-                'title' => 'Pengendalian Penyakit Menular',
-                'description' => 'Program pencegahan dan pengendalian penyakit menular berbasis masyarakat.',
-                'background' => 'Masih tingginya angka penyakit menular seperti DBD, TB, dan diare.',
-                'objectives' => 'Menurunkan angka kesakitan dan kematian akibat penyakit menular.',
-                'scope' => 'Surveilans penyakit, edukasi pencegahan, dan gerakan bersih lingkungan.',
-                'sdg_categories' => json_encode([3, 6]),
-                'required_skills' => json_encode(['Kesehatan Masyarakat', 'Epidemiologi', 'Pendidikan', 'Lingkungan']),
+                'title' => 'Gerakan Hidup Sehat',
+                'description' => 'Kampanye gaya hidup sehat melalui olahraga dan pola makan bergizi.',
+                'background' => 'Penyakit tidak menular meningkat akibat gaya hidup tidak sehat.',
+                'objectives' => 'Meningkatkan kesadaran hidup sehat dan menurunkan penyakit.',
+                'scope' => 'Senam massal, konseling gizi, dan pemeriksaan kesehatan gratis.',
+                'sdg_categories' => [3, 4],
+                'required_skills' => ['Kesehatan Masyarakat', 'Gizi', 'Olahraga', 'Komunikasi'],
+                'difficulty_level' => 'beginner',
+            ],
+            [
+                'title' => 'Pencegahan Stunting Melalui Edukasi Gizi',
+                'description' => 'Program pencegahan stunting melalui edukasi gizi ibu dan anak.',
+                'background' => 'Angka stunting masih tinggi akibat kurangnya pengetahuan gizi.',
+                'objectives' => 'Menurunkan prevalensi stunting di desa.',
+                'scope' => 'Edukasi gizi, pemberian makanan tambahan, dan monitoring pertumbuhan.',
+                'sdg_categories' => [2, 3],
+                'required_skills' => ['Gizi', 'Kesehatan Masyarakat', 'Pendidikan', 'Komunikasi'],
                 'difficulty_level' => 'intermediate',
             ],
 
-            // ===== SDG 4: PENDIDIKAN BERKUALITAS (6 templates) =====
+            // =============================================
+            // SDG 4: PENDIDIKAN BERKUALITAS (5 templates)
+            // =============================================
+            [
+                'title' => 'Bimbingan Belajar Gratis',
+                'description' => 'Program bimbingan belajar gratis untuk siswa kurang mampu.',
+                'background' => 'Banyak siswa kesulitan belajar karena kurangnya bimbingan.',
+                'objectives' => 'Meningkatkan prestasi akademik siswa.',
+                'scope' => 'Les mata pelajaran, bimbingan PR, dan motivasi belajar.',
+                'sdg_categories' => [4, 1],
+                'required_skills' => ['Pendidikan', 'Matematika', 'IPA', 'Bahasa'],
+                'difficulty_level' => 'beginner',
+            ],
             [
                 'title' => 'Literasi Digital Untuk Anak Desa',
-                'description' => 'Program pelatihan penggunaan komputer dan internet untuk anak-anak usia sekolah di desa.',
-                'background' => 'Kesenjangan digital antara kota dan desa masih tinggi, anak-anak desa perlu akses teknologi.',
-                'objectives' => 'Meningkatkan literasi digital anak-anak desa.',
-                'scope' => 'Pelatihan komputer, internet safety, dan pembelajaran online.',
-                'sdg_categories' => json_encode([4, 10]),
-                'required_skills' => json_encode(['Teknologi Informasi', 'Pendidikan', 'Komunikasi', 'Psikologi']),
+                'description' => 'Pelatihan penggunaan teknologi untuk pembelajaran.',
+                'background' => 'Anak-anak desa kurang familiar dengan teknologi pembelajaran.',
+                'objectives' => 'Meningkatkan literasi digital anak desa.',
+                'scope' => 'Pelatihan komputer, aplikasi pembelajaran, dan internet sehat.',
+                'sdg_categories' => [4, 10, 9],
+                'required_skills' => ['Teknologi Pendidikan', 'Informatika', 'Pendidikan'],
                 'difficulty_level' => 'intermediate',
             ],
             [
                 'title' => 'Taman Baca Masyarakat',
-                'description' => 'Pembangunan dan pengelolaan taman baca untuk meningkatkan minat baca masyarakat, terutama anak-anak.',
-                'background' => 'Minat baca masyarakat masih rendah dan akses terhadap buku terbatas.',
-                'objectives' => 'Meningkatkan literasi dan minat baca masyarakat.',
-                'scope' => 'Pengadaan buku, penataan ruang baca, dan program literasi.',
-                'sdg_categories' => json_encode([4, 10]),
-                'required_skills' => json_encode(['Pendidikan', 'Manajemen Perpustakaan', 'Komunikasi', 'Sastra']),
-                'difficulty_level' => 'beginner',
-            ],
-            [
-                'title' => 'Bimbingan Belajar Gratis',
-                'description' => 'Program bimbingan belajar gratis untuk anak kurang mampu di desa.',
-                'background' => 'Banyak anak kurang mampu tidak bisa mengakses bimbingan belajar berbayar.',
-                'objectives' => 'Meningkatkan prestasi akademik anak kurang mampu.',
-                'scope' => 'Bimbel mata pelajaran, motivasi belajar, dan konseling pendidikan.',
-                'sdg_categories' => json_encode([4, 1]),
-                'required_skills' => json_encode(['Pendidikan', 'Tutoring', 'Konseling', 'Psikologi']),
+                'description' => 'Pembangunan dan pengelolaan taman baca untuk meningkatkan literasi.',
+                'background' => 'Akses buku dan minat baca masih rendah.',
+                'objectives' => 'Meningkatkan minat baca dan literasi masyarakat.',
+                'scope' => 'Pengadaan buku, penataan ruang, dan program membaca.',
+                'sdg_categories' => [4, 10],
+                'required_skills' => ['Perpustakaan', 'Pendidikan', 'Manajemen', 'Komunikasi'],
                 'difficulty_level' => 'beginner',
             ],
             [
                 'title' => 'Pelatihan Guru PAUD',
-                'description' => 'Program peningkatan kompetensi guru PAUD melalui pelatihan metode pembelajaran modern.',
-                'background' => 'Kompetensi guru PAUD masih perlu ditingkatkan untuk pendidikan anak usia dini yang optimal.',
-                'objectives' => 'Meningkatkan kualitas pembelajaran PAUD di desa.',
-                'scope' => 'Workshop metode pembelajaran, pembuatan APE, dan pendampingan guru.',
-                'sdg_categories' => json_encode([4, 5]),
-                'required_skills' => json_encode(['Pendidikan', 'PAUD', 'Psikologi Anak', 'Manajemen']),
+                'description' => 'Pelatihan metode pembelajaran modern untuk guru PAUD.',
+                'background' => 'Kualitas pendidikan anak usia dini masih perlu ditingkatkan.',
+                'objectives' => 'Meningkatkan kompetensi guru PAUD.',
+                'scope' => 'Workshop metode pembelajaran, alat peraga, dan psikologi anak.',
+                'sdg_categories' => [4, 5],
+                'required_skills' => ['Pendidikan', 'Psikologi Anak', 'Manajemen Kelas'],
                 'difficulty_level' => 'intermediate',
-            ],
-            [
-                'title' => 'Revitalisasi Seni Dan Budaya Lokal',
-                'description' => 'Program pelestarian dan pengembangan seni budaya tradisional untuk generasi muda.',
-                'background' => 'Seni budaya lokal mulai terlupakan, perlu revitalisasi untuk generasi muda.',
-                'objectives' => 'Melestarikan dan mengembangkan seni budaya lokal.',
-                'scope' => 'Pelatihan seni tradisional, dokumentasi budaya, dan festival seni.',
-                'sdg_categories' => json_encode([4, 11]),
-                'required_skills' => json_encode(['Seni', 'Budaya', 'Dokumentasi', 'Pendidikan']),
-                'difficulty_level' => 'beginner',
             ],
             [
                 'title' => 'Sekolah Inklusi Ramah Disabilitas',
-                'description' => 'Program peningkatan aksesibilitas pendidikan bagi anak berkebutuhan khusus.',
-                'background' => 'Anak berkebutuhan khusus kesulitan mengakses pendidikan yang layak.',
-                'objectives' => 'Meningkatkan aksesibilitas dan kualitas pendidikan bagi ABK.',
-                'scope' => 'Adaptasi fasilitas, pelatihan guru, dan pendampingan siswa ABK.',
-                'sdg_categories' => json_encode([4, 10]),
-                'required_skills' => json_encode(['Pendidikan Khusus', 'Psikologi', 'Terapi', 'Arsitektur']),
+                'description' => 'Program inklusi pendidikan untuk anak berkebutuhan khusus.',
+                'background' => 'Anak disabilitas kesulitan akses pendidikan.',
+                'objectives' => 'Mewujudkan pendidikan inklusif dan ramah disabilitas.',
+                'scope' => 'Adaptasi fasilitas, pelatihan guru, dan pendampingan siswa.',
+                'sdg_categories' => [4, 10],
+                'required_skills' => ['Pendidikan Khusus', 'Psikologi', 'Terapi', 'Arsitektur'],
                 'difficulty_level' => 'advanced',
             ],
 
-            // ===== SDG 5: KESETARAAN GENDER (4 templates) =====
+            // =============================================
+            // SDG 5: KESETARAAN GENDER (5 templates)
+            // =============================================
             [
                 'title' => 'Pemberdayaan Perempuan Desa',
-                'description' => 'Program pelatihan keterampilan dan kewirausahaan untuk meningkatkan kemandirian ekonomi perempuan desa.',
-                'background' => 'Partisipasi ekonomi perempuan masih rendah, perlu pemberdayaan melalui keterampilan.',
-                'objectives' => 'Meningkatkan kemandirian ekonomi perempuan desa.',
-                'scope' => 'Pelatihan keterampilan, pengembangan usaha, dan akses permodalan.',
-                'sdg_categories' => json_encode([5, 8]),
-                'required_skills' => json_encode(['Kewirausahaan', 'Keterampilan', 'Pemberdayaan', 'Gender']),
-                'difficulty_level' => 'intermediate',
-            ],
-            [
-                'title' => 'Kepemimpinan Perempuan Dalam Desa',
-                'description' => 'Program pelatihan kepemimpinan untuk meningkatkan partisipasi perempuan dalam pengambilan keputusan desa.',
-                'background' => 'Partisipasi perempuan dalam kepemimpinan desa masih minim, perlu penguatan kapasitas.',
-                'objectives' => 'Meningkatkan keterlibatan dan kapasitas perempuan dalam pengambilan keputusan desa.',
-                'scope' => 'Pelatihan kepemimpinan, public speaking, dan manajemen organisasi.',
-                'sdg_categories' => json_encode([5, 16]),
-                'required_skills' => json_encode(['Kepemimpinan', 'Pemberdayaan', 'Manajemen', 'Komunikasi']),
+                'description' => 'Program pemberdayaan ekonomi perempuan melalui keterampilan dan UMKM.',
+                'background' => 'Perempuan desa kurang berperan dalam ekonomi keluarga.',
+                'objectives' => 'Meningkatkan kemandirian ekonomi perempuan.',
+                'scope' => 'Pelatihan keterampilan, pendampingan usaha, dan akses modal.',
+                'sdg_categories' => [5, 8],
+                'required_skills' => ['Gender Studies', 'Ekonomi', 'Kewirausahaan', 'Sosial'],
                 'difficulty_level' => 'intermediate',
             ],
             [
                 'title' => 'Pencegahan Kekerasan Terhadap Perempuan',
-                'description' => 'Program edukasi dan pencegahan kekerasan berbasis gender di masyarakat.',
-                'background' => 'Kasus kekerasan terhadap perempuan masih tinggi namun sering tidak terlaporkan.',
-                'objectives' => 'Menurunkan angka kekerasan terhadap perempuan dan meningkatkan kesadaran gender.',
-                'scope' => 'Sosialisasi anti-kekerasan, pendampingan korban, dan pembentukan support group.',
-                'sdg_categories' => json_encode([5, 16]),
-                'required_skills' => json_encode(['Hukum', 'Psikologi', 'Sosial', 'Konseling']),
+                'description' => 'Kampanye dan pendampingan pencegahan kekerasan berbasis gender.',
+                'background' => 'Kasus kekerasan terhadap perempuan masih tinggi.',
+                'objectives' => 'Menurunkan angka kekerasan dan meningkatkan kesadaran gender.',
+                'scope' => 'Sosialisasi, pendampingan korban, dan pembentukan support group.',
+                'sdg_categories' => [5, 16],
+                'required_skills' => ['Hukum', 'Psikologi', 'Sosial', 'Konseling'],
+                'difficulty_level' => 'advanced',
+            ],
+            [
+                'title' => 'Kepemimpinan Perempuan Dalam Desa',
+                'description' => 'Program pengembangan kapasitas kepemimpinan perempuan.',
+                'background' => 'Partisipasi perempuan dalam pengambilan keputusan masih rendah.',
+                'objectives' => 'Meningkatkan keterwakilan perempuan dalam kepemimpinan desa.',
+                'scope' => 'Pelatihan kepemimpinan, mentoring, dan advokasi kebijakan.',
+                'sdg_categories' => [5, 16],
+                'required_skills' => ['Gender Studies', 'Kepemimpinan', 'Politik', 'Komunikasi'],
                 'difficulty_level' => 'advanced',
             ],
             [
                 'title' => 'Perempuan Dan Teknologi',
                 'description' => 'Program pelatihan teknologi informasi khusus untuk perempuan desa.',
-                'background' => 'Kesenjangan gender dalam akses teknologi masih tinggi di pedesaan.',
+                'background' => 'Kesenjangan gender dalam akses teknologi masih tinggi.',
                 'objectives' => 'Meningkatkan literasi digital perempuan desa.',
                 'scope' => 'Pelatihan komputer, media sosial untuk bisnis, dan aplikasi produktivitas.',
-                'sdg_categories' => json_encode([5, 9]),
-                'required_skills' => json_encode(['Teknologi Informasi', 'Pendidikan', 'Gender Studies', 'Marketing']),
+                'sdg_categories' => [5, 9],
+                'required_skills' => ['Teknologi Informasi', 'Pendidikan', 'Gender Studies'],
+                'difficulty_level' => 'intermediate',
+            ],
+            [
+                'title' => 'Kesehatan Reproduksi Perempuan',
+                'description' => 'Edukasi kesehatan reproduksi dan keluarga berencana.',
+                'background' => 'Pengetahuan kesehatan reproduksi masih rendah.',
+                'objectives' => 'Meningkatkan kesadaran dan akses layanan kesehatan reproduksi.',
+                'scope' => 'Penyuluhan, konseling, dan rujukan layanan kesehatan.',
+                'sdg_categories' => [5, 3],
+                'required_skills' => ['Kebidanan', 'Kesehatan Masyarakat', 'Konseling'],
                 'difficulty_level' => 'intermediate',
             ],
 
-            // ===== SDG 6: AIR BERSIH DAN SANITASI (5 templates) =====
+            // =============================================
+            // SDG 6: AIR BERSIH DAN SANITASI (5 templates)
+            // =============================================
             [
                 'title' => 'Akses Air Bersih Dan Sanitasi',
-                'description' => 'Pembangunan infrastruktur air bersih dan fasilitas sanitasi untuk meningkatkan kualitas hidup masyarakat.',
-                'background' => 'Akses air bersih masih terbatas, banyak warga yang menggunakan sumber air tidak layak.',
+                'description' => 'Pembangunan infrastruktur air bersih dan fasilitas sanitasi.',
+                'background' => 'Akses air bersih masih terbatas di banyak desa.',
                 'objectives' => 'Menyediakan akses air bersih yang layak untuk seluruh warga.',
                 'scope' => 'Pembangunan sumur bor, instalasi pipa, dan fasilitas MCK.',
-                'sdg_categories' => json_encode([6, 3]),
-                'required_skills' => json_encode(['Teknik Sipil', 'Kesehatan Lingkungan', 'Manajemen Proyek', 'Geologi']),
+                'sdg_categories' => [6, 3],
+                'required_skills' => ['Teknik Sipil', 'Kesehatan Lingkungan', 'Manajemen Proyek'],
                 'difficulty_level' => 'advanced',
             ],
             [
                 'title' => 'Sistem Filtrasi Air Sederhana',
-                'description' => 'Program pembuatan dan distribusi alat filtrasi air sederhana untuk rumah tangga.',
-                'background' => 'Kualitas air sumur masih kurang baik, perlu teknologi filtrasi yang terjangkau.',
-                'objectives' => 'Meningkatkan akses terhadap air bersih melalui teknologi filtrasi sederhana.',
-                'scope' => 'Pelatihan pembuatan filter, distribusi alat, dan monitoring kualitas air.',
-                'sdg_categories' => json_encode([6, 3]),
-                'required_skills' => json_encode(['Teknik Lingkungan', 'Kesehatan', 'Teknologi Tepat Guna', 'Kimia']),
-                'difficulty_level' => 'intermediate',
-            ],
-            [
-                'title' => 'Konservasi Mata Air Desa',
-                'description' => 'Program pelestarian dan rehabilitasi mata air sebagai sumber air bersih komunitas.',
-                'background' => 'Debit mata air semakin menurun akibat kerusakan lingkungan sekitar.',
-                'objectives' => 'Menjaga kelestarian mata air dan meningkatkan debit air.',
-                'scope' => 'Reboisasi area mata air, pembuatan sumur resapan, dan edukasi konservasi.',
-                'sdg_categories' => json_encode([6, 15]),
-                'required_skills' => json_encode(['Lingkungan', 'Kehutanan', 'Konservasi', 'Hidrologi']),
+                'description' => 'Program pembuatan dan distribusi alat filtrasi air untuk rumah tangga.',
+                'background' => 'Kualitas air sumur masih kurang baik.',
+                'objectives' => 'Meningkatkan akses air bersih melalui teknologi filtrasi.',
+                'scope' => 'Pelatihan pembuatan filter, distribusi alat, dan monitoring kualitas.',
+                'sdg_categories' => [6, 3],
+                'required_skills' => ['Teknik Lingkungan', 'Kesehatan', 'Teknologi'],
                 'difficulty_level' => 'intermediate',
             ],
             [
                 'title' => 'Sanitasi Total Berbasis Masyarakat',
-                'description' => 'Program perubahan perilaku sanitasi untuk mencapai desa bebas buang air besar sembarangan.',
-                'background' => 'Masih ada warga yang buang air besar sembarangan, mengancam kesehatan publik.',
-                'objectives' => 'Mencapai status Open Defecation Free (ODF) di desa.',
-                'scope' => 'Pemicuan STBM, pembangunan jamban, dan monitoring perilaku.',
-                'sdg_categories' => json_encode([6, 3]),
-                'required_skills' => json_encode(['Kesehatan Masyarakat', 'Sanitasi', 'Pemberdayaan', 'Komunikasi']),
+                'description' => 'Program STBM untuk mengubah perilaku sanitasi masyarakat.',
+                'background' => 'Masih banyak warga yang belum memiliki jamban sehat.',
+                'objectives' => 'Mewujudkan desa bebas buang air besar sembarangan.',
+                'scope' => 'Kampanye sanitasi, pembangunan jamban, dan monitoring.',
+                'sdg_categories' => [6, 3],
+                'required_skills' => ['Kesehatan Lingkungan', 'Teknik Sipil', 'Komunikasi'],
                 'difficulty_level' => 'intermediate',
+            ],
+            [
+                'title' => 'Konservasi Mata Air Desa',
+                'description' => 'Program pelestarian dan pengelolaan mata air sebagai sumber air bersih.',
+                'background' => 'Mata air mengalami penurunan debit akibat kerusakan lingkungan.',
+                'objectives' => 'Melestarikan mata air untuk ketersediaan air jangka panjang.',
+                'scope' => 'Reboisasi, pembuatan biopori, dan pengelolaan tata air.',
+                'sdg_categories' => [6, 15],
+                'required_skills' => ['Kehutanan', 'Hidrologi', 'Lingkungan', 'Sosial'],
+                'difficulty_level' => 'advanced',
             ],
             [
                 'title' => 'Pengelolaan Limbah Rumah Tangga',
-                'description' => 'Sistem pengelolaan limbah rumah tangga yang ramah lingkungan.',
-                'background' => 'Limbah rumah tangga belum dikelola dengan baik, mencemari lingkungan.',
-                'objectives' => 'Mengurangi pencemaran dari limbah rumah tangga.',
-                'scope' => 'Pembuatan septic tank komunal, biofilter, dan edukasi pengelolaan limbah.',
-                'sdg_categories' => json_encode([6, 11]),
-                'required_skills' => json_encode(['Teknik Lingkungan', 'Kesehatan', 'Teknologi', 'Manajemen']),
-                'difficulty_level' => 'advanced',
+                'description' => 'Sistem pengelolaan limbah cair rumah tangga yang ramah lingkungan.',
+                'background' => 'Limbah rumah tangga mencemari sumber air.',
+                'objectives' => 'Mengurangi pencemaran air dari limbah rumah tangga.',
+                'scope' => 'Pembuatan bak resapan, biofilter, dan edukasi pengelolaan limbah.',
+                'sdg_categories' => [6, 11],
+                'required_skills' => ['Teknik Lingkungan', 'Kesehatan', 'Teknik Sipil'],
+                'difficulty_level' => 'intermediate',
             ],
 
-            // ===== SDG 7: ENERGI BERSIH DAN TERJANGKAU (4 templates) =====
+            // =============================================
+            // SDG 7: ENERGI BERSIH DAN TERJANGKAU (5 templates)
+            // =============================================
             [
                 'title' => 'Energi Terbarukan Desa',
-                'description' => 'Program pemanfaatan energi terbarukan seperti biogas dan solar panel untuk kebutuhan rumah tangga.',
-                'background' => 'Biaya energi tinggi dan ketergantungan pada energi fosil masih besar.',
-                'objectives' => 'Mengurangi biaya energi dan ketergantungan pada energi fosil.',
-                'scope' => 'Instalasi biogas, solar panel, dan edukasi energi terbarukan.',
-                'sdg_categories' => json_encode([7, 13]),
-                'required_skills' => json_encode(['Teknik', 'Energi Terbarukan', 'Lingkungan', 'Fisika']),
+                'description' => 'Implementasi energi terbarukan untuk listrik desa.',
+                'background' => 'Ketergantungan pada energi fosil masih tinggi.',
+                'objectives' => 'Menyediakan energi bersih dan terjangkau.',
+                'scope' => 'Instalasi panel surya, turbin angin, atau mikrohidro.',
+                'sdg_categories' => [7, 13],
+                'required_skills' => ['Teknik Elektro', 'Energi Terbarukan', 'Manajemen Proyek'],
                 'difficulty_level' => 'advanced',
-            ],
-            [
-                'title' => 'Lampu Tenaga Surya',
-                'description' => 'Instalasi lampu jalan tenaga surya untuk meningkatkan penerangan di desa.',
-                'background' => 'Penerangan jalan di desa masih minim, menghambat aktivitas malam hari.',
-                'objectives' => 'Meningkatkan penerangan jalan dengan teknologi ramah lingkungan.',
-                'scope' => 'Instalasi lampu surya, perawatan berkala, dan edukasi teknologi.',
-                'sdg_categories' => json_encode([7, 11]),
-                'required_skills' => json_encode(['Teknik Elektro', 'Energi Surya', 'Infrastruktur', 'Manajemen']),
-                'difficulty_level' => 'intermediate',
             ],
             [
                 'title' => 'Kompor Biogas Rumah Tangga',
-                'description' => 'Program pembuatan dan pemanfaatan kompor biogas dari limbah ternak.',
-                'background' => 'Limbah ternak melimpah namun belum dimanfaatkan optimal untuk energi.',
-                'objectives' => 'Mengurangi penggunaan LPG dan memanfaatkan limbah ternak.',
-                'scope' => 'Pembuatan digester biogas, instalasi kompor, dan pelatihan perawatan.',
-                'sdg_categories' => json_encode([7, 12]),
-                'required_skills' => json_encode(['Teknik', 'Pertanian', 'Energi', 'Lingkungan']),
+                'description' => 'Program pembuatan biogas dari limbah ternak untuk memasak.',
+                'background' => 'Biaya LPG mahal dan limbah ternak belum dimanfaatkan.',
+                'objectives' => 'Menyediakan energi alternatif yang murah dan ramah lingkungan.',
+                'scope' => 'Pembuatan digester biogas, pelatihan, dan pendampingan.',
+                'sdg_categories' => [7, 12],
+                'required_skills' => ['Teknik Pertanian', 'Energi', 'Lingkungan'],
+                'difficulty_level' => 'intermediate',
+            ],
+            [
+                'title' => 'Lampu Tenaga Surya',
+                'description' => 'Instalasi lampu tenaga surya untuk penerangan jalan dan fasilitas umum.',
+                'background' => 'Penerangan jalan masih minim di desa.',
+                'objectives' => 'Meningkatkan keamanan dan kenyamanan melalui penerangan.',
+                'scope' => 'Instalasi solar street light dan pelatihan perawatan.',
+                'sdg_categories' => [7, 11],
+                'required_skills' => ['Teknik Elektro', 'Teknik Sipil', 'Manajemen'],
                 'difficulty_level' => 'intermediate',
             ],
             [
                 'title' => 'Hemat Energi Rumah Tangga',
-                'description' => 'Kampanye dan edukasi penggunaan energi hemat di rumah tangga.',
-                'background' => 'Konsumsi energi rumah tangga tinggi akibat kurangnya kesadaran hemat energi.',
-                'objectives' => 'Mengurangi konsumsi energi melalui perubahan perilaku.',
-                'scope' => 'Sosialisasi hemat energi, audit energi rumah, dan tips praktis.',
-                'sdg_categories' => json_encode([7, 13]),
-                'required_skills' => json_encode(['Teknik', 'Komunikasi', 'Lingkungan', 'Pendidikan']),
+                'description' => 'Kampanye efisiensi energi dan penggunaan peralatan hemat listrik.',
+                'background' => 'Konsumsi energi rumah tangga tidak efisien.',
+                'objectives' => 'Mengurangi konsumsi energi dan biaya listrik.',
+                'scope' => 'Sosialisasi, audit energi rumah, dan pendampingan.',
+                'sdg_categories' => [7, 13],
+                'required_skills' => ['Teknik Elektro', 'Komunikasi', 'Manajemen Energi'],
                 'difficulty_level' => 'beginner',
             ],
-
-            // ===== SDG 8: PEKERJAAN LAYAK (5 templates) =====
             [
-                'title' => 'Job Fair Dan Pelatihan Kerja',
-                'description' => 'Program bursa kerja dan pelatihan untuk menghubungkan pencari kerja dengan lowongan.',
-                'background' => 'Tingkat pengangguran masih tinggi, perlu fasilitasi akses pekerjaan.',
-                'objectives' => 'Mengurangi pengangguran melalui job matching dan peningkatan skill.',
-                'scope' => 'Job fair, pelatihan interview, dan workshop soft skills.',
-                'sdg_categories' => json_encode([8]),
-                'required_skills' => json_encode(['HR', 'Pelatihan', 'Karir', 'Psikologi', 'Manajemen']),
-                'difficulty_level' => 'intermediate',
+                'title' => 'Pembangkit Listrik Mikrohidro',
+                'description' => 'Pembangunan pembangkit listrik tenaga air skala kecil.',
+                'background' => 'Desa memiliki potensi air tapi belum ada listrik PLN.',
+                'objectives' => 'Menyediakan listrik dari sumber terbarukan.',
+                'scope' => 'Survey potensi, pembangunan, dan pelatihan operator.',
+                'sdg_categories' => [7, 9],
+                'required_skills' => ['Teknik Elektro', 'Teknik Sipil', 'Hidrologi'],
+                'difficulty_level' => 'advanced',
             ],
+
+            // =============================================
+            // SDG 8: PEKERJAAN LAYAK DAN PERTUMBUHAN EKONOMI (5 templates)
+            // =============================================
             [
                 'title' => 'Kewirausahaan Digital',
-                'description' => 'Pelatihan memulai bisnis online untuk generasi muda menggunakan platform digital.',
-                'background' => 'Peluang ekonomi digital belum dimanfaatkan optimal oleh masyarakat.',
-                'objectives' => 'Meningkatkan jumlah wirausaha digital dan akses pasar online.',
-                'scope' => 'Pelatihan e-commerce, digital marketing, dan mentoring bisnis.',
-                'sdg_categories' => json_encode([8, 9]),
-                'required_skills' => json_encode(['Digital Marketing', 'E-commerce', 'Kewirausahaan', 'Desain']),
+                'description' => 'Pelatihan bisnis online dan pemasaran digital untuk UMKM.',
+                'background' => 'UMKM belum optimal memanfaatkan platform digital.',
+                'objectives' => 'Meningkatkan penjualan UMKM melalui platform digital.',
+                'scope' => 'Pelatihan e-commerce, social media marketing, dan marketplace.',
+                'sdg_categories' => [8, 9],
+                'required_skills' => ['Marketing Digital', 'E-Commerce', 'Teknologi', 'Bisnis'],
                 'difficulty_level' => 'intermediate',
             ],
             [
-                'title' => 'Wisata Desa Berkelanjutan',
-                'description' => 'Pengembangan desa wisata dengan konsep eco-tourism dan community based.',
-                'background' => 'Potensi wisata alam dan budaya belum dikembangkan optimal.',
-                'objectives' => 'Meningkatkan pendapatan masyarakat melalui wisata berkelanjutan.',
-                'scope' => 'Pelatihan pemandu, pengembangan paket wisata, dan promosi digital.',
-                'sdg_categories' => json_encode([8, 11]),
-                'required_skills' => json_encode(['Pariwisata', 'Marketing', 'Manajemen', 'Komunikasi']),
+                'title' => 'Job Fair Dan Pelatihan Kerja',
+                'description' => 'Bursa kerja dan pelatihan untuk meningkatkan ketenagakerjaan.',
+                'background' => 'Tingkat pengangguran masih tinggi di desa.',
+                'objectives' => 'Menghubungkan pencari kerja dengan pemberi kerja.',
+                'scope' => 'Job fair, pelatihan keterampilan, dan pendampingan karir.',
+                'sdg_categories' => [8],
+                'required_skills' => ['SDM', 'Manajemen', 'Komunikasi', 'Pelatihan'],
                 'difficulty_level' => 'intermediate',
             ],
             [
                 'title' => 'Sertifikasi Produk UMKM',
-                'description' => 'Pendampingan UMKM dalam mendapatkan sertifikasi produk untuk akses pasar lebih luas.',
-                'background' => 'Produk UMKM sulit masuk pasar modern karena belum bersertifikat.',
-                'objectives' => 'Meningkatkan daya saing UMKM melalui sertifikasi produk.',
-                'scope' => 'Pendampingan sertifikasi halal, PIRT, SNI, dan akses pasar.',
-                'sdg_categories' => json_encode([8, 9]),
-                'required_skills' => json_encode(['Manajemen', 'UMKM', 'Teknologi Pangan', 'Regulasi']),
+                'description' => 'Pendampingan UMKM untuk mendapatkan sertifikasi produk.',
+                'background' => 'Produk UMKM sulit bersaing karena belum bersertifikat.',
+                'objectives' => 'Meningkatkan daya saing produk UMKM.',
+                'scope' => 'Pelatihan standar produksi, pendampingan sertifikasi, dan branding.',
+                'sdg_categories' => [8, 9],
+                'required_skills' => ['Manajemen Mutu', 'Bisnis', 'Hukum', 'Marketing'],
                 'difficulty_level' => 'advanced',
+            ],
+            [
+                'title' => 'Wisata Desa Berkelanjutan',
+                'description' => 'Pengembangan desa wisata berbasis komunitas.',
+                'background' => 'Potensi wisata desa belum dikembangkan optimal.',
+                'objectives' => 'Meningkatkan pendapatan masyarakat dari sektor pariwisata.',
+                'scope' => 'Pelatihan pemandu wisata, paket wisata, dan promosi.',
+                'sdg_categories' => [8, 11],
+                'required_skills' => ['Pariwisata', 'Marketing', 'Manajemen', 'Komunikasi'],
+                'difficulty_level' => 'intermediate',
             ],
             [
                 'title' => 'Pekerja Migran Aman',
-                'description' => 'Program edukasi dan perlindungan untuk calon pekerja migran.',
-                'background' => 'Banyak pekerja migran menjadi korban penipuan dan perlakuan tidak layak.',
-                'objectives' => 'Melindungi hak-hak pekerja migran dan mencegah penipuan.',
-                'scope' => 'Edukasi prosedur migrasi, pendampingan legal, dan support group keluarga.',
-                'sdg_categories' => json_encode([8, 16]),
-                'required_skills' => json_encode(['Hukum', 'Sosial', 'Konseling', 'Administrasi']),
-                'difficulty_level' => 'intermediate',
-            ],
-
-            // ===== SDG 11: KOTA DAN KOMUNITAS BERKELANJUTAN (6 templates) =====
-            [
-                'title' => 'Pengelolaan Sampah Ramah Lingkungan',
-                'description' => 'Program pengelolaan sampah terpadu dengan sistem 3R (Reduce, Reuse, Recycle) dan pembuatan kompos.',
-                'background' => 'Masalah sampah semakin menumpuk, perlu sistem pengelolaan yang berkelanjutan.',
-                'objectives' => 'Mengurangi volume sampah dan menciptakan lingkungan yang bersih.',
-                'scope' => 'Bank sampah, pengomposan, dan edukasi pengelolaan sampah.',
-                'sdg_categories' => json_encode([11, 12]),
-                'required_skills' => json_encode(['Lingkungan', 'Manajemen', 'Pendidikan Masyarakat', 'Teknologi']),
-                'difficulty_level' => 'intermediate',
-            ],
-            [
-                'title' => 'Taman Hijau Dan Ruang Terbuka Publik',
-                'description' => 'Pembangunan dan revitalisasi taman sebagai ruang publik yang ramah keluarga.',
-                'background' => 'Kurangnya ruang terbuka hijau mengurangi kualitas hidup masyarakat perkotaan.',
-                'objectives' => 'Menyediakan ruang publik yang nyaman dan hijau untuk warga.',
-                'scope' => 'Penataan taman, penanaman pohon, dan fasilitas publik.',
-                'sdg_categories' => json_encode([11, 13]),
-                'required_skills' => json_encode(['Arsitektur Lanskap', 'Perencanaan Kota', 'Lingkungan', 'Teknik Sipil']),
-                'difficulty_level' => 'intermediate',
-            ],
-            [
-                'title' => 'Sistem Transportasi Ramah Lingkungan',
-                'description' => 'Pengembangan jalur sepeda dan promosi transportasi publik untuk mengurangi polusi.',
-                'background' => 'Ketergantungan pada kendaraan pribadi tinggi, menyebabkan kemacetan dan polusi.',
-                'objectives' => 'Meningkatkan penggunaan transportasi ramah lingkungan.',
-                'scope' => 'Pembuatan jalur sepeda, promosi bike sharing, dan edukasi transportasi publik.',
-                'sdg_categories' => json_encode([11, 13]),
-                'required_skills' => json_encode(['Transportasi', 'Perencanaan Kota', 'Lingkungan', 'Komunikasi']),
+                'description' => 'Edukasi dan pendampingan calon pekerja migran.',
+                'background' => 'Banyak kasus penipuan dan eksploitasi pekerja migran.',
+                'objectives' => 'Melindungi hak-hak pekerja migran.',
+                'scope' => 'Sosialisasi, verifikasi PPTKIS, dan pendampingan hukum.',
+                'sdg_categories' => [8, 16],
+                'required_skills' => ['Hukum', 'Sosial', 'Komunikasi', 'Advokasi'],
                 'difficulty_level' => 'advanced',
             ],
-            [
-                'title' => 'Pusat Daur Ulang Komunitas',
-                'description' => 'Pembangunan pusat daur ulang sampah untuk menghasilkan produk bernilai ekonomi.',
-                'background' => 'Sampah menumpuk dan belum dimanfaatkan sebagai bahan daur ulang.',
-                'objectives' => 'Mengolah sampah menjadi produk bernilai ekonomi.',
-                'scope' => 'Pembangunan fasilitas, pelatihan daur ulang, dan pemasaran produk.',
-                'sdg_categories' => json_encode([11, 12]),
-                'required_skills' => json_encode(['Lingkungan', 'Kewirausahaan', 'Desain', 'Manajemen']),
-                'difficulty_level' => 'intermediate',
-            ],
+
+            // =============================================
+            // SDG 9: INDUSTRI, INOVASI DAN INFRASTRUKTUR (5 templates)
+            // =============================================
             [
                 'title' => 'Smart Village Teknologi',
-                'description' => 'Implementasi teknologi IoT untuk monitoring dan pengelolaan infrastruktur desa.',
-                'background' => 'Pengelolaan infrastruktur desa belum optimal, perlu teknologi smart village.',
-                'objectives' => 'Meningkatkan efisiensi pengelolaan infrastruktur desa dengan teknologi.',
-                'scope' => 'Instalasi sensor IoT, dashboard monitoring, dan pelatihan operator.',
-                'sdg_categories' => json_encode([11, 9]),
-                'required_skills' => json_encode(['Teknik Informatika', 'IoT', 'Elektronika', 'Manajemen Data']),
+                'description' => 'Implementasi teknologi IoT untuk smart village.',
+                'background' => 'Desa perlu adopsi teknologi untuk efisiensi pengelolaan.',
+                'objectives' => 'Mewujudkan desa cerdas berbasis teknologi.',
+                'scope' => 'Instalasi sensor, dashboard monitoring, dan pelatihan.',
+                'sdg_categories' => [11, 9],
+                'required_skills' => ['Teknologi Informasi', 'IoT', 'Data Science', 'Manajemen'],
                 'difficulty_level' => 'advanced',
-            ],
-            [
-                'title' => 'Penataan Permukiman Kumuh',
-                'description' => 'Program penataan dan revitalisasi kawasan permukiman kumuh.',
-                'background' => 'Permukiman kumuh mengurangi kualitas hidup dan kesehatan warga.',
-                'objectives' => 'Meningkatkan kualitas permukiman dan kesejahteraan warga.',
-                'scope' => 'Penataan fisik, perbaikan infrastruktur, dan pemberdayaan ekonomi.',
-                'sdg_categories' => json_encode([11, 1]),
-                'required_skills' => json_encode(['Arsitektur', 'Teknik Sipil', 'Sosial', 'Perencanaan']),
-                'difficulty_level' => 'advanced',
-            ],
-
-            // ===== SDG 12: KONSUMSI BERTANGGUNG JAWAB (4 templates) =====
-            [
-                'title' => 'Kampanye Zero Waste',
-                'description' => 'Program edukasi dan implementasi gaya hidup zero waste di komunitas.',
-                'background' => 'Produksi sampah terus meningkat, perlu perubahan pola konsumsi masyarakat.',
-                'objectives' => 'Mengurangi produksi sampah melalui perubahan pola konsumsi.',
-                'scope' => 'Workshop zero waste, kampanye mengurangi plastik, dan promosi produk ramah lingkungan.',
-                'sdg_categories' => json_encode([12, 11]),
-                'required_skills' => json_encode(['Lingkungan', 'Komunikasi', 'Pendidikan', 'Marketing']),
-                'difficulty_level' => 'beginner',
-            ],
-            [
-                'title' => 'Produk Lokal Berkelanjutan',
-                'description' => 'Promosi dan pengembangan produk lokal yang ramah lingkungan.',
-                'background' => 'Produk lokal kurang dikenal, padahal memiliki potensi ekonomi dan lingkungan.',
-                'objectives' => 'Meningkatkan konsumsi produk lokal berkelanjutan.',
-                'scope' => 'Branding produk, pelatihan packaging, dan akses pasar.',
-                'sdg_categories' => json_encode([12, 8]),
-                'required_skills' => json_encode(['Marketing', 'Branding', 'Kewirausahaan', 'Desain']),
-                'difficulty_level' => 'intermediate',
-            ],
-            [
-                'title' => 'Fashion Berkelanjutan',
-                'description' => 'Program edukasi dan produksi fashion dari bahan daur ulang.',
-                'background' => 'Industri fashion menghasilkan limbah besar, perlu alternatif berkelanjutan.',
-                'objectives' => 'Mengurangi limbah fashion melalui upcycling dan daur ulang.',
-                'scope' => 'Pelatihan upcycling pakaian, produksi tas dari sampah, dan fashion show.',
-                'sdg_categories' => json_encode([12, 13]),
-                'required_skills' => json_encode(['Desain Fashion', 'Kewirausahaan', 'Lingkungan', 'Marketing']),
-                'difficulty_level' => 'intermediate',
-            ],
-            [
-                'title' => 'Packaging Ramah Lingkungan',
-                'description' => 'Pengembangan dan promosi kemasan ramah lingkungan untuk UMKM.',
-                'background' => 'UMKM masih menggunakan kemasan plastik yang tidak ramah lingkungan.',
-                'objectives' => 'Mengganti packaging plastik dengan alternatif ramah lingkungan.',
-                'scope' => 'Pelatihan pembuatan packaging, sourcing bahan, dan desain kemasan.',
-                'sdg_categories' => json_encode([12, 8]),
-                'required_skills' => json_encode(['Desain', 'Teknologi Pangan', 'Lingkungan', 'UMKM']),
-                'difficulty_level' => 'intermediate',
-            ],
-
-            // ===== SDG 13: PENANGANAN PERUBAHAN IKLIM (5 templates) =====
-            [
-                'title' => 'Penghijauan Dan Konservasi Lingkungan',
-                'description' => 'Program penanaman pohon dan konservasi lahan untuk mencegah erosi dan meningkatkan kualitas lingkungan.',
-                'background' => 'Lahan kritis semakin luas, diperlukan upaya penghijauan dan konservasi.',
-                'objectives' => 'Meningkatkan tutupan hijau dan mencegah kerusakan lingkungan.',
-                'scope' => 'Penanaman pohon, pembuatan terasering, dan edukasi lingkungan.',
-                'sdg_categories' => json_encode([13, 15]),
-                'required_skills' => json_encode(['Kehutanan', 'Lingkungan', 'Pertanian', 'Konservasi']),
-                'difficulty_level' => 'beginner',
-            ],
-            [
-                'title' => 'Mitigasi Bencana Berbasis Masyarakat',
-                'description' => 'Program peningkatan kapasitas masyarakat dalam menghadapi bencana alam.',
-                'background' => 'Wilayah ini rawan bencana, perlu peningkatan kesiapsiagaan masyarakat.',
-                'objectives' => 'Meningkatkan ketahanan masyarakat terhadap bencana alam.',
-                'scope' => 'Pelatihan tanggap bencana, pembentukan tim relawan, dan early warning system.',
-                'sdg_categories' => json_encode([13, 11]),
-                'required_skills' => json_encode(['Kebencanaan', 'Sosial', 'Manajemen Risiko', 'Geografi']),
-                'difficulty_level' => 'intermediate',
-            ],
-            [
-                'title' => 'Adaptasi Perubahan Iklim Pertanian',
-                'description' => 'Program adaptasi teknologi pertanian terhadap perubahan iklim dan cuaca ekstrem.',
-                'background' => 'Perubahan iklim berdampak pada produktivitas pertanian, perlu adaptasi teknologi.',
-                'objectives' => 'Meningkatkan ketahanan pertanian terhadap perubahan iklim.',
-                'scope' => 'Pelatihan teknologi adaptasi, pemilihan varietas tahan, dan sistem irigasi efisien.',
-                'sdg_categories' => json_encode([13, 2]),
-                'required_skills' => json_encode(['Pertanian', 'Klimatologi', 'Teknologi', 'Agronomi']),
-                'difficulty_level' => 'advanced',
-            ],
-            [
-                'title' => 'Kampung Iklim Pintar',
-                'description' => 'Program adaptasi dan mitigasi perubahan iklim tingkat desa.',
-                'background' => 'Dampak perubahan iklim semakin terasa, perlu aksi konkrit di level desa.',
-                'objectives' => 'Membangun desa yang tangguh terhadap perubahan iklim.',
-                'scope' => 'Penanaman pohon, rainwater harvesting, dan energi terbarukan.',
-                'sdg_categories' => json_encode([13, 7]),
-                'required_skills' => json_encode(['Lingkungan', 'Energi', 'Pemberdayaan', 'Teknologi']),
-                'difficulty_level' => 'intermediate',
-            ],
-            [
-                'title' => 'Monitoring Kualitas Udara',
-                'description' => 'Sistem monitoring kualitas udara berbasis komunitas.',
-                'background' => 'Polusi udara meningkat namun belum ada sistem monitoring yang memadai.',
-                'objectives' => 'Meningkatkan kesadaran dan monitoring kualitas udara.',
-                'scope' => 'Instalasi sensor udara, dashboard monitoring, dan kampanye udara bersih.',
-                'sdg_categories' => json_encode([13, 3]),
-                'required_skills' => json_encode(['Teknik Lingkungan', 'Teknologi', 'Data Science', 'Kesehatan']),
-                'difficulty_level' => 'advanced',
-            ],
-
-            // ===== SDG 16: PERDAMAIAN DAN KEADILAN (4 templates) =====
-            [
-                'title' => 'Transparansi Dana Desa',
-                'description' => 'Sistem informasi transparansi pengelolaan dana desa untuk meningkatkan akuntabilitas.',
-                'background' => 'Informasi penggunaan dana desa belum transparan, perlu sistem yang aksesibel.',
-                'objectives' => 'Meningkatkan transparansi dan akuntabilitas pengelolaan dana desa.',
-                'scope' => 'Pembuatan portal informasi, sosialisasi, dan monitoring partisipatif.',
-                'sdg_categories' => json_encode([16, 17]),
-                'required_skills' => json_encode(['Sistem Informasi', 'Pemerintahan', 'Komunikasi', 'Web Development']),
-                'difficulty_level' => 'intermediate',
-            ],
-            [
-                'title' => 'Layanan Hukum Gratis Masyarakat',
-                'description' => 'Program konsultasi dan pendampingan hukum gratis untuk masyarakat kurang mampu.',
-                'background' => 'Akses terhadap layanan hukum masih mahal dan sulit dijangkau masyarakat miskin.',
-                'objectives' => 'Meningkatkan akses keadilan bagi masyarakat kurang mampu.',
-                'scope' => 'Konsultasi hukum, pendampingan kasus, dan edukasi hukum.',
-                'sdg_categories' => json_encode([16, 10]),
-                'required_skills' => json_encode(['Hukum', 'Konseling', 'Sosial', 'Komunikasi']),
-                'difficulty_level' => 'intermediate',
-            ],
-            [
-                'title' => 'Pencegahan Korupsi Desa',
-                'description' => 'Program edukasi anti-korupsi dan sistem pengawasan partisipatif di desa.',
-                'background' => 'Potensi korupsi di level desa masih tinggi, perlu pengawasan masyarakat.',
-                'objectives' => 'Meningkatkan integritas dan pengawasan pengelolaan dana desa.',
-                'scope' => 'Edukasi anti-korupsi, pembentukan tim pengawas, dan sistem pelaporan.',
-                'sdg_categories' => json_encode([16, 17]),
-                'required_skills' => json_encode(['Hukum', 'Pemerintahan', 'Komunikasi', 'Manajemen']),
-                'difficulty_level' => 'intermediate',
-            ],
-            [
-                'title' => 'Mediasi Konflik Komunitas',
-                'description' => 'Program pelatihan mediasi dan penyelesaian konflik berbasis kearifan lokal.',
-                'background' => 'Konflik horizontal di masyarakat perlu mekanisme penyelesaian yang damai.',
-                'objectives' => 'Meningkatkan kapasitas penyelesaian konflik secara damai.',
-                'scope' => 'Pelatihan mediator, fasilitasi dialog, dan dokumentasi kearifan lokal.',
-                'sdg_categories' => json_encode([16, 11]),
-                'required_skills' => json_encode(['Hukum', 'Sosial', 'Antropologi', 'Psikologi']),
-                'difficulty_level' => 'advanced',
-            ],
-
-            // ===== SDG 17: KEMITRAAN (4 templates) =====
-            [
-                'title' => 'Kemitraan Universitas-Desa',
-                'description' => 'Program kemitraan strategis antara universitas dan desa untuk pembangunan berkelanjutan.',
-                'background' => 'Potensi kerjasama akademisi dan masyarakat belum optimal untuk pembangunan desa.',
-                'objectives' => 'Membangun kemitraan berkelanjutan untuk pengembangan desa.',
-                'scope' => 'Riset bersama, transfer teknologi, dan program pemberdayaan.',
-                'sdg_categories' => json_encode([17, 4]),
-                'required_skills' => json_encode(['Manajemen Proyek', 'Penelitian', 'Pemberdayaan', 'Komunikasi']),
-                'difficulty_level' => 'intermediate',
             ],
             [
                 'title' => 'Digitalisasi Administrasi Desa',
-                'description' => 'Transformasi digital pelayanan administrasi desa untuk efisiensi dan transparansi.',
-                'background' => 'Pelayanan administrasi masih manual dan memakan waktu lama.',
-                'objectives' => 'Mempercepat pelayanan administrasi melalui sistem digital.',
-                'scope' => 'Pembuatan sistem informasi desa, pelatihan perangkat, dan sosialisasi.',
-                'sdg_categories' => json_encode([17, 9]),
-                'required_skills' => json_encode(['Sistem Informasi', 'Pemerintahan', 'Teknologi', 'Manajemen']),
-                'difficulty_level' => 'intermediate',
-            ],
-            [
-                'title' => 'Forum Multi Stakeholder Desa',
-                'description' => 'Pembentukan forum komunikasi antar stakeholder untuk pembangunan desa.',
-                'background' => 'Koordinasi antar stakeholder belum optimal, perlu forum komunikasi.',
-                'objectives' => 'Meningkatkan koordinasi dan kolaborasi pembangunan desa.',
-                'scope' => 'Pembentukan forum, fasilitasi pertemuan, dan dokumentasi kesepakatan.',
-                'sdg_categories' => json_encode([17, 16]),
-                'required_skills' => json_encode(['Manajemen', 'Komunikasi', 'Fasilitasi', 'Administrasi']),
+                'description' => 'Sistem informasi desa untuk administrasi digital.',
+                'background' => 'Administrasi desa masih manual dan tidak efisien.',
+                'objectives' => 'Meningkatkan efisiensi pelayanan administrasi.',
+                'scope' => 'Implementasi aplikasi SID, pelatihan, dan digitalisasi data.',
+                'sdg_categories' => [17, 9],
+                'required_skills' => ['Teknologi Informasi', 'Administrasi', 'Manajemen Data'],
                 'difficulty_level' => 'intermediate',
             ],
             [
                 'title' => 'Inkubasi Bisnis Desa',
-                'description' => 'Program inkubasi dan akselerasi bisnis untuk wirausaha muda di desa.',
-                'background' => 'Wirausaha muda di desa butuh pendampingan dan akses ke mentor bisnis.',
-                'objectives' => 'Mengembangkan ekosistem kewirausahaan di desa.',
-                'scope' => 'Mentoring bisnis, akses permodalan, dan networking dengan investor.',
-                'sdg_categories' => json_encode([17, 8]),
-                'required_skills' => json_encode(['Kewirausahaan', 'Manajemen', 'Marketing', 'Keuangan']),
+                'description' => 'Program inkubator untuk startup dan inovasi di desa.',
+                'background' => 'Ide bisnis inovatif kurang mendapat dukungan.',
+                'objectives' => 'Mendorong inovasi dan kewirausahaan di desa.',
+                'scope' => 'Mentoring, pendanaan awal, dan networking.',
+                'sdg_categories' => [17, 8],
+                'required_skills' => ['Bisnis', 'Kewirausahaan', 'Mentoring', 'Teknologi'],
+                'difficulty_level' => 'advanced',
+            ],
+            [
+                'title' => 'Infrastruktur Jalan Desa',
+                'description' => 'Perbaikan dan pemeliharaan jalan untuk akses ekonomi.',
+                'background' => 'Kondisi jalan buruk menghambat aktivitas ekonomi.',
+                'objectives' => 'Meningkatkan konektivitas dan akses pasar.',
+                'scope' => 'Survei kerusakan, perbaikan jalan, dan pembangunan jembatan.',
+                'sdg_categories' => [9, 11],
+                'required_skills' => ['Teknik Sipil', 'Manajemen Proyek', 'Survey'],
+                'difficulty_level' => 'advanced',
+            ],
+            [
+                'title' => 'Akses Perbankan Untuk Masyarakat Miskin',
+                'description' => 'Program inklusi keuangan untuk masyarakat unbankable.',
+                'background' => 'Masyarakat miskin sulit akses layanan perbankan.',
+                'objectives' => 'Meningkatkan akses keuangan formal.',
+                'scope' => 'Pembukaan rekening, edukasi literasi keuangan, dan mobile banking.',
+                'sdg_categories' => [1, 9],
+                'required_skills' => ['Keuangan', 'Perbankan', 'Pendidikan', 'Teknologi'],
+                'difficulty_level' => 'intermediate',
+            ],
+
+            // =============================================
+            // SDG 10: BERKURANGNYA KESENJANGAN (3 templates)
+            // =============================================
+            [
+                'title' => 'Program Bantuan Sosial Terpadu',
+                'description' => 'Sistem distribusi bantuan sosial yang tepat sasaran.',
+                'background' => 'Penyaluran bantuan sosial belum optimal.',
+                'objectives' => 'Memastikan bantuan sampai ke yang berhak.',
+                'scope' => 'Pendataan, verifikasi, dan monitoring distribusi.',
+                'sdg_categories' => [1, 10],
+                'required_skills' => ['Sosial', 'Administrasi', 'Data', 'Manajemen'],
+                'difficulty_level' => 'intermediate',
+            ],
+            [
+                'title' => 'Layanan Hukum Gratis Masyarakat',
+                'description' => 'Bantuan hukum untuk masyarakat tidak mampu.',
+                'background' => 'Akses keadilan masih sulit bagi masyarakat miskin.',
+                'objectives' => 'Menjamin akses keadilan bagi semua.',
+                'scope' => 'Konsultasi hukum, pendampingan, dan edukasi hak hukum.',
+                'sdg_categories' => [16, 10],
+                'required_skills' => ['Hukum', 'Advokasi', 'Komunikasi', 'Sosial'],
+                'difficulty_level' => 'advanced',
+            ],
+            [
+                'title' => 'Fasilitasi Penyandang Disabilitas',
+                'description' => 'Program aksesibilitas dan inklusi penyandang disabilitas.',
+                'background' => 'Penyandang disabilitas menghadapi banyak hambatan.',
+                'objectives' => 'Mewujudkan desa ramah disabilitas.',
+                'scope' => 'Adaptasi fasilitas publik, pelatihan keterampilan, dan advokasi.',
+                'sdg_categories' => [10, 11],
+                'required_skills' => ['Sosial', 'Arsitektur', 'Pendidikan Khusus', 'Advokasi'],
+                'difficulty_level' => 'advanced',
+            ],
+
+            // =============================================
+            // SDG 11: KOTA DAN KOMUNITAS BERKELANJUTAN (5 templates)
+            // =============================================
+            [
+                'title' => 'Pengelolaan Sampah Ramah Lingkungan',
+                'description' => 'Sistem pengelolaan sampah terpadu 3R (Reduce, Reuse, Recycle).',
+                'background' => 'Sampah menumpuk dan mencemari lingkungan.',
+                'objectives' => 'Mengurangi timbunan sampah dan pencemaran.',
+                'scope' => 'Bank sampah, composting, dan pemilahan sampah.',
+                'sdg_categories' => [11, 12],
+                'required_skills' => ['Lingkungan', 'Teknik', 'Sosial', 'Manajemen'],
+                'difficulty_level' => 'intermediate',
+            ],
+            [
+                'title' => 'Penataan Permukiman Kumuh',
+                'description' => 'Program peningkatan kualitas permukiman kumuh.',
+                'background' => 'Permukiman kumuh tidak layak huni.',
+                'objectives' => 'Mewujudkan hunian yang layak dan sehat.',
+                'scope' => 'Perbaikan rumah, drainase, dan fasilitas umum.',
+                'sdg_categories' => [11, 1],
+                'required_skills' => ['Arsitektur', 'Teknik Sipil', 'Perencanaan Kota', 'Sosial'],
+                'difficulty_level' => 'advanced',
+            ],
+            [
+                'title' => 'Taman Hijau Dan Ruang Terbuka Publik',
+                'description' => 'Pembangunan taman dan ruang publik untuk warga.',
+                'background' => 'Kurangnya ruang terbuka hijau di permukiman.',
+                'objectives' => 'Menyediakan ruang publik yang nyaman.',
+                'scope' => 'Perencanaan, pembangunan, dan pengelolaan taman.',
+                'sdg_categories' => [11, 13],
+                'required_skills' => ['Arsitektur Lanskap', 'Perencanaan', 'Pertamanan'],
+                'difficulty_level' => 'intermediate',
+            ],
+            [
+                'title' => 'Sistem Transportasi Ramah Lingkungan',
+                'description' => 'Promosi transportasi umum dan sepeda sebagai mobilitas hijau.',
+                'background' => 'Polusi kendaraan bermotor meningkat.',
+                'objectives' => 'Mengurangi emisi dari transportasi.',
+                'scope' => 'Jalur sepeda, bike sharing, dan kampanye transportasi publik.',
+                'sdg_categories' => [11, 13],
+                'required_skills' => ['Transportasi', 'Perencanaan Kota', 'Lingkungan'],
+                'difficulty_level' => 'advanced',
+            ],
+            [
+                'title' => 'Mitigasi Bencana Berbasis Masyarakat',
+                'description' => 'Peningkatan kapasitas masyarakat menghadapi bencana.',
+                'background' => 'Desa rawan bencana tapi kesiapsiagaan rendah.',
+                'objectives' => 'Meningkatkan ketahanan terhadap bencana.',
+                'scope' => 'Pelatihan tanggap darurat, early warning system, dan drill.',
+                'sdg_categories' => [13, 11],
+                'required_skills' => ['Kebencanaan', 'Komunikasi', 'Manajemen Krisis'],
+                'difficulty_level' => 'advanced',
+            ],
+
+            // =============================================
+            // SDG 12: KONSUMSI DAN PRODUKSI BERTANGGUNG JAWAB (5 templates)
+            // =============================================
+            [
+                'title' => 'Produk Lokal Berkelanjutan',
+                'description' => 'Promosi dan pengembangan produk lokal yang berkelanjutan.',
+                'background' => 'Produk lokal kalah bersaing dengan produk impor.',
+                'objectives' => 'Meningkatkan konsumsi produk lokal.',
+                'scope' => 'Branding, packaging, dan kampanye cinta produk lokal.',
+                'sdg_categories' => [12, 8],
+                'required_skills' => ['Marketing', 'Desain', 'Bisnis', 'Komunikasi'],
+                'difficulty_level' => 'intermediate',
+            ],
+            [
+                'title' => 'Kampanye Zero Waste',
+                'description' => 'Gerakan gaya hidup minim sampah di komunitas.',
+                'background' => 'Produksi sampah terus meningkat.',
+                'objectives' => 'Mengurangi sampah dari sumbernya.',
+                'scope' => 'Edukasi, workshop zero waste lifestyle, dan kampanye.',
+                'sdg_categories' => [12, 11],
+                'required_skills' => ['Lingkungan', 'Komunikasi', 'Pendidikan', 'Sosial'],
+                'difficulty_level' => 'beginner',
+            ],
+            [
+                'title' => 'Pusat Daur Ulang Komunitas',
+                'description' => 'Pembangunan pusat daur ulang sampah menjadi produk bernilai.',
+                'background' => 'Sampah belum dimanfaatkan secara ekonomis.',
+                'objectives' => 'Mengubah sampah menjadi produk bernilai ekonomi.',
+                'scope' => 'Pelatihan daur ulang, produksi, dan pemasaran.',
+                'sdg_categories' => [11, 12],
+                'required_skills' => ['Lingkungan', 'Desain Produk', 'Marketing', 'Manajemen'],
+                'difficulty_level' => 'intermediate',
+            ],
+            [
+                'title' => 'Packaging Ramah Lingkungan',
+                'description' => 'Penggunaan kemasan ramah lingkungan untuk produk UMKM.',
+                'background' => 'Kemasan plastik mencemari lingkungan.',
+                'objectives' => 'Mengurangi penggunaan plastik sekali pakai.',
+                'scope' => 'Pelatihan, penyediaan kemasan alternatif, dan advokasi.',
+                'sdg_categories' => [12, 8],
+                'required_skills' => ['Desain', 'Lingkungan', 'Bisnis', 'Teknologi'],
+                'difficulty_level' => 'intermediate',
+            ],
+            [
+                'title' => 'Fashion Berkelanjutan',
+                'description' => 'Program fashion dari bahan daur ulang dan ramah lingkungan.',
+                'background' => 'Industri fashion berkontribusi pada pencemaran.',
+                'objectives' => 'Mengembangkan fashion yang sustainable.',
+                'scope' => 'Pelatihan desain, produksi, dan pemasaran fashion berkelanjutan.',
+                'sdg_categories' => [12, 13],
+                'required_skills' => ['Desain Fashion', 'Marketing', 'Lingkungan', 'Bisnis'],
+                'difficulty_level' => 'advanced',
+            ],
+
+            // =============================================
+            // SDG 13: PENANGANAN PERUBAHAN IKLIM (5 templates)
+            // =============================================
+            [
+                'title' => 'Kampung Iklim Pintar',
+                'description' => 'Program desa tangguh iklim dengan adaptasi dan mitigasi.',
+                'background' => 'Perubahan iklim berdampak pada kehidupan masyarakat.',
+                'objectives' => 'Meningkatkan ketahanan terhadap perubahan iklim.',
+                'scope' => 'Penanaman pohon, konservasi air, dan edukasi iklim.',
+                'sdg_categories' => [13, 7],
+                'required_skills' => ['Lingkungan', 'Klimatologi', 'Pertanian', 'Komunikasi'],
+                'difficulty_level' => 'advanced',
+            ],
+            [
+                'title' => 'Penghijauan Dan Konservasi Lingkungan',
+                'description' => 'Program penanaman pohon dan pelestarian hutan.',
+                'background' => 'Deforestasi menyebabkan perubahan iklim.',
+                'objectives' => 'Meningkatkan tutupan hijau dan carbon sequestration.',
+                'scope' => 'Penanaman pohon, nursery, dan monitoring pertumbuhan.',
+                'sdg_categories' => [13, 15],
+                'required_skills' => ['Kehutanan', 'Lingkungan', 'Biologi', 'Sosial'],
+                'difficulty_level' => 'beginner',
+            ],
+            [
+                'title' => 'Monitoring Kualitas Udara',
+                'description' => 'Pemantauan kualitas udara dengan sensor IoT.',
+                'background' => 'Polusi udara meningkat di perkotaan.',
+                'objectives' => 'Menyediakan data kualitas udara real-time.',
+                'scope' => 'Instalasi sensor, dashboard monitoring, dan edukasi.',
+                'sdg_categories' => [13, 3],
+                'required_skills' => ['Teknik Lingkungan', 'IoT', 'Data Science', 'Kesehatan'],
+                'difficulty_level' => 'advanced',
+            ],
+            [
+                'title' => 'Adaptasi Perubahan Iklim Pertanian',
+                'description' => 'Strategi adaptasi pertanian menghadapi perubahan iklim.',
+                'background' => 'Pola tanam terganggu akibat perubahan iklim.',
+                'objectives' => 'Membantu petani beradaptasi dengan perubahan iklim.',
+                'scope' => 'Pola tanam adaptif, varietas tahan iklim, dan asuransi pertanian.',
+                'sdg_categories' => [13, 2],
+                'required_skills' => ['Pertanian', 'Klimatologi', 'Ekonomi', 'Penyuluhan'],
+                'difficulty_level' => 'advanced',
+            ],
+            [
+                'title' => 'Pengurangan Emisi Gas Rumah Kaca',
+                'description' => 'Program pengurangan emisi melalui efisiensi energi.',
+                'background' => 'Emisi GRK terus meningkat.',
+                'objectives' => 'Mengurangi jejak karbon komunitas.',
+                'scope' => 'Audit karbon, efisiensi energi, dan carbon offset.',
+                'sdg_categories' => [13, 7],
+                'required_skills' => ['Lingkungan', 'Energi', 'Data', 'Manajemen'],
+                'difficulty_level' => 'advanced',
+            ],
+
+            // =============================================
+            // SDG 14: EKOSISTEM LAUT (2 templates)
+            // =============================================
+            [
+                'title' => 'Konservasi Terumbu Karang',
+                'description' => 'Program pelestarian dan rehabilitasi terumbu karang.',
+                'background' => 'Terumbu karang rusak akibat aktivitas manusia.',
+                'objectives' => 'Memulihkan ekosistem terumbu karang.',
+                'scope' => 'Transplantasi karang, monitoring, dan edukasi nelayan.',
+                'sdg_categories' => [14],
+                'required_skills' => ['Kelautan', 'Biologi Laut', 'Diving', 'Konservasi'],
+                'difficulty_level' => 'advanced',
+            ],
+            [
+                'title' => 'Pengelolaan Sampah Laut',
+                'description' => 'Program pembersihan dan pencegahan sampah di laut.',
+                'background' => 'Sampah plastik mencemari laut.',
+                'objectives' => 'Mengurangi sampah laut dan melindungi biota.',
+                'scope' => 'Beach clean up, edukasi, dan pengurangan plastik.',
+                'sdg_categories' => [14, 12],
+                'required_skills' => ['Lingkungan', 'Kelautan', 'Sosial', 'Komunikasi'],
+                'difficulty_level' => 'beginner',
+            ],
+
+            // =============================================
+            // SDG 15: EKOSISTEM DARATAN (2 templates)
+            // =============================================
+            [
+                'title' => 'Rehabilitasi Lahan Kritis',
+                'description' => 'Program pemulihan lahan kritis melalui reboisasi.',
+                'background' => 'Lahan kritis menyebabkan erosi dan banjir.',
+                'objectives' => 'Memulihkan fungsi lahan dan mencegah bencana.',
+                'scope' => 'Penanaman, pemeliharaan, dan monitoring vegetasi.',
+                'sdg_categories' => [15, 13],
+                'required_skills' => ['Kehutanan', 'Lingkungan', 'Teknik Sipil', 'Sosial'],
+                'difficulty_level' => 'intermediate',
+            ],
+            [
+                'title' => 'Perlindungan Satwa Liar',
+                'description' => 'Program konservasi satwa liar dan habitatnya.',
+                'background' => 'Populasi satwa liar menurun drastis.',
+                'objectives' => 'Melindungi keanekaragaman hayati.',
+                'scope' => 'Patroli, monitoring, dan edukasi konservasi.',
+                'sdg_categories' => [15],
+                'required_skills' => ['Biologi', 'Konservasi', 'Kehutanan', 'Hukum'],
+                'difficulty_level' => 'advanced',
+            ],
+
+            // =============================================
+            // SDG 16: PERDAMAIAN, KEADILAN DAN KELEMBAGAAN YANG KUAT (5 templates)
+            // =============================================
+            [
+                'title' => 'Transparansi Dana Desa',
+                'description' => 'Sistem transparansi pengelolaan anggaran desa.',
+                'background' => 'Pengelolaan dana desa kurang transparan.',
+                'objectives' => 'Meningkatkan akuntabilitas pemerintah desa.',
+                'scope' => 'Portal transparansi, papan informasi, dan musyawarah.',
+                'sdg_categories' => [16, 17],
+                'required_skills' => ['Akuntansi', 'Teknologi Informasi', 'Hukum', 'Komunikasi'],
+                'difficulty_level' => 'intermediate',
+            ],
+            [
+                'title' => 'Pencegahan Korupsi Desa',
+                'description' => 'Program edukasi anti korupsi dan pengawasan partisipatif.',
+                'background' => 'Kasus korupsi di desa masih terjadi.',
+                'objectives' => 'Mencegah korupsi melalui transparansi dan partisipasi.',
+                'scope' => 'Kampanye anti korupsi, pelatihan, dan pengawasan masyarakat.',
+                'sdg_categories' => [16, 17],
+                'required_skills' => ['Hukum', 'Akuntansi', 'Komunikasi', 'Advokasi'],
+                'difficulty_level' => 'advanced',
+            ],
+            [
+                'title' => 'Mediasi Konflik Komunitas',
+                'description' => 'Program mediasi dan resolusi konflik berbasis komunitas.',
+                'background' => 'Konflik horizontal masih sering terjadi.',
+                'objectives' => 'Menyelesaikan konflik secara damai.',
+                'scope' => 'Pelatihan mediator, fasilitasi dialog, dan kesepakatan damai.',
+                'sdg_categories' => [16, 11],
+                'required_skills' => ['Hukum', 'Psikologi', 'Komunikasi', 'Sosiologi'],
+                'difficulty_level' => 'advanced',
+            ],
+            [
+                'title' => 'Penguatan Kelembagaan Desa',
+                'description' => 'Capacity building untuk perangkat dan lembaga desa.',
+                'background' => 'Kapasitas kelembagaan desa masih lemah.',
+                'objectives' => 'Meningkatkan kinerja pemerintahan desa.',
+                'scope' => 'Pelatihan administrasi, manajemen, dan kepemimpinan.',
+                'sdg_categories' => [16],
+                'required_skills' => ['Administrasi Publik', 'Manajemen', 'Hukum', 'Kepemimpinan'],
+                'difficulty_level' => 'intermediate',
+            ],
+            [
+                'title' => 'Revitalisasi Seni Dan Budaya Lokal',
+                'description' => 'Pelestarian dan pengembangan seni budaya tradisional.',
+                'background' => 'Seni budaya lokal mulai terlupakan.',
+                'objectives' => 'Melestarikan identitas budaya lokal.',
+                'scope' => 'Pelatihan seni, pertunjukan, dan dokumentasi.',
+                'sdg_categories' => [4, 11],
+                'required_skills' => ['Seni', 'Budaya', 'Pendidikan', 'Dokumentasi'],
+                'difficulty_level' => 'beginner',
+            ],
+
+            // =============================================
+            // SDG 17: KEMITRAAN UNTUK MENCAPAI TUJUAN (5 templates)
+            // =============================================
+            [
+                'title' => 'Kemitraan Universitas-Desa',
+                'description' => 'Program kolaborasi berkelanjutan universitas dengan desa.',
+                'background' => 'Hasil penelitian universitas tidak sampai ke masyarakat.',
+                'objectives' => 'Menjembatani akademisi dengan praktik di lapangan.',
+                'scope' => 'Riset partisipatif, pengabdian, dan transfer teknologi.',
+                'sdg_categories' => [17, 4],
+                'required_skills' => ['Manajemen', 'Penelitian', 'Komunikasi', 'Multidisiplin'],
+                'difficulty_level' => 'advanced',
+            ],
+            [
+                'title' => 'Forum Multi Stakeholder Desa',
+                'description' => 'Pembentukan forum kolaborasi berbagai pemangku kepentingan.',
+                'background' => 'Koordinasi antar stakeholder masih lemah.',
+                'objectives' => 'Meningkatkan sinergi pembangunan desa.',
+                'scope' => 'Pembentukan forum, pertemuan rutin, dan kolaborasi program.',
+                'sdg_categories' => [17, 16],
+                'required_skills' => ['Manajemen', 'Komunikasi', 'Fasilitasi', 'Networking'],
+                'difficulty_level' => 'intermediate',
+            ],
+            [
+                'title' => 'Platform Kolaborasi Digital',
+                'description' => 'Sistem digital untuk kolaborasi dan berbagi sumber daya.',
+                'background' => 'Koordinasi program masih konvensional.',
+                'objectives' => 'Memudahkan kolaborasi melalui platform digital.',
+                'scope' => 'Pengembangan platform, onboarding, dan pengelolaan.',
+                'sdg_categories' => [17, 9],
+                'required_skills' => ['Teknologi Informasi', 'Manajemen', 'Desain', 'Komunikasi'],
+                'difficulty_level' => 'advanced',
+            ],
+            [
+                'title' => 'Pendampingan Berkelanjutan',
+                'description' => 'Program mentoring jangka panjang untuk keberlanjutan program.',
+                'background' => 'Program KKN sering berhenti setelah mahasiswa pulang.',
+                'objectives' => 'Memastikan keberlanjutan program pasca KKN.',
+                'scope' => 'Mentoring online, monitoring, dan dukungan teknis.',
+                'sdg_categories' => [17],
+                'required_skills' => ['Manajemen Program', 'Mentoring', 'Komunikasi', 'Monitoring'],
+                'difficulty_level' => 'intermediate',
+            ],
+            [
+                'title' => 'Database Kolaboratif',
+                'description' => 'Sistem database terpadu untuk berbagi data dan informasi.',
+                'background' => 'Data pembangunan desa tersebar dan tidak terintegrasi.',
+                'objectives' => 'Menyediakan data terpadu untuk perencanaan.',
+                'scope' => 'Pengembangan database, digitalisasi data, dan pelatihan.',
+                'sdg_categories' => [17, 9],
+                'required_skills' => ['Data Science', 'Teknologi Informasi', 'Statistik', 'Manajemen'],
                 'difficulty_level' => 'advanced',
             ],
         ];

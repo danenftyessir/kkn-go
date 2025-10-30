@@ -5,20 +5,17 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\Document;
 use App\Models\User;
-use App\Models\Project;
 use App\Models\Province;
 use App\Models\Regency;
+use Carbon\Carbon;
 
 /**
- * seeder untuk membuat dokumen
- * simple version - hardcode list file PDF yang ada di supabase
- * 
- * CATATAN:
- * - file PDF harus sudah ada di supabase storage bucket "kkn-go storage"
- * - folder: documents/reports/
- * - tidak perlu upload, cukup simpan path saja
+ * seeder untuk documents dengan format categories yang benar
+ * ✅ PERBAIKAN: categories menggunakan INTEGER (1-17), bukan string slug
  * 
  * jalankan: php artisan db:seed --class=DocumentsSeeder
+ * 
+ * TIDAK PERLU lagi menjalankan php artisan fix:double-encoded-json setelah seeding!
  */
 class DocumentsSeeder extends Seeder
 {
@@ -27,232 +24,179 @@ class DocumentsSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->command->info('📄 Membuat dokumen...');
+        // ✅ FIX: ambil users yang punya relasi student ATAU institution
+        // karena tabel users tidak punya kolom 'role'
+        $studentUsers = User::whereHas('student')->get();
+        $institutionUsers = User::whereHas('institution')->get();
+        $uploaders = $studentUsers->merge($institutionUsers);
         
-        // ambil user untuk uploader
-        $uploaders = User::where('user_type', 'student')->limit(10)->get();
-        
-        if ($uploaders->isEmpty()) {
-            $this->command->warn('⚠️  Tidak ada user student. Jalankan DummyDataSeeder terlebih dahulu.');
-            return;
-        }
-
-        // ambil provinces dan regencies
         $provinces = Province::all();
-        if ($provinces->isEmpty()) {
-            $this->command->warn('⚠️  Tidak ada data provinsi. Jalankan ProvincesRegenciesSeeder terlebih dahulu.');
+        
+        if ($uploaders->isEmpty() || $provinces->isEmpty()) {
+            $this->command->error('Harap jalankan UsersSeeder dan ProvincesSeeder terlebih dahulu!');
             return;
         }
 
-        $projects = Project::all();
-
-        $availablePdfs = [
-            'documents/reports/1.FORMAT-DAN-CONTOH-LAPORAN-INDIVIDU-KKN.pdf',
-            'documents/reports/3341b-laporan_kkn_hasbi_mudzaki_fix-1-.pdf',
-            'documents/reports/bc4f599c360deae829ef0952f9200a4f.pdf',
-            'documents/reports/d5460592f2ee74a2f9f5910138d650e6.pdf',
-            'documents/reports/download_252705030541_laporan-panitia-kegiatan-kknpmm-reguler-periode-i-tahun-2025.pdf',
-            'documents/reports/f3f3ec539ee2d963e804d3a964b3290f.pdf',
-            'documents/reports/KKN_III.D.3_REG.96_2022.pdf',
-            'documents/reports/LAPORAN AKHIR KKN .pdf',
-            'documents/reports/laporan akhir KKN PPM OK.pdf',
-            'documents/reports/LAPORAN KKN DEMAPESA.pdf',
-            'documents/reports/LAPORAN KKN KELOMPOK 2250.pdf',
-            'documents/reports/LAPORAN KKN Kelompok 5 fakultas teknik.pdf',
-            'documents/reports/LAPORAN KKN_1.A.2_REG.119_2024.pdf',
-            'documents/reports/LAPORAN KKN.pdf',
-            'documents/reports/laporan_3460160906115724.pdf',
-            'documents/reports/laporan_akhir_201_35_2.pdf',
-            'documents/reports/laporan_akhir_3011_45_5.pdf',
-            'documents/reports/Laporan-Akademik-KKN-Persemakmuran-2022.pdf',
-            'documents/reports/laporan-kelompok.pdf',
-            'documents/reports/Laporan-Tugas-Akhir-KKN-156.pdf',
-            'documents/reports/Partisipasi-Berbasis-Komunitas-Dalam-Rangka-Percepatan-Penurunan-Stunting.pdf',
-            'documents/reports/Peraturan_Akademik_UNP.pdf',
-            'documents/reports/Laporan-KKN-2019.pdf',
-            'documents/reports/Stimulasi-Masyarakat-Desa-Tiyohu-berbasis-Ekonomi-dan-Pengetahuan-Hukum-di-Kabupaten-Gorontalo.pdf',
-        ];
-
-        $this->command->info('📁 Menggunakan ' . count($availablePdfs) . ' file PDF yang tersedia');
-        $this->command->newLine();
-
-        // data dokumen untuk seeding
-        $documentData = [
+        // template documents dengan SDG categories yang benar (INTEGER)
+        $documentsTemplates = [
             [
-                'title' => 'Laporan KKN Pengembangan UMKM di Desa Sukamaju',
-                'description' => 'Dokumentasi lengkap program KKN dalam pengembangan usaha mikro kecil menengah di Desa Sukamaju, Kabupaten Bandung.',
-                'categories' => ['decent_work', 'industry_innovation'],
-                'tags' => ['UMKM', 'Ekonomi', 'Kewirausahaan'],
-                'author_name' => 'Tim KKN ITB',
-                'institution_name' => 'Dinas Koperasi Kabupaten Bandung',
+                'title' => 'Laporan KKN Pengembangan UMKM Di Desa Sukamaju',
+                'description' => 'Dokumentasi lengkap program pengembangan UMKM yang meningkatkan pendapatan masyarakat desa hingga 40%.',
+                'categories' => [8, 9], // ✅ INTEGER: Decent Work, Industry Innovation
+                'tags' => ['UMKM', 'Kewirausahaan', 'Ekonomi Desa', 'Pemberdayaan'],
+                'author_name' => 'Tim KKN ITB 2024',
+                'institution_name' => 'Pemerintah Desa Sukamaju',
                 'university_name' => 'Institut Teknologi Bandung',
+                'file_type' => 'pdf',
                 'year' => 2024,
             ],
             [
-                'title' => 'Program Sanitasi dan Air Bersih di Desa Mekar',
-                'description' => 'Implementasi sistem air bersih dan sanitasi berbasis masyarakat untuk meningkatkan kualitas hidup warga.',
-                'categories' => ['clean_water', 'good_health'],
-                'tags' => ['Kesehatan', 'Air Bersih', 'Sanitasi'],
-                'author_name' => 'Mahasiswa KKN UGM',
-                'institution_name' => 'Puskesmas Desa Mekar',
+                'title' => 'Program Sanitasi Dan Air Bersih Di Desa Mekar',
+                'description' => 'Hasil implementasi sistem sanitasi dan penyediaan air bersih untuk 500 keluarga.',
+                'categories' => [6, 3], // ✅ INTEGER: Clean Water, Good Health
+                'tags' => ['Sanitasi', 'Air Bersih', 'Kesehatan', 'Infrastruktur'],
+                'author_name' => 'Tim KKN UGM 2024',
+                'institution_name' => 'Dinas Kesehatan Kabupaten',
                 'university_name' => 'Universitas Gadjah Mada',
+                'file_type' => 'pdf',
                 'year' => 2024,
             ],
             [
-                'title' => 'Implementasi Energi Terbarukan di Desa Nusantara',
-                'description' => 'Studi kasus penerapan panel surya dan biogas untuk mengurangi ketergantungan pada energi fosil.',
-                'categories' => ['affordable_energy', 'climate_action'],
-                'tags' => ['Energi', 'Terbarukan', 'Ramah Lingkungan'],
-                'author_name' => 'Tim KKN ITS',
+                'title' => 'Implementasi Energi Terbarukan Di Desa Nusantara',
+                'description' => 'Studi kelayakan dan implementasi panel surya untuk listrik desa.',
+                'categories' => [7, 13], // ✅ INTEGER: Affordable Energy, Climate Action
+                'tags' => ['Energi Terbarukan', 'Panel Surya', 'Listrik Desa', 'Lingkungan'],
+                'author_name' => 'Tim KKN UI 2024',
                 'institution_name' => 'Pemerintah Desa Nusantara',
-                'university_name' => 'Institut Teknologi Sepuluh Nopember',
+                'university_name' => 'Universitas Indonesia',
+                'file_type' => 'pdf',
                 'year' => 2024,
             ],
             [
-                'title' => 'Pendidikan Literasi Digital untuk Anak-Anak Desa',
-                'description' => 'Program pelatihan teknologi informasi dan literasi digital untuk meningkatkan keterampilan anak-anak di pedesaan.',
-                'categories' => ['quality_education', 'reduced_inequalities'],
-                'tags' => ['Pendidikan', 'Digital', 'Teknologi'],
-                'author_name' => 'Kelompok KKN UI',
-                'institution_name' => 'SDN Harapan Bangsa',
-                'university_name' => 'Universitas Indonesia',
-                'year' => 2023,
+                'title' => 'Pendidikan Literasi Digital Untuk Anak-Anak Desa',
+                'description' => 'Program pelatihan komputer dan internet untuk siswa SD dan SMP di daerah terpencil.',
+                'categories' => [4, 10], // ✅ INTEGER: Quality Education, Reduced Inequalities
+                'tags' => ['Pendidikan', 'Literasi Digital', 'Teknologi', 'Anak-anak'],
+                'author_name' => 'Tim KKN Unpad 2024',
+                'institution_name' => 'Dinas Pendidikan Kabupaten',
+                'university_name' => 'Universitas Padjadjaran',
+                'file_type' => 'pdf',
+                'year' => 2024,
             ],
             [
                 'title' => 'Pengelolaan Sampah Organik Menjadi Kompos',
-                'description' => 'Pelatihan dan pendampingan masyarakat dalam mengolah sampah organik menjadi pupuk kompos berkualitas.',
-                'categories' => ['sustainable_cities', 'responsible_consumption'],
-                'tags' => ['Sampah', 'Kompos', 'Lingkungan'],
-                'author_name' => 'Tim KKN UNAIR',
-                'institution_name' => 'Bank Sampah Sejahtera',
-                'university_name' => 'Universitas Airlangga',
-                'year' => 2023,
-            ],
-            [
-                'title' => 'Pemberdayaan Perempuan Melalui Pelatihan Keterampilan',
-                'description' => 'Program pelatihan keterampilan jahit, bordir, dan kerajinan tangan untuk meningkatkan ekonomi keluarga.',
-                'categories' => ['gender_equality', 'decent_work'],
-                'tags' => ['Perempuan', 'Keterampilan', 'Ekonomi'],
-                'author_name' => 'Tim KKN UNPAD',
-                'institution_name' => 'PKK Desa Makmur',
-                'university_name' => 'Universitas Padjadjaran',
-                'year' => 2023,
-            ],
-            [
-                'title' => 'Peningkatan Hasil Pertanian Melalui Teknologi Hidroponik',
-                'description' => 'Pengenalan dan implementasi sistem pertanian hidroponik sederhana untuk meningkatkan produktivitas lahan terbatas.',
-                'categories' => ['zero_hunger', 'industry_innovation'],
-                'tags' => ['Pertanian', 'Hidroponik', 'Teknologi'],
-                'author_name' => 'Mahasiswa KKN IPB',
-                'institution_name' => 'Kelompok Tani Maju Jaya',
-                'university_name' => 'Institut Pertanian Bogor',
+                'description' => 'Panduan praktis pengelolaan sampah organik menjadi kompos bernilai ekonomi.',
+                'categories' => [11, 12], // ✅ INTEGER: Sustainable Cities, Responsible Consumption
+                'tags' => ['Sampah', 'Kompos', 'Daur Ulang', 'Ekonomi Sirkular'],
+                'author_name' => 'Tim KKN ITS 2024',
+                'institution_name' => 'Dinas Lingkungan Hidup',
+                'university_name' => 'Institut Teknologi Sepuluh Nopember',
+                'file_type' => 'pdf',
                 'year' => 2024,
             ],
             [
-                'title' => 'Posyandu Digital: Modernisasi Pelayanan Kesehatan Ibu dan Anak',
-                'description' => 'Digitalisasi sistem pencatatan dan monitoring kesehatan ibu dan anak di posyandu desa.',
-                'categories' => ['good_health', 'quality_education'],
-                'tags' => ['Kesehatan', 'Digital', 'Posyandu'],
-                'author_name' => 'Tim KKN UNDIP',
-                'institution_name' => 'Posyandu Mawar Melati',
+                'title' => 'Pemberdayaan Perempuan Melalui Pelatihan Keterampilan',
+                'description' => 'Dokumentasi program pelatihan menjahit dan kerajinan untuk perempuan desa.',
+                'categories' => [5, 8], // ✅ INTEGER: Gender Equality, Decent Work
+                'tags' => ['Pemberdayaan Perempuan', 'Pelatihan', 'Keterampilan', 'UMKM'],
+                'author_name' => 'Tim KKN Unair 2024',
+                'institution_name' => 'Dinas Pemberdayaan Perempuan',
+                'university_name' => 'Universitas Airlangga',
+                'file_type' => 'pdf',
+                'year' => 2024,
+            ],
+            [
+                'title' => 'Peningkatan Hasil Pertanian Melalui Teknologi Hidroponik',
+                'description' => 'Implementasi sistem hidroponik untuk meningkatkan produktivitas pertanian.',
+                'categories' => [2, 9], // ✅ INTEGER: Zero Hunger, Industry Innovation
+                'tags' => ['Pertanian', 'Hidroponik', 'Teknologi', 'Ketahanan Pangan'],
+                'author_name' => 'Tim KKN IPB 2024',
+                'institution_name' => 'Dinas Pertanian Kabupaten',
+                'university_name' => 'Institut Pertanian Bogor',
+                'file_type' => 'pdf',
+                'year' => 2024,
+            ],
+            [
+                'title' => 'Posyandu Digital: Modernisasi Pelayanan Kesehatan Ibu Dan Anak',
+                'description' => 'Implementasi sistem digital untuk posyandu yang meningkatkan efisiensi layanan.',
+                'categories' => [3, 4], // ✅ INTEGER: Good Health, Quality Education
+                'tags' => ['Posyandu', 'Kesehatan', 'Digital', 'Ibu dan Anak'],
+                'author_name' => 'Tim KKN Undip 2024',
+                'institution_name' => 'Puskesmas Kecamatan',
                 'university_name' => 'Universitas Diponegoro',
+                'file_type' => 'pdf',
                 'year' => 2024,
             ],
             [
                 'title' => 'Pengembangan Desa Wisata Berbasis Kearifan Lokal',
-                'description' => 'Strategi pengembangan potensi wisata desa dengan mempertahankan nilai-nilai budaya dan kearifan lokal.',
-                'categories' => ['decent_work', 'sustainable_cities'],
-                'tags' => ['Pariwisata', 'Budaya', 'Ekonomi Kreatif'],
-                'author_name' => 'Kelompok KKN UGM',
-                'institution_name' => 'Dinas Pariwisata Kabupaten Bantul',
-                'university_name' => 'Universitas Gadjah Mada',
-                'year' => 2023,
+                'description' => 'Strategi pengembangan desa wisata yang berkelanjutan dengan nilai budaya lokal.',
+                'categories' => [8, 11], // ✅ INTEGER: Decent Work, Sustainable Cities
+                'tags' => ['Desa Wisata', 'Pariwisata', 'Budaya Lokal', 'Ekonomi Kreatif'],
+                'author_name' => 'Tim KKN UNS 2024',
+                'institution_name' => 'Dinas Pariwisata Kabupaten',
+                'university_name' => 'Universitas Sebelas Maret',
+                'file_type' => 'pdf',
+                'year' => 2024,
             ],
             [
                 'title' => 'Bank Sampah Digital: Inovasi Pengelolaan Sampah Berbasis Aplikasi',
-                'description' => 'Pengembangan sistem bank sampah digital untuk memudahkan transaksi dan monitoring pengelolaan sampah.',
-                'categories' => ['sustainable_cities', 'climate_action'],
-                'tags' => ['Sampah', 'Digital', 'Aplikasi'],
-                'author_name' => 'Tim KKN TELKOM',
-                'institution_name' => 'Bank Sampah Digital Mandiri',
-                'university_name' => 'Universitas Telkom',
+                'description' => 'Pengembangan aplikasi mobile untuk manajemen bank sampah yang efisien.',
+                'categories' => [11, 13], // ✅ INTEGER: Sustainable Cities, Climate Action
+                'tags' => ['Bank Sampah', 'Aplikasi', 'Teknologi', 'Lingkungan'],
+                'author_name' => 'Tim KKN Telkom University 2024',
+                'institution_name' => 'Kelompok Bank Sampah',
+                'university_name' => 'Telkom University',
+                'file_type' => 'pdf',
                 'year' => 2024,
             ],
         ];
 
-        $this->command->newLine();
-        $this->command->info('📝 Membuat dokumen di database...');
-        
-        // hapus dokumen lama
-        Document::truncate();
-        
-        $fileIndex = 0;
-        $totalCreated = 0;
-        
-        // buat dokumen menggunakan file PDF yang tersedia
-        foreach ($documentData as $index => $docData) {
-            // cycle through available PDFs
-            if ($fileIndex >= count($availablePdfs)) {
-                $fileIndex = 0;
-            }
-            
-            $pdfPath = $availablePdfs[$fileIndex];
-            $fileIndex++;
-            
-            // estimasi file size (dummy, karena tidak perlu akses file)
-            $fileSize = rand(1000000, 5000000); // 1-5 MB
-            
-            // pilih uploader random
+        // create documents
+        foreach ($documentsTemplates as $template) {
             $uploader = $uploaders->random();
-            
-            // pilih province dan regency random
             $province = $provinces->random();
             $regency = Regency::where('province_id', $province->id)->inRandomOrder()->first();
             
-            // pilih project random (jika ada)
-            $project = $projects->isNotEmpty() ? $projects->random() : null;
+            if (!$regency) {
+                continue;
+            }
 
-            Document::create([
-                'project_id' => $project?->id,
-                'uploaded_by' => $uploader->id,
-                'title' => $docData['title'],
-                'description' => $docData['description'],
-                'file_path' => $pdfPath, // simpan path saja
-                'file_type' => 'pdf',
-                'file_size' => $fileSize,
-                'categories' => json_encode($docData['categories']),
-                'tags' => json_encode($docData['tags']),
-                'author_name' => $docData['author_name'],
-                'institution_name' => $docData['institution_name'],
-                'university_name' => $docData['university_name'],
-                'year' => $docData['year'],
-                'province_id' => $province->id,
-                'regency_id' => $regency?->id,
-                'download_count' => rand(10, 500),
-                'view_count' => rand(50, 1000),
-                'citation_count' => rand(0, 50),
-                'is_public' => true,
-                'is_featured' => $index < 3,
-                'status' => 'approved',
-                'approved_at' => now(),
-            ]);
+            // generate fake file path (simulasi upload ke Supabase)
+            $fileName = \Str::slug($template['title']) . '-' . time() . '.' . $template['file_type'];
+            $filePath = 'documents/' . date('Y/m/') . $fileName;
             
-            $totalCreated++;
-            $this->command->info("  ✓ {$docData['title']}");
+            // ✅ BENAR: categories langsung pass array of integers
+            Document::create([
+                'uploaded_by' => $uploader->id,
+                'title' => $template['title'],
+                'description' => $template['description'],
+                'file_path' => $filePath,
+                'file_type' => $template['file_type'],
+                'file_size' => rand(500000, 5000000), // 500KB - 5MB
+                
+                // ✅ PENTING: categories adalah array of integers (1-17)
+                'categories' => $template['categories'],
+                'tags' => $template['tags'],
+                
+                'author_name' => $template['author_name'],
+                'institution_name' => $template['institution_name'],
+                'university_name' => $template['university_name'],
+                'year' => $template['year'],
+                'province_id' => $province->id,
+                'regency_id' => $regency->id,
+                
+                'download_count' => rand(0, 100),
+                'view_count' => rand(0, 500),
+                'citation_count' => rand(0, 20),
+                
+                'is_public' => true,
+                'is_featured' => fake()->boolean(30), // 30% chance
+                'status' => 'approved',
+                'approved_at' => Carbon::now(),
+            ]);
         }
 
-        $this->command->newLine();
-        $this->command->info("✅ Berhasil membuat {$totalCreated} dokumen");
-        $this->command->info("📊 File PDF tersedia: " . count($availablePdfs));
-        $this->command->newLine();
-        $this->command->info("💡 Dokumen akan diakses via Supabase Public URL");
-        $this->command->info("🔗 Format: https://zgpykwjzmiqxhweifmrn.supabase.co/storage/v1/object/public/kkn-go%20storage/{PATH}");
-        $this->command->newLine();
-        $this->command->info("📋 CATATAN:");
-        $this->command->info("   • File PDF sudah ada di Supabase storage");
-        $this->command->info("   • Bucket: kkn-go storage");
-        $this->command->info("   • Folder: documents/reports/");
-        $this->command->info("   • Total: " . count($availablePdfs) . " file PDF");
-        $this->command->info("   • Pastikan bucket sudah PUBLIC agar bisa diakses");
+        $this->command->info('✅ Documents seeder berhasil dijalankan!');
+        $this->command->info('Total documents: ' . Document::count());
     }
 }

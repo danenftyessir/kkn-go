@@ -36,9 +36,8 @@ class KnowledgeRepositoryController extends Controller
             });
         }
 
-        // ✅ FILTER SDG CATEGORIES - REFACTORED DENGAN METODE YANG SAMA
-        // gunakan whereJsonContains untuk akurasi sempurna
-        // mendukung multiple selection
+        // ✅ FILTER SDG CATEGORIES - FIXED untuk handle double-encoded JSON
+        // gunakan raw SQL dengan JSONB cast
         if ($request->filled('category')) {
             $categories = $request->category;
             
@@ -51,10 +50,10 @@ class KnowledgeRepositoryController extends Controller
             $categories = array_map('intval', array_filter($categories));
             
             if (!empty($categories)) {
-                // gunakan whereJsonContains untuk setiap kategori yang dipilih
+                // gunakan raw SQL dengan JSONB cast
                 $query->where(function($q) use ($categories) {
                     foreach ($categories as $cat) {
-                        $q->orWhereJsonContains('categories', $cat);
+                        $q->orWhereRaw("categories::jsonb @> ?::jsonb", [json_encode([$cat])]);
                     }
                 });
             }
@@ -119,7 +118,7 @@ class KnowledgeRepositoryController extends Controller
             ->get();
 
         // statistik untuk dashboard
-        $statistics = [
+        $stats = [
             'total_documents' => Document::where('is_public', true)
                 ->where('status', 'approved')
                 ->count(),
@@ -146,7 +145,7 @@ class KnowledgeRepositoryController extends Controller
             'documents',
             'provinces',
             'featuredDocuments',
-            'statistics',
+            'stats',
             'availableYears',
             'totalDocuments'
         ));
