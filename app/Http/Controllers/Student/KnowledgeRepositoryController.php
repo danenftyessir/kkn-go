@@ -132,6 +132,10 @@ class KnowledgeRepositoryController extends Controller
             'total_views' => Document::where('is_public', true)
                 ->where('status', 'approved')
                 ->sum('view_count'),
+            'total_institutions' => Document::where('is_public', true)
+                ->where('status', 'approved')
+                ->distinct('institution_name')
+                ->count('institution_name'),
         ];
 
         // daftar tahun untuk filter
