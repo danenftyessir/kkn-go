@@ -71,12 +71,12 @@
                     <div class="relative ml-3" x-data="{ open: false }">
                         <button @click="open = !open"
                                 class="flex items-center space-x-2 p-1 rounded-lg hover:bg-gray-100 transition-colors">
-                            @if(Auth::user()->isStudent() && Auth::user()->student && Auth::user()->profile_photo)
-                                <img src="{{ Storage::url(Auth::user()->profile_photo) }}"
+                            @if(Auth::user()->isStudent() && Auth::user()->student && Auth::user()->student->profile_photo_path)
+                                <img src="{{ Auth::user()->profile_photo_url }}"
                                      alt="{{ Auth::user()->name }}"
                                      class="avatar-circle avatar-sm">
                             @elseif(Auth::user()->isInstitution() && Auth::user()->institution && Auth::user()->institution->logo)
-                                <img src="{{ Storage::url(Auth::user()->institution->logo) }}"
+                                <img src="{{ Auth::user()->profile_photo_url }}"
                                      alt="{{ Auth::user()->name }}"
                                      class="avatar-circle avatar-sm">
                             @else

@@ -177,8 +177,8 @@
                     </div>
                     <div class="relative px-4 pb-4">
                         <div class="flex justify-center -mt-12 mb-3">
-                            @if(Auth::user()->profile_photo)
-                                <img src="{{ Storage::url(Auth::user()->profile_photo) }}"
+                            @if(Auth::user()->student->profile_photo_path)
+                                <img src="{{ Auth::user()->profile_photo_url }}"
                                      alt="{{ Auth::user()->first_name }}"
                                      class="avatar-circle avatar-lg border-4 border-white shadow-lg">
                             @else
@@ -335,8 +335,8 @@
                             <div class="space-y-2">
                                 @foreach($pendingRequests as $request)
                                 <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                    @if($request->requester->user->profile_photo)
-                                        <img src="{{ Storage::url($request->requester->user->profile_photo) }}"
+                                    @if($request->requester->profile_photo_path)
+                                        <img src="{{ $request->requester->profile_photo_url }}"
                                              alt="{{ $request->requester->user->first_name }}"
                                              class="avatar-circle avatar-sm">
                                     @else
@@ -398,8 +398,8 @@
                                 @foreach($suggestions as $suggestion)
                                 <div class="border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow">
                                     <div class="flex items-start gap-2 mb-2">
-                                        @if($suggestion->user->profile_photo)
-                                            <img src="{{ Storage::url($suggestion->user->profile_photo) }}"
+                                        @if($suggestion->profile_photo_path)
+                                            <img src="{{ $suggestion->profile_photo_url }}"
                                                  alt="{{ $suggestion->user->first_name }}"
                                                  class="avatar-circle avatar-sm">
                                         @else
