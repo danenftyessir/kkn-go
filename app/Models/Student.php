@@ -30,6 +30,7 @@ class Student extends Model
         'bio',
         'stories',
         'skills',
+        'interests',
         'portfolio_visible',
     ];
 
@@ -39,6 +40,7 @@ class Student extends Model
     protected $casts = [
         'skills' => 'array',
         'stories' => 'array',
+        'interests' => 'array',
         'portfolio_visible' => 'boolean',
     ];
 
