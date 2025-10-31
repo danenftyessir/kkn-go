@@ -51,7 +51,7 @@
 
 @section('content')
 {{-- Hero section - Style marketplace dengan search di tengah --}}
-<section class="search-hero">
+<section class="search-hero flex items-center justify-center">
     {{-- Background image --}}
     <div class="absolute inset-0">
         <img src="{{ asset('search-network.jpg') }}"
@@ -62,16 +62,14 @@
     </div>
 
     {{-- Content - text di tengah --}}
-    <div class="relative h-full">
-        <div class="container mx-auto px-6 h-full flex items-center justify-center">
-            <div class="max-w-3xl w-full text-center">
-                <h1 class="text-3xl md:text-4xl lg:text-5xl font-black text-white leading-tight tracking-tight mb-3">
-                    Temukan Koneksi Baru
-                </h1>
-                <p class="text-base md:text-lg text-white/90 font-medium">
-                    Bangun jaringan profesional dengan mahasiswa KKN di seluruh Indonesia
-                </p>
-            </div>
+    <div class="relative container mx-auto px-6 text-center">
+        <div class="max-w-3xl mx-auto">
+            <h1 class="text-3xl md:text-4xl lg:text-5xl font-black text-white leading-tight tracking-tight mb-3">
+                Temukan Koneksi Baru
+            </h1>
+            <p class="text-base md:text-lg text-white/90 font-medium">
+                Bangun jaringan profesional dengan mahasiswa KKN di seluruh Indonesia
+            </p>
         </div>
     </div>
 </section>
