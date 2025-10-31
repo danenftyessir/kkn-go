@@ -69,19 +69,19 @@
 
                     {{-- user dropdown --}}
                     <div class="relative ml-3" x-data="{ open: false }">
-                        <button @click="open = !open" 
+                        <button @click="open = !open"
                                 class="flex items-center space-x-2 p-1 rounded-lg hover:bg-gray-100 transition-colors">
-                            @if(Auth::user()->isStudent() && Auth::user()->student)
-                                <img src="{{ Auth::user()->student->profile_photo_url }}" 
+                            @if(Auth::user()->isStudent() && Auth::user()->student && Auth::user()->profile_photo)
+                                <img src="{{ Storage::url(Auth::user()->profile_photo) }}"
                                      alt="{{ Auth::user()->name }}"
-                                     class="w-8 h-8 rounded-full object-cover">
-                            @elseif(Auth::user()->isInstitution() && Auth::user()->institution)
-                                <img src="{{ Auth::user()->institution->logo_url }}" 
+                                     class="avatar-circle avatar-sm">
+                            @elseif(Auth::user()->isInstitution() && Auth::user()->institution && Auth::user()->institution->logo)
+                                <img src="{{ Storage::url(Auth::user()->institution->logo) }}"
                                      alt="{{ Auth::user()->name }}"
-                                     class="w-8 h-8 rounded-full object-cover">
+                                     class="avatar-circle avatar-sm">
                             @else
-                                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center">
-                                    <span class="text-white text-sm font-bold">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
+                                <div class="avatar-circle avatar-sm">
+                                    {{ get_initials(Auth::user()->name) }}
                                 </div>
                             @endif
                             <span class="text-gray-700 font-medium">{{ Auth::user()->name }}</span>

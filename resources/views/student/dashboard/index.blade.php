@@ -180,10 +180,10 @@
                             @if(Auth::user()->profile_photo)
                                 <img src="{{ Storage::url(Auth::user()->profile_photo) }}"
                                      alt="{{ Auth::user()->first_name }}"
-                                     class="w-24 h-24 rounded-full border-4 border-white shadow-lg object-cover">
+                                     class="avatar-circle avatar-lg border-4 border-white shadow-lg">
                             @else
-                                <div class="w-24 h-24 rounded-full border-4 border-white shadow-lg bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center">
-                                    <span class="text-white text-2xl font-bold">{{ strtoupper(substr(Auth::user()->first_name, 0, 1)) }}{{ strtoupper(substr(Auth::user()->last_name, 0, 1)) }}</span>
+                                <div class="avatar-circle avatar-lg border-4 border-white shadow-lg">
+                                    {{ get_initials(Auth::user()->first_name . ' ' . Auth::user()->last_name) }}
                                 </div>
                             @endif
                         </div>
@@ -338,10 +338,10 @@
                                     @if($request->requester->user->profile_photo)
                                         <img src="{{ Storage::url($request->requester->user->profile_photo) }}"
                                              alt="{{ $request->requester->user->first_name }}"
-                                             class="w-10 h-10 rounded-full object-cover">
+                                             class="avatar-circle avatar-sm">
                                     @else
-                                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center">
-                                            <span class="text-white text-xs font-bold">{{ strtoupper(substr($request->requester->user->first_name, 0, 1)) }}{{ strtoupper(substr($request->requester->user->last_name, 0, 1)) }}</span>
+                                        <div class="avatar-circle avatar-sm">
+                                            {{ get_initials($request->requester->user->first_name . ' ' . $request->requester->user->last_name) }}
                                         </div>
                                     @endif
                                     <div class="flex-1 min-w-0">
@@ -401,10 +401,10 @@
                                         @if($suggestion->user->profile_photo)
                                             <img src="{{ Storage::url($suggestion->user->profile_photo) }}"
                                                  alt="{{ $suggestion->user->first_name }}"
-                                                 class="w-10 h-10 rounded-full object-cover">
+                                                 class="avatar-circle avatar-sm">
                                         @else
-                                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center">
-                                                <span class="text-white text-xs font-bold">{{ strtoupper(substr($suggestion->user->first_name, 0, 1)) }}{{ strtoupper(substr($suggestion->user->last_name, 0, 1)) }}</span>
+                                            <div class="avatar-circle avatar-sm">
+                                                {{ get_initials($suggestion->user->first_name . ' ' . $suggestion->user->last_name) }}
                                             </div>
                                         @endif
                                         <div class="flex-1 min-w-0">

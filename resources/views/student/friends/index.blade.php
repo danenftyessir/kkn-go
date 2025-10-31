@@ -174,10 +174,10 @@
                                 @if($request->requester->user->profile_photo)
                                     <img src="{{ Storage::url($request->requester->user->profile_photo) }}"
                                          alt="{{ $request->requester->user->first_name }}"
-                                         class="profile-image">
+                                         class="avatar-circle avatar-md">
                                 @else
-                                    <div class="profile-image bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center">
-                                        <span class="text-white text-2xl font-bold">{{ strtoupper(substr($request->requester->user->first_name, 0, 1)) }}{{ strtoupper(substr($request->requester->user->last_name, 0, 1)) }}</span>
+                                    <div class="avatar-circle avatar-md">
+                                        {{ get_initials($request->requester->user->first_name . ' ' . $request->requester->user->last_name) }}
                                     </div>
                                 @endif
                             </a>
@@ -244,10 +244,10 @@
                                 @if($suggestion->user->profile_photo)
                                     <img src="{{ Storage::url($suggestion->user->profile_photo) }}"
                                          alt="{{ $suggestion->user->first_name }}"
-                                         class="profile-image">
+                                         class="avatar-circle avatar-md">
                                 @else
-                                    <div class="profile-image bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center">
-                                        <span class="text-white text-2xl font-bold">{{ strtoupper(substr($suggestion->user->first_name, 0, 1)) }}{{ strtoupper(substr($suggestion->user->last_name, 0, 1)) }}</span>
+                                    <div class="avatar-circle avatar-md">
+                                        {{ get_initials($suggestion->user->first_name . ' ' . $suggestion->user->last_name) }}
                                     </div>
                                 @endif
                             </a>
@@ -302,10 +302,10 @@
                                 @if($friend->user->profile_photo)
                                     <img src="{{ Storage::url($friend->user->profile_photo) }}"
                                          alt="{{ $friend->user->first_name }}"
-                                         class="profile-image">
+                                         class="avatar-circle avatar-md">
                                 @else
-                                    <div class="profile-image bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center">
-                                        <span class="text-white text-2xl font-bold">{{ strtoupper(substr($friend->user->first_name, 0, 1)) }}{{ strtoupper(substr($friend->user->last_name, 0, 1)) }}</span>
+                                    <div class="avatar-circle avatar-md">
+                                        {{ get_initials($friend->user->first_name . ' ' . $friend->user->last_name) }}
                                     </div>
                                 @endif
                             </a>

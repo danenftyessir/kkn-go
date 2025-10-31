@@ -423,6 +423,37 @@ if (!function_exists('difficulty_color')) {
 }
 
 // ===============================================
+// USER PROFILE HELPERS
+// ===============================================
+
+if (!function_exists('get_initials')) {
+    /**
+     * get inisial nama user (maksimal 2 huruf)
+     *
+     * @param string $name nama lengkap user
+     * @return string inisial nama dalam uppercase
+     *
+     * usage:
+     * get_initials('Andi Susanto') // "AS"
+     * get_initials('John') // "J"
+     */
+    function get_initials(string $name): string
+    {
+        $words = explode(" ", trim($name));
+        $initials = "";
+
+        foreach ($words as $word) {
+            if (!empty($word)) {
+                $initials .= mb_substr($word, 0, 1);
+            }
+        }
+
+        // ambil maksimal 2 huruf pertama
+        return strtoupper(mb_substr($initials, 0, 2));
+    }
+}
+
+// ===============================================
 // NUMBER FORMATTING HELPERS
 // ===============================================
 
