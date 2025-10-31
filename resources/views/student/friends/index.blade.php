@@ -172,7 +172,7 @@
                         <div class="flex items-start gap-4">
                             <a href="{{ route('profile.public', $request->requester->user->username) }}">
                                 @if($request->requester->user->profile_photo)
-                                    <img src="{{ Storage::url($request->requester->user->profile_photo) }}"
+                                    <img src="{{ $request->requester->user->profile_photo_url }}"
                                          alt="{{ $request->requester->user->first_name }}"
                                          class="avatar-circle avatar-md">
                                 @else
@@ -242,7 +242,7 @@
                         <div class="flex items-center gap-4">
                             <a href="{{ route('profile.public', $suggestion->user->username) }}">
                                 @if($suggestion->user->profile_photo)
-                                    <img src="{{ Storage::url($suggestion->user->profile_photo) }}"
+                                    <img src="{{ $suggestion->user->profile_photo_url }}"
                                          alt="{{ $suggestion->user->first_name }}"
                                          class="avatar-circle avatar-md">
                                 @else
@@ -300,7 +300,7 @@
                         <div class="flex items-center gap-4">
                             <a href="{{ route('profile.public', $friend->user->username) }}">
                                 @if($friend->user->profile_photo)
-                                    <img src="{{ Storage::url($friend->user->profile_photo) }}"
+                                    <img src="{{ $friend->user->profile_photo_url }}"
                                          alt="{{ $friend->user->first_name }}"
                                          class="avatar-circle avatar-md">
                                 @else

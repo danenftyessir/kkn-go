@@ -380,9 +380,7 @@ class FriendController extends Controller
             $activities[] = [
                 'type' => 'friend',
                 'user_name' => $friend->user->first_name . ' ' . $friend->user->last_name,
-                'user_photo' => $friend->user->profile_photo 
-                    ? Storage::url($friend->user->profile_photo) 
-                    : asset('default-avatar.png'),
+                'user_photo' => $friend->user->profile_photo_url,
                 'user_url' => route('student.friends.profile', $friend->id),
                 'action' => 'terhubung dengan ' . $otherFriend->user->first_name . ' ' . $otherFriend->user->last_name,
                 'timestamp' => $friendship->responded_at->diffForHumans(),
@@ -401,9 +399,7 @@ class FriendController extends Controller
             $activities[] = [
                 'type' => 'project',
                 'user_name' => $application->student->user->first_name . ' ' . $application->student->user->last_name,
-                'user_photo' => $application->student->user->profile_photo 
-                    ? Storage::url($application->student->user->profile_photo) 
-                    : asset('default-avatar.png'),
+                'user_photo' => $application->student->user->profile_photo_url,
                 'user_url' => route('student.friends.profile', $application->student_id),
                 'action' => 'melamar proyek baru',
                 'timestamp' => $application->created_at->diffForHumans(),
@@ -411,8 +407,8 @@ class FriendController extends Controller
                 'preview' => [
                     'title' => $application->problem->title,
                     'description' => $application->problem->description,
-                    'image' => $application->problem->cover_image 
-                        ? Storage::url($application->problem->cover_image) 
+                    'image' => $application->problem->cover_image
+                        ? Storage::url($application->problem->cover_image)
                         : asset('placeholder-project.jpg')
                 ]
             ];
@@ -430,9 +426,7 @@ class FriendController extends Controller
             $activities[] = [
                 'type' => 'achievement',
                 'user_name' => $project->student->user->first_name . ' ' . $project->student->user->last_name,
-                'user_photo' => $project->student->user->profile_photo 
-                    ? Storage::url($project->student->user->profile_photo) 
-                    : asset('default-avatar.png'),
+                'user_photo' => $project->student->user->profile_photo_url,
                 'user_url' => route('student.friends.profile', $project->student_id),
                 'action' => 'menyelesaikan proyek',
                 'timestamp' => $project->updated_at->diffForHumans(),
@@ -440,8 +434,8 @@ class FriendController extends Controller
                 'preview' => [
                     'title' => $project->problem->title,
                     'description' => 'Proyek KKN berhasil diselesaikan',
-                    'image' => $project->problem->cover_image 
-                        ? Storage::url($project->problem->cover_image) 
+                    'image' => $project->problem->cover_image
+                        ? Storage::url($project->problem->cover_image)
                         : asset('placeholder-project.jpg')
                 ]
             ];
@@ -569,9 +563,7 @@ class FriendController extends Controller
                     'name' => $student->user->first_name . ' ' . $student->user->last_name,
                     'major' => $student->major,
                     'university' => $student->university->name,
-                    'photo' => $student->user->profile_photo 
-                        ? Storage::url($student->user->profile_photo) 
-                        : asset('default-avatar.png'),
+                    'photo' => $student->user->profile_photo_url,
                     'mutual_friends' => $mutualFriendsCount[$student->id],
                     'profile_url' => route('student.friends.profile', $student->id)
                 ];

@@ -137,7 +137,7 @@
                         {{-- profile photo --}}
                         <div class="flex-shrink-0">
                             @if($result->user->profile_photo)
-                                <img src="{{ Storage::url($result->user->profile_photo) }}"
+                                <img src="{{ $result->user->profile_photo_url }}"
                                      alt="{{ $result->user->first_name }}"
                                      class="avatar-circle avatar-lg shadow-sm">
                             @else
