@@ -25,12 +25,12 @@ class SupabaseStorageService
     {
         $this->projectId = config('services.supabase.project_id');
         $this->serviceKey = config('services.supabase.service_key');
-        $this->bucketName = config('services.supabase.bucket', 'kkn-go storage');
+        $this->bucketName = config('services.supabase.bucket', 'kkngo-storage');
         $this->baseUrl = "https://{$this->projectId}.supabase.co/storage/v1";
-        
+
         // cek apakah supabase dikonfigurasi dengan benar
         $this->useSupabase = !empty($this->projectId) && !empty($this->serviceKey);
-        
+
         if (config('app.debug') && !$this->useSupabase) {
             Log::warning("⚠️ Supabase config tidak lengkap - akan menggunakan local storage!", [
                 'project_id' => $this->projectId ? '✅' : '❌',
@@ -201,10 +201,7 @@ class SupabaseStorageService
         // encode path untuk URL
         $encodedPath = $this->encodePath($path);
 
-        // encode bucket name (ganti spasi dengan %20)
-        $encodedBucket = str_replace(' ', '%20', $this->bucketName);
-
-        $url = "https://{$this->projectId}.supabase.co/storage/v1/object/public/{$encodedBucket}/{$encodedPath}";
+        $url = "https://{$this->projectId}.supabase.co/storage/v1/object/public/{$this->bucketName}/{$encodedPath}";
 
         if (config('app.debug')) {
             Log::debug("✅ getPublicUrl: Generated Supabase URL", [

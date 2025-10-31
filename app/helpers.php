@@ -154,7 +154,7 @@ if (!function_exists('supabase_url')) {
 
         // ✅ FIX: Gunakan config yang sama dengan SupabaseStorageService
         $projectId = config('services.supabase.project_id');
-        $bucket = config('services.supabase.bucket', 'kkn-go storage');
+        $bucket = config('services.supabase.bucket', 'kkngo-storage');
 
         // Cek apakah Supabase dikonfigurasi
         if (empty($projectId)) {
@@ -165,14 +165,11 @@ if (!function_exists('supabase_url')) {
         // hilangkan slash di awal jika ada
         $path = ltrim($path, '/');
 
-        // encode bucket name untuk URL (ganti spasi dengan %20)
-        $encodedBucket = str_replace(' ', '%20', $bucket);
-
         // encode path jika perlu (handle spasi dan karakter khusus)
         $encodedPath = implode('/', array_map('rawurlencode', explode('/', $path)));
 
         // ✅ format: https://PROJECT_ID.supabase.co/storage/v1/object/public/BUCKET_NAME/PATH
-        return "https://{$projectId}.supabase.co/storage/v1/object/public/{$encodedBucket}/{$encodedPath}";
+        return "https://{$projectId}.supabase.co/storage/v1/object/public/{$bucket}/{$encodedPath}";
     }
 }
 
