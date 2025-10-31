@@ -162,9 +162,9 @@ class ProblemController extends Controller
                 'required_students' => 'required|integer|min:1',
                 'required_skills' => 'required|array|min:1',
                 'required_majors' => 'nullable|array',
-                'start_date' => 'required|date',
+                'start_date' => 'required|date|after_or_equal:today',
                 'end_date' => 'required|date|after:start_date',
-                'application_deadline' => 'required|date|before:start_date',
+                'application_deadline' => 'required|date|after_or_equal:today|before:start_date',
                 'duration_months' => 'required|integer|min:1',
                 'difficulty_level' => 'required|in:beginner,intermediate,advanced',
                 'status' => 'required|in:draft,open',
@@ -173,6 +173,11 @@ class ProblemController extends Controller
                 'facilities_provided' => 'nullable|array',
                 'images' => 'nullable|array|max:5',
                 'images.*' => 'image|mimes:jpeg,png,jpg|max:5120',
+            ], [
+                'start_date.after_or_equal' => 'Tanggal mulai proyek tidak boleh di masa lalu.',
+                'application_deadline.after_or_equal' => 'Deadline aplikasi tidak boleh di masa lalu.',
+                'application_deadline.before' => 'Deadline aplikasi harus sebelum tanggal mulai proyek.',
+                'end_date.after' => 'Tanggal selesai proyek harus setelah tanggal mulai.',
             ]);
 
             Log::info('Problem Store - Validation Passed', ['validated' => $validated]);
@@ -418,9 +423,9 @@ class ProblemController extends Controller
                 'required_students' => 'required|integer|min:1',
                 'required_skills' => 'required|array|min:1',
                 'required_majors' => 'nullable|array',
-                'start_date' => 'required|date',
+                'start_date' => 'required|date|after_or_equal:today',
                 'end_date' => 'required|date|after:start_date',
-                'application_deadline' => 'required|date|before:start_date',
+                'application_deadline' => 'required|date|after_or_equal:today|before:start_date',
                 'duration_months' => 'required|integer|min:1',
                 'difficulty_level' => 'required|in:beginner,intermediate,advanced',
                 'status' => 'required|in:draft,open,closed',
@@ -431,6 +436,11 @@ class ProblemController extends Controller
                 'images.*' => 'image|mimes:jpeg,png,jpg|max:5120',
                 'delete_images' => 'nullable|array',
                 'delete_images.*' => 'exists:problem_images,id',
+            ], [
+                'start_date.after_or_equal' => 'Tanggal mulai proyek tidak boleh di masa lalu.',
+                'application_deadline.after_or_equal' => 'Deadline aplikasi tidak boleh di masa lalu.',
+                'application_deadline.before' => 'Deadline aplikasi harus sebelum tanggal mulai proyek.',
+                'end_date.after' => 'Tanggal selesai proyek harus setelah tanggal mulai.',
             ]);
 
             Log::info('Problem Update - Validation Passed', ['validated_keys' => array_keys($validated)]);
