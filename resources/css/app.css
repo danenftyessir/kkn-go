@@ -48,10 +48,19 @@ header *,
    AVATAR UNIVERSAL STYLES
    =============================================== */
 
-/* Avatar Circle - untuk semua ukuran avatar */
+/* Avatar Circle - base styling untuk semua avatar */
 .avatar-circle {
     border-radius: 50%;
+}
+
+/* Avatar Circle untuk IMG tag - foto profil */
+img.avatar-circle {
     object-fit: cover;
+    display: block;
+}
+
+/* Avatar Circle untuk DIV tag - inisial nama */
+div.avatar-circle {
     display: flex;
     align-items: center;
     justify-content: center;
