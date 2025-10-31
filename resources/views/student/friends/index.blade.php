@@ -21,8 +21,6 @@
         display: flex;
         align-items: center;
         gap: 8px;
-        max-width: 600px;
-        margin: 0 auto 2rem;
     }
 
     .hero-search input {
@@ -47,6 +45,13 @@
     .hero-search button:hover {
         background: #004182;
         transform: translateY(-2px);
+    }
+
+    /* Add Connection button styling */
+    @media (max-width: 768px) {
+        .hero-search {
+            margin: 0;
+        }
     }
 
     /* Clean list-based design */
@@ -161,20 +166,29 @@
 
     {{-- Content - search bar di tengah, text di bawah --}}
     <div class="relative h-full">
-        <div class="container mx-auto px-6 h-full flex items-center justify-center">
-            <div class="max-w-3xl w-full text-center">
-                {{-- Search bar di tengah --}}
-                <div class="hero-search mb-8">
-                    <svg class="w-6 h-6 text-gray-400 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                    <input type="text"
-                           id="hero-search-input"
-                           placeholder="Cari teman berdasarkan nama atau universitas..."
-                           class="hero-search-input">
-                    <button type="button" onclick="performHeroSearch()">
-                        Cari
-                    </button>
+        <div class="container mx-auto px-6 h-full flex items-center justify-center pt-16">
+            <div class="max-w-4xl w-full text-center">
+                {{-- Search bar dengan tombol Add Connection --}}
+                <div class="flex flex-col md:flex-row gap-3 items-center justify-center mb-8">
+                    <div class="hero-search flex-1 w-full md:max-w-xl">
+                        <svg class="w-6 h-6 text-gray-400 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        <input type="text"
+                               id="hero-search-input"
+                               placeholder="Cari teman berdasarkan nama atau universitas..."
+                               class="hero-search-input">
+                        <button type="button" onclick="performHeroSearch()">
+                            Cari
+                        </button>
+                    </div>
+                    <a href="{{ route('student.friends.search') }}"
+                       class="inline-flex items-center gap-2 px-6 py-3 bg-white text-blue-600 font-semibold rounded-lg hover:bg-gray-100 transition-all shadow-lg">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                        </svg>
+                        Add Connection
+                    </a>
                 </div>
 
                 {{-- Text di bawah search bar --}}
@@ -264,54 +278,6 @@
                                     </button>
                                 </form>
                             </div>
-                        </div>
-                    </div>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-        @endif
-
-        {{-- Suggestions Section --}}
-        @if($suggestions->count() > 0)
-        <div class="mb-6 section-with-bg">
-            <div class="relative bg-white rounded-lg shadow-sm overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                    <h2 class="text-xl font-bold text-gray-900">
-                        Rekomendasi untuk Anda
-                    </h2>
-                    <a href="{{ route('student.friends.search') }}"
-                       class="text-sm font-semibold text-blue-600 hover:underline">
-                        Lihat Semua
-                    </a>
-                </div>
-
-                <div>
-                    @foreach($suggestions as $suggestion)
-                    <div class="connection-item px-6 py-4">
-                        <div class="flex items-center gap-4">
-                            <a href="{{ route('profile.public', $suggestion->user->username) }}">
-                                <img src="{{ $suggestion->profile_photo_url }}"
-                                     alt="{{ $suggestion->user->name }}"
-                                     class="avatar-circle avatar-md">
-                            </a>
-
-                            <div class="flex-1 min-w-0">
-                                <a href="{{ route('profile.public', $suggestion->user->username) }}"
-                                   class="text-lg font-semibold text-gray-900 hover:text-blue-600 hover:underline">
-                                    {{ $suggestion->user->name }}
-                                </a>
-                                <p class="text-sm text-gray-600 mt-1">
-                                    {{ $suggestion->major }} • {{ $suggestion->university->name }}
-                                </p>
-                            </div>
-
-                            <form method="POST" action="{{ route('student.friends.send-request', $suggestion->id) }}">
-                                @csrf
-                                <button type="submit" class="btn-secondary-linkedin">
-                                    Hubungkan
-                                </button>
-                            </form>
                         </div>
                     </div>
                     @endforeach

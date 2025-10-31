@@ -2,63 +2,134 @@
 
 @section('title', 'Cari Teman - KKN-Go')
 
+@push('styles')
+<style>
+    /* Hero with background image - Style persis seperti Network page */
+    .search-hero {
+        position: relative;
+        min-height: 400px;
+        overflow: hidden;
+    }
+
+    /* Search bar styling */
+    .hero-search-form {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+        padding: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        max-width: 600px;
+        margin: 0 auto 2rem;
+    }
+
+    .hero-search-form input {
+        flex: 1;
+        border: none;
+        padding: 12px 16px;
+        font-size: 16px;
+        outline: none;
+    }
+
+    .hero-search-form button {
+        background: #0a66c2;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .hero-search-form button:hover {
+        background: #004182;
+        transform: translateY(-2px);
+    }
+
+    /* Quick filter tags */
+    .filter-tag {
+        padding: 8px 16px;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        color: white;
+        font-size: 14px;
+        font-weight: 600;
+        border-radius: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .filter-tag:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+</style>
+@endpush
+
 @section('content')
-{{-- hero section dengan background --}}
-<div class="relative bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 overflow-hidden">
+{{-- Hero section - Style marketplace dengan search di tengah --}}
+<section class="search-hero">
+    {{-- Background image --}}
     <div class="absolute inset-0">
-        <img src="{{ asset('search-network.jpg') }}" 
-             alt="Search Background" 
-             class="w-full h-full object-cover opacity-20">
-        <div class="absolute inset-0 bg-gradient-to-br from-indigo-900/80 to-purple-900/80"></div>
+        <img src="{{ asset('search-network.jpg') }}"
+             alt="Temukan Koneksi KKN-Go"
+             class="w-full h-full object-cover">
+        {{-- Overlay gradient - lebih gelap di bawah --}}
+        <div class="absolute inset-0 bg-gradient-to-b from-black/30 via-black/40 to-black/70"></div>
     </div>
 
-    <div class="relative container mx-auto px-6 py-12">
-        <div class="max-w-4xl mx-auto text-center">
-            <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">
-                Temukan Koneksi Baru
-            </h1>
-            <p class="text-xl text-indigo-100 mb-8">
-                Bangun jaringan profesional dengan mahasiswa KKN di seluruh Indonesia
-            </p>
-
-            {{-- search bar --}}
-            <form method="GET" action="{{ route('student.friends.search') }}" class="mb-4">
-                <div class="relative max-w-2xl mx-auto">
-                    <input type="text" 
-                           name="search" 
+    {{-- Content - search bar di tengah, text di bawah --}}
+    <div class="relative h-full">
+        <div class="container mx-auto px-6 h-full flex items-center justify-center py-12">
+            <div class="max-w-3xl w-full text-center">
+                {{-- Search bar di tengah --}}
+                <form method="GET" action="{{ route('student.friends.search') }}" class="hero-search-form mb-8">
+                    <svg class="w-6 h-6 text-gray-400 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <input type="text"
+                           name="search"
                            value="{{ request('search') }}"
-                           placeholder="Cari berdasarkan nama, universitas, atau jurusan..." 
-                           class="w-full px-6 py-4 pr-12 text-lg border-0 rounded-lg shadow-lg focus:ring-2 focus:ring-white">
-                    <button type="submit" 
-                            class="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 text-gray-400 hover:text-gray-600">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                           placeholder="Cari berdasarkan nama, universitas, atau jurusan...">
+                    <button type="submit">
+                        Cari
+                    </button>
+                </form>
+
+                {{-- Text di bawah search bar --}}
+                <h1 class="text-3xl md:text-4xl lg:text-5xl font-black text-white leading-tight tracking-tight mb-3">
+                    Temukan Koneksi Baru
+                </h1>
+                <p class="text-base md:text-lg text-white/90 font-medium mb-6">
+                    Bangun jaringan profesional dengan mahasiswa KKN di seluruh Indonesia
+                </p>
+
+                {{-- Quick filter tags --}}
+                <div class="flex flex-wrap justify-center gap-2">
+                    <a href="{{ route('student.friends.search', ['university_id' => $student->university_id]) }}"
+                       class="filter-tag">
+                        Dari Universitas Saya
+                    </a>
+                    <a href="{{ route('student.friends.search', ['major' => $student->major]) }}"
+                       class="filter-tag">
+                        Jurusan Yang Sama
+                    </a>
+                    <button onclick="toggleFilters()"
+                            class="filter-tag">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
                         </svg>
+                        Filter Lanjutan
                     </button>
                 </div>
-            </form>
-
-            {{-- quick filter tags --}}
-            <div class="flex flex-wrap justify-center gap-2">
-                <a href="{{ route('student.friends.search', ['university_id' => $student->university_id]) }}" 
-                   class="px-4 py-2 bg-white/20 backdrop-blur-sm text-white text-sm font-medium rounded-full hover:bg-white/30 transition-colors border border-white/30">
-                    Dari Universitas Saya
-                </a>
-                <a href="{{ route('student.friends.search', ['major' => $student->major]) }}" 
-                   class="px-4 py-2 bg-white/20 backdrop-blur-sm text-white text-sm font-medium rounded-full hover:bg-white/30 transition-colors border border-white/30">
-                    Jurusan Yang Sama
-                </a>
-                <button onclick="toggleFilters()" 
-                        class="px-4 py-2 bg-white/20 backdrop-blur-sm text-white text-sm font-medium rounded-full hover:bg-white/30 transition-colors border border-white/30">
-                    <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
-                    </svg>
-                    Filter Lanjutan
-                </button>
             </div>
         </div>
     </div>
-</div>
+</section>
 
 {{-- advanced filters (collapsible) --}}
 <div id="advanced-filters" class="hidden bg-white border-b border-gray-200">
