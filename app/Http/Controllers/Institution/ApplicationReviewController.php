@@ -7,6 +7,7 @@ use App\Models\Application;
 use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * controller untuk review aplikasi mahasiswa oleh instansi
@@ -325,6 +326,42 @@ class ApplicationReviewController extends Controller
             
             return back()->with('error', 'terjadi kesalahan: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * download proposal dari database
+     * validasi: aplikasi harus milik institusi yang sedang login
+     */
+    public function downloadProposal($id)
+    {
+        $institution = auth()->user()->institution;
+
+        // ambil aplikasi yang milik institusi ini
+        $application = Application::with('problem')
+            ->whereHas('problem', function($q) use ($institution) {
+                $q->where('institution_id', $institution->id);
+            })
+            ->findOrFail($id);
+
+        // cek apakah ada proposal
+        if (!$application->proposal_content) {
+            abort(404, 'Proposal tidak ditemukan');
+        }
+
+        Log::info("Institution downloading proposal", [
+            'application_id' => $id,
+            'filename' => $application->proposal_filename,
+            'institution_id' => $institution->id,
+        ]);
+
+        // decode base64 content
+        $fileContent = base64_decode($application->proposal_content);
+
+        // return file sebagai download
+        return response($fileContent)
+            ->header('Content-Type', $application->proposal_mime_type)
+            ->header('Content-Disposition', 'inline; filename="' . $application->proposal_filename . '"')
+            ->header('Content-Length', strlen($fileContent));
     }
 
     /**

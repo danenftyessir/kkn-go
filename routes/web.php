@@ -247,6 +247,7 @@ Route::middleware(['auth', 'check.user.type:institution'])->prefix('institution'
     Route::prefix('applications')->name('applications.')->group(function () {
         Route::get('/', [ApplicationReviewController::class, 'index'])->name('index');
         Route::get('/{id}', [ApplicationReviewController::class, 'show'])->name('show');
+        Route::get('/{id}/download-proposal', [ApplicationReviewController::class, 'downloadProposal'])->name('download-proposal');
         Route::get('/{id}/review', [ApplicationReviewController::class, 'review'])->name('review');
         Route::post('/{id}/accept', [ApplicationReviewController::class, 'accept'])->name('accept');
         Route::post('/{id}/reject', [ApplicationReviewController::class, 'reject'])->name('reject');

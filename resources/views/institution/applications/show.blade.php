@@ -117,7 +117,7 @@
                     Diupload {{ $application->created_at->diffForHumans() }}
                 </p>
             </div>
-            <a href="{{ route('student.applications.download-proposal', $application->id) }}" 
+            <a href="{{ route('institution.applications.download-proposal', $application->id) }}"
             target="_blank"
             download
             class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-semibold flex items-center gap-2">
