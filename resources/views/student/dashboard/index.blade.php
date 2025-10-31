@@ -2,22 +2,162 @@
 
 @section('title', 'Dashboard Mahasiswa - KKN-Go')
 
+@push('styles')
+<style>
+    /* hero section dengan background image fixed */
+    .hero-dashboard-background {
+        position: relative;
+        background-image: url('/dashboard-student.jpg');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        min-height: 450px;
+    }
+
+    .hero-dashboard-background::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+            135deg,
+            rgba(37, 99, 235, 0.50) 0%,
+            rgba(59, 130, 246, 0.45) 35%,
+            rgba(16, 185, 129, 0.45) 65%,
+            rgba(5, 150, 105, 0.50) 100%
+        );
+        backdrop-filter: blur(1px);
+    }
+
+    /* stats cards dengan glassmorphism */
+    .stats-card-dashboard {
+        background: rgba(255, 255, 255, 0.20);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        will-change: transform;
+    }
+
+    .stats-card-dashboard:hover {
+        background: rgba(255, 255, 255, 0.30);
+        transform: translate3d(0, -4px, 0);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+
+    .text-shadow-strong {
+        text-shadow:
+            0 2px 4px rgba(0, 0, 0, 0.4),
+            0 4px 8px rgba(0, 0, 0, 0.3),
+            0 1px 2px rgba(0, 0, 0, 0.5);
+    }
+
+    .dashboard-fade-in {
+        animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+@endpush
+
 @section('content')
-{{-- hero section dengan background --}}
-<div class="relative bg-gradient-to-r from-blue-600 to-indigo-700 overflow-hidden">
-    <div class="absolute inset-0">
-        <img src="{{ asset('dashboard-student.jpg') }}" 
-             alt="Dashboard Background" 
-             class="w-full h-full object-cover opacity-20">
-    </div>
-    
-    <div class="relative container mx-auto px-6 py-12">
-        <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">
-            Selamat Datang, {{ Auth::user()->first_name }}!
-        </h1>
-        <p class="text-blue-100 text-lg">
-            Mari berkontribusi untuk pembangunan berkelanjutan melalui program KKN
-        </p>
+{{-- hero section dengan background image --}}
+<div class="hero-dashboard-background text-white py-16 md:py-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="dashboard-fade-in">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4 text-shadow-strong">
+                Selamat Datang, {{ Auth::user()->first_name }}!
+            </h1>
+            <p class="text-xl md:text-2xl text-white text-shadow-strong max-w-3xl">
+                Mari berkontribusi untuk pembangunan berkelanjutan melalui program KKN
+            </p>
+        </div>
+
+        {{-- stats cards dengan glassmorphism --}}
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6 mt-10 dashboard-fade-in" style="animation-delay: 0.2s;">
+            <div class="stats-card-dashboard rounded-xl p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="text-4xl md:text-5xl font-bold text-white text-shadow-strong">
+                            {{ Auth::user()->student->applications()->count() }}
+                        </div>
+                        <div class="text-white text-shadow-strong mt-2">
+                            Total Aplikasi
+                        </div>
+                    </div>
+                    <div class="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-card-dashboard rounded-xl p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="text-4xl md:text-5xl font-bold text-white text-shadow-strong">
+                            {{ Auth::user()->student->projects()->where('status', 'in_progress')->count() }}
+                        </div>
+                        <div class="text-white text-shadow-strong mt-2">
+                            Proyek Aktif
+                        </div>
+                    </div>
+                    <div class="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-card-dashboard rounded-xl p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="text-4xl md:text-5xl font-bold text-white text-shadow-strong">
+                            {{ Auth::user()->student->projects()->where('status', 'completed')->count() }}
+                        </div>
+                        <div class="text-white text-shadow-strong mt-2">
+                            Proyek Selesai
+                        </div>
+                    </div>
+                    <div class="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-card-dashboard rounded-xl p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="text-4xl md:text-5xl font-bold text-white text-shadow-strong">
+                            {{ Auth::user()->student->friendsCount() }}
+                        </div>
+                        <div class="text-white text-shadow-strong mt-2">
+                            Koneksi
+                        </div>
+                    </div>
+                    <div class="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
