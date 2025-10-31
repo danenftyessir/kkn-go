@@ -337,7 +337,7 @@
                                             {{ $request->requester->user->first_name }} {{ $request->requester->user->last_name }}
                                         </p>
                                         <p class="text-xs text-gray-600 truncate">
-                                            {{ $request->requester->university->name }}
+                                            {{ $request->requester->major }} • {{ $request->requester->university->name }}
                                         </p>
                                     </div>
                                     <div class="flex gap-1">
@@ -394,7 +394,7 @@
                                                 {{ $suggestion->user->first_name }} {{ $suggestion->user->last_name }}
                                             </p>
                                             <p class="text-xs text-gray-600 truncate">
-                                                {{ $suggestion->major }}
+                                                {{ $suggestion->major }} • {{ $suggestion->university->name }}
                                             </p>
                                         </div>
                                     </div>
