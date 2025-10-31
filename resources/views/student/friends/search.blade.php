@@ -15,13 +15,12 @@
     .hero-search-form {
         background: white;
         border-radius: 12px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         padding: 8px;
         display: flex;
         align-items: center;
         gap: 8px;
-        max-width: 600px;
-        margin: 0 auto 2rem;
+        border: 1px solid #e5e7eb;
     }
 
     .hero-search-form input {
@@ -47,26 +46,6 @@
         background: #004182;
         transform: translateY(-2px);
     }
-
-    /* Quick filter tags */
-    .filter-tag {
-        padding: 8px 16px;
-        background: rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(10px);
-        color: white;
-        font-size: 14px;
-        font-weight: 600;
-        border-radius: 24px;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        transition: all 0.3s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    .filter-tag:hover {
-        background: rgba(255, 255, 255, 0.3);
-    }
 </style>
 @endpush
 
@@ -82,50 +61,16 @@
         <div class="absolute inset-0 bg-gradient-to-b from-black/30 via-black/40 to-black/70"></div>
     </div>
 
-    {{-- Content - search bar di tengah, text di bawah --}}
+    {{-- Content - text di tengah --}}
     <div class="relative h-full">
-        <div class="container mx-auto px-6 h-full flex items-center justify-center py-12">
+        <div class="container mx-auto px-6 h-full flex items-center justify-center">
             <div class="max-w-3xl w-full text-center">
-                {{-- Search bar di tengah --}}
-                <form method="GET" action="{{ route('student.friends.search') }}" class="hero-search-form mb-8">
-                    <svg class="w-6 h-6 text-gray-400 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                    <input type="text"
-                           name="search"
-                           value="{{ request('search') }}"
-                           placeholder="Cari berdasarkan nama, universitas, atau jurusan...">
-                    <button type="submit">
-                        Cari
-                    </button>
-                </form>
-
-                {{-- Text di bawah search bar --}}
                 <h1 class="text-3xl md:text-4xl lg:text-5xl font-black text-white leading-tight tracking-tight mb-3">
                     Temukan Koneksi Baru
                 </h1>
-                <p class="text-base md:text-lg text-white/90 font-medium mb-6">
+                <p class="text-base md:text-lg text-white/90 font-medium">
                     Bangun jaringan profesional dengan mahasiswa KKN di seluruh Indonesia
                 </p>
-
-                {{-- Quick filter tags --}}
-                <div class="flex flex-wrap justify-center gap-2">
-                    <a href="{{ route('student.friends.search', ['university_id' => $student->university_id]) }}"
-                       class="filter-tag">
-                        Dari Universitas Saya
-                    </a>
-                    <a href="{{ route('student.friends.search', ['major' => $student->major]) }}"
-                       class="filter-tag">
-                        Jurusan Yang Sama
-                    </a>
-                    <button onclick="toggleFilters()"
-                            class="filter-tag">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
-                        </svg>
-                        Filter Lanjutan
-                    </button>
-                </div>
             </div>
         </div>
     </div>
@@ -187,7 +132,42 @@
 {{-- results section --}}
 <div class="bg-gray-50 min-h-screen">
     <div class="container mx-auto px-6 py-8">
-        
+
+        {{-- Search bar dan quick filter tags --}}
+        <div class="mb-6">
+            <form method="GET" action="{{ route('student.friends.search') }}" class="hero-search-form mb-4">
+                <svg class="w-6 h-6 text-gray-400 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <input type="text"
+                       name="search"
+                       value="{{ request('search') }}"
+                       placeholder="Cari berdasarkan nama, universitas, atau jurusan...">
+                <button type="submit">
+                    Cari
+                </button>
+            </form>
+
+            {{-- Quick filter tags --}}
+            <div class="flex flex-wrap gap-2 mb-6">
+                <a href="{{ route('student.friends.search', ['university_id' => $student->university_id]) }}"
+                   class="px-4 py-2 bg-blue-50 text-blue-600 text-sm font-medium rounded-lg hover:bg-blue-100 transition-colors border border-blue-200">
+                    Dari Universitas Saya
+                </a>
+                <a href="{{ route('student.friends.search', ['major' => $student->major]) }}"
+                   class="px-4 py-2 bg-blue-50 text-blue-600 text-sm font-medium rounded-lg hover:bg-blue-100 transition-colors border border-blue-200">
+                    Jurusan Yang Sama
+                </a>
+                <button onclick="toggleFilters()"
+                        class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors border border-gray-300 inline-flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+                    </svg>
+                    Filter Lanjutan
+                </button>
+            </div>
+        </div>
+
         {{-- results header --}}
         <div class="mb-6">
             <h2 class="text-2xl font-bold text-gray-900">

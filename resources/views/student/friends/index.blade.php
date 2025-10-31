@@ -164,34 +164,10 @@
         <div class="absolute inset-0 bg-gradient-to-b from-black/30 via-black/40 to-black/70"></div>
     </div>
 
-    {{-- Content - search bar di tengah, text di bawah --}}
+    {{-- Content - text di tengah --}}
     <div class="relative h-full">
-        <div class="container mx-auto px-6 h-full flex items-center justify-center pt-16">
+        <div class="container mx-auto px-6 h-full flex items-center justify-center">
             <div class="max-w-4xl w-full text-center">
-                {{-- Search bar dengan tombol Add Connection --}}
-                <div class="flex flex-col md:flex-row gap-3 items-center justify-center mb-8">
-                    <div class="hero-search flex-1 w-full md:max-w-xl">
-                        <svg class="w-6 h-6 text-gray-400 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                        </svg>
-                        <input type="text"
-                               id="hero-search-input"
-                               placeholder="Cari teman berdasarkan nama atau universitas..."
-                               class="hero-search-input">
-                        <button type="button" onclick="performHeroSearch()">
-                            Cari
-                        </button>
-                    </div>
-                    <a href="{{ route('student.friends.search') }}"
-                       class="inline-flex items-center gap-2 px-6 py-3 bg-white text-blue-600 font-semibold rounded-lg hover:bg-gray-100 transition-all shadow-lg">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
-                        </svg>
-                        Add Connection
-                    </a>
-                </div>
-
-                {{-- Text di bawah search bar --}}
                 <h1 class="text-3xl md:text-4xl lg:text-5xl font-black text-white leading-tight tracking-tight mb-3">
                     Jaringan Anda
                 </h1>
@@ -219,6 +195,33 @@
                 <span class="stat-number">{{ $stats['sent_requests'] }}</span>
                 <span class="stat-label">Terkirim</span>
             </div>
+        </div>
+    </div>
+</div>
+
+{{-- Search bar dan Add Connection --}}
+<div class="bg-white border-b border-gray-200 py-4">
+    <div class="max-w-6xl mx-auto px-6">
+        <div class="flex flex-col md:flex-row gap-3 items-center justify-center">
+            <div class="hero-search flex-1 w-full md:max-w-xl">
+                <svg class="w-6 h-6 text-gray-400 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <input type="text"
+                       id="hero-search-input"
+                       placeholder="Cari teman berdasarkan nama atau universitas..."
+                       class="hero-search-input">
+                <button type="button" onclick="performHeroSearch()">
+                    Cari
+                </button>
+            </div>
+            <a href="{{ route('student.friends.search') }}"
+               class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all shadow-md">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                </svg>
+                Add Connection
+            </a>
         </div>
     </div>
 </div>
