@@ -174,10 +174,11 @@ class ProfileController extends Controller
         } catch (\Exception $e) {
             Log::error("Error saat update profil student: " . $e->getMessage());
             Log::error("Stack trace: " . $e->getTraceAsString());
-            
+            Log::error("Request data: " . json_encode($request->except(['profile_photo'])));
+
             return back()
                 ->withInput()
-                ->with('error', 'Terjadi kesalahan saat memperbarui profil. Silakan coba lagi.');
+                ->with('error', 'Terjadi kesalahan saat memperbarui profil: ' . $e->getMessage());
         }
     }
 
