@@ -38,7 +38,7 @@ class DocumentsSeeder extends Seeder
         }
 
         // ✅ PERBAIKAN: Gunakan PDF yang sudah ada di Supabase
-        // File-file ini ada di root bucket Supabase (tanpa folder prefix)
+        // File-file ini ada di folder documents/reports/ di Supabase bucket
         $existingPdfs = [
             '3341b-laporan_kkn_hasbi_mudzaki_fix-1-.pdf',
             'aaLAPORAN-PROGRAM-KERJA-KKN.pdf',
@@ -188,9 +188,9 @@ class DocumentsSeeder extends Seeder
             }
 
             // ✅ PERBAIKAN: Ambil random PDF dari yang sudah ada di Supabase
-            // Path disimpan langsung sebagai nama file (file ada di root bucket)
+            // Path disimpan dengan prefix documents/reports/ sesuai lokasi di bucket
             $randomPdf = $existingPdfs[array_rand($existingPdfs)];
-            $filePath = $randomPdf;
+            $filePath = 'documents/reports/' . $randomPdf;
 
             // Debug: Log file path yang akan disimpan
             $this->command->info("  → Assigning file: {$filePath}");
