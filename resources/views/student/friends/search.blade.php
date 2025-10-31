@@ -142,7 +142,7 @@
                                      class="w-24 h-24 rounded-lg object-cover shadow-sm">
                             @else
                                 <div class="w-24 h-24 rounded-lg bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center shadow-sm">
-                                    <span class="text-white text-3xl font-bold">{{ strtoupper(substr($result->user->first_name, 0, 1)) }}{{ strtoupper(substr($result->user->last_name, 0, 1)) }}</span>
+                                    <span class="text-white text-2xl font-bold">{{ strtoupper(substr($result->user->first_name, 0, 1)) }}{{ strtoupper(substr($result->user->last_name, 0, 1)) }}</span>
                                 </div>
                             @endif
                         </div>
