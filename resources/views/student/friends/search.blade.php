@@ -137,7 +137,7 @@
                         {{-- profile photo --}}
                         <div class="flex-shrink-0">
                             <img src="{{ $result->profile_photo_url }}"
-                                 alt="{{ $result->user->first_name }}"
+                                 alt="{{ $result->user->name }}"
                                  class="avatar-circle avatar-lg shadow-sm">
                         </div>
 
@@ -146,7 +146,7 @@
                             <div class="flex items-start justify-between mb-3">
                                 <div>
                                     <h3 class="text-2xl font-bold text-gray-900 mb-1">
-                                        {{ $result->user->first_name }} {{ $result->user->last_name }}
+                                        {{ $result->user->name }}
                                     </h3>
                                     <p class="text-gray-700 font-medium mb-1">
                                         {{ $result->major }}

@@ -53,7 +53,7 @@ class FriendController extends Controller
         if ($request->filled('search')) {
             $search = strtolower($request->search);
             $friends = $friends->filter(function($friend) use ($search) {
-                $fullName = strtolower($friend->user->first_name . ' ' . $friend->user->last_name);
+                $fullName = strtolower($friend->user->name);
                 $university = strtolower($friend->university->name ?? '');
                 return str_contains($fullName, $search) || str_contains($university, $search);
             });
@@ -89,8 +89,7 @@ class FriendController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->whereHas('user', function($q) use ($search) {
-                $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
+                $q->where('name', 'like', "%{$search}%")
                   ->orWhere('username', 'like', "%{$search}%");
             });
         }

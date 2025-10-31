@@ -77,7 +77,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div class="dashboard-fade-in">
             <h1 class="text-4xl md:text-5xl font-bold mb-4 text-shadow-strong">
-                Selamat Datang, {{ Auth::user()->first_name }}!
+                Selamat Datang, {{ Auth::user()->name }}!
             </h1>
             <p class="text-xl md:text-2xl text-white text-shadow-strong max-w-3xl">
                 Mari berkontribusi untuk pembangunan berkelanjutan melalui program KKN
@@ -178,11 +178,11 @@
                     <div class="relative px-4 pb-4">
                         <div class="flex justify-center -mt-12 mb-3">
                             <img src="{{ Auth::user()->profile_photo_url }}"
-                                 alt="{{ Auth::user()->first_name }}"
+                                 alt="{{ Auth::user()->name }}"
                                  class="avatar-circle avatar-lg border-4 border-white shadow-lg">
                         </div>
                         <h3 class="text-center font-bold text-gray-900 text-lg">
-                            {{ Auth::user()->first_name }} {{ Auth::user()->last_name }}
+                            {{ Auth::user()->name }}
                         </h3>
                         <p class="text-center text-sm text-gray-600 mb-1">
                             {{ Auth::user()->student->major }}
@@ -330,11 +330,11 @@
                                 @foreach($pendingRequests as $request)
                                 <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                                     <img src="{{ $request->requester->profile_photo_url }}"
-                                         alt="{{ $request->requester->user->first_name }}"
+                                         alt="{{ $request->requester->user->name }}"
                                          class="avatar-circle avatar-sm">
                                     <div class="flex-1 min-w-0">
                                         <p class="font-medium text-gray-900 text-sm truncate">
-                                            {{ $request->requester->user->first_name }} {{ $request->requester->user->last_name }}
+                                            {{ $request->requester->user->name }}
                                         </p>
                                         <p class="text-xs text-gray-600 truncate">
                                             {{ $request->requester->major }} • {{ $request->requester->university->name }}
@@ -387,11 +387,11 @@
                                 <div class="border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow">
                                     <div class="flex items-start gap-2 mb-2">
                                         <img src="{{ $suggestion->profile_photo_url }}"
-                                             alt="{{ $suggestion->user->first_name }}"
+                                             alt="{{ $suggestion->user->name }}"
                                              class="avatar-circle avatar-sm">
                                         <div class="flex-1 min-w-0">
                                             <p class="font-medium text-gray-900 text-sm truncate">
-                                                {{ $suggestion->user->first_name }} {{ $suggestion->user->last_name }}
+                                                {{ $suggestion->user->name }}
                                             </p>
                                             <p class="text-xs text-gray-600 truncate">
                                                 {{ $suggestion->major }} • {{ $suggestion->university->name }}

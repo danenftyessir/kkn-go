@@ -172,14 +172,14 @@
                         <div class="flex items-start gap-4">
                             <a href="{{ route('profile.public', $request->requester->user->username) }}">
                                 <img src="{{ $request->requester->profile_photo_url }}"
-                                     alt="{{ $request->requester->user->first_name }}"
+                                     alt="{{ $request->requester->user->name }}"
                                      class="avatar-circle avatar-md">
                             </a>
 
                             <div class="flex-1 min-w-0">
                                 <a href="{{ route('profile.public', $request->requester->user->username) }}"
                                    class="text-lg font-semibold text-gray-900 hover:text-blue-600 hover:underline">
-                                    {{ $request->requester->user->first_name }} {{ $request->requester->user->last_name }}
+                                    {{ $request->requester->user->name }}
                                 </a>
                                 <p class="text-sm text-gray-600 mt-1">
                                     {{ $request->requester->major }} • {{ $request->requester->university->name }}
@@ -236,14 +236,14 @@
                         <div class="flex items-center gap-4">
                             <a href="{{ route('profile.public', $suggestion->user->username) }}">
                                 <img src="{{ $suggestion->profile_photo_url }}"
-                                     alt="{{ $suggestion->user->first_name }}"
+                                     alt="{{ $suggestion->user->name }}"
                                      class="avatar-circle avatar-md">
                             </a>
 
                             <div class="flex-1 min-w-0">
                                 <a href="{{ route('profile.public', $suggestion->user->username) }}"
                                    class="text-lg font-semibold text-gray-900 hover:text-blue-600 hover:underline">
-                                    {{ $suggestion->user->first_name }} {{ $suggestion->user->last_name }}
+                                    {{ $suggestion->user->name }}
                                 </a>
                                 <p class="text-sm text-gray-600 mt-1">
                                     {{ $suggestion->major }} • {{ $suggestion->university->name }}
@@ -283,19 +283,19 @@
                 <div id="friends-list">
                     @foreach($friends as $friend)
                     <div class="connection-item friend-item px-6 py-4"
-                         data-name="{{ strtolower($friend->user->first_name . ' ' . $friend->user->last_name) }}"
+                         data-name="{{ strtolower($friend->user->name) }}"
                          data-university="{{ strtolower($friend->university->name ?? '') }}">
                         <div class="flex items-center gap-4">
                             <a href="{{ route('profile.public', $friend->user->username) }}">
                                 <img src="{{ $friend->profile_photo_url }}"
-                                     alt="{{ $friend->user->first_name }}"
+                                     alt="{{ $friend->user->name }}"
                                      class="avatar-circle avatar-md">
                             </a>
 
                             <div class="flex-1 min-w-0">
                                 <a href="{{ route('profile.public', $friend->user->username) }}"
                                    class="text-lg font-semibold text-gray-900 hover:text-blue-600 hover:underline">
-                                    {{ $friend->user->first_name }} {{ $friend->user->last_name }}
+                                    {{ $friend->user->name }}
                                 </a>
                                 <p class="text-sm text-gray-600 mt-1">
                                     {{ $friend->major }} • {{ $friend->university->name }}

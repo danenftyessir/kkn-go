@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', $student->user->first_name . ' ' . $student->user->last_name . ' - Profil')
+@section('title', $student->user->name . ' - Profil')
 
 @section('content')
 {{-- profile header dengan background --}}
@@ -19,13 +19,13 @@
             <div class="flex flex-col md:flex-row items-start md:items-end gap-6">
                 {{-- profile photo --}}
                 <img src="{{ $student->profile_photo_url }}"
-                     alt="{{ $student->user->first_name }}"
+                     alt="{{ $student->user->name }}"
                      class="w-40 h-40 rounded-2xl border-4 border-white shadow-xl object-cover">
 
                 {{-- name and headline --}}
                 <div class="flex-1 bg-white rounded-lg p-6 shadow-sm border border-gray-200">
                     <h1 class="text-3xl font-bold text-gray-900 mb-2">
-                        {{ $student->user->first_name }} {{ $student->user->last_name }}
+                        {{ $student->user->name }}
                     </h1>
                     <p class="text-xl text-gray-700 mb-2">
                         {{ $student->major }}
@@ -122,11 +122,11 @@
                         <a href="{{ route('student.friends.profile', $mutual->id) }}"
                            class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
                             <img src="{{ $mutual->profile_photo_url }}"
-                                 alt="{{ $mutual->user->first_name }}"
+                                 alt="{{ $mutual->user->name }}"
                                  class="w-10 h-10 rounded-full object-cover">
                             <div class="flex-1 min-w-0">
                                 <p class="font-medium text-gray-900 text-sm truncate">
-                                    {{ $mutual->user->first_name }} {{ $mutual->user->last_name }}
+                                    {{ $mutual->user->name }}
                                 </p>
                                 <p class="text-xs text-gray-600 truncate">
                                     {{ $mutual->major }}
