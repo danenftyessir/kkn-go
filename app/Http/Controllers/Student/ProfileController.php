@@ -98,23 +98,24 @@ class ProfileController extends Controller
             // update data user
             $user->update([
                 'name' => $request->first_name . ' ' . $request->last_name,
+                'email' => $request->email,
                 'username' => $request->username ?? $user->username,
             ]);
-            
+
             // handle upload foto profil jika ada
             $profilePhotoPath = $student->profile_photo_path;
-            
+
             if ($request->hasFile('profile_photo')) {
                 $file = $request->file('profile_photo');
-                
+
                 // hapus foto lama jika ada
                 if ($profilePhotoPath) {
                     $this->storageService->delete($profilePhotoPath);
                 }
-                
+
                 // ✅ PERBAIKAN: gunakan uploadProfilePhoto() yang tersedia di SupabaseStorageService
                 $uploadedPath = $this->storageService->uploadProfilePhoto($file, $student->id);
-                
+
                 // jika upload berhasil, gunakan path baru. Jika gagal, tetap gunakan foto lama
                 if ($uploadedPath) {
                     $profilePhotoPath = $uploadedPath;
@@ -125,7 +126,31 @@ class ProfileController extends Controller
                     Log::warning("Gagal upload foto profil untuk student ID {$student->id}, menggunakan foto lama");
                 }
             }
-            
+
+            // filter stories yang kosong
+            $stories = $request->stories ?? [];
+            if (is_array($stories)) {
+                $stories = array_values(array_filter($stories, function($story) {
+                    return !empty(trim($story));
+                }));
+            }
+
+            // filter skills yang kosong
+            $skills = $request->skills ?? [];
+            if (is_array($skills)) {
+                $skills = array_values(array_filter($skills, function($skill) {
+                    return !empty(trim($skill));
+                }));
+            }
+
+            // filter interests yang kosong
+            $interests = $request->interests ?? [];
+            if (is_array($interests)) {
+                $interests = array_values(array_filter($interests, function($interest) {
+                    return !empty(trim($interest));
+                }));
+            }
+
             $student->update([
                 'first_name' => $request->first_name,
                 'last_name' => $request->last_name,
@@ -136,7 +161,9 @@ class ProfileController extends Controller
                 'phone' => $request->whatsapp_number, // field database adalah 'phone'
                 'profile_photo_path' => $profilePhotoPath,
                 'bio' => $request->bio,
-                'stories' => $request->stories, // cerita & pengalaman mahasiswa (array)
+                'stories' => $stories, // cerita & pengalaman mahasiswa (array)
+                'skills' => $skills, // skills mahasiswa (array)
+                'interests' => $interests, // interests mahasiswa (array)
             ]);
             
             Log::info("Profil berhasil diupdate untuk student ID {$student->id}");
