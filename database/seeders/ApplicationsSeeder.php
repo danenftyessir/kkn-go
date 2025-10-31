@@ -106,9 +106,6 @@ class ApplicationsSeeder extends Seeder
                 if (count($acceptedData) >= 50) {
                     DB::table('applications')->insert($acceptedData);
                     $acceptedData = [];
-                    
-                    // clear prepared statements cache
-                    DB::connection()->getPdo()->exec('DEALLOCATE ALL');
                 }
             }
         }
@@ -116,7 +113,6 @@ class ApplicationsSeeder extends Seeder
         // insert sisa accepted data
         if (!empty($acceptedData)) {
             DB::table('applications')->insert($acceptedData);
-            DB::connection()->getPdo()->exec('DEALLOCATE ALL');
         }
         
         $this->command->info("✅ Created {$acceptedCount} accepted applications");
@@ -176,9 +172,6 @@ class ApplicationsSeeder extends Seeder
                     try {
                         DB::table('applications')->insert($otherApplicationsData);
                         $otherApplicationsData = [];
-                        
-                        // clear prepared statements cache
-                        DB::connection()->getPdo()->exec('DEALLOCATE ALL');
                     } catch (\Exception $e) {
                         // skip jika duplicate
                         $otherApplicationsData = [];
@@ -191,7 +184,6 @@ class ApplicationsSeeder extends Seeder
         if (!empty($otherApplicationsData)) {
             try {
                 DB::table('applications')->insert($otherApplicationsData);
-                DB::connection()->getPdo()->exec('DEALLOCATE ALL');
             } catch (\Exception $e) {
                 // skip jika duplicate
             }
