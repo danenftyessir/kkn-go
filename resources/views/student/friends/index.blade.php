@@ -171,15 +171,9 @@
                     <div class="connection-item px-6 py-4">
                         <div class="flex items-start gap-4">
                             <a href="{{ route('profile.public', $request->requester->user->username) }}">
-                                @if($request->requester->user->profile_photo)
-                                    <img src="{{ $request->requester->user->profile_photo_url }}"
-                                         alt="{{ $request->requester->user->first_name }}"
-                                         class="avatar-circle avatar-md">
-                                @else
-                                    <div class="avatar-circle avatar-md">
-                                        {{ get_initials($request->requester->user->first_name . ' ' . $request->requester->user->last_name) }}
-                                    </div>
-                                @endif
+                                <img src="{{ $request->requester->profile_photo_url }}"
+                                     alt="{{ $request->requester->user->first_name }}"
+                                     class="avatar-circle avatar-md">
                             </a>
 
                             <div class="flex-1 min-w-0">
@@ -241,15 +235,9 @@
                     <div class="connection-item px-6 py-4">
                         <div class="flex items-center gap-4">
                             <a href="{{ route('profile.public', $suggestion->user->username) }}">
-                                @if($suggestion->user->profile_photo)
-                                    <img src="{{ $suggestion->user->profile_photo_url }}"
-                                         alt="{{ $suggestion->user->first_name }}"
-                                         class="avatar-circle avatar-md">
-                                @else
-                                    <div class="avatar-circle avatar-md">
-                                        {{ get_initials($suggestion->user->first_name . ' ' . $suggestion->user->last_name) }}
-                                    </div>
-                                @endif
+                                <img src="{{ $suggestion->profile_photo_url }}"
+                                     alt="{{ $suggestion->user->first_name }}"
+                                     class="avatar-circle avatar-md">
                             </a>
 
                             <div class="flex-1 min-w-0">
@@ -299,15 +287,9 @@
                          data-university="{{ strtolower($friend->university->name ?? '') }}">
                         <div class="flex items-center gap-4">
                             <a href="{{ route('profile.public', $friend->user->username) }}">
-                                @if($friend->user->profile_photo)
-                                    <img src="{{ $friend->user->profile_photo_url }}"
-                                         alt="{{ $friend->user->first_name }}"
-                                         class="avatar-circle avatar-md">
-                                @else
-                                    <div class="avatar-circle avatar-md">
-                                        {{ get_initials($friend->user->first_name . ' ' . $friend->user->last_name) }}
-                                    </div>
-                                @endif
+                                <img src="{{ $friend->profile_photo_url }}"
+                                     alt="{{ $friend->user->first_name }}"
+                                     class="avatar-circle avatar-md">
                             </a>
 
                             <div class="flex-1 min-w-0">

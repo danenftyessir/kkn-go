@@ -136,15 +136,9 @@
                     <div class="flex items-start gap-6">
                         {{-- profile photo --}}
                         <div class="flex-shrink-0">
-                            @if($result->user->profile_photo)
-                                <img src="{{ $result->user->profile_photo_url }}"
-                                     alt="{{ $result->user->first_name }}"
-                                     class="avatar-circle avatar-lg shadow-sm">
-                            @else
-                                <div class="avatar-circle avatar-lg shadow-sm">
-                                    {{ get_initials($result->user->first_name . ' ' . $result->user->last_name) }}
-                                </div>
-                            @endif
+                            <img src="{{ $result->profile_photo_url }}"
+                                 alt="{{ $result->user->first_name }}"
+                                 class="avatar-circle avatar-lg shadow-sm">
                         </div>
 
                         {{-- profile info --}}
