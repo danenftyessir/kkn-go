@@ -148,7 +148,7 @@
 @endpush
 
 @section('content')
-{{-- Hero section - Style persis About & Contact (versi lebih kecil) --}}
+{{-- Hero section - Style marketplace dengan search di tengah --}}
 <section class="network-hero">
     {{-- Background image --}}
     <div class="absolute inset-0">
@@ -159,19 +159,12 @@
         <div class="absolute inset-0 bg-gradient-to-b from-black/30 via-black/40 to-black/70"></div>
     </div>
 
-    {{-- Content - text di kiri bawah --}}
+    {{-- Content - search bar di tengah, text di bawah --}}
     <div class="relative h-full">
-        <div class="container mx-auto px-6 h-full flex items-end pb-12">
-            <div class="max-w-4xl w-full">
-                <h1 class="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight tracking-tight mb-3">
-                    Jaringan Anda
-                </h1>
-                <p class="text-lg md:text-xl text-white/90 font-medium mb-6">
-                    Kelola koneksi profesional Anda
-                </p>
-
-                {{-- Search bar --}}
-                <div class="hero-search">
+        <div class="container mx-auto px-6 h-full flex items-center justify-center">
+            <div class="max-w-3xl w-full text-center">
+                {{-- Search bar di tengah --}}
+                <div class="hero-search mb-8">
                     <svg class="w-6 h-6 text-gray-400 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                     </svg>
@@ -183,6 +176,14 @@
                         Cari
                     </button>
                 </div>
+
+                {{-- Text di bawah search bar --}}
+                <h1 class="text-3xl md:text-4xl lg:text-5xl font-black text-white leading-tight tracking-tight mb-3">
+                    Jaringan Anda
+                </h1>
+                <p class="text-base md:text-lg text-white/90 font-medium">
+                    Kelola koneksi profesional Anda
+                </p>
             </div>
         </div>
     </div>
