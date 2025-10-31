@@ -29,13 +29,39 @@ class DocumentsSeeder extends Seeder
         $studentUsers = User::whereHas('student')->get();
         $institutionUsers = User::whereHas('institution')->get();
         $uploaders = $studentUsers->merge($institutionUsers);
-        
+
         $provinces = Province::all();
-        
+
         if ($uploaders->isEmpty() || $provinces->isEmpty()) {
             $this->command->error('Harap jalankan UsersSeeder dan ProvincesSeeder terlebih dahulu!');
             return;
         }
+
+        // ✅ PERBAIKAN: Gunakan PDF yang sudah ada di Supabase
+        // File-file ini ada di root bucket Supabase (tanpa folder prefix)
+        $existingPdfs = [
+            '3341b-laporan_kkn_hasbi_mudzaki_fix-1-.pdf',
+            'aaLAPORAN-PROGRAM-KERJA-KKN.pdf',
+            'bc4f599c360deae829ef0952f9200a4f.pdf',
+            'd5460592f2ee74a2f9f5910138d650e6.pdf',
+            'f3f3ec539ee2d963e804d3a964b3290f.pdf',
+            'KKN_III.D.3_REG.96_2022.pdf',
+            'LAPORAN AKHIR KKN .pdf',
+            'laporan akhir KKN PPM OK.pdf',
+            'LAPORAN KELOMPOK KKN 1077fix.pdf',
+            'LAPORAN KKN DEMAPESA.pdf',
+            'LAPORAN KKN KELOMPOK 2250.pdf',
+            'LAPORAN KKN_1.A.2_REG.119_2024.pdf',
+            'LAPORAN KKN.pdf',
+            'laporan_3460160906115724.pdf',
+            'laporan_akhir_201_35_2.pdf',
+            'laporan_akhir_3011_45_5.pdf',
+            'laporan-kelompok.pdf',
+            'Laporan-KKN-2019.pdf',
+            'Laporan-Tugas-Akhir-KKN-156.pdf',
+        ];
+
+        $this->command->info('📄 Menggunakan ' . count($existingPdfs) . ' PDF yang sudah ada di Supabase...');
 
         // template documents dengan SDG categories yang benar (INTEGER)
         $documentsTemplates = [
@@ -161,9 +187,13 @@ class DocumentsSeeder extends Seeder
                 continue;
             }
 
-            // generate fake file path (simulasi upload ke Supabase)
-            $fileName = \Str::slug($template['title']) . '-' . time() . '.' . $template['file_type'];
-            $filePath = 'documents/' . date('Y/m/') . $fileName;
+            // ✅ PERBAIKAN: Ambil random PDF dari yang sudah ada di Supabase
+            // Path disimpan langsung sebagai nama file (file ada di root bucket)
+            $randomPdf = $existingPdfs[array_rand($existingPdfs)];
+            $filePath = $randomPdf;
+
+            // Debug: Log file path yang akan disimpan
+            $this->command->info("  → Assigning file: {$filePath}");
             
             // ✅ BENAR: categories langsung pass array of integers
             Document::create([

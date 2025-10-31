@@ -101,7 +101,7 @@
                     <p class="text-sm text-gray-600">Aksi Massal:</p>
                     <div class="flex gap-3">
                         @if($stats['unread'] > 0)
-                            <form action="{{ route('notifications.mark-all-read') }}" method="POST" class="inline">
+                            <form action="{{ route('notifications.read-all') }}" method="POST" class="inline">
                                 @csrf
                                 <button type="submit" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-all duration-200 text-sm font-medium">
                                     Tandai Semua Dibaca

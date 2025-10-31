@@ -133,7 +133,7 @@ if (!function_exists('sdg_color')) {
 if (!function_exists('supabase_url')) {
     /**
      * generate URL publik untuk file di Supabase Storage atau local storage
-     * FIX: Smart detection tanpa exists() untuk performa lebih baik
+     * ✅ FIX: Konsisten dengan SupabaseStorageService
      *
      * @param string|null $path path file di bucket
      * @return string URL publik file
@@ -152,21 +152,27 @@ if (!function_exists('supabase_url')) {
             return url('/storage/' . $path);
         }
 
-        // Jika tidak ada di local, assume ada di Supabase
-        // nama bucket dari config
-        $bucket = config('filesystems.disks.supabase.bucket', 'kkngo-storage');
+        // ✅ FIX: Gunakan config yang sama dengan SupabaseStorageService
+        $projectId = config('services.supabase.project_id');
+        $bucket = config('services.supabase.bucket', 'kkn-go storage');
 
-        // base URL dari supabase
-        $baseUrl = config('filesystems.disks.supabase.url');
+        // Cek apakah Supabase dikonfigurasi
+        if (empty($projectId)) {
+            \Illuminate\Support\Facades\Log::warning('⚠️ Supabase project_id tidak dikonfigurasi', ['path' => $path]);
+            return '';
+        }
+
+        // hilangkan slash di awal jika ada
+        $path = ltrim($path, '/');
 
         // encode bucket name untuk URL (ganti spasi dengan %20)
         $encodedBucket = str_replace(' ', '%20', $bucket);
 
-        // encode path jika perlu
+        // encode path jika perlu (handle spasi dan karakter khusus)
         $encodedPath = implode('/', array_map('rawurlencode', explode('/', $path)));
 
-        // format: https://PROJECT_ID.supabase.co/storage/v1/object/public/BUCKET_NAME/PATH
-        return "{$baseUrl}/storage/v1/object/public/{$encodedBucket}/{$encodedPath}";
+        // ✅ format: https://PROJECT_ID.supabase.co/storage/v1/object/public/BUCKET_NAME/PATH
+        return "https://{$projectId}.supabase.co/storage/v1/object/public/{$encodedBucket}/{$encodedPath}";
     }
 }
 

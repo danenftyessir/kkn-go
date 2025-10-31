@@ -355,8 +355,24 @@ class SupabaseStorageService
     }
 
     /**
+     * upload verification document untuk institusi ke supabase
+     *
+     * @param UploadedFile $file file verification document
+     * @param int $institutionId ID institusi
+     * @return string|false path file yang berhasil diupload atau false jika gagal
+     */
+    public function uploadVerificationDocument(UploadedFile $file, int $institutionId)
+    {
+        $extension = $file->getClientOriginalExtension();
+        $filename = "institution-{$institutionId}-verification-" . time() . '.' . $extension;
+        $path = 'institutions/verifications/' . $filename;
+
+        return $this->uploadFile($file, $path);
+    }
+
+    /**
      * upload document ke supabase
-     * 
+     *
      * @param UploadedFile $file file document
      * @param string $category kategori document (reports, certificates, dll)
      * @return string|false path file yang berhasil diupload atau false jika gagal

@@ -5,7 +5,6 @@
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/friends.css') }}">
 <style>
-    /* Hero with background image - Style persis About & Contact tapi versi lebih kecil */
     .network-hero {
         position: relative;
         min-height: 400px;
