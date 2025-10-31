@@ -70,7 +70,7 @@
                             {{ $student->major }} - {{ $student->university->name }}
                         </p>
                         <div class="border-t border-gray-200 pt-3">
-                            <a href="{{ route('student.profile.public', $student->id) }}" 
+                            <a href="{{ route('student.profile.index') }}"
                                class="flex items-center justify-center text-sm text-blue-600 hover:text-blue-700 font-medium">
                                 Lihat Profil Lengkap
                                 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
