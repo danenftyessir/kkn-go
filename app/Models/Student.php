@@ -28,6 +28,7 @@ class Student extends Model
         'phone',
         'profile_photo_path',
         'bio',
+        'stories',
         'skills',
         'portfolio_visible',
     ];
@@ -37,6 +38,7 @@ class Student extends Model
      */
     protected $casts = [
         'skills' => 'array',
+        'stories' => 'array',
         'portfolio_visible' => 'boolean',
     ];
 

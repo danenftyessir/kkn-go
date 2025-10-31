@@ -202,14 +202,54 @@
                 <!-- bio -->
                 <div>
                     <label for="bio" class="block text-sm font-medium text-gray-700 mb-2">Bio</label>
-                    <textarea id="bio" 
-                              name="bio" 
+                    <textarea id="bio"
+                              name="bio"
                               rows="4"
                               maxlength="500"
                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
                               placeholder="Ceritakan tentang diri Anda...">{{ old('bio', Auth::user()->student->bio) }}</textarea>
                     <p class="text-xs text-gray-500 mt-1">Maksimal 500 karakter</p>
                     @error('bio')
+                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- cerita & pengalaman -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Cerita & Pengalaman
+                        <span class="text-gray-500 font-normal">(Opsional)</span>
+                    </label>
+                    <p class="text-xs text-gray-500 mb-3">Bagikan cerita dan pengalaman Anda dalam menjalani proyek-proyek KKN. Anda bisa menambahkan lebih dari satu cerita!</p>
+                    <div id="stories-container" class="space-y-3">
+                        @php
+                            $stories = old('stories', json_decode(Auth::user()->student->stories ?? '[]', true));
+                        @endphp
+                        @foreach($stories as $index => $story)
+                            <div class="story-item border border-gray-200 rounded-lg p-3">
+                                <div class="flex justify-between items-start mb-2">
+                                    <span class="text-sm font-medium text-gray-700">Cerita {{ $index + 1 }}</span>
+                                    <button type="button"
+                                            onclick="removeStory(this)"
+                                            class="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition-colors">
+                                        Hapus
+                                    </button>
+                                </div>
+                                <textarea name="stories[]"
+                                          rows="4"
+                                          maxlength="2000"
+                                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
+                                          placeholder="Contoh: Saat mengerjakan proyek desa wisata, saya belajar betapa pentingnya mendengarkan aspirasi masyarakat lokal...">{{ $story }}</textarea>
+                                <p class="text-xs text-gray-500 mt-1">Maksimal 2000 karakter per cerita</p>
+                            </div>
+                        @endforeach
+                    </div>
+                    <button type="button"
+                            onclick="addStory()"
+                            class="mt-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
+                        + Tambah Cerita
+                    </button>
+                    @error('stories')
                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                     @enderror
                 </div>
@@ -447,6 +487,49 @@ function addInterest() {
 // fungsi untuk hapus interest
 function removeInterest(button) {
     button.closest('.interest-item').remove();
+}
+
+// fungsi untuk tambah cerita & pengalaman
+function addStory() {
+    const container = document.getElementById('stories-container');
+    const storyCount = container.querySelectorAll('.story-item').length + 1;
+    const newStory = document.createElement('div');
+    newStory.className = 'story-item border border-gray-200 rounded-lg p-3';
+    newStory.innerHTML = `
+        <div class="flex justify-between items-start mb-2">
+            <span class="text-sm font-medium text-gray-700">Cerita ${storyCount}</span>
+            <button type="button"
+                    onclick="removeStory(this)"
+                    class="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition-colors">
+                Hapus
+            </button>
+        </div>
+        <textarea name="stories[]"
+                  rows="4"
+                  maxlength="2000"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
+                  placeholder="Contoh: Saat mengerjakan proyek desa wisata, saya belajar betapa pentingnya mendengarkan aspirasi masyarakat lokal..."></textarea>
+        <p class="text-xs text-gray-500 mt-1">Maksimal 2000 karakter per cerita</p>
+    `;
+    container.appendChild(newStory);
+    updateStoryNumbers();
+}
+
+// fungsi untuk hapus cerita & pengalaman
+function removeStory(button) {
+    button.closest('.story-item').remove();
+    updateStoryNumbers();
+}
+
+// fungsi untuk update nomor cerita setelah add/remove
+function updateStoryNumbers() {
+    const stories = document.querySelectorAll('.story-item');
+    stories.forEach((story, index) => {
+        const label = story.querySelector('span.text-sm');
+        if (label) {
+            label.textContent = `Cerita ${index + 1}`;
+        }
+    });
 }
 
 // preview foto profil

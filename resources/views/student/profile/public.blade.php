@@ -46,7 +46,7 @@
     {{-- Hero Section dengan Background Image --}}
     <div class="relative h-[550px] overflow-hidden">
         <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('{{ asset('dashboard-student3.jpg') }}');"></div>
-        <div class="absolute inset-0 bg-gradient-to-r from-indigo-900/90 via-purple-800/85 to-transparent"></div>
+        <div class="absolute inset-0 bg-gradient-to-r from-blue-900/90 via-blue-800/85 to-transparent"></div>
 
         <div class="relative h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="h-full flex items-center">
@@ -238,22 +238,33 @@
                 <h2 class="text-3xl font-bold text-gray-900">Cerita & Pengalaman</h2>
             </div>
 
-            <div class="bg-gradient-to-br from-orange-50 via-white to-red-50 rounded-3xl p-10 border-l-4 border-orange-500">
-                @if($student->story || $student->experience)
-                    <div class="prose prose-lg max-w-none">
-                        <p class="text-gray-700 leading-relaxed text-lg">
-                            {{ $student->story ?? $student->experience }}
-                        </p>
-                    </div>
-                @else
+            @if($student->stories && count($student->stories) > 0)
+                <div class="space-y-6">
+                    @foreach($student->stories as $index => $story)
+                        <div class="bg-gradient-to-br from-orange-50 via-white to-red-50 rounded-3xl p-10 border-l-4 border-orange-500">
+                            <div class="flex items-start gap-3 mb-4">
+                                <div class="flex-shrink-0 w-8 h-8 bg-orange-600 rounded-full flex items-center justify-center">
+                                    <span class="text-white font-bold text-sm">{{ $index + 1 }}</span>
+                                </div>
+                                <div class="prose prose-lg max-w-none flex-1">
+                                    <p class="text-gray-700 leading-relaxed text-lg m-0">
+                                        {{ $story }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @else
+                <div class="bg-gradient-to-br from-orange-50 via-white to-red-50 rounded-3xl p-10 border-l-4 border-orange-500">
                     <div class="text-center py-8">
                         <svg class="w-16 h-16 text-orange-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                         </svg>
                         <p class="text-gray-500 text-lg">Belum ada cerita yang dibagikan</p>
                     </div>
-                @endif
-            </div>
+                </div>
+            @endif
         </div>
 
         {{-- Projects Section --}}

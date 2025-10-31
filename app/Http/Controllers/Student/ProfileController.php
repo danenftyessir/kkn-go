@@ -136,6 +136,7 @@ class ProfileController extends Controller
                 'phone' => $request->whatsapp_number, // field database adalah 'phone'
                 'profile_photo_path' => $profilePhotoPath,
                 'bio' => $request->bio,
+                'stories' => $request->stories, // cerita & pengalaman mahasiswa (array)
             ]);
             
             Log::info("Profil berhasil diupdate untuk student ID {$student->id}");

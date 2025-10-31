@@ -169,14 +169,25 @@
                 <h2 class="text-3xl font-bold text-gray-900">Cerita & Pengalaman Saya</h2>
             </div>
 
-            <div class="bg-gradient-to-br from-orange-50 via-white to-red-50 rounded-3xl p-10 border-l-4 border-orange-500">
-                @if($student->story || $student->experience)
-                    <div class="prose prose-lg max-w-none">
-                        <p class="text-gray-700 leading-relaxed text-lg">
-                            {{ $student->story ?? $student->experience ?? 'Bagikan cerita dan pengalaman Anda dalam menjalani proyek-proyek KKN. Pengalaman Anda dapat menginspirasi mahasiswa lain!' }}
-                        </p>
-                    </div>
-                @else
+            @if($student->stories && count($student->stories) > 0)
+                <div class="space-y-6">
+                    @foreach($student->stories as $index => $story)
+                        <div class="bg-gradient-to-br from-orange-50 via-white to-red-50 rounded-3xl p-10 border-l-4 border-orange-500">
+                            <div class="flex items-start gap-3 mb-4">
+                                <div class="flex-shrink-0 w-8 h-8 bg-orange-600 rounded-full flex items-center justify-center">
+                                    <span class="text-white font-bold text-sm">{{ $index + 1 }}</span>
+                                </div>
+                                <div class="prose prose-lg max-w-none flex-1">
+                                    <p class="text-gray-700 leading-relaxed text-lg m-0">
+                                        {{ $story }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @else
+                <div class="bg-gradient-to-br from-orange-50 via-white to-red-50 rounded-3xl p-10 border-l-4 border-orange-500">
                     <div class="text-center py-8">
                         <svg class="w-16 h-16 text-orange-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
@@ -186,8 +197,8 @@
                             Tambahkan cerita Anda di sini
                         </a>
                     </div>
-                @endif
-            </div>
+                </div>
+            @endif
         </div>
 
         {{-- Projects Section --}}
