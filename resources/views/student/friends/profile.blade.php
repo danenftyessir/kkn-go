@@ -18,9 +18,7 @@
         <div class="relative -mt-24 pb-6">
             <div class="flex flex-col md:flex-row items-start md:items-end gap-6">
                 {{-- profile photo --}}
-                <img src="{{ $student->profile_photo_path
-                            ? $student->profile_photo_url
-                            : asset('default-avatar.png') }}"
+                <img src="{{ $student->profile_photo_url }}"
                      alt="{{ $student->user->first_name }}"
                      class="w-40 h-40 rounded-2xl border-4 border-white shadow-xl object-cover">
 
@@ -123,9 +121,7 @@
                         @foreach($mutualFriends as $mutual)
                         <a href="{{ route('student.friends.profile', $mutual->id) }}"
                            class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
-                            <img src="{{ $mutual->profile_photo_path
-                                        ? $mutual->profile_photo_url
-                                        : asset('default-avatar.png') }}"
+                            <img src="{{ $mutual->profile_photo_url }}"
                                  alt="{{ $mutual->user->first_name }}"
                                  class="w-10 h-10 rounded-full object-cover">
                             <div class="flex-1 min-w-0">

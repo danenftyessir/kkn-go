@@ -177,15 +177,9 @@
                     </div>
                     <div class="relative px-4 pb-4">
                         <div class="flex justify-center -mt-12 mb-3">
-                            @if(Auth::user()->student->profile_photo_path)
-                                <img src="{{ Auth::user()->profile_photo_url }}"
-                                     alt="{{ Auth::user()->first_name }}"
-                                     class="avatar-circle avatar-lg border-4 border-white shadow-lg">
-                            @else
-                                <div class="avatar-circle avatar-lg border-4 border-white shadow-lg">
-                                    {{ get_initials(Auth::user()->first_name . ' ' . Auth::user()->last_name) }}
-                                </div>
-                            @endif
+                            <img src="{{ Auth::user()->profile_photo_url }}"
+                                 alt="{{ Auth::user()->first_name }}"
+                                 class="avatar-circle avatar-lg border-4 border-white shadow-lg">
                         </div>
                         <h3 class="text-center font-bold text-gray-900 text-lg">
                             {{ Auth::user()->first_name }} {{ Auth::user()->last_name }}
@@ -335,15 +329,9 @@
                             <div class="space-y-2">
                                 @foreach($pendingRequests as $request)
                                 <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                    @if($request->requester->profile_photo_path)
-                                        <img src="{{ $request->requester->profile_photo_url }}"
-                                             alt="{{ $request->requester->user->first_name }}"
-                                             class="avatar-circle avatar-sm">
-                                    @else
-                                        <div class="avatar-circle avatar-sm">
-                                            {{ get_initials($request->requester->user->first_name . ' ' . $request->requester->user->last_name) }}
-                                        </div>
-                                    @endif
+                                    <img src="{{ $request->requester->profile_photo_url }}"
+                                         alt="{{ $request->requester->user->first_name }}"
+                                         class="avatar-circle avatar-sm">
                                     <div class="flex-1 min-w-0">
                                         <p class="font-medium text-gray-900 text-sm truncate">
                                             {{ $request->requester->user->first_name }} {{ $request->requester->user->last_name }}
@@ -398,15 +386,9 @@
                                 @foreach($suggestions as $suggestion)
                                 <div class="border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow">
                                     <div class="flex items-start gap-2 mb-2">
-                                        @if($suggestion->profile_photo_path)
-                                            <img src="{{ $suggestion->profile_photo_url }}"
-                                                 alt="{{ $suggestion->user->first_name }}"
-                                                 class="avatar-circle avatar-sm">
-                                        @else
-                                            <div class="avatar-circle avatar-sm">
-                                                {{ get_initials($suggestion->user->first_name . ' ' . $suggestion->user->last_name) }}
-                                            </div>
-                                        @endif
+                                        <img src="{{ $suggestion->profile_photo_url }}"
+                                             alt="{{ $suggestion->user->first_name }}"
+                                             class="avatar-circle avatar-sm">
                                         <div class="flex-1 min-w-0">
                                             <p class="font-medium text-gray-900 text-sm truncate">
                                                 {{ $suggestion->user->first_name }} {{ $suggestion->user->last_name }}

@@ -71,19 +71,9 @@
                     <div class="relative ml-3" x-data="{ open: false }">
                         <button @click="open = !open"
                                 class="flex items-center space-x-2 p-1 rounded-lg hover:bg-gray-100 transition-colors">
-                            @if(Auth::user()->isStudent() && Auth::user()->student && Auth::user()->student->profile_photo_path)
-                                <img src="{{ Auth::user()->profile_photo_url }}"
-                                     alt="{{ Auth::user()->name }}"
-                                     class="avatar-circle avatar-sm">
-                            @elseif(Auth::user()->isInstitution() && Auth::user()->institution && Auth::user()->institution->logo)
-                                <img src="{{ Auth::user()->profile_photo_url }}"
-                                     alt="{{ Auth::user()->name }}"
-                                     class="avatar-circle avatar-sm">
-                            @else
-                                <div class="avatar-circle avatar-sm">
-                                    {{ get_initials(Auth::user()->name) }}
-                                </div>
-                            @endif
+                            <img src="{{ Auth::user()->profile_photo_url }}"
+                                 alt="{{ Auth::user()->name }}"
+                                 class="avatar-circle avatar-sm">
                             <span class="text-gray-700 font-medium">{{ Auth::user()->name }}</span>
                             <svg class="w-4 h-4 text-gray-500" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
