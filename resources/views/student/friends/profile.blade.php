@@ -220,6 +220,7 @@
                             <p class="text-sm text-gray-700 mb-2">
                                 {{ $project->problem->province->name }}, {{ $project->problem->regency->name }}
                             </p>
+                            @if($project->problem->sdgs && count($project->problem->sdgs) > 0)
                             <div class="flex flex-wrap gap-2 mt-3">
                                 @foreach($project->problem->sdgs as $sdg)
                                 <span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded">
@@ -227,6 +228,7 @@
                                 </span>
                                 @endforeach
                             </div>
+                            @endif
                         </div>
                         @endforeach
                     </div>

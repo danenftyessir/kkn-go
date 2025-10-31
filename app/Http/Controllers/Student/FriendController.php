@@ -321,31 +321,11 @@ class FriendController extends Controller
      */
     public function showProfile($studentId)
     {
-        $currentStudent = Auth::user()->student;
-        $student = Student::with(['user', 'university', 'applications.problem', 'projects'])
-                          ->findOrFail($studentId);
+        // redirect ke public profile view
+        $student = Student::with('user')->findOrFail($studentId);
 
-        // cek status pertemanan
-        $friendshipStatus = $currentStudent->friendshipStatusWith($studentId);
-
-        // hitung statistik
-        $stats = [
-            'total_projects' => $student->projects()->count(),
-            'completed_projects' => $student->projects()->where('status', 'completed')->count(),
-            'total_applications' => $student->applications()->count(),
-            'friends_count' => $student->friendsCount()
-        ];
-
-        // mutual friends
-        $mutualFriends = $this->getMutualFriends($currentStudent, $student);
-
-        return view('student.friends.profile', compact(
-            'student',
-            'currentStudent',
-            'friendshipStatus',
-            'stats',
-            'mutualFriends'
-        ));
+        // redirect ke public profile dengan username
+        return redirect()->route('profile.public', $student->user->username);
     }
 
     /**

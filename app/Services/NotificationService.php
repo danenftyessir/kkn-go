@@ -21,7 +21,7 @@ class NotificationService
                     '/notifications/getLatest',
                     '/api/',
                 ];
-                
+
                 foreach ($invalidPaths as $invalid) {
                     if (str_contains($actionUrl, $invalid)) {
                         Log::warning('Invalid action_url detected, setting to null', [
@@ -32,13 +32,13 @@ class NotificationService
                         break;
                     }
                 }
-                
+
                 // jika action_url hanya '#' atau kosong, set null
                 if (in_array($actionUrl, ['#', '', ' '])) {
                     $actionUrl = null;
                 }
             }
-            
+
             return Notification::create([
                 'user_id' => $userId,
                 'type' => $type,
@@ -52,6 +52,14 @@ class NotificationService
             Log::error('gagal membuat notifikasi: ' . $e->getMessage());
             return null;
         }
+    }
+
+    /**
+     * alias untuk create() - untuk backward compatibility
+     */
+    public function createNotification($userId, $type, $title, $message, $actionUrl = null, $data = null)
+    {
+        return $this->create($userId, $type, $title, $message, $data, $actionUrl);
     }
     
     /**
