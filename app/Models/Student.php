@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * model untuk tabel students
- * 
+ *
  * representasi mahasiswa yang menggunakan platform KKN-GO
  */
 class Student extends Model
@@ -201,12 +201,12 @@ class Student extends Model
         foreach ($completedProjects as $project) {
             if ($project->problem && $project->problem->sdg_categories) {
                 $categories = $project->problem->sdg_categories;
-                
+
                 // handle jika masih string JSON
                 if (is_string($categories)) {
                     $categories = json_decode($categories, true) ?? [];
                 }
-                
+
                 if (is_array($categories)) {
                     $sdgs = array_merge($sdgs, $categories);
                 }
@@ -214,5 +214,171 @@ class Student extends Model
         }
 
         return count(array_unique($sdgs));
+    }
+
+    /**
+     * relasi untuk permintaan pertemanan yang diterima (pending)
+     */
+    public function pendingFriendRequests()
+    {
+        return Friend::where('receiver_id', $this->id)
+            ->where('status', 'pending')
+            ->with('requester.user', 'requester.university')
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
+
+    /**
+     * relasi untuk permintaan pertemanan yang dikirim
+     */
+    public function sentFriendRequests()
+    {
+        return Friend::where('requester_id', $this->id)
+            ->with('receiver.user', 'receiver.university')
+            ->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * get jumlah teman yang sudah diterima
+     */
+    public function friendsCount()
+    {
+        return Friend::where(function($query) {
+                $query->where('requester_id', $this->id)
+                      ->orWhere('receiver_id', $this->id);
+            })
+            ->where('status', 'accepted')
+            ->count();
+    }
+
+    /**
+     * get daftar teman yang sudah diterima
+     */
+    public function friends()
+    {
+        $friendships = Friend::where(function($query) {
+                $query->where('requester_id', $this->id)
+                      ->orWhere('receiver_id', $this->id);
+            })
+            ->where('status', 'accepted')
+            ->with('requester.user', 'requester.university', 'receiver.user', 'receiver.university')
+            ->get();
+
+        // ekstrak student objects dari friendships
+        return $friendships->map(function($friendship) {
+            return $friendship->requester_id === $this->id
+                ? $friendship->receiver
+                : $friendship->requester;
+        });
+    }
+
+    /**
+     * cek status pertemanan dengan student lain
+     */
+    public function friendshipStatusWith($studentId)
+    {
+        // cek apakah sudah berteman
+        $friendship = Friend::where(function($query) use ($studentId) {
+                $query->where(function($q) use ($studentId) {
+                    $q->where('requester_id', $this->id)
+                      ->where('receiver_id', $studentId);
+                })->orWhere(function($q) use ($studentId) {
+                    $q->where('requester_id', $studentId)
+                      ->where('receiver_id', $this->id);
+                });
+            })
+            ->first();
+
+        if (!$friendship) {
+            return 'none'; // tidak ada relasi
+        }
+
+        if ($friendship->status === 'accepted') {
+            return 'friends';
+        }
+
+        if ($friendship->status === 'pending') {
+            if ($friendship->requester_id === $this->id) {
+                return 'request_sent'; // kita yang kirim request
+            } else {
+                return 'request_received'; // kita yang terima request
+            }
+        }
+
+        return 'none';
+    }
+
+    /**
+     * cek apakah ada pending request dengan student lain
+     */
+    public function hasPendingRequestWith($studentId)
+    {
+        return Friend::where(function($query) use ($studentId) {
+                $query->where(function($q) use ($studentId) {
+                    $q->where('requester_id', $this->id)
+                      ->where('receiver_id', $studentId);
+                })->orWhere(function($q) use ($studentId) {
+                    $q->where('requester_id', $studentId)
+                      ->where('receiver_id', $this->id);
+                });
+            })
+            ->where('status', 'pending')
+            ->exists();
+    }
+
+    /**
+     * cek apakah sudah berteman dengan student lain
+     */
+    public function isFriendWith($studentId)
+    {
+        return Friend::where(function($query) use ($studentId) {
+                $query->where(function($q) use ($studentId) {
+                    $q->where('requester_id', $this->id)
+                      ->where('receiver_id', $studentId);
+                })->orWhere(function($q) use ($studentId) {
+                    $q->where('requester_id', $studentId)
+                      ->where('receiver_id', $this->id);
+                });
+            })
+            ->where('status', 'accepted')
+            ->exists();
+    }
+
+    /**
+     * suggested friends berdasarkan universitas dan jurusan yang sama
+     */
+    public function suggestedFriends($limit = 5)
+    {
+        // get IDs dari teman yang sudah ada
+        $existingFriendIds = $this->friends()->pluck('id')->toArray();
+
+        // get IDs dari pending requests (baik yang dikirim maupun diterima)
+        $pendingIds = Friend::where(function($query) {
+                $query->where('requester_id', $this->id)
+                      ->orWhere('receiver_id', $this->id);
+            })
+            ->where('status', 'pending')
+            ->get()
+            ->map(function($friendship) {
+                return $friendship->requester_id === $this->id
+                    ? $friendship->receiver_id
+                    : $friendship->requester_id;
+            })
+            ->toArray();
+
+        // combine IDs yang harus di-exclude
+        $excludeIds = array_merge($existingFriendIds, $pendingIds, [$this->id]);
+
+        // cari students dengan universitas atau jurusan yang sama
+        return Student::where('id', '!=', $this->id)
+            ->whereNotIn('id', $excludeIds)
+            ->where(function($query) {
+                $query->where('university_id', $this->university_id)
+                      ->orWhere('major', 'like', '%' . $this->major . '%');
+            })
+            ->with('user', 'university')
+            ->inRandomOrder()
+            ->limit($limit)
+            ->get();
     }
 }
