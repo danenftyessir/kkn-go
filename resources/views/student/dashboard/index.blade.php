@@ -177,11 +177,15 @@
                     </div>
                     <div class="relative px-4 pb-4">
                         <div class="flex justify-center -mt-12 mb-3">
-                            <img src="{{ Auth::user()->profile_photo 
-                                        ? Storage::url(Auth::user()->profile_photo) 
-                                        : asset('default-avatar.png') }}" 
-                                 alt="{{ Auth::user()->first_name }}" 
-                                 class="w-24 h-24 rounded-full border-4 border-white shadow-lg object-cover">
+                            @if(Auth::user()->profile_photo)
+                                <img src="{{ Storage::url(Auth::user()->profile_photo) }}"
+                                     alt="{{ Auth::user()->first_name }}"
+                                     class="w-24 h-24 rounded-full border-4 border-white shadow-lg object-cover">
+                            @else
+                                <div class="w-24 h-24 rounded-full border-4 border-white shadow-lg bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center">
+                                    <span class="text-white text-3xl font-bold">{{ strtoupper(substr(Auth::user()->first_name, 0, 1)) }}{{ strtoupper(substr(Auth::user()->last_name, 0, 1)) }}</span>
+                                </div>
+                            @endif
                         </div>
                         <h3 class="text-center font-bold text-gray-900 text-lg">
                             {{ Auth::user()->first_name }} {{ Auth::user()->last_name }}
@@ -331,11 +335,15 @@
                             <div class="space-y-2">
                                 @foreach($pendingRequests as $request)
                                 <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                    <img src="{{ $request->requester->user->profile_photo 
-                                                ? Storage::url($request->requester->user->profile_photo) 
-                                                : asset('default-avatar.png') }}" 
-                                         alt="{{ $request->requester->user->first_name }}" 
-                                         class="w-10 h-10 rounded-full object-cover">
+                                    @if($request->requester->user->profile_photo)
+                                        <img src="{{ Storage::url($request->requester->user->profile_photo) }}"
+                                             alt="{{ $request->requester->user->first_name }}"
+                                             class="w-10 h-10 rounded-full object-cover">
+                                    @else
+                                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center">
+                                            <span class="text-white text-xs font-bold">{{ strtoupper(substr($request->requester->user->first_name, 0, 1)) }}{{ strtoupper(substr($request->requester->user->last_name, 0, 1)) }}</span>
+                                        </div>
+                                    @endif
                                     <div class="flex-1 min-w-0">
                                         <p class="font-medium text-gray-900 text-sm truncate">
                                             {{ $request->requester->user->first_name }} {{ $request->requester->user->last_name }}
@@ -390,11 +398,15 @@
                                 @foreach($suggestions as $suggestion)
                                 <div class="border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow">
                                     <div class="flex items-start gap-2 mb-2">
-                                        <img src="{{ $suggestion->user->profile_photo 
-                                                    ? Storage::url($suggestion->user->profile_photo) 
-                                                    : asset('default-avatar.png') }}" 
-                                             alt="{{ $suggestion->user->first_name }}" 
-                                             class="w-10 h-10 rounded-full object-cover">
+                                        @if($suggestion->user->profile_photo)
+                                            <img src="{{ Storage::url($suggestion->user->profile_photo) }}"
+                                                 alt="{{ $suggestion->user->first_name }}"
+                                                 class="w-10 h-10 rounded-full object-cover">
+                                        @else
+                                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center">
+                                                <span class="text-white text-xs font-bold">{{ strtoupper(substr($suggestion->user->first_name, 0, 1)) }}{{ strtoupper(substr($suggestion->user->last_name, 0, 1)) }}</span>
+                                            </div>
+                                        @endif
                                         <div class="flex-1 min-w-0">
                                             <p class="font-medium text-gray-900 text-sm truncate">
                                                 {{ $suggestion->user->first_name }} {{ $suggestion->user->last_name }}

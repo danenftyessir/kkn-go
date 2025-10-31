@@ -171,9 +171,15 @@
                     <div class="connection-item px-6 py-4">
                         <div class="flex items-start gap-4">
                             <a href="{{ route('profile.public', $request->requester->user->username) }}">
-                                <img src="{{ $request->requester->user->profile_photo ? Storage::url($request->requester->user->profile_photo) : asset('default-avatar.png') }}"
-                                     alt="{{ $request->requester->user->first_name }}"
-                                     class="profile-image">
+                                @if($request->requester->user->profile_photo)
+                                    <img src="{{ Storage::url($request->requester->user->profile_photo) }}"
+                                         alt="{{ $request->requester->user->first_name }}"
+                                         class="profile-image">
+                                @else
+                                    <div class="profile-image bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center">
+                                        <span class="text-white text-2xl font-bold">{{ strtoupper(substr($request->requester->user->first_name, 0, 1)) }}{{ strtoupper(substr($request->requester->user->last_name, 0, 1)) }}</span>
+                                    </div>
+                                @endif
                             </a>
 
                             <div class="flex-1 min-w-0">
@@ -235,9 +241,15 @@
                     <div class="connection-item px-6 py-4">
                         <div class="flex items-center gap-4">
                             <a href="{{ route('profile.public', $suggestion->user->username) }}">
-                                <img src="{{ $suggestion->user->profile_photo ? Storage::url($suggestion->user->profile_photo) : asset('default-avatar.png') }}"
-                                     alt="{{ $suggestion->user->first_name }}"
-                                     class="profile-image">
+                                @if($suggestion->user->profile_photo)
+                                    <img src="{{ Storage::url($suggestion->user->profile_photo) }}"
+                                         alt="{{ $suggestion->user->first_name }}"
+                                         class="profile-image">
+                                @else
+                                    <div class="profile-image bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center">
+                                        <span class="text-white text-2xl font-bold">{{ strtoupper(substr($suggestion->user->first_name, 0, 1)) }}{{ strtoupper(substr($suggestion->user->last_name, 0, 1)) }}</span>
+                                    </div>
+                                @endif
                             </a>
 
                             <div class="flex-1 min-w-0">
@@ -287,9 +299,15 @@
                          data-university="{{ strtolower($friend->university->name ?? '') }}">
                         <div class="flex items-center gap-4">
                             <a href="{{ route('profile.public', $friend->user->username) }}">
-                                <img src="{{ $friend->user->profile_photo ? Storage::url($friend->user->profile_photo) : asset('default-avatar.png') }}"
-                                     alt="{{ $friend->user->first_name }}"
-                                     class="profile-image">
+                                @if($friend->user->profile_photo)
+                                    <img src="{{ Storage::url($friend->user->profile_photo) }}"
+                                         alt="{{ $friend->user->first_name }}"
+                                         class="profile-image">
+                                @else
+                                    <div class="profile-image bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center">
+                                        <span class="text-white text-2xl font-bold">{{ strtoupper(substr($friend->user->first_name, 0, 1)) }}{{ strtoupper(substr($friend->user->last_name, 0, 1)) }}</span>
+                                    </div>
+                                @endif
                             </a>
 
                             <div class="flex-1 min-w-0">

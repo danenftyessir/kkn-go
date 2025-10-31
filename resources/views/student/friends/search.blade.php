@@ -136,11 +136,15 @@
                     <div class="flex items-start gap-6">
                         {{-- profile photo --}}
                         <div class="flex-shrink-0">
-                            <img src="{{ $result->user->profile_photo 
-                                        ? Storage::url($result->user->profile_photo) 
-                                        : asset('default-avatar.png') }}" 
-                                 alt="{{ $result->user->first_name }}" 
-                                 class="w-24 h-24 rounded-lg object-cover shadow-sm">
+                            @if($result->user->profile_photo)
+                                <img src="{{ Storage::url($result->user->profile_photo) }}"
+                                     alt="{{ $result->user->first_name }}"
+                                     class="w-24 h-24 rounded-lg object-cover shadow-sm">
+                            @else
+                                <div class="w-24 h-24 rounded-lg bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center shadow-sm">
+                                    <span class="text-white text-3xl font-bold">{{ strtoupper(substr($result->user->first_name, 0, 1)) }}{{ strtoupper(substr($result->user->last_name, 0, 1)) }}</span>
+                                </div>
+                            @endif
                         </div>
 
                         {{-- profile info --}}
