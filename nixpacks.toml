@@ -5,12 +5,15 @@ aptPkgs = []
 
 [phases.install]
 cmds = [
-    'composer install --no-dev --optimize-autoloader --no-interaction --no-progress --prefer-dist --no-scripts'
+    'composer install --no-dev --optimize-autoloader --no-interaction --no-progress --prefer-dist'
 ]
 [phases.build]
 cmds = [
-    'echo "✅ Using pre-built assets from git repository"',    
-    'ls -la public/build || echo "⚠️ Warning: public/build not found!"'
+    'echo "✅ Using pre-built assets from git repository"',
+    'ls -la public/build || echo "⚠️ Warning: public/build not found!"',
+    'php artisan config:cache',
+    'php artisan route:cache',
+    'php artisan view:cache'
 ]
 [start]
 cmd = 'php artisan serve --host=0.0.0.0 --port=$PORT'
