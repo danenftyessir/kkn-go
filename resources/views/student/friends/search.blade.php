@@ -6,7 +6,7 @@
 {{-- hero section dengan background --}}
 <div class="relative bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 overflow-hidden">
     <div class="absolute inset-0">
-        <img src="{{ asset('placeholder-search-hero.jpg') }}" 
+        <img src="{{ asset('search-network.jpg') }}" 
              alt="Search Background" 
              class="w-full h-full object-cover opacity-20">
         <div class="absolute inset-0 bg-gradient-to-br from-indigo-900/80 to-purple-900/80"></div>

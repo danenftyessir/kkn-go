@@ -20,13 +20,13 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background-image: url('/dashboard-student.jpg');
+        background-image: url('/network-student.JPG');
         background-size: cover;
         background-position: center;
         opacity: 0.15;
     }
 
-    /* Clean list-based design - NO CARDS */
+    /* Clean list-based design */
     .connection-item {
         background: white;
         border-bottom: 1px solid #e5e7eb;

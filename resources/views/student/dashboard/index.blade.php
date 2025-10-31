@@ -7,7 +7,7 @@
     /* hero section dengan background image fixed */
     .hero-dashboard-background {
         position: relative;
-        background-image: url('/dashboard-student.jpg');
+        background-image: url('/dashboard-student2.jpg');
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
@@ -80,7 +80,7 @@
                 Selamat Datang, {{ Auth::user()->name }}!
             </h1>
             <p class="text-xl md:text-2xl text-white text-shadow-strong max-w-3xl">
-                Mari berkontribusi untuk pembangunan berkelanjutan melalui program KKN
+                Mari berkontribusi untuk pembangunan berkelanjutan melalui KKN!
             </p>
         </div>
 
@@ -171,7 +171,7 @@
                 {{-- profile card --}}
                 <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-6">
                     <div class="relative h-20 bg-gradient-to-r from-blue-500 to-indigo-600">
-                        <img src="{{ asset('dashboard-student2.jpeg') }}" 
+                        <img src="{{ asset('dashboard-student3.jpeg') }}" 
                              alt="Cover" 
                              class="w-full h-full object-cover opacity-50">
                     </div>
