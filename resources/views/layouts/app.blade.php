@@ -97,7 +97,11 @@
         }
 
         createContainer() {
-            if (document.getElementById('notification-container')) return;
+            const existingContainer = document.getElementById('notification-container');
+            if (existingContainer) {
+                this.container = existingContainer;
+                return;
+            }
 
             this.container = document.createElement('div');
             this.container.id = 'notification-container';
