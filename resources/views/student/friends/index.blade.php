@@ -5,25 +5,48 @@
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/friends.css') }}">
 <style>
-    /* Hero with background image - LinkedIn style */
+    /* Hero with background image - Style persis About & Contact tapi versi lebih kecil */
     .network-hero {
         position: relative;
-        background: linear-gradient(135deg, #0a66c2 0%, #004182 100%);
-        min-height: 200px;
+        min-height: 400px;
         overflow: hidden;
     }
 
-    .network-hero::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-image: url('/network-student.JPG');
-        background-size: cover;
-        background-position: center;
-        opacity: 0.15;
+    /* Search bar styling */
+    .hero-search {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+        padding: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        max-width: 600px;
+        margin: 0 auto 2rem;
+    }
+
+    .hero-search input {
+        flex: 1;
+        border: none;
+        padding: 12px 16px;
+        font-size: 16px;
+        outline: none;
+    }
+
+    .hero-search button {
+        background: #0a66c2;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .hero-search button:hover {
+        background: #004182;
+        transform: translateY(-2px);
     }
 
     /* Clean list-based design */
@@ -125,13 +148,45 @@
 @endpush
 
 @section('content')
-{{-- Clean LinkedIn-style hero --}}
-<div class="network-hero">
-    <div class="relative z-10 max-w-6xl mx-auto px-6 py-12">
-        <h1 class="text-3xl font-bold text-white mb-2">Jaringan Anda</h1>
-        <p class="text-lg text-white/90">Kelola koneksi profesional Anda</p>
+{{-- Hero section - Style persis About & Contact (versi lebih kecil) --}}
+<section class="network-hero">
+    {{-- Background image --}}
+    <div class="absolute inset-0">
+        <img src="{{ asset('network-student.JPG') }}"
+             alt="Jaringan KKN-Go"
+             class="w-full h-full object-cover">
+        {{-- Overlay gradient - lebih gelap di bawah --}}
+        <div class="absolute inset-0 bg-gradient-to-b from-black/30 via-black/40 to-black/70"></div>
     </div>
-</div>
+
+    {{-- Content - text di kiri bawah --}}
+    <div class="relative h-full">
+        <div class="container mx-auto px-6 h-full flex items-end pb-12">
+            <div class="max-w-4xl w-full">
+                <h1 class="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight tracking-tight mb-3">
+                    Jaringan Anda
+                </h1>
+                <p class="text-lg md:text-xl text-white/90 font-medium mb-6">
+                    Kelola koneksi profesional Anda
+                </p>
+
+                {{-- Search bar --}}
+                <div class="hero-search">
+                    <svg class="w-6 h-6 text-gray-400 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <input type="text"
+                           id="hero-search-input"
+                           placeholder="Cari teman berdasarkan nama atau universitas..."
+                           class="hero-search-input">
+                    <button type="button" onclick="performHeroSearch()">
+                        Cari
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
 {{-- Stats bar - clean and minimal --}}
 <div class="bg-white border-b border-gray-200">
@@ -337,21 +392,55 @@
 
 @push('scripts')
 <script>
-// Real-time search
-document.getElementById('friend-search')?.addEventListener('input', function(e) {
-    const searchTerm = e.target.value.toLowerCase();
+// Fungsi search untuk hero section dan friends list
+function performSearch(searchTerm) {
     const friendItems = document.querySelectorAll('.friend-item');
+    const lowerSearchTerm = searchTerm.toLowerCase();
 
     friendItems.forEach(item => {
         const name = item.dataset.name;
         const university = item.dataset.university;
 
-        if (name.includes(searchTerm) || university.includes(searchTerm)) {
+        if (name.includes(lowerSearchTerm) || university.includes(lowerSearchTerm)) {
             item.style.display = 'flex';
         } else {
             item.style.display = 'none';
         }
     });
+
+    // Scroll ke section friends list
+    if (searchTerm) {
+        document.getElementById('friends-list')?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+    }
+}
+
+// Hero search button click
+function performHeroSearch() {
+    const heroSearchInput = document.getElementById('hero-search-input');
+    const searchTerm = heroSearchInput.value;
+
+    // Sinkronkan dengan search bar di bawah
+    const friendSearch = document.getElementById('friend-search');
+    if (friendSearch) {
+        friendSearch.value = searchTerm;
+    }
+
+    performSearch(searchTerm);
+}
+
+// Hero search on Enter key
+document.getElementById('hero-search-input')?.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        performHeroSearch();
+    }
+});
+
+// Real-time search on input (untuk search bar di friends list section)
+document.getElementById('friend-search')?.addEventListener('input', function(e) {
+    performSearch(e.target.value);
 });
 
 // Auto-hide alerts
