@@ -63,7 +63,7 @@ class LoginController extends Controller
             RateLimiter::hit($throttleKey, 60);
             
             throw ValidationException::withMessages([
-                'email' => 'email/username atau password salah.',
+                'email' => 'email atau password salah.',
             ]);
         }
 
@@ -73,7 +73,7 @@ class LoginController extends Controller
             RateLimiter::hit($throttleKey, 60);
             
             throw ValidationException::withMessages([
-                'email' => 'email/username atau password salah.',
+                'email' => 'email atau password salah.',
             ]);
         }
 
@@ -140,7 +140,7 @@ class LoginController extends Controller
         RateLimiter::hit($throttleKey, 60);
 
         throw ValidationException::withMessages([
-            'email' => 'email/username atau password salah.',
+            'email' => 'email atau password salah.',
         ]);
     }
 
