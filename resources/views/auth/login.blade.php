@@ -94,16 +94,16 @@
                 <form method="POST" action="{{ route('login') }}" class="space-y-6">
                     @csrf
 
-                    <!-- email atau username -->
+                    <!-- email -->
                     <div>
                         <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
-                            Email atau Username <span class="text-red-500">*</span>
+                            Email <span class="text-red-500">*</span>
                         </label>
                         <input type="text" 
                                id="email" 
                                name="email" 
                                value="{{ old('email') }}"
-                               placeholder="Email atau username"
+                               placeholder="Email"
                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all @error('email') border-red-500 @enderror"
                                required
                                autofocus>
