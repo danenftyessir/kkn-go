@@ -162,7 +162,7 @@ class ProjectManagementController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
-            'target_date' => 'required|date|after:today',
+            'target_date' => 'required|date',
             'deliverables' => 'nullable|string',
         ]);
 
@@ -179,9 +179,23 @@ class ProjectManagementController extends Controller
             'status' => 'pending',
         ]);
 
+        return redirect()
+            ->route('institution.projects.manage', $project->id)
+            ->with('success', 'Milestone berhasil ditambahkan');
+    }
+
+    /**
+     * get single milestone data
+     */
+    public function getMilestone($id, $milestoneId)
+    {
+        $institution = auth()->user()->institution;
+
+        $project = Project::where('institution_id', $institution->id)->findOrFail($id);
+        $milestone = $project->milestones()->findOrFail($milestoneId);
+
         return response()->json([
             'success' => true,
-            'message' => 'milestone berhasil ditambahkan',
             'milestone' => $milestone,
         ]);
     }

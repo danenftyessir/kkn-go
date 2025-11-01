@@ -259,7 +259,9 @@ Route::middleware(['auth', 'check.user.type:institution'])->prefix('institution'
         Route::get('/{id}', [ProjectManagementController::class, 'show'])->name('show');
         Route::get('/{id}/manage', [ProjectManagementController::class, 'manage'])->name('manage');
         Route::post('/{id}/milestone', [ProjectManagementController::class, 'addMilestone'])->name('add-milestone');
-        Route::put('/{id}/milestone/{milestoneId}', [ProjectManagementController::class, 'updateMilestone'])->name('update-milestone');
+        Route::get('/{id}/milestones/{milestoneId}', [ProjectManagementController::class, 'getMilestone'])->name('get-milestone');
+        Route::put('/{id}/milestones/{milestoneId}', [ProjectManagementController::class, 'updateMilestone'])->name('update-milestone');
+        Route::delete('/{id}/milestones/{milestoneId}', [ProjectManagementController::class, 'deleteMilestone'])->name('delete-milestone');
         Route::post('/{id}/status', [ProjectManagementController::class, 'updateStatus'])->name('update-status');    
         Route::post('/{id}/reports/{reportId}/approve', [ProjectManagementController::class, 'approveReport'])->name('approve-report');
         Route::post('/{id}/reports/{reportId}/reject', [ProjectManagementController::class, 'rejectReport'])->name('reject-report');

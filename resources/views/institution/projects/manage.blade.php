@@ -264,7 +264,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Target Tanggal *</label>
-                    <input type="date" name="due_date" required class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                    <input type="date" name="target_date" required class="w-full px-4 py-2 border border-gray-300 rounded-lg">
                 </div>
             </div>
             <div class="flex gap-3 mt-6">
@@ -327,6 +327,46 @@
     </div>
 </div>
 
+{{-- modal edit milestone --}}
+<div id="edit-milestone-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 p-6">
+        <h3 class="text-xl font-bold text-gray-900 mb-4">Edit Milestone</h3>
+        <form id="edit-milestone-form" onsubmit="submitEditMilestone(event)">
+            <input type="hidden" id="edit-milestone-id">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Judul *</label>
+                    <input type="text" id="edit-milestone-title" name="title" required class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Deskripsi</label>
+                    <textarea id="edit-milestone-description" name="description" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Target Tanggal *</label>
+                    <input type="date" id="edit-milestone-target-date" name="target_date" required class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Status</label>
+                    <select id="edit-milestone-status" name="status" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                        <option value="pending">Pending</option>
+                        <option value="in_progress">Berjalan</option>
+                        <option value="completed">Selesai</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold">
+                    Update
+                </button>
+                <button type="button" onclick="closeModal('edit-milestone-modal')" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-semibold">
+                    Batal
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
 // modal functions
 function showAddMilestoneModal() {
@@ -377,10 +417,69 @@ function updateProjectStatus() {
     });
 }
 
+// edit milestone
+function editMilestone(milestoneId) {
+    // fetch milestone data
+    fetch(`/institution/projects/{{ $project->id }}/milestones/${milestoneId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const milestone = data.milestone;
+
+                // populate form
+                document.getElementById('edit-milestone-id').value = milestoneId;
+                document.getElementById('edit-milestone-title').value = milestone.title;
+                document.getElementById('edit-milestone-description').value = milestone.description || '';
+                document.getElementById('edit-milestone-target-date').value = milestone.target_date;
+                document.getElementById('edit-milestone-status').value = milestone.status;
+
+                // show modal
+                document.getElementById('edit-milestone-modal').classList.remove('hidden');
+                document.getElementById('edit-milestone-modal').classList.add('flex');
+            }
+        })
+        .catch(error => {
+            alert('Terjadi kesalahan: ' + error);
+        });
+}
+
+// submit edit milestone
+function submitEditMilestone(event) {
+    event.preventDefault();
+
+    const milestoneId = document.getElementById('edit-milestone-id').value;
+    const formData = {
+        title: document.getElementById('edit-milestone-title').value,
+        description: document.getElementById('edit-milestone-description').value,
+        target_date: document.getElementById('edit-milestone-target-date').value,
+        status: document.getElementById('edit-milestone-status').value
+    };
+
+    fetch(`/institution/projects/{{ $project->id }}/milestones/${milestoneId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Terjadi kesalahan: ' + (data.message || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        alert('Terjadi kesalahan: ' + error);
+    });
+}
+
 // delete milestone
 function deleteMilestone(milestoneId) {
     if (!confirm('Yakin ingin menghapus milestone ini?')) return;
-    
+
     fetch(`/institution/projects/{{ $project->id }}/milestones/${milestoneId}`, {
         method: 'DELETE',
         headers: {
