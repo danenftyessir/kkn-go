@@ -174,7 +174,7 @@ class ProjectManagementController extends Controller
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
             'target_date' => $validated['target_date'],
-            'deliverables' => $validated['deliverables'] ? explode(',', $validated['deliverables']) : null,
+            'deliverables' => isset($validated['deliverables']) && $validated['deliverables'] ? explode(',', $validated['deliverables']) : null,
             'order' => $maxOrder + 1,
             'status' => 'pending',
         ]);
